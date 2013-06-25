@@ -1,0 +1,11 @@
+
+To run an experiment, exec:
+
+First delete the 'seeds' file and any old output files, if one exists using:
+./clean.sh
+
+Then:
+./run.sh ..
+./parse.sh
+./merge.sh XXX
+

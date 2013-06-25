@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>se.sics.stun</groupId>
+        <artifactId>stun</artifactId>
+        <version>1.0-SNAPSHOT</version>
+    </parent>
+    <groupId>se.sics.stun.clientmain</groupId>
+    <artifactId>stun-client-main</artifactId>
+    <packaging>jar</packaging>
+    <name>Stun Client Main</name>
+
+    <dependencies>
+        <dependency>
+            <groupId>se.sics.nat.emu</groupId>
+            <artifactId>nat-emulator</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>se.sics.net</groupId>
+            <artifactId>etty</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>se.sics.net.utils</groupId>
+            <artifactId>resolve-ip</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>se.sics.kompics.nat.logger</groupId>
+            <artifactId>logger</artifactId>
+            <version>0.4.2.7-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>se.sics.stun.client</groupId>
+            <artifactId>stun-client</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <configuration>
+                    <descriptorRefs>
+                        <descriptorRef>jar-with-dependencies</descriptorRef>
+                    </descriptorRefs>
+                    <archive>
+                        <manifest>
+                            <mainClass>se.sics.stun.clientmain.StunClientMain</mainClass>
+                        </manifest>
+                    </archive>
+                </configuration>
+            </plugin>
+            
+                    <plugin>
+                        <groupId>com.pyx4me</groupId>
+                        <artifactId>proguard-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <phase></phase>
+                                <goals>
+                                    <goal>proguard</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <obfuscate>true</obfuscate>
+                            <injar>${project.build.finalName}-jar-with-dependencies.jar</injar>
+                            <outjar>${project.build.finalName}-small.jar</outjar>
+                            <outputDirectory>${project.build.directory}</outputDirectory>
+                            <proguardInclude>${basedir}/proguard.conf</proguardInclude>
+                            <options>
+                                <option>-allowaccessmodification</option>
+                            </options>
+                            <libs>
+                                <lib>${java.home}/lib/rt.jar</lib>
+                            </libs>
+                            <addMavenDescriptor>false</addMavenDescriptor>
+                        </configuration>
+                    </plugin>
+            
+            
+        </plugins>
+    </build>
+</project>

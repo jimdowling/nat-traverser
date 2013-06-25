@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<actions>
+        <action>
+            <actionName>run</actionName>
+            <goals>
+                <goal>process-classes</goal>
+                <goal>org.codehaus.mojo:exec-maven-plugin:1.1.1:exec</goal>
+            </goals>
+            <properties>
+                <exec.classpathScope>runtime</exec.classpathScope>
+<<<<<<< HEAD
+                <exec.args>-classpath %classpath se.sics.gvod.stun.clientmain.StunClientMain lucan.sics.se</exec.args>
+=======
+                <exec.args>-classpath %classpath se.sics.gvod.stun.clientmain.StunClientMain cloud7.sics.se</exec.args>
+>>>>>>> 1c6bd18bb643ddd3801368f57319a89b20812e33
+                <exec.executable>java</exec.executable>
+            </properties>
+        </action>
+        <action>
+            <actionName>debug</actionName>
+            <goals>
+                <goal>process-classes</goal>
+                <goal>org.codehaus.mojo:exec-maven-plugin:1.1.1:exec</goal>
+            </goals>
+            <properties>
+                <exec.classpathScope>runtime</exec.classpathScope>
+<<<<<<< HEAD
+                <exec.args>-Xdebug -Xrunjdwp:transport=dt_socket,server=n,address=${jpda.address} -classpath %classpath se.sics.gvod.stun.clientmain.StunClientMain lucan.sics.se</exec.args>
+=======
+                <exec.args>-Xdebug -Xrunjdwp:transport=dt_socket,server=n,address=${jpda.address} -classpath %classpath se.sics.gvod.stun.clientmain.StunClientMain cloud7.sics.se</exec.args>
+>>>>>>> 1c6bd18bb643ddd3801368f57319a89b20812e33
+                <jpda.listen>true</jpda.listen>
+                <exec.executable>java</exec.executable>
+            </properties>
+        </action>
+        <action>
+            <actionName>profile</actionName>
+            <goals>
+                <goal>process-classes</goal>
+                <goal>org.codehaus.mojo:exec-maven-plugin:1.1.1:exec</goal>
+            </goals>
+            <properties>
+<<<<<<< HEAD
+                <exec.args>${profiler.args} -classpath %classpath se.sics.gvod.stun.clientmain.StunClientMain lucan.sics.se</exec.args>
+=======
+                <exec.args>${profiler.args} -classpath %classpath se.sics.gvod.stun.clientmain.StunClientMain cloud7.sics.se</exec.args>
+>>>>>>> 1c6bd18bb643ddd3801368f57319a89b20812e33
+                <profiler.action>profile</profiler.action>
+                <exec.executable>${profiler.java}</exec.executable>
+            </properties>
+        </action>
+    </actions>

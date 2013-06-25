@@ -1,0 +1,5 @@
+hp-server-main-0.4.2.7-SNAPSHOT-jar-with-dependencies.jar#!/bin/bash
+mvn assembly:assembly
+mv target/stun-server-main-0.4.2.7-SNAPSHOT-jar-with-dependencies.jar ./hpserver.jar
+scp hpserver.jar salman@kajsa.sics.se:~/
+scp hpserver.jar salman@lucan.sics.se:~/

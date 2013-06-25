@@ -1,0 +1,54 @@
+package se.sics.gvod.hp.msgs;
+
+import java.util.Set;
+import org.jboss.netty.buffer.ChannelBuffer;
+import se.sics.gvod.common.msgs.MessageDecodingException;
+import se.sics.gvod.net.util.UserTypesDecoderFactory;
+
+public class PRP_PreallocatedPortsMsgFactory {
+
+    public static class Request extends HpMsgFactory {
+
+        private Request() {
+        }
+
+        public static PRP_PreallocatedPortsMsg.Request fromBuffer(ChannelBuffer buffer)
+                
+                throws MessageDecodingException {
+            return (PRP_PreallocatedPortsMsg.Request)
+                    new PRP_PreallocatedPortsMsgFactory.Request().decode(buffer, false);
+        }
+
+        @Override
+        protected PRP_PreallocatedPortsMsg.Request process(ChannelBuffer buffer) throws MessageDecodingException {
+
+            return new PRP_PreallocatedPortsMsg.Request(vodSrc, vodDest, msgTimeoutId);
+        }
+    }
+
+    public static class Response extends HpMsgFactory {
+
+        private Response() {
+        }
+
+        public static PRP_PreallocatedPortsMsg.Response fromBuffer(ChannelBuffer buffer)
+                
+                throws MessageDecodingException {
+            return (PRP_PreallocatedPortsMsg.Response)
+                    new PRP_PreallocatedPortsMsgFactory.Response().decode(buffer, true);
+        }
+
+        @Override
+        protected PRP_PreallocatedPortsMsg.Response process(ChannelBuffer buffer) 
+                throws MessageDecodingException 
+        {
+            int rt = UserTypesDecoderFactory.readUnsignedIntAsOneByte(buffer);
+            PRP_PreallocatedPortsMsg.ResponseType responseType =
+                    PRP_PreallocatedPortsMsg.ResponseType.values()[rt];
+            Set<Integer> prpPorts = UserTypesDecoderFactory.readSetUnsignedTwoByteInts(buffer);
+            return new PRP_PreallocatedPortsMsg.Response(vodSrc, vodDest, timeoutId,
+                    responseType, prpPorts, msgTimeoutId);
+        }
+
+    }
+}

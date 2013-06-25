@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<actions>
+        <action>
+            <actionName>CUSTOM-Clean n Build with dependencies (skip tests)</actionName>
+            <displayName>Clean n Build with dependencies (skip tests)</displayName>
+            <goals>
+                <goal>clean</goal>
+                <goal>install</goal>
+                <goal>-Dmaven.test.skip=true</goal>
+            </goals>
+        </action>
+    </actions>
