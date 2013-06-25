@@ -40,13 +40,13 @@
                     </descriptorRefs>
                     <archive>
                         <manifest>
-                            <mainClass>se.sics.stun.servermain.StunServerMain</mainClass>
+                            <mainClass>se.sics.gvod.stun.servermain.StunServerMain</mainClass>
                         </manifest>
                     </archive>
                 </configuration>
             </plugin>
             
-                    <plugin>
+<!--                    <plugin>
                         <groupId>com.pyx4me</groupId>
                         <artifactId>proguard-maven-plugin</artifactId>
                         <executions>
@@ -72,7 +72,7 @@
                             </libs>
                             <addMavenDescriptor>false</addMavenDescriptor>
                         </configuration>
-                    </plugin>            
+                    </plugin>            -->
             
         </plugins>
     </build>

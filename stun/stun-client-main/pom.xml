@@ -50,7 +50,7 @@
                     </descriptorRefs>
                     <archive>
                         <manifest>
-                            <mainClass>se.sics.stun.clientmain.StunClientMain</mainClass>
+                            <mainClass>se.sics.gvod.stun.clientmain.StunClientMain</mainClass>
                         </manifest>
                     </archive>
                 </configuration>

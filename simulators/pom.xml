@@ -101,7 +101,7 @@
                     </descriptorRefs>
                     <archive>
                         <manifest>
-                            <mainClass>se.sics.simulator.video.Main</mainClass>
+                            <mainClass>se.sics.gvod.simulator.nattraverser.Main</mainClass>
                         </manifest>
                     </archive>
                 </configuration>
