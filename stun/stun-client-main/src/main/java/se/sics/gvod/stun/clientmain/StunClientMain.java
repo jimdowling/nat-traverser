@@ -16,7 +16,7 @@ import se.sics.kompics.Kompics;
 import se.sics.kompics.Start;
 import se.sics.gvod.address.Address;
 import se.sics.gvod.common.Self;
-import se.sics.gvod.common.SelfNoParents;
+import se.sics.gvod.common.SelfImpl;
 import se.sics.gvod.common.util.ToVodAddr;
 import se.sics.gvod.net.VodAddress;
 import se.sics.gvod.net.NettyNetwork;
@@ -169,7 +169,7 @@ public final class StunClientMain extends ComponentDefinition {
                     setNumMsgRetries(5).
                     setMsgRetryScale(1.2);
 
-            self = new SelfNoParents(sca);
+            self = new SelfImpl(sca);
             trigger(new StunClientInit(self, SEED,
                     sc), stunClient.getControl());
 

@@ -1008,12 +1008,8 @@ public class NatTraverser extends MsgRetryComponent {
                 failedStunServers.clear();
                 // Only start RendezvousServer if we can run it on the default port
                 if (event.getNat().isOpen()) {
-//                    if (VodConfig.getPort() == VodConfig.DEFAULT_PORT) {
                         // start the server components, when we have some partner for the stun server
                         startServerComponents();
-//                    } else {
-//                        logger.info("Not using the default port - not starting rendezvous/stun server services");
-//                    }
                 } else if (event.getNat().isUpnp()) {
                     logger.info("UPnP is supported.");
                     if (parentMaker != null) {
