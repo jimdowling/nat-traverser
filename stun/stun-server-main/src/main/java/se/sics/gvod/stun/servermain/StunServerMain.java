@@ -95,10 +95,18 @@ public final class StunServerMain extends ComponentDefinition {
     private Handler<Start> handleStart = new Handler<Start>() {
         @Override
         public void handle(Start event) {
+            if (pickIp == 0) {
+            trigger(new GetIpRequest(false, EnumSet.of(
+                    GetIpRequest.NetworkInterfacesMask.IGNORE_LOOPBACK,
+                    GetIpRequest.NetworkInterfacesMask.IGNORE_TEN_DOT_PRIVATE,
+                    GetIpRequest.NetworkInterfacesMask.IGNORE_PRIVATE)),
+                    resolveIp.getPositive(ResolveIpPort.class));                
+            } else {
             trigger(new GetIpRequest(false, EnumSet.of(
                     GetIpRequest.NetworkInterfacesMask.IGNORE_LOOPBACK,
                     GetIpRequest.NetworkInterfacesMask.IGNORE_PRIVATE)),
                     resolveIp.getPositive(ResolveIpPort.class));
+            }
         }
     };
 //------------------------------------------------------------------------    
