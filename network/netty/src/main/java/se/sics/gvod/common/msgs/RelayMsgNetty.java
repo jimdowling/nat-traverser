@@ -200,25 +200,6 @@ public class RelayMsgNetty {
 
     }
 
-//    public static class FailedRequest extends Request {
-//
-//        public FailedRequest(Request req) {
-//            super(req.getVodSource(), req.getVodDestination(), req.getClientId(),
-//                    req.getRemoteId(), req.getRto(), req.getRetries(), req.getScaleRto(), 
-//                    req.getTimeoutId());
-//        }
-//        private FailedRequest(VodAddress src, VodAddress dest, int clientId, 
-//                int remoteId, int rto, int numRetries, double scaleRto, TimeoutId timeoutId) {
-//            super(src, dest, clientId, remoteId, rto, numRetries, scaleRto, timeoutId);
-//        }        
-//
-//        @Override
-//        public RewriteableMsg copy() {
-//            return new FailedRequest(gvodSrc, gvodDest, clientId, remoteId, 
-//                    getRto(), getRetries(), getScaleRto(), timeoutId);
-//        }
-//    }
-
     public abstract static class Oneway extends Base {
 
         public Oneway(VodAddress source, VodAddress destination, int clientId, int remoteId) {

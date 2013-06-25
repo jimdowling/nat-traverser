@@ -135,23 +135,6 @@ public class CroupierTest extends VodRetryComponentTestCase {
         croupier.handleCycle.handle(new CroupierShuffleCycle(new SchedulePeriodicTimeout(shufflePeriod, shufflePeriod)));
     }
 
-//    @Test
-//    public void testRebootstrap() {
-//        eventList.clear();
-//        croupier.handleJoin.handle(new CroupierJoin(neighbours));
-//        croupier.rebootstrap();
-//        
-//        LinkedList<Event> events = pollEvent(3);
-//        assertSequence(events, CroupierShuffleCycle.class, CroupierJoinCompleted.class, 
-//                Rebootstrap.class);
-//        
-//        neighbours.add(desc1);
-//        croupier.handleRebootstrapResponse.handle(new RebootstrapResponse(this.getId(),
-//                neighbours));
-//        assert (croupier.privateView.isEmpty());
-//        assert (croupier.publicView.size() == 1);
-//    }
-
     @Test
     public void testShuffleTimeout() {
         neighbours.add(desc1);

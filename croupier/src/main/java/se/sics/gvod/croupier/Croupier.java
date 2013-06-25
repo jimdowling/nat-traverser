@@ -26,6 +26,7 @@ import org.slf4j.LoggerFactory;
 import se.sics.gvod.common.*;
 import se.sics.gvod.config.VodConfig;
 import se.sics.gvod.common.msgs.RelayMsgNetty;
+import se.sics.gvod.config.CroupierConfiguration;
 import se.sics.gvod.croupier.events.*;
 import se.sics.gvod.croupier.msgs.ShuffleMsg;
 import se.sics.gvod.croupier.snapshot.CroupierStats;
@@ -34,7 +35,6 @@ import se.sics.gvod.net.VodAddress;
 import se.sics.gvod.net.msgs.ScheduleRetryTimeout;
 import se.sics.gvod.timer.CancelPeriodicTimeout;
 import se.sics.gvod.timer.SchedulePeriodicTimeout;
-import se.sics.gvod.timer.ScheduleTimeout;
 import se.sics.gvod.timer.TimeoutId;
 import se.sics.kompics.Handler;
 import se.sics.kompics.Negative;
@@ -51,16 +51,9 @@ public class Croupier extends MsgRetryComponent {
     private Self self;
     View publicView;
     View privateView;
-    private int viewSize;
     private boolean joining;
-    private long shufflePeriod;
-    private int shuffleLength;
-    private long randomSetshuffleTimeout;
-    private int seed;
+    CroupierConfiguration config;    
     private TimeoutId shuffleTimeoutId;
-    private int numRebootstraps = 0;
-    private boolean ongoingRebootstrap = false;
-    VodConfig.CroupierSelectionPolicy policy;
     String compName;
     private Map<Integer,Long> shuffleTimes = new HashMap<Integer,Long>();
 
@@ -77,17 +70,10 @@ public class Croupier extends MsgRetryComponent {
         public void handle(CroupierInit init) {
             self = init.getSelf();
             compName = "(" + self.getId() + ") ";
-            seed = init.getConfig().getSeed();
-            viewSize = init.getConfig().getViewSize();
-            publicView = new View(self, viewSize, seed);
-            privateView = new View(self, viewSize, seed);
-            shufflePeriod = init.getConfig().getShufflePeriod();
-            shuffleLength = init.getConfig().getShuffleLength();
-            randomSetshuffleTimeout = init.getConfig().getShuffleTimeout();
-            viewSize = init.getConfig().getViewSize();
+            config = init.getConfig();
+            publicView = new View(self, config.getViewSize(), config.getSeed());
+            privateView = new View(self, config.getViewSize(), config.getSeed());
             self.updateUtility(new UtilityVod(0));
-            policy = init.getConfig().getPolicy();
-
             CroupierStats.addNode(self.getAddress());
         }
     };
@@ -117,9 +103,9 @@ public class Croupier extends MsgRetryComponent {
     private VodAddress selectPeerToShuffleWith() {
         VodAddress node = null;
         if (!publicView.isEmpty()) {
-            node = publicView.selectPeerToShuffleWith(policy);
+            node = publicView.selectPeerToShuffleWith(config.getPolicy());
         } else if (!privateView.isEmpty()) {
-            node = privateView.selectPeerToShuffleWith(policy);
+            node = privateView.selectPeerToShuffleWith(config.getPolicy());
         }
         return node;
     }
@@ -130,7 +116,8 @@ public class Croupier extends MsgRetryComponent {
 
             logger.debug(compName + "JOIN {} using {} public nodes", self.getId(), insiders.size());
 
-            SchedulePeriodicTimeout spt = new SchedulePeriodicTimeout(shufflePeriod, shufflePeriod);
+            SchedulePeriodicTimeout spt = new SchedulePeriodicTimeout(config.getShufflePeriod(), 
+                    config.getShufflePeriod());
             spt.setTimeoutEvent(new CroupierShuffleCycle(spt));
             delegator.doTrigger(spt, timer);
 
@@ -150,46 +137,6 @@ public class Croupier extends MsgRetryComponent {
         }
     };
     
-//    Handler<RebootstrapResponse> handleRebootstrapResponse = new Handler<RebootstrapResponse>() {
-//        @Override
-//        public void handle(RebootstrapResponse event) {
-//            assert (event.getId() == self.getId());
-//
-//            ongoingRebootstrap = false;
-//            List<VodDescriptor> insiders = event.getVodInsiders();
-//            logger.warn(compName + "handle rebootstrap response {}", insiders.size());
-//            if (!insiders.isEmpty()) {
-//                numRebootstraps = 0;
-//                initializeCaches(insiders);
-//
-//                logger.warn(compName + "After rebootstrap response pubSize {}, privSize {}",
-//                        publicView.size(), privateView.size());
-//            } else {
-//                // re-bootstrap after timeout
-//                enqueueBootstrap();
-//            }
-//        }
-//    };
-
-//    private void enqueueBootstrap() {
-//        if (ongoingRebootstrap) {
-//            logger.warn(compName + " Ongoing bootstrap.");
-//            return;
-//        }
-//        numRebootstraps++;
-//        ScheduleTimeout st = new ScheduleTimeout(numRebootstraps * 2500);
-//        RebootstrapTimeout rt = new RebootstrapTimeout(st);
-//        st.setTimeoutEvent(rt);
-//        delegator.doTrigger(st, timer);
-//        ongoingRebootstrap = true;
-//        CroupierStats.instance(self).incNumReboots();
-//    }
-//    Handler<RebootstrapTimeout> handleRebootstrapTimeout = new Handler<RebootstrapTimeout>() {
-//        @Override
-//        public void handle(RebootstrapTimeout event) {
-//            rebootstrap();
-//        }
-//    };
 
     private void initiateShuffle(int shuffleSize, VodAddress node) {
         if (node == null) {
@@ -215,11 +162,13 @@ public class Croupier extends MsgRetryComponent {
 
 
         ScheduleRetryTimeout st =
-                new ScheduleRetryTimeout(randomSetshuffleTimeout, 0);
+                new ScheduleRetryTimeout(config.getShuffleTimeout(), 0);
         ShuffleMsg.Request request = new ShuffleMsg.Request(self.getAddress(), node,
                 buffer, self.getDescriptor());
         ShuffleMsg.RequestTimeout retryRequest = new ShuffleMsg.RequestTimeout(st, request);
         TimeoutId id = delegator.doRetry(retryRequest);
+        
+        
         shuffleTimes.put(id.getId(), System.currentTimeMillis());
         logger.debug(compName + "SHUFFLE SENT from {} to {} . Id=" + id, self.getId(), node.getId());
     }
@@ -230,16 +179,14 @@ public class Croupier extends MsgRetryComponent {
                     privateView.size());
             VodAddress peer = selectPeerToShuffleWith();
 
-            if (peer == null) {
-//                enqueueBootstrap();
-            } else {
+            if (peer != null) {
                 if (!peer.isOpen()) {
                     logger.info(compName + "Didn't pick a public node for shuffling. Public Size {}",
                             publicView.getAll().size());
                 }
 
                 CroupierStats.instance(self).incSelectedTimes();
-                initiateShuffle(shuffleLength, peer);
+                initiateShuffle(config.getShuffleLength(), peer);
 
             }
 
@@ -248,13 +195,6 @@ public class Croupier extends MsgRetryComponent {
         }
     };
 
-//    protected void rebootstrap() {
-//        logger.warn(compName + "rebootstraping " + self.getAddress());
-//        if (!ongoingRebootstrap) {
-//            delegator.doTrigger(new Rebootstrap(self.getId(),
-//                    self.getOverlayId(), self.getUtility()), croupierPort);
-//        }
-//    }
     /**
      * handle requests to shuffle
      */

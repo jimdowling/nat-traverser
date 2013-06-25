@@ -23,8 +23,6 @@ import se.sics.gvod.common.DescriptorBuffer;
 import se.sics.gvod.net.VodAddress;
 import se.sics.gvod.common.VodDescriptor;
 import se.sics.gvod.config.BaseCommandLineConfig;
-import se.sics.gvod.bootstrap.msgs.BootstrapMsg;
-import se.sics.gvod.bootstrap.msgs.BootstrapMsgFactory;
 import se.sics.gvod.common.msgs.ConnectMsg;
 import se.sics.gvod.common.msgs.ConnectMsgFactory;
 import se.sics.gvod.common.msgs.DataMsgFactory;
@@ -76,8 +74,6 @@ import se.sics.gvod.hp.msgs.SHP_OpenHoleMsg;
 import se.sics.gvod.hp.msgs.SHP_OpenHoleMsgFactory;
 import se.sics.gvod.net.Nat;
 import se.sics.gvod.address.Address;
-import se.sics.gvod.bootstrap.msgs.MonitorMsg;
-import se.sics.gvod.bootstrap.msgs.MonitorMsgFactory;
 import se.sics.gvod.common.UtilityVod;
 import se.sics.gvod.config.VodConfig;
 import se.sics.gvod.common.msgs.RelayMsgNetty;
@@ -85,10 +81,9 @@ import se.sics.gvod.croupier.msgs.ShuffleMsg;
 import se.sics.gvod.croupier.msgs.ShuffleMsgFactory;
 import se.sics.gvod.hp.events.OpenConnectionResponseType;
 import se.sics.gvod.hp.msgs.*;
-import se.sics.gvod.interas.msgs.InterAsGossipMsg;
-import se.sics.gvod.interas.msgs.InterAsGossipMsgFactory;
 import se.sics.gvod.common.hp.HPMechanism;
 import se.sics.gvod.common.hp.HPRole;
+import se.sics.gvod.common.msgs.SearchMsgFactory;
 import se.sics.gvod.net.util.UserTypesDecoderFactory;
 import se.sics.gvod.net.util.UserTypesEncoderFactory;
 import se.sics.gvod.stun.msgs.EchoChangeIpAndPortMsg;
@@ -103,7 +98,7 @@ import se.sics.gvod.stun.msgs.ServerHostChangeMsg;
 import se.sics.gvod.stun.msgs.ServerHostChangeMsgFactory;
 import se.sics.gvod.timer.TimeoutId;
 import se.sics.gvod.timer.UUID;
-import se.sics.gvod.video.msgs.*;
+import se.sics.peersearch.msgs.SearchMsg;
 
 /**
  *
@@ -363,165 +358,6 @@ public class EncodingDecodingTest {
         }
     }
 
-//    @Test
-//    public void parentRequest() {
-//        int rtt = 1000;
-//        ParentMsg.Request request = new ParentMsg.Request(gSrc, gDest, rtt);
-//        try {
-//            ChannelBuffer buffer = request.toByteArray();
-//            opCodeCorrect(buffer, request);
-//            Request fromBuffer = ParentMsgFactory.Request.fromBuffer(buffer);
-//            
-//            assert (fromBuffer.getRtt() == request.getRtt());
-//            
-//        } catch (MessageDecodingException ex) {
-//            Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
-//            assert (false);
-//        } catch (MessageEncodingException ex) {
-//            Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
-//            assert (false);
-//        }
-//        
-//    }
-//    
-//    @Test
-//    public void parentResponse() {
-//        TimeoutId id = UUID.nextUUID();
-//        ParentMsg.Response response = new ParentMsg.Response(gSrc, gDest, id, ParentMsg.Result.ACCEPT);
-//        try {
-//            ChannelBuffer buffer = response.toByteArray();
-//            opCodeCorrect(buffer, response);
-//            Response fromBuffer = ParentMsgFactory.Response.fromBuffer(buffer);
-//            
-//            assert (fromBuffer.getStatus() == ParentMsg.Result.ACCEPT);
-//            
-//        } catch (MessageDecodingException ex) {
-//            Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
-//            assert (false);
-//        } catch (MessageEncodingException ex) {
-//            Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
-//            assert (false);
-//        }
-//        
-//    }
-//
-//    @Test
-//    public void parentRemoveParent() {
-//        TimeoutId id = UUID.nextUUID();
-//        ParentMsg.RemoveParent response = new ParentMsg.RemoveParent(gSrc, gDest);
-//        try {
-//            ChannelBuffer buffer = response.toByteArray();
-//            opCodeCorrect(buffer, response);
-//            ParentMsg.RemoveParent fromBuffer = ParentMsgFactory.RemoveParent.fromBuffer(buffer);
-//            
-//            assert (true);
-//            
-//        } catch (MessageDecodingException ex) {
-//            Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
-//            assert (false);
-//        } catch (MessageEncodingException ex) {
-//            Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
-//            assert (false);
-//        }
-//        
-//    }
-//    @Test
-//    public void parentRemoveChild() {
-//        TimeoutId id = UUID.nextUUID();
-//        ParentMsg.RemoveChild response = new ParentMsg.RemoveChild(gSrc, gDest);
-//        try {
-//            ChannelBuffer buffer = response.toByteArray();
-//            opCodeCorrect(buffer, response);
-//            ParentMsg.RemoveChild fromBuffer = ParentMsgFactory.RemoveChild.fromBuffer(buffer);
-//            
-//            assert (true);
-//            
-//        } catch (MessageDecodingException ex) {
-//            Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
-//            assert (false);
-//        } catch (MessageEncodingException ex) {
-//            Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
-//            assert (false);
-//        }
-//        
-//    }
-    @Test
-    public void bootstrapRequest() {
-        TimeoutId id = UUID.nextUUID();
-        BootstrapMsg.GetPeersRequest msg = new BootstrapMsg.GetPeersRequest(gSrc, gDest,
-                overlay, utility.getChunk());
-        msg.setTimeoutId(id);
-        try {
-            ChannelBuffer buffer = msg.toByteArray();
-            opCodeCorrect(buffer, msg);
-            BootstrapMsg.GetPeersRequest res = BootstrapMsgFactory.GetPeersRequestFactory.fromBuffer(buffer);
-            assert (true);
-        } catch (MessageDecodingException ex) {
-            Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
-            assert (false);
-        } catch (MessageEncodingException ex) {
-            Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
-            assert (false);
-        }
-    }
-
-    @Test
-    public void bootstrapResponse() {
-        TimeoutId id = UUID.nextUUID();
-        BootstrapMsg.GetPeersResponse msg = new BootstrapMsg.GetPeersResponse(gSrc, gDest,
-                id, 23, descriptors);
-        try {
-            ChannelBuffer buffer = msg.toByteArray();
-            opCodeCorrect(buffer, msg);
-            BootstrapMsg.GetPeersResponse res =
-                    BootstrapMsgFactory.GetPeersResponse.fromBuffer(buffer);
-            assert (true);
-        } catch (MessageDecodingException ex) {
-            Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
-            assert (false);
-        } catch (MessageEncodingException ex) {
-            Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
-            assert (false);
-        }
-    }
-
-//    @Test
-//    public void changeUtilityRequest() {
-//        TimeoutId id = UUID.nextUUID();
-//        int peersMax = 10;
-//        ChangeUtilityMsg.Request msg = new ChangeUtilityMsg.Request(src, dest,
-//                id, overlay, peersMax, utility);
-//        try {
-//            ChannelBuffer buffer = msg.toByteArray();
-//            opCodeCorrect(buffer, msg);
-//            ChangeUtilityMsg.Request res = ChangeUtilityMsgFactory.Request.fromBuffer(buffer);
-//            assert (true);
-//        } catch (MessageDecodingException ex) {
-//            Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
-//            assert (false);
-//        } catch (MessageEncodingException ex) {
-//            Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
-//            assert (false);
-//        }
-//    }
-//    @Test
-//    public void changeUtilityResponse() {
-//        TimeoutId id = UUID.nextUUID();
-//        ChangeUtilityMsg.Response msg = new ChangeUtilityMsg.Response(src, dest,
-//                id, peers);
-//        try {
-//            ChannelBuffer buffer = msg.toByteArray();
-//            opCodeCorrect(buffer, msg);
-//            ChangeUtilityMsg.Response res = ChangeUtilityMsgFactory.Response.fromBuffer(buffer);
-//            assert (true);
-//        } catch (MessageDecodingException ex) {
-//            Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
-//            assert (false);
-//        } catch (MessageEncodingException ex) {
-//            Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
-//            assert (false);
-//        }
-//    }
     @Test
     public void connectMsgRequest() {
         ConnectMsg.Request msg = new ConnectMsg.Request(gSrc, gSrc,
@@ -655,42 +491,6 @@ public class EncodingDecodingTest {
         }
     }
 
-//    @Test
-//    public void referencesRequestMsg() {
-//        ReferencesMsg.Request msg = new ReferencesMsg.Request(
-//                gSrc, gSrc, id, 10, utility, children);
-//        try {
-//            ChannelBuffer buffer = msg.toByteArray();
-//            opCodeCorrect(buffer, msg);
-//            ReferencesMsg.Request res =
-//                    ReferencesMsgFactory.Request.fromBuffer(buffer);
-//            assert (true);
-//        } catch (MessageDecodingException ex) {
-//            Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
-//            assert (false);
-//        } catch (MessageEncodingException ex) {
-//            Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
-//            assert (false);
-//        }
-//    }
-//    @Test
-//    public void referencesResponseMsg() {
-//        ReferencesMsg.Response msg = new ReferencesMsg.Response(
-//                gSrc, gSrc, id, 10, utility, children);
-//        try {
-//            ChannelBuffer buffer = msg.toByteArray();
-//            opCodeCorrect(buffer, msg);
-//            ReferencesMsg.Response res =
-//                    ReferencesMsgFactory.Response.fromBuffer(buffer);
-//            assert (true);
-//        } catch (MessageDecodingException ex) {
-//            Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
-//            assert (false);
-//        } catch (MessageEncodingException ex) {
-//            Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
-//            assert (false);
-//        }
-//    }
     @Test
     public void setsExchangeRequestMsg() {
         SetsExchangeMsg.Request msg = new SetsExchangeMsg.Request(
@@ -894,43 +694,6 @@ public class EncodingDecodingTest {
         }
     }
 
-//    @Test
-//    public void HpFeasibilityMsg() {
-//        HpFeasibilityMsg.Request msg = new HpFeasibilityMsg.Request(gSrc, gDest, 
-//                remoteClientId, 
-//                src.getId());
-//        msg.setTimeoutId(UUID.nextUUID());
-//        try {
-//            ChannelBuffer buffer = msg.toByteArray();
-//            opCodeCorrect(buffer, msg);
-//            HpFeasibilityMsg.Request res =
-//                    HpFeasibilityMsgFactory.Request.fromBuffer(buffer);
-//        } catch (MessageDecodingException ex) {
-//            Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
-//            assert (false);
-//        } catch (MessageEncodingException ex) {
-//            Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
-//            assert (false);
-//        }
-//
-//        HpFeasibilityMsg.Response response = new HpFeasibilityMsg.Response(gSrc, gDest, remoteClientId,
-//                HpFeasibilityMsg.Response.ResponseType.NAT_COMBINATION_NOT_TRAVERSABLE,
-//                UUID.nextUUID(), HPMechanism.PRP_PRC, false);
-//        try {
-//            ChannelBuffer buffer = response.toByteArray();
-//            opCodeCorrect(buffer, response);
-//            HpFeasibilityMsg.Response res2 =
-//                    HpFeasibilityMsgFactory.Response.fromBuffer(buffer);
-//
-//            assert (true);
-//        } catch (MessageDecodingException ex) {
-//            Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
-//            assert (false);
-//        } catch (MessageEncodingException ex) {
-//            Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
-//            assert (false);
-//        }
-//    }
     @Test
     public void HolePunchingMsg() {
         HolePunchingMsg.Request msg = new HolePunchingMsg.Request(gSrc, gDest, remoteClientId,
@@ -1511,46 +1274,8 @@ public class EncodingDecodingTest {
 
     }
 
-    @Test
-    public void addOverlayRequest() {
-        BootstrapMsg.AddOverlayReq msg = new BootstrapMsg.AddOverlayReq(gSrc, gDest, "name", 12, "desc", 
-                new byte[]{'a', 'd'}, null, 0, 1);
-        msg.setTimeoutId(UUID.nextUUID());
-        try {
-            ChannelBuffer buffer = msg.toByteArray();
-            opCodeCorrect(buffer, msg);
-            BootstrapMsg.AddOverlayReq res =
-                    BootstrapMsgFactory.AddOverlayReq.fromBuffer(buffer);
-            assert (true);
-        } catch (MessageDecodingException ex) {
-            Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
-            assert (false);
-        } catch (MessageEncodingException ex) {
-            Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
-            assert (false);
-        }
 
-    }
 
-    @Test
-    public void addOverlayResponse() {
-        BootstrapMsg.AddOverlayResp msg = new BootstrapMsg.AddOverlayResp(gSrc, gDest, 
-                12, true, true, UUID.nextUUID());
-        try {
-            ChannelBuffer buffer = msg.toByteArray();
-            opCodeCorrect(buffer, msg);
-            BootstrapMsg.AddOverlayResp res =
-                    BootstrapMsgFactory.AddOverlayResp.fromBuffer(buffer);
-            assert (true);
-        } catch (MessageDecodingException ex) {
-            Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
-            assert (false);
-        } catch (MessageEncodingException ex) {
-            Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
-            assert (false);
-        }
-
-    }
 
     @Test
     public void echoMsgRequest() {
@@ -1753,243 +1478,7 @@ public class EncodingDecodingTest {
         }
     }
 
-    @Test
-    public void monitorMsg() {
-        Map<String, String> attrs = new HashMap<String, String>();
-        attrs.put("k", "v");
-        attrs.put("y", "z");
-        MonitorMsg msg = new MonitorMsg(gSrc, gDest, attrs);
-        try {
-            ChannelBuffer buffer = msg.toByteArray();
-            opCodeCorrect(buffer, msg);
-            MonitorMsg res = MonitorMsgFactory.fromBuffer(buffer);
-            assert (res.getAttrValues().size() == attrs.size());
-            assert (res.getAttrValues().keySet().iterator().next().equals(
-                    attrs.keySet().iterator().next()));
-        } catch (MessageDecodingException ex) {
-            Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
-            assert (false);
-        } catch (MessageEncodingException ex) {
-            Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
-            assert (false);
-        }
-    }
-
-    @Test
-    public void interAsRequestMsg() {
-        InterAsGossipMsg.Request msg = new InterAsGossipMsg.Request(
-                gSrc, gSrc, id);
-        try {
-            ChannelBuffer buffer = msg.toByteArray();
-            opCodeCorrect(buffer, msg);
-            InterAsGossipMsg.Request req =
-                    InterAsGossipMsgFactory.Request.fromBuffer(buffer);
-            assert (true);
-        } catch (MessageDecodingException ex) {
-            Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
-            assert (false);
-        } catch (MessageEncodingException ex) {
-            Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
-            assert (false);
-        }
-    }
-
-    @Test
-    public void interAsResponseMsg() {
-        InterAsGossipMsg.Response msg = new InterAsGossipMsg.Response(
-                gSrc, gSrc, gDest, id, descriptors);
-        try {
-            ChannelBuffer buffer = msg.toByteArray();
-            opCodeCorrect(buffer, msg);
-            InterAsGossipMsg.Response res =
-                    InterAsGossipMsgFactory.Response.fromBuffer(buffer);
-            assert (true);
-        } catch (MessageDecodingException ex) {
-            Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
-            assert (false);
-        } catch (MessageEncodingException ex) {
-            Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
-            assert (false);
-        }
-    }
-
-    @Test
-    public void videoConnectionMsgRequest() {
-        boolean randomRequest = false;
-        VideoConnectionMsg.Request msg = new VideoConnectionMsg.Request(gSrc, gDest, UUID.nextUUID(), randomRequest);
-        try {
-            ChannelBuffer buffer = msg.toByteArray();
-            opCodeCorrect(buffer, msg);
-            VideoConnectionMsg.Request req =
-                    VideoConnectionMsgFactory.Request.fromBuffer(buffer);
-            assert (randomRequest == req.isRandomRequest());
-            assert (true);
-        } catch (MessageDecodingException ex) {
-            Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
-            assert (false);
-        } catch (MessageEncodingException ex) {
-            Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
-            assert (false);
-        }
-    }
-
-    @Test
-    public void videoConnectionMsgResponse() {
-        boolean randomRequest = false;
-        boolean acceptConnection = true;
-        VideoConnectionMsg.Response msg = new VideoConnectionMsg.Response(gSrc, gDest, randomRequest, acceptConnection);
-        try {
-            ChannelBuffer buffer = msg.toByteArray();
-            opCodeCorrect(buffer, msg);
-            VideoConnectionMsg.Response res =
-                    VideoConnectionMsgFactory.Response.fromBuffer(buffer);
-            assert (randomRequest == res.wasRandomRequest());
-            assert (acceptConnection == res.connectionAccepted());
-            assert (true);
-        } catch (MessageDecodingException ex) {
-            Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
-            assert (false);
-        } catch (MessageEncodingException ex) {
-            Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
-            assert (false);
-        }
-    }
-
-    @Test
-    public void longSet() {
-        ChannelBuffer buffer = ChannelBuffers.dynamicBuffer(2);
-        Set<Long> longs = new HashSet<Long>();
-        longs.add(1L);
-
-        Set<Long> processedLongs = null;
-
-        try {
-            UserTypesEncoderFactory.writeLongSet(buffer, longs);
-            processedLongs = UserTypesDecoderFactory.readLongSet(buffer);
-
-        } catch (MessageEncodingException ex) {
-            Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        assert (longs.size() == processedLongs.size());
-        Iterator<Long> longsIt = longs.iterator();
-        Iterator<Long> processedLongsIt = processedLongs.iterator();
-        while (longsIt.hasNext() || processedLongsIt.hasNext()) {
-            assert (longsIt.next() == processedLongsIt.next());
-        }
-    }
-
-    @Test
-    public void videoPieceMsgAdvertisement() {
-        Set<Integer> pieceIds = new HashSet<Integer>();
-        for (int i = 0; i < 100; i++) {
-            pieceIds.add(i * 17);
-        }
-        VideoPieceMsg.Advertisement msg = new VideoPieceMsg.Advertisement(gSrc, gDest, UUID.nextUUID(), pieceIds);
-        try {
-            ChannelBuffer buffer = msg.toByteArray();
-            opCodeCorrect(buffer, msg);
-            VideoPieceMsg.Advertisement adv =
-                    VideoPieceMsgFactory.Advertisement.fromBuffer(buffer);
-            assert (true);
-            assert (pieceIds.size() == adv.getAdvertisedPiecesIds().size());
-            assert (adv.getAdvertisedPiecesIds().containsAll(pieceIds));
-        } catch (MessageDecodingException ex) {
-            Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
-            assert (false);
-        } catch (MessageEncodingException ex) {
-            Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
-            assert (false);
-        }
-    }
-
-    @Test
-    public void videoPieceMsgRequest() {
-        Set<Integer> pieceIds = new HashSet<Integer>();
-        for (int i = 0; i < 100; i++) {
-            pieceIds.add(i * 13);
-        }
-        VideoPieceMsg.Request msg = new VideoPieceMsg.Request(gSrc, gDest, UUID.nextUUID(), pieceIds);
-        try {
-            ChannelBuffer buffer = msg.toByteArray();
-            opCodeCorrect(buffer, msg);
-            VideoPieceMsg.Request request =
-                    VideoPieceMsgFactory.Request.fromBuffer(buffer);
-            assert (true);
-            assert (pieceIds.size() == request.getPiecesIds().size());
-            assert (request.getPiecesIds().containsAll(pieceIds));
-        } catch (MessageDecodingException ex) {
-            Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
-            assert (false);
-        } catch (MessageEncodingException ex) {
-            Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
-            assert (false);
-        }
-    }
-
-    @Test
-    public void encodedSubPieceSet() {
-        int globalIndex = 0;
-        ChannelBuffer buffer = ChannelBuffers.dynamicBuffer(3 * 16 * 1024);
-        Set<EncodedSubPiece> pieces = new HashSet<EncodedSubPiece>();
-        Random random = new Random();
-        for (int i = 0; i < 3; i++) {
-            byte[] data = new byte[1316];
-            random.nextBytes(data);
-            EncodedSubPiece piece = new EncodedSubPiece(globalIndex++, i, data, 1);
-            pieces.add(piece);
-        }
-
-        Set<EncodedSubPiece> processedPieces = null;
-        try {
-            UserTypesEncoderFactory.writeEncodedSubPieceSet(buffer, pieces);
-            processedPieces = UserTypesDecoderFactory.readEncodedSubPieceSet(buffer);
-        } catch (MessageEncodingException ex) {
-            Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (MessageDecodingException ex) {
-            Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        assert (pieces.size() == processedPieces.size());
-        Map<Integer, EncodedSubPiece> processedPieceMap = new HashMap<Integer, EncodedSubPiece>();
-
-        for (EncodedSubPiece p : processedPieces) {
-            processedPieceMap.put(p.getEncodedIndex(), p);
-        }
-
-        for (EncodedSubPiece p : pieces) {
-            EncodedSubPiece processedPiece = processedPieceMap.get(p.getEncodedIndex());
-            assert (processedPiece != null);
-            assert (p.getEncodedIndex() == processedPiece.getEncodedIndex());
-            assert (p.getData().length == processedPiece.getData().length);
-            for (int i = 0; i < p.getData().length; i++) {
-                assert (p.getData()[i] == processedPiece.getData()[i]);
-            }
-        }
-    }
-
-    @Test
-    public void videoPieceMsgResponse() {
-        Random random = new Random();
-        byte[] data = new byte[1316];
-        random.nextBytes(data);
-        EncodedSubPiece esp = new EncodedSubPiece(1, 1, data, 0);
-        
-        VideoPieceMsg.Response msg = new VideoPieceMsg.Response(gSrc, gDest, UUID.nextUUID(), esp);
-        try {
-            ChannelBuffer buffer = msg.toByteArray();
-            opCodeCorrect(buffer, msg);
-            VideoPieceMsg.Response response =
-                    VideoPieceMsgFactory.Response.fromBuffer(buffer);
-            assert (true);
-            assert (response.getEncodedSubPiece().equals(esp));
-        } catch (MessageDecodingException ex) {
-            Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
-            assert (false);
-        } catch (MessageEncodingException ex) {
-            Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
-            assert (false);
-        }
-    }
-    
+   
     @Test
     public void stunReportRequest() {
         String report = "bbbbbbbbbbbbbbbbbbb";
@@ -2027,4 +1516,67 @@ public class EncodingDecodingTest {
             assert (false);
         }
     }
+    
+    
+    @Test
+    public void searchRequest() {
+        try {
+            String query = "bbbbbbbbbbbbbbbbbbb";
+            SearchMsg.Request msg = new SearchMsg.Request(gSrc, gDest, UUID.nextUUID(), query);
+            try {
+                ChannelBuffer buffer = msg.toByteArray();
+                opCodeCorrect(buffer, msg);
+                SearchMsg.Request request =
+                        SearchMsgFactory.Request.fromBuffer(buffer);
+                assert (query.equals(request.getQuery()));
+            } catch (MessageDecodingException ex) {
+                Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
+                assert (false);
+            } catch (MessageEncodingException ex) {
+                Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
+                assert (false);
+            }
+        } catch (SearchMsg.IllegalSearchString ex) {
+            Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
+            assert(false);
+        }
+    }    
+    
+    
+    @Test
+    public void searchResponse() {
+        try {
+            TimeoutId id = UUID.nextUUID();
+            int numResponses = 5, responseNum = 1;
+            String res = "day of the diesels day of the diesels day of the diesels"
+                    + "day of the diesels" + "day of the diesels" + "day of the diesels" + "day of the diesels" + "day of the diesels"
+                    + "day of the diesels" + "day of the diesels" + "day of the diesels"+ "day of the diesels" + "day of the diesels"
+                    + "day of the diesels" + "day of the diesels" + "day of the diesels"+ "day of the diesels" + "day of the diesels"
+                    + "day of the diesels" + "day of the diesels" + "day of the diesels"+ "day of the diesels" + "day of the diesels"
+                    + "day of the diesels" + "day of the diesels" + "day of the diesels"+ "day of the diesels" + "day of the diesels"
+                    + "day of the diesels" + "day of the diesels" + "day of the diesels"+ "day of the diesels" + "day of the diesels"
+                    + "day of the diesels" + "day of the diesels" + "day of the diesels"+ "day of the diesels" + "day of the diesels"
+                    + "day of the diesels" + "day of the diesels" + "day of the diesels"+ "day of the diesels" + "day of the diesels";
+            SearchMsg.Response msg = new SearchMsg.Response(gSrc, gDest, id, numResponses, responseNum, res);
+            try {
+                ChannelBuffer buffer = msg.toByteArray();
+                opCodeCorrect(buffer, msg);
+                SearchMsg.Response response =
+                        SearchMsgFactory.Response.fromBuffer(buffer);
+                assert (id.equals(response.getTimeoutId()));
+                assert (response.getNumResponses() == numResponses);
+                assert (response.getResponseNumber() == responseNum);
+                assert (res.compareTo(response.getResults()) == 0);
+            } catch (MessageDecodingException ex) {
+                Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
+                assert (false);
+            } catch (MessageEncodingException ex) {
+                Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
+                assert (false);
+            }
+        } catch (SearchMsg.IllegalSearchString ex) {
+            Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
+                assert (false);
+        }
+    }    
 }

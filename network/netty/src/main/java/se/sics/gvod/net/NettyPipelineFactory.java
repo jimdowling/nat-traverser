@@ -64,8 +64,8 @@ public class NettyPipelineFactory implements ChannelPipelineFactory {
 
 
 //        pipeline.addFirst("byteCounter", byteCounter);
-        pipeline.addLast("decoder", new VodFrameDecoder());
-        pipeline.addLast("encoder", new VodFrameEncoder());
+        pipeline.addLast("decoder", new MsgFrameDecoder());
+        pipeline.addLast("encoder", new MsgFrameEncoder());
 //        pipeline.addLast("decoder", new ObjectDecoder(NettyNetwork.MAX_OBJECT_SIZE));
 //        pipeline.addLast("encoder", new ObjectEncoder(1650));
 //        pipeline.addLast("msgCounter", messageCounter);

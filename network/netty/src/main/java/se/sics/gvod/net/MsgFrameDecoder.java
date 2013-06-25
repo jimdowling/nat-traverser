@@ -14,27 +14,26 @@ import se.sics.gvod.common.msgs.ConnectMsgFactory;
 import se.sics.gvod.common.msgs.DataMsgFactory;
 import se.sics.gvod.common.msgs.DataOfferMsgFactory;
 import se.sics.gvod.common.msgs.DisconnectMsgFactory;
-import se.sics.gvod.bootstrap.msgs.BootstrapMsgFactory;
 import se.sics.gvod.stun.msgs.EchoChangeIpAndPortMsgFactory;
 import se.sics.gvod.stun.msgs.EchoChangePortMsgFactory;
 import se.sics.gvod.stun.msgs.EchoMsgFactory;
 import se.sics.gvod.common.msgs.LeaveMsgFactory;
 import se.sics.gvod.common.msgs.MessageDecodingException;
 import se.sics.gvod.common.msgs.OpCode;
+import static se.sics.gvod.common.msgs.OpCode.SEARCH_REQUEST;
+import static se.sics.gvod.common.msgs.OpCode.SEARCH_RESPONSE;
 import static se.sics.gvod.common.msgs.OpCode.SHUFFLE_REQUEST;
 import static se.sics.gvod.common.msgs.OpCode.SHUFFLE_RESPONSE;
 import se.sics.gvod.common.msgs.ReferencesMsgFactory;
+import se.sics.gvod.common.msgs.SearchMsgFactory;
 import se.sics.gvod.stun.msgs.ServerHostChangeMsgFactory;
 import se.sics.gvod.gradient.msgs.SetsExchangeMsgFactory;
 import se.sics.gvod.common.msgs.UploadingRateMsgFactory;
 import se.sics.gvod.croupier.msgs.ShuffleMsgFactory;
 import se.sics.gvod.gradient.msgs.GradientSearchMsgFactory;
 import se.sics.gvod.hp.msgs.*;
-import se.sics.gvod.interas.msgs.InterAsGossipMsgFactory;
 import se.sics.gvod.net.msgs.RewriteableMsg;
 import se.sics.gvod.stun.msgs.ReportMsgFactory;
-import se.sics.gvod.video.msgs.VideoConnectionMsgFactory;
-import se.sics.gvod.video.msgs.VideoPieceMsgFactory;
 
 /**
  *
@@ -42,13 +41,13 @@ import se.sics.gvod.video.msgs.VideoPieceMsgFactory;
  * 
  * @author jdowling
  */
-public class VodFrameDecoder
+public class MsgFrameDecoder
         extends ReplayingDecoder<DecoderState> {
 
-    private static final Logger logger = LoggerFactory.getLogger(VodFrameDecoder.class);
+    private static final Logger logger = LoggerFactory.getLogger(MsgFrameDecoder.class);
     private OpCode opCode;
 
-    public VodFrameDecoder() {
+    public MsgFrameDecoder() {
         // Set the initial state.
         super(DecoderState.READ_TYPE);
     }
@@ -74,6 +73,15 @@ public class VodFrameDecoder
                 RewriteableMsg msg = null;
 
                 switch (opCode) {
+                  // PEERSEARCH MSGS
+                    case SEARCH_REQUEST:
+                        msg = SearchMsgFactory.Request.fromBuffer(buffer);
+                        break;
+                    case SEARCH_RESPONSE:
+                        msg = SearchMsgFactory.Response.fromBuffer(buffer);
+                        break;
+                                        
+                    // COMMON MSGS
                     case CONNECT_REQUEST:
                         msg = ConnectMsgFactory.Request.fromBuffer(buffer);
                         break;
@@ -124,49 +132,6 @@ public class VodFrameDecoder
                         break;
                     case HASH_RESPONSE:
                         msg = DataMsgFactory.HashResponse.fromBuffer(buffer);
-                        break;
-                    case BOOTSTRAP_REQUEST:
-                        msg = BootstrapMsgFactory.GetPeersRequestFactory.fromBuffer(buffer);
-                        break;
-                    case BOOTSTRAP_RESPONSE:
-                        msg = BootstrapMsgFactory.GetPeersResponse.fromBuffer(buffer);
-                        break;
-                    case BOOTSTRAP_HEARTBEAT:
-                        msg = BootstrapMsgFactory.BootstrapHeartbeatFactory.fromBuffer(buffer);
-                        break;
-                    case BOOTSTRAP_ADD_OVERLAY_REQUEST:
-                        msg = BootstrapMsgFactory.AddOverlayReq.fromBuffer(buffer);
-                        break;
-                    case BOOTSTRAP_ADD_OVERLAY_RESPONSE:
-                        msg = BootstrapMsgFactory.AddOverlayResp.fromBuffer(buffer);
-                        break;
-                    // LIVE STREAMING MSGS
-                    case INTER_AS_GOSSIP_REQUEST:
-                        msg = InterAsGossipMsgFactory.Request.fromBuffer(buffer);
-                        break;
-                    case INTER_AS_GOSSIP_RESPONSE:
-                        msg = InterAsGossipMsgFactory.Response.fromBuffer(buffer);
-                        break;
-//                    case INTRA_AS_GOSSIP_REQUEST:
-//                        msg = IntraAsGossipMsgFactory.Request.fromBuffer(buffer);
-//                        break;
-//                    case INTRA_AS_GOSSIP_RESPONSE:
-//                        msg = IntraAsGossipMsgFactory.Response.fromBuffer(buffer);
-//                        break;
-                    case VIDEO_CONNECTION_REQUEST:
-                        msg = VideoConnectionMsgFactory.Request.fromBuffer(buffer);
-                        break;
-                    case VIDEO_CONNECTION_RESPONSE:
-                        msg = VideoConnectionMsgFactory.Response.fromBuffer(buffer);
-                        break;
-                    case VIDEO_PIECES_ADVERTISEMENT:
-                        msg = VideoPieceMsgFactory.Advertisement.fromBuffer(buffer);
-                        break;
-                    case VIDEO_PIECES_REQUEST:
-                        msg = VideoPieceMsgFactory.Request.fromBuffer(buffer);
-                        break;
-                    case VIDEO_PIECES_PIECES:
-                        msg = VideoPieceMsgFactory.Response.fromBuffer(buffer);
                         break;
                     // GRADIENT MSGS
                     case SETS_EXCHANGE_REQUEST:

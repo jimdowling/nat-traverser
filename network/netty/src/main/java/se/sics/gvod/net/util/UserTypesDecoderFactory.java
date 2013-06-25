@@ -28,7 +28,6 @@ import se.sics.gvod.common.*;
 import se.sics.gvod.timer.NoTimeoutId;
 import se.sics.gvod.timer.TimeoutId;
 import se.sics.gvod.timer.UUID;
-import se.sics.gvod.video.msgs.EncodedSubPiece;
 
 /**
  *
@@ -375,27 +374,6 @@ public class UserTypesDecoderFactory {
             longs.add(l);
         }
         return longs;
-    }
-    
-    public static EncodedSubPiece readEncodedSubPiece(ChannelBuffer buffer) throws MessageDecodingException {
-        int globalId = buffer.readInt();
-        int encodedIndex = buffer.readInt();
-        byte[] pieceData = UserTypesDecoderFactory.readArrayBytes(buffer);
-        int parentId = buffer.readInt();
-        return new EncodedSubPiece(globalId, encodedIndex, pieceData, parentId);
-    }
-    
-    public static Set<EncodedSubPiece> readEncodedSubPieceSet(ChannelBuffer buffer) throws MessageDecodingException {
-        int size = UserTypesDecoderFactory.readUnsignedIntAsTwoBytes(buffer);
-        Set<EncodedSubPiece> pieces = new HashSet<EncodedSubPiece>(size);
-        for(int i = 0; i < size; i++) {
-            int globalId = buffer.readInt();
-            int encodedIndex = buffer.readInt();
-            byte[] pieceData = UserTypesDecoderFactory.readArrayBytes(buffer);
-            int parentId = buffer.readInt();
-            pieces.add(new EncodedSubPiece(globalId, encodedIndex, pieceData, parentId));
-        }
-        return pieces;
     }
     
 }

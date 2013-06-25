@@ -20,6 +20,11 @@ public enum OpCode {
     DISCONNECT_RESPONSE((byte) 0x04),
     DATAOFFER((byte) 0x05),
     LEAVE((byte) 0x06),
+    SHUFFLE_REQUEST((byte) 0x07),
+    SHUFFLE_RESPONSE((byte) 0x08),
+    REPORT_REQUEST((byte) 0x09),
+    REPORT_RESPONSE((byte) 0x10),
+    
     REFERENCES_REQUEST((byte) 0x13),
     REFERENCES_RESPONSE((byte) 0x14),
     UPLOADING_RATE_REQUEST((byte) 0x17),
@@ -31,30 +36,13 @@ public enum OpCode {
     ACK((byte) 0x23),
     HASH_REQUEST((byte) 0x24),
     HASH_RESPONSE((byte) 0x25),
-    GVOD_MESSAGE((byte) 0x26),
+    VOD_MESSAGE((byte) 0x26),
     REWRITEABLE_MESSAGE((byte) 0x27),
-    // BOOTSTRAP MSGS
-    BOOTSTRAP_REQUEST((byte) 0x28),
-    BOOTSTRAP_RESPONSE((byte) 0x29),
-    BOOTSTRAP_HEARTBEAT((byte) 0x30),
-    BOOTSTRAP_ADD_OVERLAY_REQUEST((byte) 0x31),
-    BOOTSTRAP_ADD_OVERLAY_RESPONSE((byte) 0x32),
-    DOWNLOAD_COMPLETED((byte) 0x33),
-    MONITOR_MSG((byte) 0x34),
-    // LIVE STREAMING MSGS
-    INTER_AS_GOSSIP_REQUEST((byte) 0x35),
-    INTER_AS_GOSSIP_RESPONSE((byte) 0x36),
-    //INTRA_AS_GOSSIP_REQUEST((byte) 0x37),
-    //INTRA_AS_GOSSIP_RESPONSE((byte) 0x38),
-    // VIDEO MESSAGES
+    // PEERSEARCH MESSAGES
+    SEARCH_REQUEST((byte) 0x30),
+    SEARCH_RESPONSE((byte) 0x31),
 
-    VIDEO_CONNECTION_REQUEST((byte) 0x39),
-    VIDEO_CONNECTION_RESPONSE((byte) 0x3a),
-    VIDEO_CONNECTION_DISCONNECT((byte) 0x3b),
-    VIDEO_PIECES_ADVERTISEMENT((byte) 0x3c),
-    VIDEO_PIECES_REQUEST((byte) 0x3d),
-    VIDEO_PIECES_PIECEDATA((byte) 0x3e),
-    VIDEO_PIECES_PIECES((byte) 0x3f),
+    
     //GRADIENT MSGS
     TARGET_UTILITY_PROBE_REQUEST((byte) 0x40),
     TARGET_UTILITY_PROBE_RESPONSE((byte) 0x41),
@@ -117,12 +105,7 @@ public enum OpCode {
     RELAY_RESPONSE((byte) 0x82),
     RELAY_ONEWAY((byte) 0x83),
     PONG((byte) 0x084),
-    // STUN REPORTING
-    REPORT_REQUEST((byte) 0x09),
-    REPORT_RESPONSE((byte) 0x10),
-    // CROUPIER MSGS
-    SHUFFLE_REQUEST((byte) 0x07),
-    SHUFFLE_RESPONSE((byte) 0x08),;
+    ;
     private int b;
 
     OpCode(int b) {

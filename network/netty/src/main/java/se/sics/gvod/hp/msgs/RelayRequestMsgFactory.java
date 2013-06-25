@@ -4,7 +4,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import se.sics.gvod.common.msgs.*;
 import org.jboss.netty.buffer.ChannelBuffer;
-import se.sics.gvod.net.VodFrameDecoder;
+import se.sics.gvod.net.MsgFrameDecoder;
 import se.sics.gvod.net.msgs.VodMsg;
 
 public class RelayRequestMsgFactory {
@@ -24,7 +24,7 @@ public class RelayRequestMsgFactory {
         @Override
         protected RelayRequestMsg.ClientToServer process(ChannelBuffer buffer) throws MessageDecodingException {
 
-            VodFrameDecoder decoder = new VodFrameDecoder();
+            MsgFrameDecoder decoder = new MsgFrameDecoder();
             VodMsg message = null;
             try {
                 message = (VodMsg) decoder.parse(buffer);
@@ -52,7 +52,7 @@ public class RelayRequestMsgFactory {
         @Override
         protected RelayRequestMsg.ServerToClient process(ChannelBuffer buffer) throws MessageDecodingException {
 
-            VodFrameDecoder decoder = new VodFrameDecoder();
+            MsgFrameDecoder decoder = new MsgFrameDecoder();
             VodMsg message = null;
             try {
                 message = (VodMsg) decoder.parse(buffer);

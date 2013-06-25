@@ -26,7 +26,6 @@ import se.sics.gvod.common.*;
 import se.sics.gvod.config.VodConfig;
 import se.sics.gvod.timer.NoTimeoutId;
 import se.sics.gvod.timer.TimeoutId;
-import se.sics.gvod.video.msgs.EncodedSubPiece;
 
 /**
  *
@@ -427,30 +426,6 @@ public class UserTypesEncoderFactory {
     public static void writeBoolean(ChannelBuffer buffer, boolean b)
             throws MessageEncodingException {
         UserTypesEncoderFactory.writeUnsignedintAsOneByte(buffer, b == true ? 1 : 0);
-    }
-
-    public static void writeEncodedSubPiece(ChannelBuffer buffer, EncodedSubPiece esp) throws MessageEncodingException {
-        if (esp == null) {
-            throw new IllegalArgumentException("null EncodedSubPiece not allowed");
-        }
-        buffer.writeInt(esp.getGlobalId());
-        buffer.writeInt(esp.getEncodedIndex());
-        UserTypesEncoderFactory.writeArrayBytes(buffer, esp.getData());
-        buffer.writeInt(esp.getParentId());
-    }
-
-    public static void writeEncodedSubPieceSet(ChannelBuffer buffer, Set<EncodedSubPiece> pieces) throws MessageEncodingException {
-        if (pieces == null || pieces.isEmpty()) {
-            throw new IllegalArgumentException("Empty EncodedSubPiece set not allowed");
-        } else {
-            UserTypesEncoderFactory.writeUnsignedintAsTwoBytes(buffer, pieces.size());
-            for (EncodedSubPiece p : pieces) {
-                buffer.writeInt(p.getGlobalId());
-                buffer.writeInt(p.getEncodedIndex());
-                UserTypesEncoderFactory.writeArrayBytes(buffer, p.getData());
-                buffer.writeInt(p.getParentId());
-            }
-        }
     }
 
     public static int getCollectionIntsLength(Collection<Integer> listInts) {

@@ -15,10 +15,10 @@ import se.sics.gvod.common.msgs.Encodable;
  *
  * @author jdowling
  */
-public class VodFrameEncoder extends OneToOneEncoder
+public class MsgFrameEncoder extends OneToOneEncoder
 {
 
-    public VodFrameEncoder() {
+    public MsgFrameEncoder() {
     }
 
     @Override
