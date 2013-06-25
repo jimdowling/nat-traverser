@@ -75,12 +75,11 @@ public class VodConfig extends BaseCommandLineConfig {
     protected Option bootstrapRefreshOption;
     
     // All protocol default params
-    public static final int DEFAULT_RTO = 5 * 1000;
-    public static final int DEFAULT_RTO_RETRIES = 3;
-    public static final double DEFAULT_RTO_SCALE = 1.75;
+    public static final int DEFAULT_RTO = 2 * 1000;
+    public static final int DEFAULT_RTO_RETRIES = 2;
+    public static final double DEFAULT_RTO_SCALE = 1.5;
     //Croupier parameters
     public static final long SHUFFLE_PERIOD = 30 * 1000;
-    public static final long SHUFFLE_TIMEOUT = DEFAULT_RTO;
     public static final int SHUFFLE_LENGTH = 15;
     public static final int RANDOM_VIEW_SIZE = 15;
 

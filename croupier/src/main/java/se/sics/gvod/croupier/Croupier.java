@@ -162,7 +162,8 @@ public class Croupier extends MsgRetryComponent {
 
 
         ScheduleRetryTimeout st =
-                new ScheduleRetryTimeout(config.getShuffleTimeout(), 0);
+                new ScheduleRetryTimeout(config.getRto(),
+                config.getRtoRetries(), config.getRtoScale());
         ShuffleMsg.Request request = new ShuffleMsg.Request(self.getAddress(), node,
                 buffer, self.getDescriptor());
         ShuffleMsg.RequestTimeout retryRequest = new ShuffleMsg.RequestTimeout(st, request);

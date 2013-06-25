@@ -19,7 +19,6 @@ public class GetIpRequest extends Request {
     public static enum NetworkInterfacesMask {
         IGNORE_PRIVATE /* 192.168.*.* IP addresses*/,
         IGNORE_TEN_DOT_PRIVATE /* 10.*.*.* IP addresses*/,
-        IGNORE_PUBLIC ,
         IGNORE_LOOPBACK /*127.0.*.* IP addresses*/,
         NO_MASK
     };

@@ -1,12 +1,10 @@
 package se.sics.gvod.stun.servermain;
 
 import java.io.IOException;
-import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.EnumSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Level;
 import org.slf4j.Logger;
@@ -36,7 +34,6 @@ import se.sics.gvod.net.NettyNetwork;
 import se.sics.gvod.stun.msgs.ReportMsg;
 import se.sics.gvod.timer.Timer;
 import se.sics.gvod.timer.java.JavaTimer;
-import se.sics.kompics.nat.utils.getip.IpAddrStatus;
 
 /**
  * The
@@ -56,19 +53,19 @@ public final class StunServerMain extends ComponentDefinition {
     int altServerPort;
     static List<String> partners = new ArrayList<String>();
     private Address serverAddr;
-    private static Boolean preferPrivateIP;
+    private static Integer pickIp;
 
 //------------------------------------------------------------------------    
     public static void main(String[] args) {
         if (args.length < 2) {
-            System.out.println("Usage: <prog> partner1 preferPrivateIp");
+            System.out.println("Usage: <prog> partner1 [0|1|2|..] (0=public, 1=private1, 2=private2)");
             System.exit(-1);
         }
 
         SEED = (int) System.currentTimeMillis();
         STUN_SERVER_ID = 1;
         partners.add(args[0]);
-        preferPrivateIP = Boolean.parseBoolean(args[1]);
+        pickIp = Integer.parseInt(args[1]);
 
         try {
             VodConfig.init(new String[0]);
@@ -114,8 +111,8 @@ public final class StunServerMain extends ComponentDefinition {
             int mtu = 1500;
 
             try {
-                if (preferPrivateIP) {
-                    addr = event.getTenDotIpAddress();
+                if (pickIp > 0) {
+                    addr = event.getTenDotIpAddress(pickIp);
                     if (addr == null) {
                         System.err.println("No 10.* IP address found. Exiting.");
                         System.exit(0);

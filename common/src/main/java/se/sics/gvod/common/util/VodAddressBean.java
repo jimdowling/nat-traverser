@@ -4,6 +4,7 @@
  */
 package se.sics.gvod.common.util;
 
+import java.io.Serializable;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
@@ -18,7 +19,7 @@ import se.sics.gvod.address.Address;
  *
  * @author jim
  */
-public class VodAddressBean {
+public class VodAddressBean implements Serializable {
 
     private static final Logger logger = LoggerFactory.getLogger(VodAddressBean.class);
     private AddressBean addressBean;

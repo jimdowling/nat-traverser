@@ -4,11 +4,13 @@
  */
 package se.sics.gvod.common.util;
 
+import java.io.Serializable;
+
 /**
  *
  * @author jim
  */
-public class AddressBean {
+public class AddressBean implements Serializable {
 
     private int id;
     private int port;

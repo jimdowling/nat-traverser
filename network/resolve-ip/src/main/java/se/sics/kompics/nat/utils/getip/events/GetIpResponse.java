@@ -53,11 +53,16 @@ public class GetIpResponse extends Response {
         }
     }
 
-    public InetAddress getTenDotIpAddress() {
+    /**
+     * 
+     * @param number the network interface number, starting at 1.
+     * @return 
+     */
+    public InetAddress getTenDotIpAddress(int number) {
         InetAddress addr = null;
-        boolean found = false;
         Iterator<IpAddrStatus> iter = addrs.iterator();
-        while (!found && iter.hasNext()) {
+        int i=0;
+        while (iter.hasNext() && i < number) {
             addr = iter.next().getAddr();
             String textualPrefixAddr = addr.getHostAddress();
             int firstDot = textualPrefixAddr.indexOf(".");
@@ -65,7 +70,7 @@ public class GetIpResponse extends Response {
                 textualPrefixAddr = textualPrefixAddr.substring(0, firstDot);
             }
             if (textualPrefixAddr.compareTo("10") == 0) {
-                found = true;
+                i++;
             } else {
                 addr = null;
             }

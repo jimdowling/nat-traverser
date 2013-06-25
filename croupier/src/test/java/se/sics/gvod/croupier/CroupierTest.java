@@ -95,7 +95,7 @@ public class CroupierTest extends VodRetryComponentTestCase {
                 .setPolicy(VodConfig.CroupierSelectionPolicy.TAIL.name())
                 .setShuffleLength(shuffleLength)
                 .setShufflePeriod(shufflePeriod)
-                .setShuffleTimeout(shuffleTimeout)
+                .setRto(shuffleTimeout)
                 .setViewSize(viewSize)
                 .setSeed(seed)
                 ;
