@@ -838,11 +838,11 @@ public class StunClient extends MsgRetryComponent {
     private void manageHostFailure(Address server, GetNatTypeResponse.Status status) {
         failedHosts.add(server);
         if (echoTimeoutedServers.containsAll(initialServers)) {
-            sendResponse(status);
             logger.debug(compName + " All hosts have timed-out stun");
-        } else if (failedHosts.containsAll(initialServers)) {
             sendResponse(status);
+        } else if (failedHosts.containsAll(initialServers)) {
             logger.debug(compName + " All hosts are identified as failed");
+            sendResponse(status);
         }
     }
 

@@ -599,7 +599,7 @@ public class HolePunchingTestSimulator
                 StunClientConfiguration sc = StunClientConfiguration.build().
                         setRuleExpirationIncrement(3500).
                         setUpnpEnable(false).
-                        setMsgTimeout(retryDelay).
+                        setRto(retryDelay).
                         setRuleExpirationMinWait(1000).
                         setMinimumRtt(3 * 1000).
                         setRandTolerance(10).

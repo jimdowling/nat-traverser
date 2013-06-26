@@ -188,7 +188,7 @@ public final class StunClientDistributedNatEmulatorMain extends ComponentDefinit
             StunClientConfiguration sc = StunClientConfiguration.build().
                     setRuleExpirationIncrement(RULE_EXPIRATION_INCREMENT).
                     setUpnpEnable(false).
-                    setMsgTimeout(MSG_RETRY_TIMEOUT).
+                    setRto(MSG_RETRY_TIMEOUT).
                     setRuleExpirationMinWait(RULE_EXPIRATION_TIMEOUT).
                     setMinimumRtt(MINIMUM_RTT).
                     setRandTolerance(10).

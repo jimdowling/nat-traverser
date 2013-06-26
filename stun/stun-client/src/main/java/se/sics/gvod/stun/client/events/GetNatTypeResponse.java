@@ -9,34 +9,26 @@ import se.sics.gvod.stun.client.RoundTripTime;
 
 public final class GetNatTypeResponse extends Event {
 
-    public static enum Status { SUCCEED, 
-    FAIL, 
-    NO_UPNP, 
-    UPNP_STUN_SERVERS_ENABLED, 
-//    DUPLICATE, 
-//    FIRST_SERVER_SLOW,
-    FIRST_SERVER_FAILED,
-    SECOND_SERVER_FAILED, 
-//    PING_FAILED, 
-    NO_SESSION,
-    ALL_HOSTS_TIMED_OUT, 
-    ONGOING, 
-    NO_SERVER
+    public static enum Status {
+        SUCCEED,
+        FAIL,
+        NO_UPNP,
+        UPNP_STUN_SERVERS_ENABLED,
+        FIRST_SERVER_FAILED,
+        SECOND_SERVER_FAILED,
+        NO_SESSION,
+        ALL_HOSTS_TIMED_OUT,
+        ONGOING,
+        NO_SERVER
     };
-
     private final Nat nat;
-
     private final Status status;
-
     private final InetAddress externalUpnpIp;
     private final int mappedUpnpPort;
-    
     private final Address stunServer;
-    
     private final List<RoundTripTime> roundTripTimes;
 
-
-    public GetNatTypeResponse( Nat nat, Status status, Address stunServer, List<RoundTripTime> rtts) {
+    public GetNatTypeResponse(Nat nat, Status status, Address stunServer, List<RoundTripTime> rtts) {
         this.nat = nat;
         this.status = status;
         this.mappedUpnpPort = 0;
@@ -45,7 +37,7 @@ public final class GetNatTypeResponse extends Event {
         this.roundTripTimes = rtts;
     }
 
-    public GetNatTypeResponse(Nat natType, Status status, InetAddress externalUpnpIp, int mappedUpnpPort, List<RoundTripTime> pingTimes ) {
+    public GetNatTypeResponse(Nat natType, Status status, InetAddress externalUpnpIp, int mappedUpnpPort, List<RoundTripTime> pingTimes) {
         this.nat = natType;
         this.status = status;
         this.externalUpnpIp = externalUpnpIp;
@@ -57,7 +49,7 @@ public final class GetNatTypeResponse extends Event {
     public Address getStunServer() {
         return this.stunServer;
     }
-    
+
     public InetAddress getExternalUpnpIp() {
         return externalUpnpIp;
     }
@@ -77,5 +69,4 @@ public final class GetNatTypeResponse extends Event {
     public List<RoundTripTime> getRoundTripTimes() {
         return roundTripTimes;
     }
-    
 }

@@ -197,13 +197,13 @@ public final class StunClientMain extends ComponentDefinition {
             }
 
             self.setNat(event.getNat());
-    
+
             String report = "REPORT:\t" + event.getStatus() + " - " + self.getAddress() + "\n"
                     + event.getNat();
             logger.info(report);
             sendReport(report);
 
-            if (event.getNat() == null) {
+            if (event.getNat() == null || event.getStatus() != GetNatTypeResponse.Status.NO_UPNP) {
                 Kompics.shutdown();
                 System.exit(0);
             }
@@ -239,10 +239,13 @@ public final class StunClientMain extends ComponentDefinition {
             new Handler<ReportMsg.RequestTimeout>() {
         @Override
         public void handle(ReportMsg.RequestTimeout msg) {
-            logger.warn("Could not send STUN report to server: " + server);
             retries--;
             if (retries > 0) {
                 sendReport(msg.getRequestMsg().getReport());
+            } else {
+                logger.warn("Could not send STUN report to server: " + server);
+                Kompics.shutdown();
+                System.exit(0);
             }
         }
     };

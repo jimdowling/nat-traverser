@@ -213,7 +213,7 @@ public class StunClientTest {
                         setUpnpEnable(upnpEnabled).
                         setUpnpTimeout(500).
                         setMinimumRtt(500).
-                        setMsgTimeout(500).
+                        setRto(500).
                         setRtoRetries(0)), stunClientComp.getControl());
                 ruleLifeTime = ruleLifeTime + (ruleLifeTime / 2);
 

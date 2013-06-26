@@ -230,7 +230,7 @@ public class StunClientDistributedTest
                     setRuleExpirationIncrement(RULE_EXPIRATION_INCREMENT).
                     setUpnpEnable(true).
                     setUpnpTimeout(STUN_UPNP_TIMEOUT).
-                    setMsgTimeout(MSG_RETRY_TIMEOUT).
+                    setRto(MSG_RETRY_TIMEOUT).
                     setRuleExpirationMinWait(RULE_EXPIRATION_TIMEOUT).
                     setMinimumRtt(MINIMUM_RTT).
                     setRandTolerance(10).

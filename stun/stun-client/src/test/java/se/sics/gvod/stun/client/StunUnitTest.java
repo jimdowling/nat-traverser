@@ -53,7 +53,7 @@ public class StunUnitTest extends VodRetryComponentTestCase {
                 setUpnpEnable(false).
                 setUpnpTimeout(500).
                 setMinimumRtt(500).
-                setMsgTimeout(500).
+                setRto(500).
                 setRtoRetries(0)));
         stunServers = new HashSet<Address>();
     }
