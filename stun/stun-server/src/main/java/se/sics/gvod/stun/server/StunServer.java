@@ -140,7 +140,6 @@ public final class StunServer extends MsgRetryComponent {
             for (RTTStore.RTT rtt : RTTStore.getAllOnAvgBetterRtts(self.getId(), worstRto, 20 /* tolerance*/)) {
                 if (rtt.getAddress().isOpen()) {
                     addPartner(rtt.getAddress());
-
                     if (--bestOpenNodes == 0) {
                         break;
                     }

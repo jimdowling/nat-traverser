@@ -166,11 +166,11 @@ public final class StunClientMain extends ComponentDefinition {
                     setRuleExpirationIncrement(RULE_EXPIRATION_INCREMENT).
                     setUpnpEnable(ENABLE_UPNP).
                     setUpnpTimeout(STUN_UPNP_TIMEOUT).
-                    setMsgTimeout(MSG_RETRY_TIMEOUT).
+                    setRto(MSG_RETRY_TIMEOUT).
                     setRuleExpirationMinWait(RULE_EXPIRATION_TIMEOUT).
                     setMinimumRtt(MINIMUM_RTT).
                     setRandTolerance(10).
-                    setRtoRetries(5).
+                    setRtoRetries(2).
                     setRtoScale(1.2);
 
             self = new SelfImpl(sca);

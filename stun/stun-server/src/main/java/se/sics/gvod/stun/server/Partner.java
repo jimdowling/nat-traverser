@@ -16,8 +16,8 @@ import se.sics.gvod.common.RTTStore;
  */
 public class Partner implements Comparable<Partner>, Serializable {
 
-	private static final long serialVersionUID = 1L;
-	public final static int DEFAULT_RTT = 1000;
+    private static final long serialVersionUID = 1L;
+    public final static int DEFAULT_RTT = 1000;
     private final VodAddress addr;
     private RTTStore.RTT rtt;
 
@@ -45,7 +45,7 @@ public class Partner implements Comparable<Partner>, Serializable {
     public void updateRtt(int nodeId, long rtt) {
         RTTStore.addSample(nodeId, addr, rtt);
     }
-    
+
     public RttStats getRttStats() {
         return rtt.getRttStats();
     }

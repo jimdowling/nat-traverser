@@ -135,10 +135,6 @@ public final class StunClientConfiguration extends AbstractConfiguration<StunCli
         return this;
     }
 
-    public StunClientConfiguration setMsgTimeout(int msgTimeout) {
-        this.rto = msgTimeout;
-        return this;
-    }
 
     public StunClientConfiguration setRandTolerance(int randTolerance) {
         this.randTolerance = randTolerance;

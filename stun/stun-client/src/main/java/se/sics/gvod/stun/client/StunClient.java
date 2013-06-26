@@ -304,7 +304,7 @@ public class StunClient extends MsgRetryComponent {
         long server2PartnerRto = session.getBestPartnerRtt();
         RoundTripTime echoRtt = echoRtts.get(target.getPeerAddress());
         long client2ServerRtt = (echoRtt != null) ? echoRtt.getRtt() : config.getRto();
-        long timeout = (client2ServerRtt * 3) + (server2PartnerRto)
+        long timeout = (client2ServerRtt * 2) + (server2PartnerRto)
                 + config.getMinimumRtt();
         EchoChangeIpAndPortMsg.Request echoChangeIpReq = new EchoChangeIpAndPortMsg.Request(
                 self.getAddress(), target, transactionId);
@@ -317,7 +317,7 @@ public class StunClient extends MsgRetryComponent {
 
         logger.debug(compName + "Sending EchoChangeIpandPort from :"
                 + self.getAddress() + " to" + target.getIp()
-                + " timeout = 3*(" + client2ServerRtt + " + "
+                + " timeout = 2*(" + client2ServerRtt + " + "
                 + server2PartnerRto + ")" + " retries is " + config.getRtoRetries()
                 + " tid: " + transactionId);
 
@@ -329,7 +329,7 @@ public class StunClient extends MsgRetryComponent {
                 self.getAddress(), target, transactionId);
         RoundTripTime echoRtt = echoRtts.get(target.getPeerAddress());
         long timeout = (echoRtt != null)
-                ? (echoRtt.getRtt() + config.getMinimumRtt()) : (5000 + config.getMinimumRtt());
+                ? (echoRtt.getRtt() + config.getMinimumRtt()) : config.getRto();
 
         ScheduleRetryTimeout st =
                 new ScheduleRetryTimeout(timeout, config.getRtoRetries(),

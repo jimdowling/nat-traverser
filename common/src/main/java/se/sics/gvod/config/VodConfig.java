@@ -104,8 +104,8 @@ public class VodConfig extends BaseCommandLineConfig {
     static int STUN_MIN_RTT = 250;
     static int STUN_RTO = 2*1000;
     static int STUN_RTO_RETRIES = 2;
-    static double STUN_RTO_SCALE = 1.75d;
-    static int STUN_UPNP_TIMEOUT = 10*1000;
+    static double STUN_RTO_SCALE = 1.5d;
+    static int STUN_UPNP_TIMEOUT = 6*1000;
     static int STUN_UPNP_DISCOVERY_TIMEOUT = 3*1000;
     static boolean STUN_UPNP_ENABLED = false;
     static boolean STUN_MEASURE_NAT_BINDING_TIMEOUT = false;
