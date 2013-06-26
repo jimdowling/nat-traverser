@@ -3,6 +3,7 @@ package se.sics.gvod.stun.clientmain;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.Set;
 import org.apache.log4j.Logger;
@@ -69,8 +70,9 @@ public final class StunClientMain extends ComponentDefinition {
     private Address server;
     private Self self;
     private int retries = 3;
-
+    private static Integer pickIp;
 //------------------------------------------------------------------------    
+
     public static class MsgTimeout extends Timeout {
 
         public MsgTimeout(ScheduleTimeout request) {
@@ -82,7 +84,8 @@ public final class StunClientMain extends ComponentDefinition {
     public static void main(String[] args) {
         // This initializes the Kompics runtime, and creates an instance of Root
         if (args.length < 1) {
-            System.out.println("Usage: <prog> server [client-port]");
+            System.out.println("Usage: <prog> server [enable-upnp] [0|1|2 "
+                    + "(publicIp|privIp1|privIp2) [enable-natBindingTimeoutMeasure] [clientPort] ");
             System.exit(0);
         }
 
@@ -92,10 +95,13 @@ public final class StunClientMain extends ComponentDefinition {
             ENABLE_UPNP = Boolean.parseBoolean(args[1]);
         }
         if (args.length > 2) {
-            NAT_BINDING_TIMEOUT_MEASURE = Boolean.parseBoolean(args[2]);
+            pickIp = Integer.parseInt(args[2]);
         }
         if (args.length > 3) {
-            CLIENT_PORT = Integer.parseInt(args[3]);
+            NAT_BINDING_TIMEOUT_MEASURE = Boolean.parseBoolean(args[3]);
+        }
+        if (args.length > 4) {
+            CLIENT_PORT = Integer.parseInt(args[4]);
         }
         try {
             VodConfig.init(new String[0]);
@@ -139,13 +145,25 @@ public final class StunClientMain extends ComponentDefinition {
         @Override
         public void handle(Start event) {
             // ignore planetlab apis
-            trigger(new GetIpRequest(false), resolveIp.getPositive(ResolveIpPort.class));
+            if (pickIp == 0) {
+                trigger(new GetIpRequest(false, EnumSet.of(
+                        GetIpRequest.NetworkInterfacesMask.IGNORE_LOOPBACK,
+                        GetIpRequest.NetworkInterfacesMask.IGNORE_TEN_DOT_PRIVATE,
+                        GetIpRequest.NetworkInterfacesMask.IGNORE_PRIVATE)),
+                        resolveIp.getPositive(ResolveIpPort.class));
+            } else {
+                trigger(new GetIpRequest(false, EnumSet.of(
+                        GetIpRequest.NetworkInterfacesMask.IGNORE_LOOPBACK,
+                        GetIpRequest.NetworkInterfacesMask.IGNORE_PRIVATE)),
+                        resolveIp.getPositive(ResolveIpPort.class));
+            }
         }
     };
 //------------------------------------------------------------------------    
     public Handler<GetIpResponse> handleGetIpResponse = new Handler<GetIpResponse>() {
         @Override
         public void handle(GetIpResponse event) {
+
             try {
                 server = new Address(InetAddress.getByName(SERVER), VodConfig.DEFAULT_STUN_PORT,
                         VodConfig.DEFAULT_STUN_ID);
@@ -154,8 +172,19 @@ public final class StunClientMain extends ComponentDefinition {
                 throw new IllegalArgumentException(e.toString());
             }
 
-            InetAddress addr = null;
-            addr = event.getIpAddress();
+            InetAddress addr;
+
+            if (pickIp > 0) {
+                addr = event.getTenDotIpAddress(pickIp);
+                if (addr == null) {
+                    System.err.println("No 10.* IP address found. Exiting.");
+                    System.exit(0);
+                }
+            } else {
+                addr = event.getBoundIp();
+            }
+
+//            addr = event.getIpAddress();
             logger.info("my ip is " + addr);
             Address stunClientAddress = new Address(addr, CLIENT_PORT, CLIENT_ID);
             trigger(new NettyInit(stunClientAddress, true, SEED), network.getControl());
@@ -170,8 +199,8 @@ public final class StunClientMain extends ComponentDefinition {
                     setRuleExpirationMinWait(RULE_EXPIRATION_TIMEOUT).
                     setMinimumRtt(MINIMUM_RTT).
                     setRandTolerance(10).
-                    setRtoRetries(2).
-                    setRtoScale(1.2);
+                    setRtoRetries(20).
+                    setRtoScale(1.0);
 
             self = new SelfImpl(sca);
             trigger(new StunClientInit(self, SEED,
