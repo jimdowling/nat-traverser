@@ -19,7 +19,6 @@ Any value defined here will override the pom.xml file value but is only applicab
         <configurations>
             <configuration id="croupier" profiles=""/>
             <configuration id="gradient" profiles=""/>
-            <configuration id="ls-video" profiles=""/>
             <configuration id="natTraverser" profiles=""/>
         </configurations>
     </config-data>

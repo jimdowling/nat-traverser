@@ -86,7 +86,7 @@ public class SelfImpl extends SelfBase
     public VodDescriptor getDescriptor() {
         int age = 0;
         return new VodDescriptor(getAddress(), VodView.getPeerUtility(this), 
-                age, VodConfig.MTU_MEASURED);
+                age, VodConfig.LB_MTU_MEASURED);
     }
 
     @Override

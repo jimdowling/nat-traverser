@@ -192,7 +192,7 @@ public final class StunClientDistributedNatEmulatorMain extends ComponentDefinit
                     setRuleExpirationMinWait(RULE_EXPIRATION_TIMEOUT).
                     setMinimumRtt(MINIMUM_RTT).
                     setRandTolerance(10).
-                    setNumMsgRetries(0);
+                    setRtoRetries(0);
             
             trigger(new StunClientInit(new SelfNoParents(sca), SEED, 
                     sc), stunClient.getControl());
@@ -203,7 +203,7 @@ public final class StunClientDistributedNatEmulatorMain extends ComponentDefinit
 
             Set<Address> servers = new HashSet<Address>();
             servers.add(server);
-            trigger(new GetNatTypeRequest(servers, 1),
+            trigger(new GetNatTypeRequest(servers, 1, true),
                     stunClient.getPositive(StunPort.class));
             trigger(st, timer.getPositive(Timer.class));
 

@@ -54,7 +54,7 @@ public abstract class RelayMsgNettyFactory {
 //        @Override
 //        protected RewriteableMsg process(ChannelBuffer buffer) throws MessageDecodingException {
 //            return new RelayMsgNetty.Request(gvodSrc, gvodDest, clientId, remoteId,
-//                    nextDest, 0 /*timeoutInMs*/, 0 /*retries*/, 1.0d /*scaleRto*/,  timeoutId);
+//                    nextDest, 0 /*timeoutInMs*/, 0 /*retries*/, 1.0d /*rtoScale*/,  timeoutId);
 //        }
     }
 

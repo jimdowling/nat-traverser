@@ -21,17 +21,17 @@ public class HpUnregisterMsg {
     public static final class Request extends VodMsgNetty {
 
         static final long serialVersionUID = 44574788L;
-        private final long delay;
+        private final int delay;
         private final RegisterStatus status;
 
-        public Request(VodAddress src, VodAddress dest, long delay,
+        public Request(VodAddress src, VodAddress dest, int delay,
                 RegisterStatus status) {
             super(src, dest);
             this.delay = delay;
             this.status = status;
         }
 
-        public Request(Request msg, VodAddress src, long delay,
+        public Request(Request msg, VodAddress src, int delay,
                 RegisterStatus status) {
             super(src, msg.getVodDestination());
             this.delay = delay;
@@ -43,7 +43,7 @@ public class HpUnregisterMsg {
             return status;
         }
 
-        public long getDelay() {
+        public int getDelay() {
             return delay;
         }
 
@@ -66,7 +66,7 @@ public class HpUnregisterMsg {
         @Override
         public ChannelBuffer toByteArray() throws MessageEncodingException {
             ChannelBuffer buffer = createChannelBufferWithHeader();
-            buffer.writeLong(delay);
+            buffer.writeInt(delay);
             UserTypesEncoderFactory.writeUnsignedintAsOneByte(buffer, status.ordinal());
             return buffer;
         }

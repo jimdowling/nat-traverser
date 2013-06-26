@@ -103,17 +103,17 @@ public class Stats {
         this.privatePartners.addAll(privatePartners);
 
         if (publicEstimation == 0) {
-            publicSize = VodConfig.RANDOM_VIEW_SIZE / 2;
+            publicSize = VodConfig.CROUPIER__VIEW_SIZE / 2;
         } else {
             if (publicEstimation > 1.0d || publicEstimation < 0.0d) {
-                publicSize = VodConfig.RANDOM_VIEW_SIZE / 2;
+                publicSize = VodConfig.CROUPIER__VIEW_SIZE / 2;
             } else {
-                publicSize = (int) Math.round(VodConfig.RANDOM_VIEW_SIZE * publicEstimation);
+                publicSize = (int) Math.round(VodConfig.CROUPIER__VIEW_SIZE * publicEstimation);
             }
         }
         this.publicEstimation = estimation;
 
-        privateSize = VodConfig.RANDOM_VIEW_SIZE - publicSize;
+        privateSize = VodConfig.CROUPIER__VIEW_SIZE - publicSize;
 
 
     }

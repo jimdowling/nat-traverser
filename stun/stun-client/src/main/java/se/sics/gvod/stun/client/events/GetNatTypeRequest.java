@@ -11,22 +11,28 @@ public final class GetNatTypeRequest extends Event {
     private final Set<Address> stunServerAddresses;
     private final int timeout;
     private final int msgRetryTimeout;
-    private final int numRetries;
-    private final double scaleRto;
+    private final int rtoRetries;
+    private final double rtoScale;
+    private final boolean measureNatBindingTimeout;
 
-    public GetNatTypeRequest(Set<Address> stunServerAddresses) {
-        this(stunServerAddresses, 0);
+    public GetNatTypeRequest(Set<Address> stunServerAddresses, boolean measureNatBindingTimeout) {
+        this(stunServerAddresses, 0, measureNatBindingTimeout);
     }
     
-    public GetNatTypeRequest(Set<Address> stunServerAddresses, int timeout) {
-        this(stunServerAddresses, timeout, 
-                StunClientConfiguration.build().getMsgRetryDelay(), 
-                StunClientConfiguration.build().getNumMsgRetries(), 
-                StunClientConfiguration.build().getMsgRetryDelay());
+    public GetNatTypeRequest(Set<Address> stunServerAddresses, int timeout, 
+            boolean measureNatBindingTimeout) {
+        this(stunServerAddresses, 
+                timeout,
+                measureNatBindingTimeout,
+                StunClientConfiguration.build().getRto(), 
+                StunClientConfiguration.build().getRtoRetries(), 
+                StunClientConfiguration.build().getRto()
+                );
     }
 
     public GetNatTypeRequest(Set<Address> stunServerAddresses, int timeout,
-            int msgRetryTimeout,  int numRetries, double scaleRto) {
+            boolean measureNatBindingTimeout,
+            int msgRetryTimeout,  int rtoRetries, double rtoScale) {
 
         if (stunServerAddresses == null) {
             throw new IllegalArgumentException("Stun server address was null.");
@@ -34,11 +40,16 @@ public final class GetNatTypeRequest extends Event {
 
         this.stunServerAddresses = stunServerAddresses;
         this.timeout = timeout;
+        this.measureNatBindingTimeout = measureNatBindingTimeout;
         this.msgRetryTimeout = msgRetryTimeout;
-        this.numRetries = numRetries;
-        this.scaleRto = scaleRto;
+        this.rtoRetries = rtoRetries;
+        this.rtoScale = rtoScale;
     }
 
+    public boolean isMeasureNatBindingTimeout() {
+        return measureNatBindingTimeout;
+    }
+    
     public Set<Address> getStunServerAddresses() {
         return this.stunServerAddresses;
     }
@@ -47,16 +58,16 @@ public final class GetNatTypeRequest extends Event {
         return this.timeout;
     }
 
-    public int getMsgRetryTimeout() {
+    public int getRto() {
         return msgRetryTimeout;
     }
 
-    public int getNumRetries() {
-        return numRetries;
+    public int getRtoRetries() {
+        return rtoRetries;
     }
 
-    public double getScaleRto() {
-        return scaleRto;
+    public double getRtoScale() {
+        return rtoScale;
     }
     
 }

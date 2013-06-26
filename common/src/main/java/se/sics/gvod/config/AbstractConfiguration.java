@@ -110,8 +110,6 @@ public class AbstractConfiguration<T extends AbstractConfiguration> {
     public static AbstractConfiguration load(Class<? extends AbstractConfiguration> type)
             throws IOException {
         try {
-//            Constructor[] c = type.getConstructors();
-//            instance = (AbstractConfiguration) c[0].newInstance();
             Constructor<? extends AbstractConfiguration> c = type.getConstructor();
             instance = c.newInstance();
             AbstractConfiguration ac = instance.loadP(type,

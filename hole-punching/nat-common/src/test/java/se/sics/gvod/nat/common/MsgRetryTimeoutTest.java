@@ -28,8 +28,7 @@ import se.sics.gvod.timer.java.JavaTimer;
 /**
  * Unit test for simple App.
  */
-public class MsgRetryTimeoutTest
-        extends TestCase
+public class MsgRetryTimeoutTest extends TestCase
 {
 
     private Logger logger = LoggerFactory.getLogger(getClass().getName());

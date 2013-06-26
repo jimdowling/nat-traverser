@@ -26,23 +26,23 @@ public class GoMsg
         private final HPMechanism holePunchingMechanism;
         private final HPRole holePunchingRole;
         private int PRP_PRP_interleavedPort;
-        private int numRetries;
+        private int rtoRetries;
         private boolean bindPort;
 
         public Request(VodAddress src, VodAddress dest,
                 VodAddress openedHole,
                 HPMechanism holePunchingMechanism,
-                HPRole holePunchingRole, int numRetries,
+                HPRole holePunchingRole, int rtoRetries,
                 TimeoutId msgTimeoutId)
         {
             this(src, dest, openedHole, holePunchingMechanism,
-                    holePunchingRole, numRetries, 0, false, msgTimeoutId);
+                    holePunchingRole, rtoRetries, 0, false, msgTimeoutId);
         }
         
         public Request(VodAddress src, VodAddress dest,
                 VodAddress openedHole,
                 HPMechanism holePunchingMechanism,
-                HPRole holePunchingRole, int numRetries,
+                HPRole holePunchingRole, int rtoRetries,
                 int PRP_PRP_interleavedPort,
                 boolean bindPort,
                 TimeoutId msgTimeoutId)
@@ -51,7 +51,7 @@ public class GoMsg
             this.openedHole = openedHole;
             this.holePunchingMechanism = holePunchingMechanism;
             this.holePunchingRole = holePunchingRole;
-            this.numRetries = numRetries;
+            this.rtoRetries = rtoRetries;
             this.PRP_PRP_interleavedPort = PRP_PRP_interleavedPort;
             this.bindPort = bindPort;
         }
@@ -60,8 +60,8 @@ public class GoMsg
             return bindPort;
         }
         
-        public int getNumRetries() {
-            return numRetries;
+        public int getRtoRetries() {
+            return rtoRetries;
         }
         
         public int getRemoteId() {
@@ -116,7 +116,7 @@ public class GoMsg
             UserTypesEncoderFactory.writeUnsignedintAsTwoBytes(buffer,
                     PRP_PRP_interleavedPort);
             UserTypesEncoderFactory.writeUnsignedintAsOneByte(buffer,
-                    numRetries);
+                    rtoRetries);
             UserTypesEncoderFactory.writeBoolean(buffer, bindPort);
             return buffer;
         }
@@ -124,7 +124,7 @@ public class GoMsg
         @Override
         public RewriteableMsg copy() {
             GoMsg.Request copy = new GoMsg.Request(vodSrc, vodDest, openedHole,
-                    holePunchingMechanism, holePunchingRole, numRetries, 
+                    holePunchingMechanism, holePunchingRole, rtoRetries, 
                     PRP_PRP_interleavedPort, bindPort,
                     msgTimeoutId);
             copy.setTimeoutId(timeoutId);

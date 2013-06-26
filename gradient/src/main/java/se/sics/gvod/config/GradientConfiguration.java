@@ -31,36 +31,44 @@ public class GradientConfiguration
     /** 
      * Fields cannot be private. Package protected, ok.
      */
-    int similarSetSize;
-    long setsExchangePeriod;
-    long setsExchangeTimeout;
-    // Timeout for search msgs up the Gradient
-    long searchRequestTimeout;
+    // Max Number of references to neighbours stored in a gradient view
+    int viewSize;
+    // Number of best similar peers that should be sent in each sets exchange response.
+    int shuffleLength; //10
+    // How often to exchange gradient views with a neighbour
+    int shufflePeriod;
+    // When searching up the Gradient, ???
     int utilityThreshold;
+    // Fingers are long-range links (small world links) to nodes higher up the gradient
+    int numFingers; 
+    // Range is from 0-1.0. Higher temperature (nearer 1) causes the gradient to converge slower, 
+    // but with lower probability of having multiple nodes thinking they are the leader.
+    // Lower temperatures (nearer 0.5) cause increasingly random neighbour selection.
+    double temperature; 
+
+    // Timeout for search msgs up the Gradient
+    int searchRequestTimeout;
     // Number of parallel probes to send
     int numParallelSearches; // 5
     //Time-To-Live used for Gradient search messages.
     int searchTtl; //5
-    //Number of best similar peers that should be sent in each sets exchange response.
-    int numBestSimilarPeers; //10
-    int numFingers; 
-    double temperature; 
+    int rto;
 
     /** 
      * Default constructor comes first.
      */
     public GradientConfiguration() {
         this(VodConfig.getSeed(),
-                VodConfig.SIMILAR_SET_SIZE,
-                VodConfig.SETS_EXCHANGE_PERIOD,
-                VodConfig.SETS_EXCHANGE_TIMEOUT,
-                VodConfig.PROBE_REQUEST_TIMEOUT,
-                VodConfig.UTILITY_THRESHOLD,
-                VodConfig.NUM_OF_PROBES,
-                VodConfig.PROBE_TTL,
-                VodConfig.NUM_BEST_SIMILAR_PEERS,
-                500 /* default numChunks */,
-                0.9d /*temperature*/
+                VodConfig.GRADIENT_VIEW_SIZE,
+                VodConfig.GRADIENT_SHUFFLE_LENGTH,
+                VodConfig.GRADIENT_SHUFFLE_PERIOD,
+                VodConfig.GRADIENT_UTILITY_THRESHOLD,
+                VodConfig.GRADIENT_NUM_FINGERS,
+                VodConfig.GRADIENT_TEMPERATURE,
+                VodConfig.GRADIENT_SEARCH_TIMEOUT,
+                VodConfig.GRADIENT_NUM_PARALLEL_SEARCHES,
+                VodConfig.GRADIENT_SEARCH_TTL,
+                VodConfig.GRADIENT_SHUFFLE_TIMEOUT
                 );
     }
 
@@ -69,28 +77,28 @@ public class GradientConfiguration
      */
     public GradientConfiguration(
             int seed, 
-            int similarSetSize, 
-            long setsExchangePeriod,
-            long setsExchangeTimeout, 
-            long searchRequestTimeout,
+            int viewSize, 
+            int shuffleLength,
+            int shufflePeriod,
             int utilityThreshold,
+            int numFingers,
+            double temperature,
+            int searchRequestTimeout,
             int numParallelSearches,
             int searchTtl,
-            int numberOfBestSimilarPeers,
-            int numFingers,
-            double temperature
+            int rto
             ) {
         super(seed);
-        this.similarSetSize = similarSetSize;
-        this.setsExchangeTimeout = setsExchangeTimeout;
-        this.setsExchangePeriod = setsExchangePeriod;
+        this.viewSize = viewSize;
+        this.shuffleLength = shuffleLength;
+        this.shufflePeriod = shufflePeriod;
         this.searchRequestTimeout = searchRequestTimeout;
         this.utilityThreshold = utilityThreshold;
         this.numParallelSearches = numParallelSearches;
         this.searchTtl = searchTtl;
-        this.numBestSimilarPeers = numberOfBestSimilarPeers;
         this.numFingers = numFingers;
         this.temperature = temperature;
+        this.rto = rto;
     }
 
     public static GradientConfiguration build() {
@@ -101,16 +109,16 @@ public class GradientConfiguration
         return temperature;
     }
     
-    public int getSimilarSetSize() {
-        return similarSetSize;
+    public int getViewSize() {
+        return viewSize;
     }
 
     public int getSearchTtl() {
         return searchTtl;
     }
 
-    public long getSetsExchangeTimeout() {
-        return setsExchangeTimeout;
+    public int getRto() {
+        return rto;
     }
 
     public int getFingers() {
@@ -124,21 +132,21 @@ public class GradientConfiguration
     /**
      * @return the setsExchangeDelay
      */
-    public long getSetsExchangeDelay() {
-        return setsExchangeTimeout;
+    public int getSetsExchangeDelay() {
+        return rto;
     }
 
     /**
      * @return the setsExchangePeriod
      */
-    public long getSetsExchangePeriod() {
-        return setsExchangePeriod;
+    public int getSetsExchangePeriod() {
+        return shufflePeriod;
     }
 
     /**
      * @return the probeRequestTimeout
      */
-    public long getSearchRequestTimeout() {
+    public int getSearchRequestTimeout() {
         return searchRequestTimeout;
     }
 
@@ -160,25 +168,25 @@ public class GradientConfiguration
      * @return the numberOfBestSimilarPeers
      */
     public int getNumBestSimilarPeers() {
-        return numBestSimilarPeers;
+        return shuffleLength;
     }
 
     public GradientConfiguration setSimilarSetSize(int similarSetSize) {
-        this.similarSetSize = similarSetSize;
+        this.viewSize = similarSetSize;
         return this;
     }
 
-    public GradientConfiguration setSetsExchangePeriod(long setsExchangePeriod) {
-        this.setsExchangePeriod = setsExchangePeriod;
+    public GradientConfiguration setShufflePeriod(int shufflePeriod) {
+        this.shufflePeriod = shufflePeriod;
         return this;
     }
 
-    public GradientConfiguration setSetsExchangeTimeout(long setsExchangeTimeout) {
-        this.setsExchangeTimeout = setsExchangeTimeout;
+    public GradientConfiguration setRto(int rto) {
+        this.rto = rto;
         return this;
     }
 
-    public GradientConfiguration setSearchRequestTimeout(long searchRequestTimeout) {
+    public GradientConfiguration setSearchRequestTimeout(int searchRequestTimeout) {
         this.searchRequestTimeout = searchRequestTimeout;
         return this;
     }
@@ -199,7 +207,7 @@ public class GradientConfiguration
     }
 
     public GradientConfiguration setNumBestSimilarPeers(int numBestSimilarPeers) {
-        this.numBestSimilarPeers = numBestSimilarPeers;
+        this.shuffleLength = numBestSimilarPeers;
         return this;
     }
 

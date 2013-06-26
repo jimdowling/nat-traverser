@@ -106,6 +106,7 @@ public class Configuration {
             5 * sec /*upnp  timeout*/,
             true /*upnp  enabled*/,
             50 /* min rtt */,
+            true, /* measure NatBindingTimeout*/
             3 * sec/*msg timeout*/,
             1 * sec/*number of retries*/,
             1.5 * sec/*scale retry timeout*/

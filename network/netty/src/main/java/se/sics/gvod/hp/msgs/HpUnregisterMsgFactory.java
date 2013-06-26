@@ -20,7 +20,7 @@ public class HpUnregisterMsgFactory {
 
         @Override
         protected HpUnregisterMsg.Request process(ChannelBuffer buffer) throws MessageDecodingException {
-            long delay = buffer.readLong();
+            int delay = buffer.readInt();
             int s = UserTypesDecoderFactory.readUnsignedIntAsOneByte(buffer);
             HpRegisterMsg.RegisterStatus status = HpRegisterMsg.RegisterStatus.values()[s];
             return new HpUnregisterMsg.Request(vodSrc, vodDest, delay, status);

@@ -863,7 +863,7 @@ public class EncodingDecodingTest {
 
     @Test
     public void HpUnregisterMsg() {
-        HpUnregisterMsg.Request msg = new HpUnregisterMsg.Request(gSrc, gDest, 10000l,
+        HpUnregisterMsg.Request msg = new HpUnregisterMsg.Request(gSrc, gDest, 10000,
                 HpRegisterMsg.RegisterStatus.BETTER_PARENT);
         msg.setTimeoutId(UUID.nextUUID());
         try {

@@ -50,8 +50,8 @@ public class RelayMsgNetty {
                     + 4 // destId
                     + (hasTimeout() ? 4 : 0)
                     + 1 /*natPolicy src*/
-                    + (UserTypesEncoderFactory.ADDRESS_LEN * VodConfig.DEFAULT_PARENT_SIZE)
-                    + (UserTypesEncoderFactory.ADDRESS_LEN * VodConfig.DEFAULT_PARENT_SIZE)
+                    + (UserTypesEncoderFactory.ADDRESS_LEN * VodConfig.PM_PARENT_SIZE)
+                    + (UserTypesEncoderFactory.ADDRESS_LEN * VodConfig.PM_PARENT_SIZE)
                     + 1 /*natPolicy dest*/
                     + (4 * 2) /* overlayId of client and server */
                     + UserTypesEncoderFactory.VOD_ADDRESS_LEN_NO_PARENTS

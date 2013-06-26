@@ -15,26 +15,26 @@ public class ScheduleRetryTimeout {
 
     private final ScheduleTimeout st;
     private final long delay;
-    private final int numRetries;
-    private final double scaleRtoAfterRetry;
+    private final int rtoRetries;
+    private final double rtoScaleAfterRetry;
 
     /**
      * The delay is stored locally and used to initialize the
      * RetryTimeout's ScheduleTimeout object.
      * This ScheduleTimeout is scheduled directly after all retries have failed.
      * @param delay
-     * @param numRetries
-     * @param scaleRtoAfterRetry
+     * @param rtoRetries
+     * @param rtoScaleAfterRetry
      */
-    public ScheduleRetryTimeout(long delay, int numRetries, double scaleRtoAfterRetry) {
+    public ScheduleRetryTimeout(long delay, int rtoRetries, double rtoScaleAfterRetry) {
         this.st = new ScheduleTimeout(0);
         this.delay = delay;
-        this.numRetries = numRetries;
-        this.scaleRtoAfterRetry = scaleRtoAfterRetry;
+        this.rtoRetries = rtoRetries;
+        this.rtoScaleAfterRetry = rtoScaleAfterRetry;
     }
 
-    public ScheduleRetryTimeout(long delay, int numRetries) {
-        this(delay, numRetries, 1.0d);
+    public ScheduleRetryTimeout(long delay, int rtoRetries) {
+        this(delay, rtoRetries, 1.0d);
     }
 
 
@@ -46,12 +46,12 @@ public class ScheduleRetryTimeout {
         return delay;
     }
 
-    public int getNumRetries() {
-        return numRetries;
+    public int getRtoRetries() {
+        return rtoRetries;
     }
 
-    public double getScaleRtoAfterRetry() {
-        return scaleRtoAfterRetry;
+    public double getRtoScaleAfterRetry() {
+        return rtoScaleAfterRetry;
     }
 
     

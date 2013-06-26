@@ -762,9 +762,9 @@ public class DistributedNatGatewayEmulator extends MsgRetryComponent {
             RewriteableMsg msg = session.getMsg();
 
             if (event.getStatus() != NatPortBindResponse.Status.SUCCESS) {
-                int numRetries = event.getNumRetries();
-                if (numRetries < 3) {
-                    mapPort(msg, v, publicEndPoint, dstPort, natPublicAddress, dstPort, numRetries + 1);
+                int rtoRetries = event.getRtoRetries();
+                if (rtoRetries < 3) {
+                    mapPort(msg, v, publicEndPoint, dstPort, natPublicAddress, dstPort, rtoRetries + 1);
                 } else {
                     // remove entries from tables
                     Address privateAddr = pubPortToPrivateAddr.remove(portToMap);
@@ -819,18 +819,18 @@ public class DistributedNatGatewayEmulator extends MsgRetryComponent {
     };
 
     public void mapPort(RewriteableMsg msg, Address v, InetAddress destIp,
-            int dstPort, InetAddress srcIp, int srcPort, int numRetries) {
+            int dstPort, InetAddress srcIp, int srcPort, int rtoRetries) {
         int portToMap = 0;
         // Check if others mapped that port
         switch (allocationPolicy) {
             case PORT_PRESERVATION:
                 Address mappedEnd = pubPortToPrivateAddr.get(srcPort);
-                if (mappedEnd == null && numRetries == 0) {
+                if (mappedEnd == null && rtoRetries == 0) {
                     // Nobody is using that port - port binding didn't fail
                     portToMap = srcPort;
                 } else {
                     // Somebody is already using that port
-                    if ((clashingOverrides || isExpired(srcPort)) && numRetries == 0) {
+                    if ((clashingOverrides || isExpired(srcPort)) && rtoRetries == 0) {
                         /*
                          * Remove mapping from NAT table
                          */
@@ -864,7 +864,7 @@ public class DistributedNatGatewayEmulator extends MsgRetryComponent {
         logger.trace(compName + "Requested mapping from private port " + v.getPort() + " to public port: " + portToMap);
         PortBindRequest req = new PortBindRequest(99 /* natId */, portToMap);
         BindingSession session = new BindingSession(v, destIp, dstPort, msg);
-        NatPortBindResponse resp = new NatPortBindResponse(req, session, numRetries);
+        NatPortBindResponse resp = new NatPortBindResponse(req, session, rtoRetries);
         req.setResponse(resp);
         delegator.doTrigger(req, lowerNetControl);
 

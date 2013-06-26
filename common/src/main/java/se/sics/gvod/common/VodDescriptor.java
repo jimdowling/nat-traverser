@@ -101,9 +101,9 @@ public class VodDescriptor implements Comparable<VodDescriptor>, Serializable {
             int mtu) {
         this(vodAddress, age,
                 utility, 0, 0, new LinkedList<Block>(),
-                new CommunicationWindow(VodConfig.DEFAULT_WINDOW_SIZE,
-                VodConfig.DEFAULT_MAX_WINDOW_SIZE),
-                VodConfig.DEFAULT_PIPELINE_SIZE, mtu);
+                new CommunicationWindow(VodConfig.LB_WINDOW_SIZE,
+                VodConfig.LB_MAX_WINDOW_SIZE),
+                VodConfig.LB_DEFAULT_PIPELINE_SIZE, mtu);
     }
 
     public VodDescriptor(VodDescriptor descriptor, int age) {
@@ -149,11 +149,11 @@ public class VodDescriptor implements Comparable<VodDescriptor>, Serializable {
     private static long counter = 0;
 
     public void setPipeSize(int pipeSize) {
-        if (pipeSize > VodConfig.MAX_PIPELINE_SIZE) {
-            pipeSize = VodConfig.MAX_PIPELINE_SIZE;
+        if (pipeSize > VodConfig.LB_MAX_PIPELINE_SIZE) {
+            pipeSize = VodConfig.LB_MAX_PIPELINE_SIZE;
         }
-        this.pipeSize = (pipeSize < VodConfig.DEFAULT_PIPELINE_SIZE)
-                ? VodConfig.DEFAULT_PIPELINE_SIZE : pipeSize;
+        this.pipeSize = (pipeSize < VodConfig.LB_DEFAULT_PIPELINE_SIZE)
+                ? VodConfig.LB_DEFAULT_PIPELINE_SIZE : pipeSize;
         if (counter++ % 1000 == 0) {
             logger.info("Pipesize is : " + this.pipeSize);
         }

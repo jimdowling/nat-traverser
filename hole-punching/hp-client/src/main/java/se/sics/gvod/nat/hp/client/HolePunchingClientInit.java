@@ -13,13 +13,13 @@ public final class HolePunchingClientInit extends Init {
     private final boolean scanningEnabled;
     private final int scanRetries;
     private final int sessionExpirationTime;
-    private final int messageRetryDelay;
+    private final int rto;
 
     public HolePunchingClientInit(Self self,
             ConcurrentHashMap<HPSessionKey,OpenedConnection> openedConnections,
             int scanRetries, boolean scanningEnabled,
             int sessionExpirationTime,
-            int messageRetryDelay) {
+            int rto) {
         assert self != null;
         assert openedConnections != null;
         this.self = self;
@@ -27,11 +27,11 @@ public final class HolePunchingClientInit extends Init {
         this.scanRetries = scanRetries;
         this.scanningEnabled = scanningEnabled;
         this.sessionExpirationTime = sessionExpirationTime;
-        this.messageRetryDelay = messageRetryDelay;
+        this.rto = rto;
     }
 
-    public int getMessageRetryDelay() {
-        return messageRetryDelay;
+    public int getRto() {
+        return rto;
     }
 
     public int getSessionExpirationTime() {

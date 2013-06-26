@@ -21,7 +21,7 @@ import se.sics.gvod.net.VodAddress;
 
 /**
  *
- * @author 
+ * @author Jim
  */
  class Session {
 
@@ -45,6 +45,7 @@ import se.sics.gvod.net.VodAddress;
     private boolean finishedAllocation = false;
     private boolean recvdEchoS1 = false;
     private boolean recvdEchoS2 = false;
+    private final boolean measureNatBindingTimeout;
     private int delta = 1;
     private Map<Integer, Address> tries = new HashMap<Integer, Address>(); // [NUM_PING_TRIES];
     private int clientFirstRandomPort;
@@ -55,12 +56,18 @@ import se.sics.gvod.net.VodAddress;
     private final Address privateAddress;
     private Logger Logger = LoggerFactory.getLogger(getClass().getName());
 
-    public Session(long transactionId, Address privateAddress, Address stunServer) {
+    public Session(long transactionId, Address privateAddress, Address stunServer, 
+            boolean measureNatBindingTimeout) {
         this.transactionId = transactionId;
         this.privateAddress = privateAddress;
         this.server1 = stunServer;
+        this.measureNatBindingTimeout = measureNatBindingTimeout;
     }
 
+    public boolean isMeasureNatBindingTimeout() {
+        return measureNatBindingTimeout;
+    }
+    
     public int getServer1Port2() {
         return server1Port2;
     }

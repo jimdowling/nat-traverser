@@ -8,9 +8,9 @@ public final class StunServerConfiguration extends AbstractConfiguration<StunSer
     int maxNumPartners;
     int partnerHeartbeatPeriod;
     int minimumRtt;
-    int msgRetryDelay;
-    int numMsgRetries;
-    double msgRetryScale;
+    long rto;
+    int rtoRetries;
+    double rtoScale;
 
     /** 
      * Default constructor comes first.
@@ -18,12 +18,12 @@ public final class StunServerConfiguration extends AbstractConfiguration<StunSer
     public StunServerConfiguration()
     {
         this(VodConfig.getSeed(), 
-                VodConfig.DEFAULT_MAX_NUM_PARTNERS, 
-                VodConfig.DEFAULT_PARTNER_HEARTBEAT_PERIOD, 
-                VodConfig.DEFAULT_PARENT_KEEP_RTT_TOLERANCE, 
-                VodConfig.DEFAULT_STUN_RTO, 
-                VodConfig.DEFAULT_STUN_NUM_RETRIES, 
-                VodConfig.DEFAULT_STUN_RTO_SCALE
+                VodConfig.STUN_MAX_NUM_PARTNERS, 
+                VodConfig.STUN_PARTNER_HEARTBEAT_PERIOD, 
+                VodConfig.STUN_MIN_RTT, 
+                VodConfig.STUN_RTO, 
+                VodConfig.STUN_RTO_RETRIES, 
+                VodConfig.STUN_RTO_SCALE
                 );
     }
     
@@ -35,39 +35,39 @@ public final class StunServerConfiguration extends AbstractConfiguration<StunSer
             int maxNumPartners,
             int partnerHeartbeatPeriod,
             int minimumRtt,
-            int msgRetryDelay,             
-            int numMsgRetries,
-            double msgRetryScale
+            long rto,             
+            int rtoRetries,
+            double rtoScale
             )
     {
         super(seed);
         this.maxNumPartners = maxNumPartners;
         this.partnerHeartbeatPeriod = partnerHeartbeatPeriod;
-        this.msgRetryDelay = msgRetryDelay;
+        this.rto = rto;
         this.minimumRtt = minimumRtt;
-        this.numMsgRetries = numMsgRetries;
-        this.msgRetryScale = msgRetryScale;
+        this.rtoRetries = rtoRetries;
+        this.rtoScale = rtoScale;
     }
 
     public static StunServerConfiguration build() {
         return new StunServerConfiguration();
     }
     
-    public int getMsgRetryDelay()
+    public long getRto()
     {
-        return msgRetryDelay;
+        return rto;
     }
 
     public int getMinimumRtt() {
         return minimumRtt;
     }
 
-    public int getNumMsgRetries() {
-        return numMsgRetries;
+    public int getRtoRetries() {
+        return rtoRetries;
     }
 
-    public double getMsgRetryScale() {
-        return msgRetryScale;
+    public double getRtoScale() {
+        return rtoScale;
     }
 
     public int getMaxNumPartners() {
@@ -95,20 +95,20 @@ public final class StunServerConfiguration extends AbstractConfiguration<StunSer
         return this;
     }
 
-    public StunServerConfiguration setMsgTimeout(int msgTimeout) {
-        this.msgRetryDelay = msgTimeout;
+    public StunServerConfiguration setRto(long rto) {
+        this.rto = rto;
         return this;
     }
 
-
-    public StunServerConfiguration setMsgRetryScale(double msgRetryScale) {
-        this.msgRetryScale = msgRetryScale;
+    public StunServerConfiguration setRtoRetries(int rtoRetries) {
+        this.rtoRetries = rtoRetries;
         return this;
     }
 
-    public StunServerConfiguration setNumMsgRetries(int numMsgRetries) {
-        this.numMsgRetries = numMsgRetries;
+    public StunServerConfiguration setRtoScale(double rtoScale) {
+        this.rtoScale = rtoScale;
         return this;
     }
+
 
 }

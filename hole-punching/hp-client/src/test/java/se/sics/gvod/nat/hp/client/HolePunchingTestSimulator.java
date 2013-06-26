@@ -603,7 +603,7 @@ public class HolePunchingTestSimulator
                         setRuleExpirationMinWait(1000).
                         setMinimumRtt(3 * 1000).
                         setRandTolerance(10).
-                        setNumMsgRetries(0);
+                        setRtoRetries(0);
 
                 VodAddress ga = ToVodAddr.stunClient(stunClient_A_Address);
                 trigger(new StunClientInit(new SelfNoUtility(ga),
@@ -708,7 +708,7 @@ public class HolePunchingTestSimulator
 
                 Set<Address> servers = new HashSet<Address>();
                 servers.add(serverS1Address);
-                trigger(new GetNatTypeRequest(servers),
+                trigger(new GetNatTypeRequest(servers, false),
                         stunClientComp_A.getPositive(StunPort.class));
                 trigger(stt, timer.getPositive(Timer.class));
 
@@ -717,7 +717,7 @@ public class HolePunchingTestSimulator
                 MsgTimeout msgTimeout1 = new MsgTimeout(st1);
                 st1.setTimeoutEvent(msgTimeout1);
 
-                trigger(new GetNatTypeRequest(servers),
+                trigger(new GetNatTypeRequest(servers, false),
                         stunClientComp_B.getPositive(StunPort.class));
                 trigger(st1, timer.getPositive(Timer.class));
 
@@ -1019,7 +1019,7 @@ public class HolePunchingTestSimulator
                         setScanRetries(0).
                         setScanningEnabled(true).
                         setSessionExpirationTime(30 * 1000).
-                        setMessageRetryDelay(retryDelay)),
+                        setRto(retryDelay)),
                         holePunchingClientComp_A.getControl());
 
 
@@ -1068,7 +1068,7 @@ public class HolePunchingTestSimulator
                         setScanRetries(5).
                         setScanningEnabled(true).
                         setSessionExpirationTime(30 * 1000).
-                        setMessageRetryDelay(retryDelay)), holePunchingClientComp_B.getControl());
+                        setRto(retryDelay)), holePunchingClientComp_B.getControl());
 
 
 

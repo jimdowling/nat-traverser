@@ -50,7 +50,7 @@ public class VodConfig extends BaseCommandLineConfig {
     public static final String PROP_VIDEO_HEIGHT = "video.height";
     public static String STARTUP_CONFIG_FILE;
     // Vod config params
-    public static final int DEFAULT_BOOTSTRAP_REFRESH_PERIOD = 5 * 60 * 1000;
+    public static final int BOOTSTRAP_REFRESH_PERIOD = 5 * 60 * 1000;
     public static final int DEFAULT_CONTROL_PORT = 58024;
     protected static final int DEFAULT_MEDIA_PLAYER = 0;
     protected static final int DEFAULT_VIDEO_WIDTH = 640;
@@ -79,9 +79,9 @@ public class VodConfig extends BaseCommandLineConfig {
     public static final int DEFAULT_RTO_RETRIES = 2;
     public static final double DEFAULT_RTO_SCALE = 1.5;
     //Croupier parameters
-    public static final long SHUFFLE_PERIOD = 30 * 1000;
-    public static final int SHUFFLE_LENGTH = 15;
-    public static final int RANDOM_VIEW_SIZE = 15;
+    public static final int CROUPIER_SHUFFLE_PERIOD = 30 * 1000;
+    public static final int CROUPIER_SHUFFLE_LENGTH = 15;
+    public static final int CROUPIER__VIEW_SIZE = 15;
 
     public static enum CroupierSelectionPolicy {
 
@@ -98,94 +98,98 @@ public class VodConfig extends BaseCommandLineConfig {
             return null;
         }
     };
-    public static final CroupierSelectionPolicy SELECTION_POLICY = CroupierSelectionPolicy.HEALER;
+    public static final CroupierSelectionPolicy CROUPIER_SELECTION_POLICY = CroupierSelectionPolicy.HEALER;
     
     //Stun parameters
-    static int DEFAULT_STUN_RTO = 3*1000;
-    static int DEFAULT_STUN_NUM_RETRIES = 2;
-    static double DEFAULT_STUN_RTO_SCALE = 1.75d;
-    static int DEFAULT_UPNP_TIMEOUT = 10*1000;
-    static int DEFAULT_UPNP_DISCOVERY_TIMEOUT = 3*1000;
-    static boolean DEFAULT_UPNP_ENABLED = false;
-    static final int DEFAULT_PARTNER_HEARTBEAT_PERIOD = 10 * 1000;
-    static final int DEFAULT_MAX_NUM_PARTNERS = 10;
+    static int STUN_MIN_RTT = 250;
+    static int STUN_RTO = 2*1000;
+    static int STUN_RTO_RETRIES = 2;
+    static double STUN_RTO_SCALE = 1.75d;
+    static int STUN_UPNP_TIMEOUT = 10*1000;
+    static int STUN_UPNP_DISCOVERY_TIMEOUT = 3*1000;
+    static boolean STUN_UPNP_ENABLED = false;
+    static boolean STUN_MEASURE_NAT_BINDING_TIMEOUT = false;
+    static final int STUN_PARTNER_HEARTBEAT_PERIOD = 10 * 1000;
+    static final int STUN_MAX_NUM_PARTNERS = 10;
     
     //Parent Maker's params
-    public static long DEFAULT_PARENT_RTO = DEFAULT_RTO;
-    public static long DEFAULT_PARENT_UPDATE_PERIOD = 60 * 1000;
-    public static int DEFAULT_PARENT_SIZE = 3;
-    public static int DEFAULT_PARENT_KEEP_RTT_TOLERANCE = 20;
-    public static int DEFAULT_CHILDREN_SIZE = 50;
-    public static int DEFAULT_CHILDREN_REMOVE_TIMEOUT = 0 * 1000;
-    public static long DEFAULT_PARENT_TIMEOUT_DELAY = 4 * 1000;
-    public static long DEFAULT_PARENT_REJECTED_CLEANUP_TIMEOUT = 300 * 1000;
+    public static int PM_PARENT_RTO = DEFAULT_RTO;
+    public static int PM_PARENT_UPDATE_PERIOD = 60 * 1000;
+    public static int PM_PARENT_SIZE = 3;
+    public static int PM_PARENT_KEEP_RTT_TOLERANCE = 20;
+    public static int PM_CHILDREN_SIZE = 50;
+    public static int PM_CHILDREN_REMOVE_TIMEOUT = 0 * 1000;
+    public static int PM_PARENT_TIMEOUT_DELAY = 4 * 1000;
+    public static int PM_PARENT_REJECTED_CLEANUP_TIMEOUT = 300 * 1000;
     // VOD's params
     public static final int BITTORRENT_SET_SIZE = 100;
     public static final int UPPER_SET_SIZE = 100;
     public static final int BELOW_SET_SIZE = 100;
-    public static final long CONNECTION_TIMEOUT = 30 * 1000;
-    public static final long DATA_REQUEST_TIMEOUT = 5 * 1000;
-    public static final long REF_TIMEOUT = DEFAULT_RTO;
-    public static final long VERIFY_PERIOD = 10 * 1000;
+    public static final int CONNECTION_TIMEOUT = 30 * 1000;
+    public static final int DATA_REQUEST_TIMEOUT = 5 * 1000;
+    public static final int REF_TIMEOUT = DEFAULT_RTO;
+    public static final int VERIFY_PERIOD = 10 * 1000;
     public static final int OFFSET = 3;
-    public static final long DATA_OFFER_PERIOD = 1 * 1000;
-    public static final long READING_PERIOD = 1410 /*readingPeriod  misfits 1048kbps*/;
-    public static final long LIM_READING_WINDOW = 11;
+    public static final int DATA_OFFER_PERIOD = 1 * 1000;
+    public static final int READING_PERIOD = 1410 /*readingPeriod  misfits 1048kbps*/;
+    public static final int LIM_READING_WINDOW = 11;
     public static final int INF_UTIL_FREC = 63;
     public static final int PERCENT_BACK = 70;
-    public static final long CHECK_POSITION_PERIOD = 20 * 1000; // 2 seconds
+    public static final int CHECK_POSITION_PERIOD = 20 * 1000; // 2 seconds
     public static final Random random;
     public final static int ACK_TIMEOUT = 10 * 1000; // 5 seconds
     public final static int BUFFERING_WINDOW_NUM_PIECES = 1; // in number of pieces
     public final static int PERCENTAGE_FREERIDERS = 15;
     public static final int SEEDER_UTILITY_VALUE = 9999;
     // GRADIENT'S DEFAULTS
-    public static final int SIMILAR_SET_SIZE = 10;
-    public static final long SETS_EXCHANGE_TIMEOUT = DEFAULT_RTO;
-    public static final long SETS_EXCHANGE_PERIOD = 5000;
-    public static final long PROBE_REQUEST_TIMEOUT = DEFAULT_RTO * 6;
-    public static final int UTILITY_THRESHOLD = 10;
-    public static final int NUM_OF_PROBES = 5;
-    public static final int PROBE_TTL = 5;
-    public static final int NUM_BEST_SIMILAR_PEERS = 10;
-    public static final int UTILITY_SET_FILLING_RATE = 10;
+    public static final int GRADIENT_VIEW_SIZE = 10;
+    public static final int GRADIENT_SHUFFLE_TIMEOUT = DEFAULT_RTO;
+    public static final int GRADIENT_SHUFFLE_PERIOD = 5000;
+    public static final int GRADIENT_SEARCH_TIMEOUT = DEFAULT_RTO * 6;
+    public static final int GRADIENT_NUM_FINGERS = 5;
+    public static final int GRADIENT_UTILITY_THRESHOLD = 10;
+    public static final int GRADIENT_NUM_PARALLEL_SEARCHES = 5;
+    public static final int GRADIENT_SEARCH_TTL = 5;
+    public static final int GRADIENT_SHUFFLE_LENGTH = 10;
+    public static final double GRADIENT_TEMPERATURE = 0.9d;
+    public static final int GRADIENT_UTILITY_SET_FILLING_RATE = 10;
     // NAT-TRAVERSER'S DEFAULTS
-    public final static int DEFAULT_NT_STUN_RETRIES = 5;
-    public final static int DEFAULT_NT_MAX_NUM_OPENED_CONNECTIONS = 5000;
+    public final static int NT_STUN_RETRIES = 5;
+    public final static int NT_MAX_NUM_OPENED_CONNECTIONS = 5000;
     public final static int DEFAULT_NT_CONNECTION_ESTABLISHMENT_TIMEOUT = 10*1000;
-    public final static long DEFAULT_NT_SERVER_INIT_RETRY_PERIOD = 1000;
-    public final static long DEFAULT_NT_GARBAGE_COLLECT_STALE_CONNS_PERIOD = 10 * 1000;
-    public final static long DEFAULT_NT_STALE_RELAY_MSG_TIME = 60 * 1000;
+    public final static int NT_SERVER_INIT_RETRY_PERIOD = 1000;
+    public final static int NT_GARBAGE_COLLECT_STALE_CONNS_PERIOD = 10 * 1000;
+    public final static int NT_STALE_RELAY_MSG_TIME = 60 * 1000;
     // HOLE-PUNCHING CLIENT DEFAULTS
-    public final static int DEFAULT_HP_DELTA = 1;
-    public final static int DEFAULT_HP_SCANNING_RETRIES = 1;
+    public static int       HP_DELTA = 1;
+    public final static int HP_SCANNING_RETRIES = 1;
     // Timeout a hpSession if it hasn't been used for this period of time.
-    public final static int DEFAULT_HP_SESSION_EXPIRATION = 55*1000;
+    public final static int HP_SESSION_EXPIRATION = 55*1000;
     // LEDBAT Defaults
-    public static final int MAX_PIPELINE_SIZE = 100;
-    public static final int DEFAULT_PIPELINE_SIZE = 15;
-    public static final int MAX_SEGMENT_SIZE = 1500 * DEFAULT_PIPELINE_SIZE; // MTU - 1024?
-    public static final int DEFAULT_WINDOW_SIZE = 2 * MAX_SEGMENT_SIZE;
-    public static final int DEFAULT_MAX_WINDOW_SIZE = 64 * MAX_SEGMENT_SIZE; // 64
-    public static final int DEFAULT_LEDBAT_TARGET_DELAY = 100;
+    public static final int LB_MAX_PIPELINE_SIZE = 100;
+    public static final int LB_DEFAULT_PIPELINE_SIZE = 15;
+    public static final int LB_MAX_SEGMENT_SIZE = 1500 * LB_DEFAULT_PIPELINE_SIZE; // MTU - 1024?
+    public static final int LB_WINDOW_SIZE = 2 * LB_MAX_SEGMENT_SIZE;
+    public static final int LB_MAX_WINDOW_SIZE = 64 * LB_MAX_SEGMENT_SIZE; // 64
+    public static final int LB_LEDBAT_TARGET_DELAY = 100;
     public static final int MINUTE_IN_MS = 60 * 1000;
-    public static final int DEFAULT_DELAY_BOUNDARY = 13 * 60 * 1000;
-    public static final double GAIN = 0.9d; // must be set to 1 or less
-    public static final int MIN_SIZE = 1400; // MTU 1024
-    public static final int MIN_CWND = 2;
-    public static final int INIT_CWND = 2;
-    public static final int BASE_HISTORY = 10; // 10
-    public static final int CURRENT_FILTER = 5;
-    public static final float SCALE_DOWN_SIZE_TIMEOUT = 0.75f;
-    public static final double ALLOWED_INCREASE = 1.0d; // SHOULD be 1, and it MUST be greater than 0.
-    public static final int ADSL_MTU = 1460;
-    public static int MTU_MEASURED = 1500;
+    public static final int LB_DELAY_BOUNDARY = 13 * 60 * 1000;
+    public static final double LB_GAIN = 0.9d; // must be set to 1 or less
+    public static final int LB_MIN_SIZE = 1400; // MTU 1024
+    public static final int LB_MIN_CWND = 2;
+    public static final int LB_INIT_CWND = 2;
+    public static final int LB_BASE_HISTORY = 10; // 10
+    public static final int LB_CURRENT_FILTER = 5;
+    public static final float LB_SCALE_DOWN_SIZE_TIMEOUT = 0.75f;
+    public static final double LB_ALLOWED_INCREASE = 1.0d; // SHOULD be 1, and it MUST be greater than 0.
+    public static final int LB_ADSL_MTU = 1460;
+    public static int LB_MTU_MEASURED = 1500;
     public static int ASN;
     public static final int IPV4_HEADER_SIZE = 20;
     public static final int UDP_HEADER_SIZE = 8;
-    public static final int LEDBAT_HEADER_SIZE = 20;
+    public static final int LB_HEADER_SIZE = 20;
     public static final int UDP_IPV4_OVERHEAD = IPV4_HEADER_SIZE + UDP_HEADER_SIZE;
-    public static final int UDP_IPV4_MTU = ADSL_MTU - UDP_IPV4_OVERHEAD - LEDBAT_HEADER_SIZE;
+    public static final int UDP_IPV4_MTU = LB_ADSL_MTU - UDP_IPV4_OVERHEAD - LB_HEADER_SIZE;
     // Bittorrent and Heartbeat
     public static final int HASH_REQUEST_TIMEOUT = 10 * 1000;
     public static final int UPLOADING_RATE_REQ_TIMEOUT = 5 * 1000;
@@ -199,9 +203,8 @@ public class VodConfig extends BaseCommandLineConfig {
     public static final int STUN_OVERLAY_ID = 2; // stunClient, stunServer
     public static final int HP_OVERLAY_ID = 3; // hpClient, zServer, ParentMaker
     public static final int MONITOR_OVERLAY_ID = 4; // monitorClient, monitorServer
-    public static long maxUploadBwCapacity = 0;
-    public static long uploadBwUsage = 0;
-    public static int delta = DEFAULT_HP_DELTA;
+    public static long MAX_UPLOAD_BW_CAPACITY = 0;
+    public static long UPLOAD_BW_USAGE = 0;
 
     static {
         STARTUP_CONFIG_FILE = BaseCommandLineConfig.GVOD_HOME + File.separator + "sconfig.xml";
@@ -373,7 +376,7 @@ public class VodConfig extends BaseCommandLineConfig {
             compositeConfig.setProperty(PROP_TORRENT_URL, torrent);
         }
         if (line.hasOption(bootstrapRefreshOption.getOpt())) {
-            long bootstrapRefreshPeriod = new Long(line.getOptionValue(bootstrapRefreshOption.getOpt()));
+            int bootstrapRefreshPeriod = new Integer(line.getOptionValue(bootstrapRefreshOption.getOpt()));
             compositeConfig.setProperty(PROP_BOOTSTRAP_REFRESH_PERIOD, bootstrapRefreshPeriod);
         }
 
@@ -448,7 +451,7 @@ public class VodConfig extends BaseCommandLineConfig {
     public static int getBootstrapRefreshPeriod() {
         baseInitialized();
         return singleton.compositeConfig.getInt(PROP_BOOTSTRAP_REFRESH_PERIOD,
-                DEFAULT_BOOTSTRAP_REFRESH_PERIOD);
+                BOOTSTRAP_REFRESH_PERIOD);
     }
 
     public static Address getServer() {
@@ -513,31 +516,31 @@ public class VodConfig extends BaseCommandLineConfig {
     }
 
     public synchronized static long getMaxUploadBwCapacity() {
-        return maxUploadBwCapacity;
+        return MAX_UPLOAD_BW_CAPACITY;
     }
 
     public synchronized static void setMaxUploadBwCapacity(long newMax) {
-        maxUploadBwCapacity = newMax;
+        MAX_UPLOAD_BW_CAPACITY = newMax;
     }
 
     public synchronized static long getUploadBwUsage() {
-        return uploadBwUsage;
+        return UPLOAD_BW_USAGE;
     }
 
     public synchronized static void setUploadBwUsage(long newBw) {
-        uploadBwUsage = newBw;
+        UPLOAD_BW_USAGE = newBw;
     }
 
     public synchronized static long getAvailableUploadBw() {
-        return maxUploadBwCapacity - uploadBwUsage;
+        return MAX_UPLOAD_BW_CAPACITY - UPLOAD_BW_USAGE;
     }
 
     public synchronized static int getDelta() {
-        return delta;
+        return HP_DELTA;
     }
 
     public synchronized static void setDelta(int updateDelta) {
-        delta = updateDelta;
+        HP_DELTA = updateDelta;
     }
 
     public static int getControlPort() {

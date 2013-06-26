@@ -85,8 +85,8 @@ public class GradientTest extends VodRetryComponentTestCase {
             gradient = new Gradient(this);
             GradientConfiguration config = GradientConfiguration.build()
                     .setSimilarSetSize(10)
-                    .setSetsExchangePeriod(setsExchangePeriod)
-                    .setSetsExchangeTimeout(setsExchangeDelay)
+                    .setShufflePeriod(setsExchangePeriod)
+                    .setRto(setsExchangeDelay)
                     .setSearchRequestTimeout(probeRequestTimeout)
                     .setSearchTtl(probeTtl)
                     .setUtilityThreshold(utilityThreshold)

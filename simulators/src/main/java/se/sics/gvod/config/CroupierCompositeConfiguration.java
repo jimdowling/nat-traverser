@@ -18,8 +18,8 @@ public class CroupierCompositeConfiguration extends CompositeConfiguration {
                 .setChildSize(250)
                 .setParentUpdatePeriod(parentUpdatePeriod)
                 .setKeepParentRttRange(100)
-                .setRetryNum(0)
-                .setNumPingRetries(3);
+                .setRtoRetries(0)
+                .setPingRetries(3);
 
         croupierConfig =
                 CroupierConfiguration.build()
@@ -29,8 +29,8 @@ public class CroupierCompositeConfiguration extends CompositeConfiguration {
 
         gradientConfig = GradientConfiguration.build()
                 .setSimilarSetSize(VIEW_SIZE)
-                .setSetsExchangePeriod(2000)
-                .setSetsExchangeTimeout(5000)
+                .setShufflePeriod(2000)
+                .setRto(5000)
                 .setSearchRequestTimeout(20 * 1000)
                 .setUtilityThreshold(2000)
                 .setNumParallelSearches(4)

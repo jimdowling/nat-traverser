@@ -16,10 +16,10 @@ extends AbstractConfiguration<NatTraverserConfiguration>{
      */
     public NatTraverserConfiguration() {
         this(VodConfig.getSeed(),
-                VodConfig.DEFAULT_NT_STUN_RETRIES, 
+                VodConfig.NT_STUN_RETRIES, 
                 VodConfig.DEFAULT_RTO, 
                 VodConfig.DEFAULT_NT_CONNECTION_ESTABLISHMENT_TIMEOUT, 
-                VodConfig.DEFAULT_NT_MAX_NUM_OPENED_CONNECTIONS);
+                VodConfig.NT_MAX_NUM_OPENED_CONNECTIONS);
     }
 
     /** 

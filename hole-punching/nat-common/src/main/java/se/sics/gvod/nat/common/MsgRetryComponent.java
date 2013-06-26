@@ -84,45 +84,45 @@ public abstract class MsgRetryComponent extends AutoSubscribeComponent
         private final ScheduleRetryTimeout retryScheduleTimeout;
         private long retransmissionTimeout;
         private int retriesLeft;
-        private final double scaleRtoAfterRetry;
-        private int numRetries;
+        private final double rtoScaleAfterRetry;
+        private int rtoRetries;
         private int numReplies;
         private Set<Address> multicastAddrs;
 
-        public Retry(RewriteableMsg message, long retransmissionTimeout, int numRetries,
-                double scaleRtoAfterRetry, Object context, Set<Address> multicastAddrs) {
-            this(message, retransmissionTimeout, numRetries, scaleRtoAfterRetry,
+        public Retry(RewriteableMsg message, long retransmissionTimeout, int rtoRetries,
+                double rtoScaleAfterRetry, Object context, Set<Address> multicastAddrs) {
+            this(message, retransmissionTimeout, rtoRetries, rtoScaleAfterRetry,
                     null, context, multicastAddrs);
         }
 
-        public Retry(RewriteableMsg message, long retransmissionTimeout, int numRetries,
-                double scaleRtoAfterRetry, ScheduleRetryTimeout retryTimeout,
+        public Retry(RewriteableMsg message, long retransmissionTimeout, int rtoRetries,
+                double rtoScaleAfterRetry, ScheduleRetryTimeout retryTimeout,
                 Object context, Set<Address> multicastAddrs) {
-            this(message, retransmissionTimeout, numRetries, scaleRtoAfterRetry,
+            this(message, retransmissionTimeout, rtoRetries, rtoScaleAfterRetry,
                     retryTimeout, 1, context, multicastAddrs);
         }
 
-        public Retry(RewriteableMsg message, long retransmissionTimeout, int numRetries,
-                double scaleRtoAfterRetry, ScheduleRetryTimeout retryTimeout, int numReplies,
+        public Retry(RewriteableMsg message, long retransmissionTimeout, int rtoRetries,
+                double rtoScaleAfterRetry, ScheduleRetryTimeout retryTimeout, int numReplies,
                 Object context, Set<Address> multicastAddrs) {
             super();
             if (retransmissionTimeout < 0) {
                 throw new IllegalArgumentException("Retransmission timeout must be zero or greater");
             }
-            if (numRetries < 0) {
+            if (rtoRetries < 0) {
                 throw new IllegalArgumentException("Number of Retries must be zero or greater");
             }
             if (numReplies < 0) {
                 throw new IllegalArgumentException("Number of Replies must be zero or greater");
             }
-            if (scaleRtoAfterRetry == 0 || scaleRtoAfterRetry < 0) {
-                throw new IllegalArgumentException("ScaleRtoAfterRetry must be greater than zero.");
+            if (rtoScaleAfterRetry == 0 || rtoScaleAfterRetry < 0) {
+                throw new IllegalArgumentException("RtoScaleAfterRetry must be greater than zero.");
             }
             this.message = message;
             this.retransmissionTimeout = retransmissionTimeout;
-            this.retriesLeft = numRetries;
-            this.numRetries = numRetries;
-            this.scaleRtoAfterRetry = scaleRtoAfterRetry;
+            this.retriesLeft = rtoRetries;
+            this.rtoRetries = rtoRetries;
+            this.rtoScaleAfterRetry = rtoScaleAfterRetry;
             this.retryScheduleTimeout = retryTimeout;
             this.numReplies = numReplies;
             this.context = context;
@@ -149,16 +149,16 @@ public abstract class MsgRetryComponent extends AutoSubscribeComponent
             return retriesLeft;
         }
 
-        public int getNumRetries() {
-            return numRetries;
+        public int getRtoRetries() {
+            return rtoRetries;
         }
 
-        public double getScaleRtoAfterRetry() {
-            return scaleRtoAfterRetry;
+        public double getRtoScaleAfterRetry() {
+            return rtoScaleAfterRetry;
         }
 
-        public void scaleRto() {
-            this.retransmissionTimeout = (long) (scaleRtoAfterRetry * retransmissionTimeout);
+        public void rtoScale() {
+            this.retransmissionTimeout = (long) (rtoScaleAfterRetry * retransmissionTimeout);
         }
 
         public void decRetriesLeft() {
@@ -209,26 +209,26 @@ public abstract class MsgRetryComponent extends AutoSubscribeComponent
 
     protected TimeoutId multicast(RewriteableMsg msg, Set<Address> multicastAddrs,
             long timeoutInMilliSecs,
-            int numRetries) {
-        return multicast(msg, multicastAddrs, timeoutInMilliSecs, numRetries, 1.0d, null);
+            int rtoRetries) {
+        return multicast(msg, multicastAddrs, timeoutInMilliSecs, rtoRetries, 1.0d, null);
     }
 
     protected TimeoutId multicast(RewriteableMsg msg, Set<Address> multicastAddrs,
             long timeoutInMilliSecs,
-            int numRetries, Object request) {
-        return multicast(msg, multicastAddrs, timeoutInMilliSecs, numRetries, 1.0d, request);
+            int rtoRetries, Object request) {
+        return multicast(msg, multicastAddrs, timeoutInMilliSecs, rtoRetries, 1.0d, request);
     }
 
     protected TimeoutId multicast(RewriteableMsg msg, Set<Address> multicastAddrs,
             long timeoutInMilliSecs,
-            int numRetries, double scaleRtoAfterRetry) {
-        return multicast(msg, multicastAddrs, timeoutInMilliSecs, numRetries, scaleRtoAfterRetry, null);
+            int rtoRetries, double rtoScaleAfterRetry) {
+        return multicast(msg, multicastAddrs, timeoutInMilliSecs, rtoRetries, rtoScaleAfterRetry, null);
     }
 
     protected TimeoutId multicast(RewriteableMsg msg, Set<Address> multicastAddrs,
             long timeoutInMilliSecs,
-            int numRetries, double scaleRtoAfterRetry, Object request) {
-        return retry(msg, timeoutInMilliSecs, numRetries, scaleRtoAfterRetry,
+            int rtoRetries, double rtoScaleAfterRetry, Object request) {
+        return retry(msg, timeoutInMilliSecs, rtoRetries, rtoScaleAfterRetry,
                 request, multicastAddrs, null);
     }
 
@@ -252,42 +252,42 @@ public abstract class MsgRetryComponent extends AutoSubscribeComponent
     private TimeoutId retry(RewriteableRetryTimeout timeout, Set<Address> multicastAddrs,
             Object request) {
         ScheduleRetryTimeout st = timeout.getScheduleRewriteableRetryTimeout();
-        int numRetries = st.getNumRetries();
-        double scaleRtoAfterRetry = st.getScaleRtoAfterRetry();
+        int rtoRetries = st.getRtoRetries();
+        double rtoScaleAfterRetry = st.getRtoScaleAfterRetry();
         TimeoutId timeoutId = timeout.getTimeoutId();
         timeout.getMsg().setTimeoutId(timeoutId);
         RewriteableMsg msg = timeout.getMsg();
-        return scheduleMessageRetry(new Retry(msg, st.getDelay(), numRetries, scaleRtoAfterRetry, st,
+        return scheduleMessageRetry(new Retry(msg, st.getDelay(), rtoRetries, rtoScaleAfterRetry, st,
                 request, multicastAddrs), st.getDelay(), null);
     }
 
     protected TimeoutId retry(RewriteableMsg msg, long timeoutInMilliSecs,
-            int numRetries) {
-        return retry(msg, timeoutInMilliSecs, numRetries, 1.0d, null);
+            int rtoRetries) {
+        return retry(msg, timeoutInMilliSecs, rtoRetries, 1.0d, null);
     }
 
     protected TimeoutId retry(RewriteableMsg msg, long timeoutInMilliSecs,
-            int numRetries, Object request) {
-        return retry(msg, timeoutInMilliSecs, numRetries, 1.0d, request);
+            int rtoRetries, Object request) {
+        return retry(msg, timeoutInMilliSecs, rtoRetries, 1.0d, request);
     }
 
     protected TimeoutId retry(RewriteableMsg msg, long timeoutInMilliSecs,
-            int numRetries, double scaleRtoAfterRetry) {
-        return retry(msg, timeoutInMilliSecs, numRetries, scaleRtoAfterRetry, null);
+            int rtoRetries, double rtoScaleAfterRetry) {
+        return retry(msg, timeoutInMilliSecs, rtoRetries, rtoScaleAfterRetry, null);
     }
 
     protected TimeoutId retry(RewriteableMsg msg, long timeoutInMilliSecs,
-            int numRetries, double scaleRtoAfterRetry, Object request) {
-        return retry(msg, timeoutInMilliSecs, numRetries, scaleRtoAfterRetry,
+            int rtoRetries, double rtoScaleAfterRetry, Object request) {
+        return retry(msg, timeoutInMilliSecs, rtoRetries, rtoScaleAfterRetry,
                 request, null, null);
     }
 
     private TimeoutId retry(RewriteableMsg msg, long timeoutInMilliSecs,
-            int numRetries, double scaleRtoAfterRetry, Object request,
+            int rtoRetries, double rtoScaleAfterRetry, Object request,
             Set<Address> multicastAddrs, TimeoutId oldTimeoutId) {
 
         return scheduleMessageRetry(new Retry(msg, timeoutInMilliSecs,
-                numRetries, scaleRtoAfterRetry, request, multicastAddrs),
+                rtoRetries, rtoScaleAfterRetry, request, multicastAddrs),
                 timeoutInMilliSecs, oldTimeoutId);
     }
     
@@ -400,7 +400,7 @@ public abstract class MsgRetryComponent extends AutoSubscribeComponent
             
             if (retryData.getRetriesLeft() > 0) {
                 retryData.decRetriesLeft();
-                retryData.scaleRto();
+                retryData.rtoScale();
                 RewriteableMsg msg = retryData.getMessage();
                 if (msg instanceof VodMsg) {
                     VodMsg m = (VodMsg) msg;
@@ -515,50 +515,50 @@ public abstract class MsgRetryComponent extends AutoSubscribeComponent
     }
 
     @Override
-    public TimeoutId doRetry(RewriteableMsg msg, long timeoutInMilliSecs, int numRetries) {
-        return retry(msg, timeoutInMilliSecs, numRetries);
+    public TimeoutId doRetry(RewriteableMsg msg, long timeoutInMilliSecs, int rtoRetries) {
+        return retry(msg, timeoutInMilliSecs, rtoRetries);
     }
 
     @Override
-    public TimeoutId doRetry(RewriteableMsg msg, long timeoutInMilliSecs, int numRetries,
+    public TimeoutId doRetry(RewriteableMsg msg, long timeoutInMilliSecs, int rtoRetries,
             Object request) {
-        return retry(msg, timeoutInMilliSecs, numRetries, request);
+        return retry(msg, timeoutInMilliSecs, rtoRetries, request);
     }
 
     @Override
-    public TimeoutId doRetry(RewriteableMsg msg, long timeoutInMilliSecs, int numRetries,
-            double scaleRtoAfterRetry) {
-        return retry(msg, timeoutInMilliSecs, numRetries, scaleRtoAfterRetry);
+    public TimeoutId doRetry(RewriteableMsg msg, long timeoutInMilliSecs, int rtoRetries,
+            double rtoScaleAfterRetry) {
+        return retry(msg, timeoutInMilliSecs, rtoRetries, rtoScaleAfterRetry);
     }
 
     @Override
-    public TimeoutId doRetry(RewriteableMsg msg, long timeoutInMilliSecs, int numRetries,
-            double scaleRtoAfterRetry, Object request) {
-        return retry(msg, timeoutInMilliSecs, numRetries, scaleRtoAfterRetry, request);
-    }
-
-    @Override
-    public TimeoutId doMulticast(RewriteableMsg msg, Set<Address> multicastAddrs,
-            long timeoutInMilliSecs, int numRetries) {
-        return multicast(msg, multicastAddrs, timeoutInMilliSecs, numRetries);
+    public TimeoutId doRetry(RewriteableMsg msg, long timeoutInMilliSecs, int rtoRetries,
+            double rtoScaleAfterRetry, Object request) {
+        return retry(msg, timeoutInMilliSecs, rtoRetries, rtoScaleAfterRetry, request);
     }
 
     @Override
     public TimeoutId doMulticast(RewriteableMsg msg, Set<Address> multicastAddrs,
-            long timeoutInMilliSecs, int numRetries, Object request) {
-        return multicast(msg, multicastAddrs, timeoutInMilliSecs, numRetries, request);
+            long timeoutInMilliSecs, int rtoRetries) {
+        return multicast(msg, multicastAddrs, timeoutInMilliSecs, rtoRetries);
     }
 
     @Override
     public TimeoutId doMulticast(RewriteableMsg msg, Set<Address> multicastAddrs,
-            long timeoutInMilliSecs, int numRetries, double scaleRtoAfterRetry) {
-        return multicast(msg, multicastAddrs, timeoutInMilliSecs, numRetries, scaleRtoAfterRetry);
+            long timeoutInMilliSecs, int rtoRetries, Object request) {
+        return multicast(msg, multicastAddrs, timeoutInMilliSecs, rtoRetries, request);
     }
 
     @Override
     public TimeoutId doMulticast(RewriteableMsg msg, Set<Address> multicastAddrs,
-            long timeoutInMilliSecs, int numRetries, double scaleRtoAfterRetry, Object request) {
-        return retry(msg, timeoutInMilliSecs, numRetries, scaleRtoAfterRetry, request, 
+            long timeoutInMilliSecs, int rtoRetries, double rtoScaleAfterRetry) {
+        return multicast(msg, multicastAddrs, timeoutInMilliSecs, rtoRetries, rtoScaleAfterRetry);
+    }
+
+    @Override
+    public TimeoutId doMulticast(RewriteableMsg msg, Set<Address> multicastAddrs,
+            long timeoutInMilliSecs, int rtoRetries, double rtoScaleAfterRetry, Object request) {
+        return retry(msg, timeoutInMilliSecs, rtoRetries, rtoScaleAfterRetry, request, 
                 multicastAddrs, null);
     }
 

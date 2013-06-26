@@ -234,7 +234,7 @@ public class StunClientDistributedTest
                     setRuleExpirationMinWait(RULE_EXPIRATION_TIMEOUT).
                     setMinimumRtt(MINIMUM_RTT).
                     setRandTolerance(10).
-                    setNumMsgRetries(0);
+                    setRtoRetries(0);
             
             trigger(new StunClientInit(new SelfNoParents(sca),
                         0 /*seed*/,
@@ -287,7 +287,7 @@ public class StunClientDistributedTest
 
                 Set<Address> servers = new HashSet<Address>();
                 servers.add(serverAddress);
-                trigger(new GetNatTypeRequest(servers),
+                trigger(new GetNatTypeRequest(servers, true),
                         stunClientComp.getPositive(StunPort.class));
                 trigger(st, timer.getPositive(Timer.class));
 

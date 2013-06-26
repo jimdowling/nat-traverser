@@ -214,7 +214,7 @@ public class StunClientTest {
                         setUpnpTimeout(500).
                         setMinimumRtt(500).
                         setMsgTimeout(500).
-                        setNumMsgRetries(0)), stunClientComp.getControl());
+                        setRtoRetries(0)), stunClientComp.getControl());
                 ruleLifeTime = ruleLifeTime + (ruleLifeTime / 2);
 
 
@@ -238,7 +238,7 @@ public class StunClientTest {
                 Set<Address> serverAddresses = new LinkedHashSet<Address>();
                 serverAddresses.addAll(serverS1Addresses);
 
-                trigger(new GetNatTypeRequest(serverAddresses),
+                trigger(new GetNatTypeRequest(serverAddresses, true),
                         stunClientComp.getPositive(StunPort.class));
                 ScheduleTimeout st = new ScheduleTimeout(ruleLifeTime * 20);
                 MsgTimeout mt = new MsgTimeout(st);

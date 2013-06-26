@@ -63,7 +63,7 @@ public class HpClientUnitTest extends VodRetryComponentTestCase {
                         setScanRetries(scanRetries).
                         setScanningEnabled(scanningEnabled).
                         setSessionExpirationTime(30*1000).
-                        setMessageRetryDelay(4000)                
+                        setRto(4000)                
                 ));
         events = pollEvent(1);
         assertSequence(events, GarbageCleanupTimeout.class);

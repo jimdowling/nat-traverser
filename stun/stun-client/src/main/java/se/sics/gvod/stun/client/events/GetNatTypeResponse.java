@@ -20,6 +20,7 @@ public final class GetNatTypeResponse extends Event {
 //    PING_FAILED, 
     NO_SESSION,
     ALL_HOSTS_TIMED_OUT, 
+    ONGOING, 
     NO_SERVER
     };
 

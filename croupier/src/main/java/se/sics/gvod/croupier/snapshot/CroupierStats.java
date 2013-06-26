@@ -518,7 +518,7 @@ public final class CroupierStats {
         }
         
         
-        for (int i = 0; i <= VodConfig.DEFAULT_PARENT_SIZE; i++) {
+        for (int i = 0; i <= VodConfig.PM_PARENT_SIZE; i++) {
             str += numOfParents.get(i) == null ? 0 : numOfParents.get(i);
             str += " ";
         }

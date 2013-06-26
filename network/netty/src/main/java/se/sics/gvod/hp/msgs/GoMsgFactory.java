@@ -30,12 +30,12 @@ public class GoMsgFactory {
             HPRole holePunchingRole = HPRole.values()[hpR];
             int PRP_PRP_interleavedPort =
                     UserTypesDecoderFactory.readUnsignedIntAsTwoBytes(buffer);
-            int numRetries =
+            int rtoRetries =
                     UserTypesDecoderFactory.readUnsignedIntAsOneByte(buffer);
             boolean bindPort = UserTypesDecoderFactory.readBoolean(buffer);
             GoMsg.Request msg = new GoMsg.Request(vodSrc, vodDest, openedHole, 
                     holePunchingMechanism,
-                    holePunchingRole, numRetries, PRP_PRP_interleavedPort, bindPort,
+                    holePunchingRole, rtoRetries, PRP_PRP_interleavedPort, bindPort,
                     msgTimeoutId);
             return msg;
         }

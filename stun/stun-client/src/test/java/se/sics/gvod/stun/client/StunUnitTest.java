@@ -14,7 +14,6 @@ import org.junit.Test;
 import se.sics.gvod.address.Address;
 import se.sics.gvod.net.Nat;
 import se.sics.gvod.net.msgs.ScheduleRetryTimeout;
-import se.sics.gvod.stun.client.events.DetermineNatTimeout;
 import se.sics.gvod.stun.client.events.GetNatTypeRequest;
 import se.sics.gvod.stun.client.events.GetNatTypeResponse;
 import se.sics.gvod.stun.client.events.StunClientInit;
@@ -55,7 +54,7 @@ public class StunUnitTest extends VodRetryComponentTestCase {
                 setUpnpTimeout(500).
                 setMinimumRtt(500).
                 setMsgTimeout(500).
-                setNumMsgRetries(0)));
+                setRtoRetries(0)));
         stunServers = new HashSet<Address>();
     }
 
@@ -67,7 +66,7 @@ public class StunUnitTest extends VodRetryComponentTestCase {
 
     @Test
     public void testStunNoServers() {
-        stunClient.handleGetNatTypeRequest.handle(new GetNatTypeRequest(stunServers, 5000));
+        stunClient.handleGetNatTypeRequest.handle(new GetNatTypeRequest(stunServers, 5000, true));
         events = pollEvent(1);
         assertSequence(events, GetNatTypeResponse.class);
         GetNatTypeResponse r = (GetNatTypeResponse) events.getFirst();
@@ -77,13 +76,11 @@ public class StunUnitTest extends VodRetryComponentTestCase {
     @Test
     public void testOpenClient() {
         stunServers.add(pubAddrs.get(0).getPeerAddress());
-        stunClient.handleGetNatTypeRequest.handle(new GetNatTypeRequest(stunServers, 5000));
+        stunClient.handleGetNatTypeRequest.handle(new GetNatTypeRequest(stunServers, 5000, true));
         events = pollEvent(1);
         assertSequence(events, EchoMsg.Request.class);
         EchoMsg.Request req = (EchoMsg.Request) events.get(0);
         long transId = req.getTransactionId();
-        events = pollEvent(1);
-        assertSequence(events, DetermineNatTimeout.class);
 
         TimeoutId tId = req.getTimeoutId();
         Set<Address> partners = new HashSet<Address>();
@@ -109,13 +106,11 @@ public class StunUnitTest extends VodRetryComponentTestCase {
     @Test
     public void testNatClient() {
         stunServers.add(pubAddrs.get(0).getPeerAddress());
-        stunClient.handleGetNatTypeRequest.handle(new GetNatTypeRequest(stunServers, 5000));
+        stunClient.handleGetNatTypeRequest.handle(new GetNatTypeRequest(stunServers, 5000, true));
         events = pollEvent(1);
         assertSequence(events, EchoMsg.Request.class);
         EchoMsg.Request req = (EchoMsg.Request) events.get(0);
         long transId = req.getTransactionId();
-        events = pollEvent(1);
-        assertSequence(events, DetermineNatTimeout.class);
 
         TimeoutId tId = req.getTimeoutId();
         Set<Address> partners = new HashSet<Address>();

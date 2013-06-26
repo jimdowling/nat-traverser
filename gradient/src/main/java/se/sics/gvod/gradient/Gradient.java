@@ -116,7 +116,7 @@ public class Gradient extends MsgRetryComponent {
             periodicTimeout.setTimeoutEvent(new GradientSetsExchangeCycle(periodicTimeout));
             setsGossipingTimeoutId = periodicTimeout.getTimeoutEvent().getTimeoutId();
             delegator.doTrigger(periodicTimeout, timer);
-            similarSet = new SimilarSet(self, init.getConfig().getSimilarSetSize(), 
+            similarSet = new SimilarSet(self, init.getConfig().getViewSize(), 
                     init.getConfig().getTemperature());
 
             // Initialize the gradient fingers

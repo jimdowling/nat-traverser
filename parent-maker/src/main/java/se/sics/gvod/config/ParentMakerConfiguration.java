@@ -6,30 +6,46 @@ public final class ParentMakerConfiguration
     /** 
      * Fields cannot be private. Package protected, ok.
      */
+    // number of parents per child
     int parentSize;
+    // Max number of children per parent
     int childSize;
-    long parentUpdatePeriod;
-    long childRemoveTimeout;
-    long keepParentRttRange;
-    int retryNum;
-    long retryRto;
-    double retryScaleRto;
-    int numPingRetries;
-    long pingRto;
-    double pingScaleRto;
+    
+    // How often a child tries to update its parents
+    int parentUpdatePeriod;
+    
+    // When a child has been removed, how long do we keep a reference to it before
+    // actually removing it. The reason for this is that the NAT Binding will still
+    // exist when remove the child, so we might as well maintain a reference to the
+    // child until the NAT Binding expires, so any requests using the old parents for 
+    // the child can still be routed to the child.
+    int childRemoveTimeout;
+    
+    // Only replace your parent if: new Parent's RTT < current parent's RTT + keepParentRttRange
+    int keepParentRttRange;
+    
+    // How often a child pings its parent to refresh its NAT Binding Timeout (normally 30s)
+    int pingRto;
+    int pingRetries;
+    double pingRtoScale;
+
+    // How often a child pings its parent to refresh its NAT Binding Timeout (normally 30s)
+    int rto;
+    int rtoRetries;
+    double rtoScale;
 
     /** 
      * Default constructor comes first.
      */
     public ParentMakerConfiguration() {
         this(   VodConfig.getSeed(),
-                VodConfig.DEFAULT_PARENT_SIZE, 
-                VodConfig.DEFAULT_CHILDREN_SIZE, 
-                VodConfig.DEFAULT_PARENT_UPDATE_PERIOD, 
-                VodConfig.DEFAULT_CHILDREN_REMOVE_TIMEOUT, 
-                VodConfig.DEFAULT_PARENT_KEEP_RTT_TOLERANCE,
+                VodConfig.PM_PARENT_SIZE, 
+                VodConfig.PM_CHILDREN_SIZE, 
+                VodConfig.PM_PARENT_UPDATE_PERIOD, 
+                VodConfig.PM_CHILDREN_REMOVE_TIMEOUT, 
+                VodConfig.PM_PARENT_KEEP_RTT_TOLERANCE,
                 VodConfig.DEFAULT_RTO_RETRIES, 
-                VodConfig.DEFAULT_PARENT_RTO, 
+                VodConfig.PM_PARENT_RTO, 
                 VodConfig.DEFAULT_RTO_SCALE,
                 VodConfig.DEFAULT_RTO_RETRIES, 
                 15*1000, 
@@ -40,10 +56,10 @@ public final class ParentMakerConfiguration
      * Full argument constructor comes second. Contains seed from base class.
      */
     public ParentMakerConfiguration(int seed, int parentSize, int childSize, 
-            long parentUpdatePeriod, 
-            long removeChildTimeout, long keepParentRttRange, 
-            int retryNum, long retryRto, double retryScaleRto,
-            int numPingRetries, long pingRto, double pingScaleRto
+            int parentUpdatePeriod, 
+            int removeChildTimeout, int keepParentRttRange, 
+            int rtoRetries, int rto, double rtoScale,
+            int numPingRetries, int pingRto, double pingRtoScale
             ) {
         super(seed);
         this.parentSize = parentSize;
@@ -51,31 +67,31 @@ public final class ParentMakerConfiguration
         this.parentUpdatePeriod = parentUpdatePeriod;
         this.childRemoveTimeout = removeChildTimeout;
         this.keepParentRttRange = keepParentRttRange;
-        this.retryNum = retryNum;
-        this.retryRto = retryRto;
-        this.retryScaleRto = retryScaleRto;
-        this.numPingRetries = numPingRetries;
+        this.rtoRetries = rtoRetries;
+        this.rto = rto;
+        this.rtoScale = rtoScale;
+        this.pingRetries = numPingRetries;
         this.pingRto = pingRto;
-        this.pingScaleRto = pingScaleRto;
+        this.pingRtoScale = pingRtoScale;
     }
     
     public static ParentMakerConfiguration build() {
         return new ParentMakerConfiguration();
     }
 
-    public int getRetryNum() {
-        return retryNum;
+    public int getRtoRetries() {
+        return rtoRetries;
     }
 
-    public double getRetryScaleRto() {
-        return retryScaleRto;
+    public double getRtoScale() {
+        return rtoScale;
     }
 
-    public long getRetryRto() {
-        return retryRto;
+    public int getRto() {
+        return rto;
     }
 
-    public long getKeepParentRttRange() {
+    public int getKeepParentRttRange() {
         return keepParentRttRange;
     }
 
@@ -87,15 +103,15 @@ public final class ParentMakerConfiguration
         return this.childSize;
     }
 
-    public long getParentUpdatePeriod() {
+    public int getParentUpdatePeriod() {
         return this.parentUpdatePeriod;
     }
 
-    public long getChildRemoveTimeout() {
+    public int getChildRemoveTimeout() {
         return this.childRemoveTimeout;
     }
 
-    public ParentMakerConfiguration setChildRemoveTimeout(long childRemoveTimeout) {
+    public ParentMakerConfiguration setChildRemoveTimeout(int childRemoveTimeout) {
         this.childRemoveTimeout = childRemoveTimeout;
         return this;
     }
@@ -105,7 +121,7 @@ public final class ParentMakerConfiguration
         return this;
     }
 
-    public ParentMakerConfiguration setKeepParentRttRange(long keepParentRttRange) {
+    public ParentMakerConfiguration setKeepParentRttRange(int keepParentRttRange) {
         this.keepParentRttRange = keepParentRttRange;
         return this;
     }
@@ -115,50 +131,50 @@ public final class ParentMakerConfiguration
         return this;
     }
 
-    public ParentMakerConfiguration setParentUpdatePeriod(long parentUpdatePeriod) {
+    public ParentMakerConfiguration setParentUpdatePeriod(int parentUpdatePeriod) {
         this.parentUpdatePeriod = parentUpdatePeriod;
         return this;
     }
 
-    public ParentMakerConfiguration setRetryNum(int retryNum) {
-        this.retryNum = retryNum;
+    public ParentMakerConfiguration setRtoRetries(int rtoRetries) {
+        this.rtoRetries = rtoRetries;
         return this;
     }
 
-    public ParentMakerConfiguration setRetryRto(long retryRto) {
-        this.retryRto = retryRto;
+    public ParentMakerConfiguration setRto(int rto) {
+        this.rto = rto;
         return this;
     }
 
-    public ParentMakerConfiguration setRetryScaleRto(double retryScaleRto) {
-        this.retryScaleRto = retryScaleRto;
+    public ParentMakerConfiguration setRtoScale(double rtoScale) {
+        this.rtoScale = rtoScale;
         return this;
     }
 
-    public int getNumPingRetries() {
-        return numPingRetries;
+    public int getPingRetries() {
+        return pingRetries;
     }
 
-    public long getPingRto() {
+    public int getPingRto() {
         return pingRto;
     }
 
-    public double getPingScaleRto() {
-        return pingScaleRto;
+    public double getPingRtoScale() {
+        return pingRtoScale;
     }
 
-    public ParentMakerConfiguration setNumPingRetries(int numPingRetries) {
-        this.numPingRetries = numPingRetries;
+    public ParentMakerConfiguration setPingRetries(int pingRetries) {
+        this.pingRetries = pingRetries;
         return this;
     }
 
-    public ParentMakerConfiguration setPingRto(long pingRto) {
+    public ParentMakerConfiguration setPingRto(int pingRto) {
         this.pingRto = pingRto;
         return this;
     }
 
-    public ParentMakerConfiguration setPingScaleRto(double pingScaleRto) {
-        this.pingScaleRto = pingScaleRto;
+    public ParentMakerConfiguration setPingRtoScale(double pingRtoScale) {
+        this.pingRtoScale = pingRtoScale;
         return this;
     }
 

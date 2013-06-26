@@ -61,6 +61,7 @@ public final class StunClientMain extends ComponentDefinition {
     private static int SEED;
     private static String SERVER;
     private static boolean ENABLE_UPNP = false;
+    private static boolean NAT_BINDING_TIMEOUT_MEASURE = false;
     private Component stunClient;
     private Component timer;
     private Component network;
@@ -91,7 +92,10 @@ public final class StunClientMain extends ComponentDefinition {
             ENABLE_UPNP = Boolean.parseBoolean(args[1]);
         }
         if (args.length > 2) {
-            CLIENT_PORT = Integer.parseInt(args[2]);
+            NAT_BINDING_TIMEOUT_MEASURE = Boolean.parseBoolean(args[2]);
+        }
+        if (args.length > 3) {
+            CLIENT_PORT = Integer.parseInt(args[3]);
         }
         try {
             VodConfig.init(new String[0]);
@@ -166,8 +170,8 @@ public final class StunClientMain extends ComponentDefinition {
                     setRuleExpirationMinWait(RULE_EXPIRATION_TIMEOUT).
                     setMinimumRtt(MINIMUM_RTT).
                     setRandTolerance(10).
-                    setNumMsgRetries(5).
-                    setMsgRetryScale(1.2);
+                    setRtoRetries(5).
+                    setRtoScale(1.2);
 
             self = new SelfImpl(sca);
             trigger(new StunClientInit(self, SEED,
@@ -179,7 +183,7 @@ public final class StunClientMain extends ComponentDefinition {
 
             Set<Address> servers = new HashSet<Address>();
             servers.add(server);
-            trigger(new GetNatTypeRequest(servers), stunClient.getPositive(StunPort.class));
+            trigger(new GetNatTypeRequest(servers, NAT_BINDING_TIMEOUT_MEASURE), stunClient.getPositive(StunPort.class));
             trigger(st, timer.getPositive(Timer.class));
         }
     };

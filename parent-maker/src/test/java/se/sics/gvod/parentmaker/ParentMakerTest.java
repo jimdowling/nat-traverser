@@ -66,9 +66,9 @@ public class ParentMakerTest extends VodRetryComponentTestCase {
         parentMaker.handleInit.handle(new ParentMakerInit(this,  
                 ParentMakerConfiguration.build(). 
                 setParentUpdatePeriod(30*1000)
-                .setRetryRto(5*1000)
-                .setRetryScaleRto(1.5)
-                .setRetryNum(4)
+                .setRto(5*1000)
+                .setRtoScale(1.5)
+                .setRtoRetries(4)
                 .setKeepParentRttRange(200)
                 ));
         
@@ -77,9 +77,9 @@ public class ParentMakerTest extends VodRetryComponentTestCase {
 //                30*1000, 2, 5000, 1.5, 4, 200, 0
                 ParentMakerConfiguration.build(). 
                 setParentUpdatePeriod(30*1000)
-                .setRetryRto(5*1000)
-                .setRetryScaleRto(1.5)
-                .setRetryNum(4)
+                .setRto(5*1000)
+                .setRtoScale(1.5)
+                .setRtoRetries(4)
                 .setKeepParentRttRange(200)                
                 ));
         LinkedList<Event> events = pollEvent(1);

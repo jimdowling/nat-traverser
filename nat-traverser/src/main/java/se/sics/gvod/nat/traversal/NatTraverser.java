@@ -305,7 +305,7 @@ public class NatTraverser extends MsgRetryComponent {
             // number of connections
             if (maxOpenedConnections > 0) {
                 SchedulePeriodicTimeout st = new SchedulePeriodicTimeout(
-                        VodConfig.DEFAULT_NT_GARBAGE_COLLECT_STALE_CONNS_PERIOD, VodConfig.DEFAULT_NT_GARBAGE_COLLECT_STALE_CONNS_PERIOD);
+                        VodConfig.NT_GARBAGE_COLLECT_STALE_CONNS_PERIOD, VodConfig.NT_GARBAGE_COLLECT_STALE_CONNS_PERIOD);
                 GarbageCleanupTimeout msgTimeout = new GarbageCleanupTimeout(st);
                 st.setTimeoutEvent(msgTimeout);
                 delegator.doTrigger(st, timer);
@@ -341,9 +341,10 @@ public class NatTraverser extends MsgRetryComponent {
 
                 delegator.doTrigger(new GetNatTypeRequest(stunServers,
                         0 /*timeout before starting stun*/,
-                        init.getStunClientConfig().getMsgRetryDelay(),
-                        init.getStunClientConfig().getNumMsgRetries(),
-                        init.getStunClientConfig().getMsgRetryScale()),
+                        init.getStunClientConfig().isMeasureNatBindingTimeout(),
+                        init.getStunClientConfig().getRto(),
+                        init.getStunClientConfig().getRtoRetries(),
+                        init.getStunClientConfig().getRtoScale()),
                         stunClient.getPositive(StunPort.class));
             }
             //initialize the hole punching client
@@ -474,7 +475,7 @@ public class NatTraverser extends MsgRetryComponent {
     };
 
     private void startServerComponents() {
-        ScheduleTimeout st = new ScheduleTimeout(VodConfig.DEFAULT_NT_SERVER_INIT_RETRY_PERIOD);
+        ScheduleTimeout st = new ScheduleTimeout(VodConfig.NT_SERVER_INIT_RETRY_PERIOD);
         ServersInitTimeout t = new ServersInitTimeout(st);
         st.setTimeoutEvent(t);
         delegator.doTrigger(st, timer);
@@ -979,7 +980,7 @@ public class NatTraverser extends MsgRetryComponent {
 
             long t = System.currentTimeMillis();
             for (Long l : receivedRelaysIndex.keySet()) {
-                if (t - l > VodConfig.DEFAULT_NT_STALE_RELAY_MSG_TIME) {
+                if (t - l > VodConfig.NT_STALE_RELAY_MSG_TIME) {
                     HPSessionKey sk = receivedRelaysIndex.remove(l);
                     receivedRelays.remove(sk);
                 }
@@ -1065,9 +1066,10 @@ public class NatTraverser extends MsgRetryComponent {
                 stunServers.add(rtts.get(0).getAddress().getPeerAddress());
                 delegator.doTrigger(new GetNatTypeRequest(stunServers,
                         0 /*timeout before starting stun*/,
-                        stunClientConfiguration.getMsgRetryDelay(),
-                        stunClientConfiguration.getNumMsgRetries(),
-                        stunClientConfiguration.getMsgRetryScale()),
+                        stunClientConfiguration.isMeasureNatBindingTimeout(),
+                        stunClientConfiguration.getRto(),
+                        stunClientConfiguration.getRtoRetries(),
+                        stunClientConfiguration.getRtoScale()),
                         stunClient.getPositive(StunPort.class));
             }
         }

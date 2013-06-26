@@ -32,23 +32,31 @@ public class CroupierConfiguration
     /**
      * Fields cannot be private. Package protected, ok.
      */
+    // Max Number of references to neighbours stored in a view
     int viewSize;
+    // Number of references swapped with neighbours during a shuffle operation
     int shuffleLength;
+    // How often a node shuffles its view
     long shufflePeriod;
+
+    // Healer, Swapper, etc. See Jelasity's paper.
+    String policy;
+    
+    // The expected RTO for shuffleRequests
     long rto;
     int rtoRetries;
     double rtoScale;
-    String policy;
+    
 
     /**
      * Default constructor comes first.
      */
     public CroupierConfiguration() {
         this(VodConfig.getSeed(),
-                VodConfig.RANDOM_VIEW_SIZE,
-                VodConfig.SHUFFLE_LENGTH,
-                VodConfig.SHUFFLE_PERIOD,
-                VodConfig.SELECTION_POLICY.name(),
+                VodConfig.CROUPIER__VIEW_SIZE,
+                VodConfig.CROUPIER_SHUFFLE_LENGTH,
+                VodConfig.CROUPIER_SHUFFLE_PERIOD,
+                VodConfig.CROUPIER_SELECTION_POLICY.name(),
                 VodConfig.DEFAULT_RTO,
                 VodConfig.DEFAULT_RTO_RETRIES,
                 VodConfig.DEFAULT_RTO_SCALE);

@@ -323,8 +323,8 @@ public final class StunServer extends MsgRetryComponent {
             // user-supplied values taken instead.
             ServerHostChangeMsg.Request req = new ServerHostChangeMsg.Request(self.getAddress(),
                     dest, clientPublicIp.getPeerAddress(), transactionId, originalTimeoutId);
-            ScheduleRetryTimeout st = new ScheduleRetryTimeout(config.getMsgRetryDelay(), 
-                    config.getNumMsgRetries(), config.getMsgRetryScale());
+            ScheduleRetryTimeout st = new ScheduleRetryTimeout(config.getRto(), 
+                    config.getRtoRetries(), config.getRtoScale());
             ServerHostChangeMsg.RequestTimeout shct = new ServerHostChangeMsg.RequestTimeout(st, req);
             TimeoutId timeoutId = delegator.doRetry(shct);
             partnerRTTs.put(timeoutId, System.currentTimeMillis());

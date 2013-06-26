@@ -576,7 +576,7 @@ public class HolePunchingTest
                     setRuleExpirationMinWait(1000).
                     setMinimumRtt(3*1000).
                     setRandTolerance(10).
-                    setNumMsgRetries(0);
+                    setRtoRetries(0);
             
             VodAddress ga = ToVodAddr.stunClient(stunClient_A_Address);
             trigger(new StunClientInit(new SelfNoParents(ga),
@@ -712,12 +712,12 @@ public class HolePunchingTest
 
                 Set<Address> servers = new HashSet<Address>();
                 servers.add(s1Address);
-                trigger(new GetNatTypeRequest(servers, 10 * 1000),
+                trigger(new GetNatTypeRequest(servers, 10 * 1000, false),
                         stunClientComp_A.getPositive(StunPort.class));
                 trigger(st, timer.getPositive(Timer.class));
 
 
-                trigger(new GetNatTypeRequest(servers, 10 * 1000),
+                trigger(new GetNatTypeRequest(servers, 10 * 1000, false),
                         stunClientComp_B.getPositive(StunPort.class));
 
 
@@ -753,8 +753,8 @@ public class HolePunchingTest
                 trigger(new ParentMakerInit(self, 
                         ParentMakerConfiguration.build()
                         .setParentUpdatePeriod(30*1000)
-                        .setRetryRto(1000)
-                        .setRetryScaleRto(1.5d)
+                        .setRto(1000)
+                        .setRtoScale(1.5d)
                         .setKeepParentRttRange(1000)
                         .setParentSize(1)
                 ), parentA.getControl());
@@ -764,7 +764,7 @@ public class HolePunchingTest
                         setScanRetries(3).
                         setScanningEnabled(true).
                         setSessionExpirationTime(30*1000).
-                        setMessageRetryDelay(retryDelay)                                    
+                        setRto(retryDelay)                                    
                         ),
                         holePunchingClientComp_A.getControl());
 
@@ -818,8 +818,8 @@ public class HolePunchingTest
                 trigger(new ParentMakerInit(self, 
                         ParentMakerConfiguration.build()
                         .setParentUpdatePeriod(30*1000)
-                        .setRetryRto(1000)
-                        .setRetryScaleRto(1.5d)
+                        .setRto(1000)
+                        .setRtoScale(1.5d)
                         .setKeepParentRttRange(1000)
                         .setParentSize(1)                        
                 ), parentB.getControl());
@@ -831,7 +831,7 @@ public class HolePunchingTest
                         setScanRetries(5).
                         setScanningEnabled(true).
                         setSessionExpirationTime(30*1000).
-                        setMessageRetryDelay(retryDelay)                                                           
+                        setRto(retryDelay)                                                           
                         ), holePunchingClientComp_B.getControl());
 
                 boolean pass = true;

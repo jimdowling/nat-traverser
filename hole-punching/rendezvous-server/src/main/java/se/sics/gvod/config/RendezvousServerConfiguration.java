@@ -17,7 +17,7 @@ public final class RendezvousServerConfiguration
     public RendezvousServerConfiguration() {
         super(VodConfig.getSeed());
         this.sessionExpirationTime = Nat.UPPER_RULE_EXPIRATION_TIME;
-        this.numChildren = VodConfig.DEFAULT_CHILDREN_SIZE;
+        this.numChildren = VodConfig.PM_CHILDREN_SIZE;
     }
 
     /**

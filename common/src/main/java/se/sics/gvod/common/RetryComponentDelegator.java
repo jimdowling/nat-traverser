@@ -22,13 +22,13 @@ public interface RetryComponentDelegator extends ComponentDelegator {
     public TimeoutId doMulticast(RewriteableRetryTimeout timeout, Set<Address> multicastAddrs, 
             Object request);
     public TimeoutId doMulticast(RewriteableMsg msg, Set<Address> multicastAddrs, 
-            long timeoutInMilliSecs, int numRetries);
+            long timeoutInMilliSecs, int rtoRetries);
     public TimeoutId doMulticast(RewriteableMsg msg, Set<Address> multicastAddrs, 
-            long timeoutInMilliSecs, int numRetries,  Object request);
+            long timeoutInMilliSecs, int rtoRetries,  Object request);
     public TimeoutId doMulticast(RewriteableMsg msg, Set<Address> multicastAddrs, 
-            long timeoutInMilliSecs, int numRetries, double scaleRtoAfterRetry);
+            long timeoutInMilliSecs, int rtoRetries, double rtoScaleAfterRetry);
     public TimeoutId doMulticast(RewriteableMsg msg, Set<Address> multicastAddrs, 
-            long timeoutInMilliSecs, int numRetries, double scaleRtoAfterRetry, Object request);
+            long timeoutInMilliSecs, int rtoRetries, double rtoScaleAfterRetry, Object request);
     
     /*
      * This retry method retries the message a number of times, and
@@ -47,13 +47,13 @@ public interface RetryComponentDelegator extends ComponentDelegator {
      * You can't call cancelRetry() on the timeoutId returned by this method.
      */
     public TimeoutId doRetry(RewriteableMsg msg);
-    public TimeoutId doRetry(RewriteableMsg msg, long timeoutInMilliSecs, int numRetries);
-    public TimeoutId doRetry(RewriteableMsg msg, long timeoutInMilliSecs, int numRetries, 
+    public TimeoutId doRetry(RewriteableMsg msg, long timeoutInMilliSecs, int rtoRetries);
+    public TimeoutId doRetry(RewriteableMsg msg, long timeoutInMilliSecs, int rtoRetries, 
             Object request);
-    public TimeoutId doRetry(RewriteableMsg msg, long timeoutInMilliSecs, int numRetries, 
-            double scaleRtoAfterRetry);
-    public TimeoutId doRetry(RewriteableMsg msg, long timeoutInMilliSecs, int numRetries, 
-            double scaleRtoAfterRetry, Object request);
+    public TimeoutId doRetry(RewriteableMsg msg, long timeoutInMilliSecs, int rtoRetries, 
+            double rtoScaleAfterRetry);
+    public TimeoutId doRetry(RewriteableMsg msg, long timeoutInMilliSecs, int rtoRetries, 
+            double rtoScaleAfterRetry, Object request);
 
     /**
      * 

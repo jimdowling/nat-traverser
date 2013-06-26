@@ -110,27 +110,27 @@ public abstract class VodRetryComponentTestCase extends VodComponentTestCase
 
     @Override
     public TimeoutId doMulticast(RewriteableMsg msg, Set<Address> multicastAddrs,
-            long timeoutInMilliSecs, int numRetries) {
-        return doMulticast(msg, multicastAddrs, timeoutInMilliSecs, numRetries, null);
+            long timeoutInMilliSecs, int rtoRetries) {
+        return doMulticast(msg, multicastAddrs, timeoutInMilliSecs, rtoRetries, null);
     }
 
     @Override
     public TimeoutId doMulticast(RewriteableMsg msg, Set<Address> multicastAddrs,
-            long timeoutInMilliSecs, int numRetries,
+            long timeoutInMilliSecs, int rtoRetries,
             Object request) {
-        return doMulticast(msg, multicastAddrs, timeoutInMilliSecs, numRetries, 1.0d, request);
+        return doMulticast(msg, multicastAddrs, timeoutInMilliSecs, rtoRetries, 1.0d, request);
     }
 
     @Override
     public TimeoutId doMulticast(RewriteableMsg msg, Set<Address> multicastAddrs,
-            long timeoutInMilliSecs, int numRetries, double scaleRtoAfterRetry) {
-        return doMulticast(msg, multicastAddrs, timeoutInMilliSecs, numRetries, scaleRtoAfterRetry, null);
+            long timeoutInMilliSecs, int rtoRetries, double rtoScaleAfterRetry) {
+        return doMulticast(msg, multicastAddrs, timeoutInMilliSecs, rtoRetries, rtoScaleAfterRetry, null);
 
     }
 
     @Override
     public TimeoutId doMulticast(RewriteableMsg msg, Set<Address> multicastAddrs,
-            long timeoutInMilliSecs, int numRetries, double scaleRtoAfterRetry, Object request) {
+            long timeoutInMilliSecs, int rtoRetries, double rtoScaleAfterRetry, Object request) {
         for (Address addr : multicastAddrs) {
             msg.rewriteDestination(addr);
             eventList.add(msg);
@@ -144,25 +144,25 @@ public abstract class VodRetryComponentTestCase extends VodComponentTestCase
         return doRetry(msg, 0, 0, null);
     }
     @Override
-    public TimeoutId doRetry(RewriteableMsg msg, long timeoutInMilliSecs, int numRetries) {
-        return doRetry(msg, timeoutInMilliSecs, numRetries, null);
+    public TimeoutId doRetry(RewriteableMsg msg, long timeoutInMilliSecs, int rtoRetries) {
+        return doRetry(msg, timeoutInMilliSecs, rtoRetries, null);
     }
 
     @Override
-    public TimeoutId doRetry(RewriteableMsg msg, long timeoutInMilliSecs, int numRetries,
+    public TimeoutId doRetry(RewriteableMsg msg, long timeoutInMilliSecs, int rtoRetries,
             Object request) {
-        return doRetry(msg, timeoutInMilliSecs, numRetries, 1.0d, request);
+        return doRetry(msg, timeoutInMilliSecs, rtoRetries, 1.0d, request);
     }
 
     @Override
-    public TimeoutId doRetry(RewriteableMsg msg, long timeoutInMilliSecs, int numRetries,
-            double scaleRtoAfterRetry) {
-        return doRetry(msg, timeoutInMilliSecs, numRetries, scaleRtoAfterRetry, null);
+    public TimeoutId doRetry(RewriteableMsg msg, long timeoutInMilliSecs, int rtoRetries,
+            double rtoScaleAfterRetry) {
+        return doRetry(msg, timeoutInMilliSecs, rtoRetries, rtoScaleAfterRetry, null);
     }
 
     @Override
-    public TimeoutId doRetry(RewriteableMsg msg, long timeoutInMilliSecs, int numRetries,
-            double scaleRtoAfterRetry, Object request) {
+    public TimeoutId doRetry(RewriteableMsg msg, long timeoutInMilliSecs, int rtoRetries,
+            double rtoScaleAfterRetry, Object request) {
         eventList.add(msg);
         eventSemaphore.release();
         return null;

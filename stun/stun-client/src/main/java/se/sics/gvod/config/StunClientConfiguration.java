@@ -2,92 +2,103 @@ package se.sics.gvod.config;
 
 import se.sics.gvod.net.Nat;
 
-public final class StunClientConfiguration extends AbstractConfiguration<StunClientConfiguration>
-{
-    /** 
+public final class StunClientConfiguration extends AbstractConfiguration<StunClientConfiguration> {
+
+    /**
      * Fields cannot be private. Package protected, ok.
      */
+    // if the difference between two ports is less than tolerance value then the ports are contiguous
     int randTolerance;
+    // When establishing the amount of time a binding is kept in the NAT without being
+    // refreshed (NAT binding timeout), we test with a minimum value first, normally 30s.
     int ruleExpirationMinWait;
+    // When establishing the NAT binding timeout, increment the test timeout for the binding,
+    // normally by 30s. Smaller values give more accurate NAT binding timeouts, but at the cost
+    // of significantly increased running time.
     int ruleExpirationIncrement;
+    // Amount of time to wait until we have discovered a UPNP device in our proximity
     int upnpDiscoveryTimeout;
+    // Amount of time to wait until we receive a response from a UPnP message (e.g., MapPorts)
     int upnpTimeout;
+    // Do we test for a UPnP Internet Gateway Device (IGD)?
     boolean upnpEnable;
-    int minimumRtt;
-    int msgRetryDelay;
-    int numMsgRetries;
-    double msgRetryScale;
+    // Minimum Latency added to estimates of the RTO to a server, for safety.
+    // Higher values mean slower running of the protocol, but fewer timeouts and retries
+    int minimumRto;
+    // Do we try and establish the Nat Binding Timeout
+    boolean measureNatBindingTimeout;
+    // initial estimate of the RTO to a stun server
+    int rto;
+    // number of retries for msgs sent to stun servers
+    int rtoRetries;
+    // Amount to scale the RTO after a timeout.
+    double rtoScale;
 
-    /** 
+    /**
      * Default constructor comes first.
      */
-    public StunClientConfiguration()
-    {
-        this(VodConfig.getSeed(), 
-                2, 
-                Nat.DEFAULT_RULE_EXPIRATION_TIME, 
-                Nat.DEFAULT_RULE_EXPIRATION_TIME, 
-                VodConfig.DEFAULT_UPNP_DISCOVERY_TIMEOUT, 
-                VodConfig.DEFAULT_UPNP_TIMEOUT, 
-                VodConfig.DEFAULT_UPNP_ENABLED, 
-                VodConfig.DEFAULT_PARENT_KEEP_RTT_TOLERANCE, 
-                VodConfig.DEFAULT_STUN_RTO, 
-                VodConfig.DEFAULT_STUN_NUM_RETRIES, 
-                VodConfig.DEFAULT_STUN_RTO_SCALE
-                );
+    public StunClientConfiguration() {
+        this(VodConfig.getSeed(),
+                2, // Rand tolerance  
+                Nat.DEFAULT_RULE_EXPIRATION_TIME,
+                Nat.DEFAULT_RULE_EXPIRATION_TIME,
+                VodConfig.STUN_UPNP_DISCOVERY_TIMEOUT,
+                VodConfig.STUN_UPNP_TIMEOUT,
+                VodConfig.STUN_UPNP_ENABLED,
+                VodConfig.STUN_MIN_RTT,
+                VodConfig.STUN_MEASURE_NAT_BINDING_TIMEOUT,
+                VodConfig.STUN_RTO,
+                VodConfig.STUN_RTO_RETRIES,
+                VodConfig.STUN_RTO_SCALE);
     }
-    
-    /** 
+
+    /**
      * Full argument constructor comes second.
      */
     public StunClientConfiguration(
             int seed,
-            int randTolerance, 
-            int ruleExpirationMinWait, 
-            int ruleExpirationIncrement, 
-            int upnpDiscoveryTimeout, 
-            int upnpTimeout, 
+            int randTolerance,
+            int ruleExpirationMinWait,
+            int ruleExpirationIncrement,
+            int upnpDiscoveryTimeout,
+            int upnpTimeout,
             boolean upnpEnable,
             int minimumRtt,
-            int msgRetryDelay,             
-            int numMsgRetries,
-            double msgRetryScale
-            )
-    {
+            boolean measureNatBindingTimeout,
+            int rto,
+            int rtoRetries,
+            double rtoScale) {
         super(seed);
         this.randTolerance = randTolerance;
         this.ruleExpirationMinWait = ruleExpirationMinWait;
         this.ruleExpirationIncrement = ruleExpirationIncrement;
-        this.msgRetryDelay = msgRetryDelay;
         this.upnpDiscoveryTimeout = upnpDiscoveryTimeout;
         this.upnpTimeout = upnpTimeout;
         this.upnpEnable = upnpEnable;
-        this.minimumRtt = minimumRtt;
-        this.numMsgRetries = numMsgRetries;
-        this.msgRetryScale = msgRetryScale;
+        this.minimumRto = minimumRtt;
+        this.measureNatBindingTimeout = measureNatBindingTimeout;
+        this.rto = rto;
+        this.rtoRetries = rtoRetries;
+        this.rtoScale = rtoScale;
     }
 
     public static StunClientConfiguration build() {
         return new StunClientConfiguration();
     }
-    
-    public int getMsgRetryDelay()
-    {
-        return msgRetryDelay;
+
+    public int getRto() {
+        return rto;
     }
 
-    public int getRandTolerance()
-    {
+    public int getRandTolerance() {
         return randTolerance;
     }
 
-    public int getRuleExpirationIncrement()
-    {
+    public int getRuleExpirationIncrement() {
         return ruleExpirationIncrement;
     }
 
-    public int getRuleExpirationMinWait()
-    {
+    public int getRuleExpirationMinWait() {
         return ruleExpirationMinWait;
     }
 
@@ -102,26 +113,30 @@ public final class StunClientConfiguration extends AbstractConfiguration<StunCli
     public int getUpnpDiscoveryTimeout() {
         return upnpDiscoveryTimeout;
     }
-    
+
     public int getMinimumRtt() {
-        return minimumRtt;
+        return minimumRto;
     }
 
-    public int getNumMsgRetries() {
-        return numMsgRetries;
+    public int getRtoRetries() {
+        return rtoRetries;
     }
 
-    public double getMsgRetryScale() {
-        return msgRetryScale;
+    public double getRtoScale() {
+        return rtoRetries;
+    }
+
+    public boolean isMeasureNatBindingTimeout() {
+        return measureNatBindingTimeout;
     }
     
     public StunClientConfiguration setMinimumRtt(int minimumRtt) {
-        this.minimumRtt = minimumRtt;
+        this.minimumRto = minimumRtt;
         return this;
     }
 
     public StunClientConfiguration setMsgTimeout(int msgTimeout) {
-        this.msgRetryDelay = msgTimeout;
+        this.rto = msgTimeout;
         return this;
     }
 
@@ -155,14 +170,23 @@ public final class StunClientConfiguration extends AbstractConfiguration<StunCli
         return this;
     }
 
-    public StunClientConfiguration setMsgRetryScale(double msgRetryScale) {
-        this.msgRetryScale = msgRetryScale;
+    public StunClientConfiguration setRto(int rto) {
+        this.rto = rto;
         return this;
     }
 
-    public StunClientConfiguration setNumMsgRetries(int numMsgRetries) {
-        this.numMsgRetries = numMsgRetries;
+    public StunClientConfiguration setRtoRetries(int rtoRetries) {
+        this.rtoRetries = rtoRetries;
         return this;
     }
 
+    public StunClientConfiguration setRtoScale(double rtoScale) {
+        this.rtoScale = rtoScale;
+        return this;
+    }
+    
+    public StunClientConfiguration setMeasureNatBindingTimeout(boolean measureNatBindingTimeout) {
+        this.measureNatBindingTimeout = measureNatBindingTimeout;
+        return this;
+    }
 }

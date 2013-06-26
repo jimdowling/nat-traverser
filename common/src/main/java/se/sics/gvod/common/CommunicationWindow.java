@@ -47,9 +47,9 @@ public class CommunicationWindow implements Serializable {
     private List<TimeoutId> outstandingMessages;
     private LinkedList<TimeDelay> baseDelaysMins = new LinkedList<TimeDelay>();
     private LinkedList<Long> currentDelays;
-    private int sizeCurrentDelays = VodConfig.CURRENT_FILTER;
-    private final long target = VodConfig.DEFAULT_LEDBAT_TARGET_DELAY; // 100
-    private final int numDelayIntervals = VodConfig.DEFAULT_DELAY_BOUNDARY / (60 * 1000);
+    private int sizeCurrentDelays = VodConfig.LB_CURRENT_FILTER;
+    private final long target = VodConfig.LB_LEDBAT_TARGET_DELAY; // 100
+    private final int numDelayIntervals = VodConfig.LB_DELAY_BOUNDARY / (60 * 1000);
     private long baseTime = 0;
     private long lastPacketLossTime = 0;
 
@@ -76,8 +76,8 @@ public class CommunicationWindow implements Serializable {
         outstandingMessages = new ArrayList<TimeoutId>();
         currentDelays = new LinkedList<Long>();
         this.size = size;
-        if (size < VodConfig.MIN_SIZE) {
-            this.size = VodConfig.MIN_SIZE;
+        if (size < VodConfig.LB_MIN_SIZE) {
+            this.size = VodConfig.LB_MIN_SIZE;
         }
         maxWindowSize = maxSize;
     }
@@ -131,12 +131,12 @@ public class CommunicationWindow implements Serializable {
         updateCurrentDelay(delay);
         long queuingDelay = currentDelay() - baseDelay();
         double offTarget = target - queuingDelay;
-        int incWinSize = (int) (VodConfig.GAIN * VodConfig.MAX_SEGMENT_SIZE * offTarget / size);
+        int incWinSize = (int) (VodConfig.LB_GAIN * VodConfig.LB_MAX_SEGMENT_SIZE * offTarget / size);
 
 //        max_allowed_cwnd = flightsize + ALLOWED_INCREASE * MSS
         size += incWinSize;
-        if (size < VodConfig.MIN_SIZE) {
-            size = VodConfig.MIN_SIZE;
+        if (size < VodConfig.LB_MIN_SIZE) {
+            size = VodConfig.LB_MIN_SIZE;
         } else if (maxWindowSize > 0 && size > maxWindowSize) {
             size = maxWindowSize;
         }
@@ -236,10 +236,10 @@ public class CommunicationWindow implements Serializable {
         removeMessage(id, s);
         long now = System.currentTimeMillis();
         if (now - lastPacketLossTime > 1000) {
-            size *= VodConfig.SCALE_DOWN_SIZE_TIMEOUT;
+            size *= VodConfig.LB_SCALE_DOWN_SIZE_TIMEOUT;
             logger.debug("TIMEOUT. Comms Window. Size now: " + size);
-            if (size < VodConfig.MIN_SIZE) {
-                size = VodConfig.MIN_SIZE;
+            if (size < VodConfig.LB_MIN_SIZE) {
+                size = VodConfig.LB_MIN_SIZE;
             }
         }
         lastPacketLossTime = now;

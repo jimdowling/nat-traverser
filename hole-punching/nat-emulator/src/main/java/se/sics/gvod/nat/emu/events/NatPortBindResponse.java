@@ -16,16 +16,16 @@ import se.sics.gvod.net.events.PortBindResponse;
 public class NatPortBindResponse extends PortBindResponse
 {
     private final BindingSession session;
-    private final int numRetries;
+    private final int rtoRetries;
 
     public NatPortBindResponse(PortBindRequest request, BindingSession session, 
-            int numRetries) {
+            int rtoRetries) {
         super(request);
         this.session = session;
-        this.numRetries = numRetries;
+        this.rtoRetries = rtoRetries;
     }
-    public int getNumRetries() {
-        return numRetries;
+    public int getRtoRetries() {
+        return rtoRetries;
     }
 
     public BindingSession getSession() {
