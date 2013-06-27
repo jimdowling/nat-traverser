@@ -193,7 +193,7 @@ public final class StunClientMain extends ComponentDefinition {
 //            addr = event.getIpAddress();
             logger.info("my ip is " + addr);
             Address stunClientAddress = new Address(addr, CLIENT_PORT, CLIENT_ID);
-            trigger(new NettyInit(stunClientAddress, true, SEED), network.getControl());
+            trigger(new NettyInit(stunClientAddress, false, SEED), network.getControl());
 
             VodAddress sca = ToVodAddr.stunClient(stunClientAddress);
 
