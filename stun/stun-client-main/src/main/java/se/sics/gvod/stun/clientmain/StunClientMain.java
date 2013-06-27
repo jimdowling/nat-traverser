@@ -6,6 +6,7 @@ import java.net.UnknownHostException;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.logging.Level;
 import org.apache.log4j.Logger;
 import se.sics.gvod.net.VodNetwork;
 import se.sics.gvod.net.NatNetworkControl;
@@ -83,8 +84,8 @@ public final class StunClientMain extends ComponentDefinition {
 //------------------------------------------------------------------------    
     public static void main(String[] args) {
         // This initializes the Kompics runtime, and creates an instance of Root
-        if (args.length < 1) {
-            System.out.println("Usage: <prog> server [enable-upnp] [0|1|2 "
+        if (args.length < 3) {
+            System.out.println("Usage: <prog> server enable-upnp 0|1|2 "
                     + "(publicIp|privIp1|privIp2) [enable-natBindingTimeoutMeasure] [clientPort] ");
             System.exit(0);
         }
@@ -109,6 +110,11 @@ public final class StunClientMain extends ComponentDefinition {
             logger.warn(ex.toString());
         }
 
+        try {
+            Thread.sleep(5 * 1000);
+        } catch (InterruptedException ex) {
+            java.util.logging.Logger.getLogger(StunClientMain.class.getName()).log(Level.SEVERE, null, ex);
+        }
         Kompics.createAndStart(StunClientMain.class, 2);
     }
 
