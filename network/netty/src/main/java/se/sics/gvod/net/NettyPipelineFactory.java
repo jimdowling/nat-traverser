@@ -1,6 +1,5 @@
 package se.sics.gvod.net;
 
-import java.util.concurrent.atomic.AtomicLong;
 import org.jboss.netty.channel.ChannelPipeline;
 import org.jboss.netty.channel.ChannelPipelineFactory;
 import org.jboss.netty.channel.Channels;
@@ -16,6 +15,8 @@ public class NettyPipelineFactory implements ChannelPipelineFactory {
 //TRUSTSTORE_PATH, TS_PASS, TLS_SESSION_CACHE_SIZE);
     private final NettyHandler handler;
 
+    private Class<? extends MsgFrameDecoder> msgDecoderClass;
+    
     /**
      * Constructor
      * @param channelGroup
@@ -24,12 +25,16 @@ public class NettyPipelineFactory implements ChannelPipelineFactory {
      * @param max max connection
      */
     public NettyPipelineFactory(NettyHandler handler, ChannelGroup channelGroup,
-            OrderedMemoryAwareThreadPoolExecutor pipelineExecutor) {
+            OrderedMemoryAwareThreadPoolExecutor pipelineExecutor, 
+            Class<? extends MsgFrameDecoder> msgDecoderClass) {
         super();
         this.handler = handler;
         this.channelGroup = channelGroup;
         this.pipelineExecutor = pipelineExecutor;
+        this.msgDecoderClass = msgDecoderClass;
     }
+       
+    
 
     /**
      * Initiate the Pipeline for the newly active connection with ObjectXxcoder.
@@ -64,7 +69,7 @@ public class NettyPipelineFactory implements ChannelPipelineFactory {
 
 
 //        pipeline.addFirst("byteCounter", byteCounter);
-        pipeline.addLast("decoder", new MsgFrameDecoder());
+        pipeline.addLast("decoder", msgDecoderClass.newInstance());
         pipeline.addLast("encoder", new MsgFrameEncoder());
 //        pipeline.addLast("decoder", new ObjectDecoder(NettyNetwork.MAX_OBJECT_SIZE));
 //        pipeline.addLast("encoder", new ObjectEncoder(1650));

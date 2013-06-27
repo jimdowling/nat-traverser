@@ -24,7 +24,14 @@ public class RelayRequestMsgFactory {
         @Override
         protected RelayRequestMsg.ClientToServer process(ChannelBuffer buffer) throws MessageDecodingException {
 
-            MsgFrameDecoder decoder = new MsgFrameDecoder();
+            MsgFrameDecoder decoder= null;
+            try {
+                decoder = VodMsgNettyFactory.msgFrameDecoder.newInstance();
+            } catch (InstantiationException ex) {
+                Logger.getLogger(RelayRequestMsgFactory.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (IllegalAccessException ex) {
+                Logger.getLogger(RelayRequestMsgFactory.class.getName()).log(Level.SEVERE, null, ex);
+            }
             VodMsg message = null;
             try {
                 message = (VodMsg) decoder.parse(buffer);
@@ -52,7 +59,16 @@ public class RelayRequestMsgFactory {
         @Override
         protected RelayRequestMsg.ServerToClient process(ChannelBuffer buffer) throws MessageDecodingException {
 
-            MsgFrameDecoder decoder = new MsgFrameDecoder();
+            MsgFrameDecoder decoder;
+            try {
+                decoder = VodMsgNettyFactory.msgFrameDecoder.newInstance();
+            } catch (InstantiationException ex) {
+                Logger.getLogger(RelayRequestMsgFactory.class.getName()).log(Level.SEVERE, null, ex);
+                throw new MessageDecodingException(ex.getMessage());
+            } catch (IllegalAccessException ex) {
+                Logger.getLogger(RelayRequestMsgFactory.class.getName()).log(Level.SEVERE, null, ex);
+                throw new MessageDecodingException(ex.getMessage());
+            }
             VodMsg message = null;
             try {
                 message = (VodMsg) decoder.parse(buffer);

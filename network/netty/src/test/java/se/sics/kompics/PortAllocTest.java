@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import se.sics.gvod.net.NatNetworkControl;
 import se.sics.gvod.net.events.PortAllocRequest;
 import se.sics.gvod.address.Address;
+import se.sics.gvod.net.BaseMsgFrameDecoder;
 import se.sics.gvod.net.NettyInit;
 import se.sics.gvod.net.NettyNetwork;
 import se.sics.gvod.timer.ScheduleTimeout;
@@ -77,7 +78,7 @@ public class PortAllocTest
             self = new Address(addr, port, 1);
 
 
-            trigger(new NettyInit(self, false, (int) 132), netty.getControl());
+            trigger(new NettyInit(self, false, (int) 132, BaseMsgFrameDecoder.class), netty.getControl());
 
         }
         public Handler<Start> handleStart = new Handler<Start>() {

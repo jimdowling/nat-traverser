@@ -1,6 +1,6 @@
 #!/bin/bash
-if [ $# -lt 2 ] ; then
- echo "usage: <prog> server upnp [clientPort]"
+if [ $# -lt 3 ] ; then
+ echo "usage: <prog> server upnp 0|1|2 (publicIp/privIp|tenDotIp1|tenDotIp2) [natBinding] [clientPort]"
  echo "Example: <prog> cloud7.sics.se true"
  exit 1
 fi

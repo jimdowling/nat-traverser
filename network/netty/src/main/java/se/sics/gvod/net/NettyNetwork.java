@@ -43,6 +43,7 @@ import org.jboss.netty.util.DefaultObjectSizeEstimator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import se.sics.gvod.address.Address;
+import se.sics.gvod.common.msgs.VodMsgNettyFactory;
 import se.sics.gvod.config.VodConfig;
 import se.sics.gvod.net.events.*;
 import se.sics.gvod.net.msgs.RewriteableMsg;
@@ -82,6 +83,7 @@ public final class NettyNetwork extends ComponentDefinition {
     DatagramChannelFactory factoryDataChannel;
     private int maxPacketSize;
     private boolean bindAllNetworkIfs;
+    private Class<? extends MsgFrameDecoder> msgDecoderClass;
     /**
      * locally bound sockets
      */
@@ -238,6 +240,9 @@ public final class NettyNetwork extends ComponentDefinition {
                 throw new IllegalArgumentException("Netty problem: max Packet Size must be set to greater than zero.");
             }
 
+            msgDecoderClass = init.getMsgDecoderClass();
+            VodMsgNettyFactory.setMsgFrameDecoder(msgDecoderClass);
+            
             // Executors.newCachedThreadPool is an unbounded thread pool, with automatic thread reclamation
             factoryDataChannel = new NioDatagramChannelFactory(Executors.newCachedThreadPool());
 
@@ -392,7 +397,7 @@ public final class NettyNetwork extends ComponentDefinition {
                 Executors.defaultThreadFactory());
 
         bootstrap.setPipelineFactory(new NettyPipelineFactory(handler, channelGroup,
-                pipelineExecutor));
+                pipelineExecutor, msgDecoderClass));
 
 
         // Allow packets as large as up to 1600 bytes (default is 768).

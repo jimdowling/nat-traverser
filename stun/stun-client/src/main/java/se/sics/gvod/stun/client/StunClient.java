@@ -284,32 +284,40 @@ public class StunClient extends MsgRetryComponent {
     }
 
     private void sendEchoRequest(VodAddress target, EchoMsg.Test testType, long transactionId) {
+        int rto = calculateRto(target.getPeerAddress(), 0);
+        
         EchoMsg.Request bindingReq = new EchoMsg.Request(self.getAddress(),
                 target, testType, transactionId);
         ScheduleRetryTimeout st =
-                new ScheduleRetryTimeout(config.getRto(), config.getRtoRetries(),
+                new ScheduleRetryTimeout(rto, config.getRtoRetries(),
                 config.getRtoScale());
         EchoMsg.RequestRetryTimeout requestRetryTimeout =
                 new EchoMsg.RequestRetryTimeout(st, bindingReq);
         delegator.doRetry(requestRetryTimeout);
         logger.debug(compName + "Sending " + testType + " from "
-                + self.getAddress() + " to" + target.getPeerAddress() + " . Timeout: "
-                + config.getRto() + ". Retries left: " + config.getRtoRetries() + " tid: "
+                + self.getAddress() + " to" + target.getPeerAddress() + " . Rto="
+                + config.getRto() + " retries=" + config.getRtoRetries() + " tid: "
                 + transactionId);
     }
 
+    private int calculateRto(Address dest, long additional) {
+        RoundTripTime echoRtt = echoRtts.get(dest);
+        long client2ServerRtt = (echoRtt != null) ? echoRtt.getRtt() : config.getRto();
+        return (int) ((client2ServerRtt * 1.5) + (additional)
+                + config.getMinimumRtt());
+    }
+    
     private void sendEchoChangeIpAndPortRequest(VodAddress target, long transactionId) {
 
         Session session = sessionMap.get(transactionId);
         long server2PartnerRto = session.getBestPartnerRtt();
-        RoundTripTime echoRtt = echoRtts.get(target.getPeerAddress());
-        long client2ServerRtt = (echoRtt != null) ? echoRtt.getRtt() : config.getRto();
-        long timeout = (client2ServerRtt * 2) + (server2PartnerRto)
-                + config.getMinimumRtt();
+        int rto = calculateRto(target.getPeerAddress(), server2PartnerRto);
+        logger.debug(compName + "sendEchoChangeIpAndPortRequest " + " Rto=" + rto + " - "
+                + transactionId);
         EchoChangeIpAndPortMsg.Request echoChangeIpReq = new EchoChangeIpAndPortMsg.Request(
                 self.getAddress(), target, transactionId);
         ScheduleRetryTimeout st =
-                new ScheduleRetryTimeout(timeout, config.getRtoRetries(),
+                new ScheduleRetryTimeout(rto, config.getRtoRetries(),
                 config.getRtoScale());
         EchoChangeIpAndPortMsg.RequestRetryTimeout requestMsg =
                 new EchoChangeIpAndPortMsg.RequestRetryTimeout(st, echoChangeIpReq);
@@ -317,8 +325,7 @@ public class StunClient extends MsgRetryComponent {
 
         logger.debug(compName + "Sending EchoChangeIpandPort from :"
                 + self.getAddress() + " to" + target.getIp()
-                + " timeout = 2*(" + client2ServerRtt + " + "
-                + server2PartnerRto + ")" + " retries is " + config.getRtoRetries()
+                + " rto= " + rto + " retries= " + config.getRtoRetries()
                 + " tid: " + transactionId);
 
     }
@@ -328,17 +335,15 @@ public class StunClient extends MsgRetryComponent {
         EchoChangePortMsg.Request echoChangePortReq = new EchoChangePortMsg.Request(
                 self.getAddress(), target, transactionId);
         RoundTripTime echoRtt = echoRtts.get(target.getPeerAddress());
-        long timeout = (echoRtt != null)
-                ? (echoRtt.getRtt() + config.getMinimumRtt()) : config.getRto();
-
+        long rto = calculateRto(target.getPeerAddress(), 0);
         ScheduleRetryTimeout st =
-                new ScheduleRetryTimeout(timeout, config.getRtoRetries(),
+                new ScheduleRetryTimeout(rto, config.getRtoRetries(),
                 config.getRtoScale());
         delegator.doRetry(new EchoChangePortMsg.RequestRetryTimeout(st, echoChangePortReq));
 
-        logger.debug(compName + "Sending EchoChangePort from port/id :"
-                + self.getPort() + ":" + self.getId() + " to" + target.getIp() + " timeout = " + timeout
-                + " retries is" + config.getRtoRetries() + " tid: " + transactionId);
+        logger.debug(compName + "Sending EchoChangePort:"
+                + target.getPeerAddress() + " Rto= " + rto
+                + " retries=" + config.getRtoRetries() + " tid: " + transactionId);
     }
 
     private void testIfFinished(Session session, long transactionId) {
@@ -658,23 +663,23 @@ public class StunClient extends MsgRetryComponent {
 
     private void sendPingRequest(VodAddress source, VodAddress dest,
             long transactionId, int tryId) {
-        logger.debug(compName + "Sending Echo Ping " + tryId + " from ip/port/id :"
-                + source.getIp().getHostAddress() + ":"
-                + source.getPort() + "/" + source.getId()
-                + " to " + dest.getId() + " tid: " + transactionId);
         EchoMsg.Request pingReq =
                 new EchoMsg.Request(source, dest, EchoMsg.Test.PING, transactionId);
         pingReq.setTryId(tryId);
 
-        // TODO - retry once
+        int rto = calculateRto(dest.getPeerAddress(), 0);
         ScheduleRetryTimeout st =
-                new ScheduleRetryTimeout(config.getRto(),
+                new ScheduleRetryTimeout(rto,
                 config.getRtoRetries(), config.getRtoScale());
 
         EchoMsg.RequestRetryTimeout requestRetryTimeout =
                 new EchoMsg.RequestRetryTimeout(st, pingReq);
 
         delegator.doRetry(requestRetryTimeout);
+        logger.debug(compName + "Sending Echo Ping " + tryId 
+                + " to " + dest.getPeerAddress()
+                + " Rto=" + rto
+                + " tid: " + transactionId);
     }
 
     private void storeSample(Address serverAddress, long rtt) {
@@ -1020,6 +1025,7 @@ public class StunClient extends MsgRetryComponent {
     private void sendResponse(Session session, GetNatTypeResponse.Status status) {
 
         long tid = (session == null) ? -1 : session.getTransactionId();
+        long timeTaken = (session == null) ? 0 : (System.currentTimeMillis() - session.getStartTime());
         logger.debug(compName + " sending the nat response . status " + status
                 + " tid: " + tid);
 
@@ -1065,10 +1071,7 @@ public class StunClient extends MsgRetryComponent {
 
         logger.debug(compName + status + ": Nat Type is " + nat.toString());
 
-        List<RoundTripTime> list = new ArrayList<RoundTripTime>(echoRtts.values());
-        Collections.sort(list);
-
-        delegator.doTrigger(new GetNatTypeResponse(nat, status, null, list), stunPort);
+        delegator.doTrigger(new GetNatTypeResponse(nat, status, null, timeTaken), stunPort);
         ongoing = false;
     }
 

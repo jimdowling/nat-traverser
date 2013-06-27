@@ -28,6 +28,7 @@ import se.sics.gvod.nat.emu.events.DistributedNatGatewayEmulatorInit;
 import se.sics.gvod.net.VodAddress;
 import se.sics.gvod.stun.client.StunClient;
 import se.sics.gvod.config.StunClientConfiguration;
+import se.sics.gvod.net.BaseMsgFrameDecoder;
 import se.sics.gvod.stun.client.StunPort;
 import se.sics.gvod.stun.client.events.GetNatTypeRequest;
 import se.sics.gvod.stun.client.events.GetNatTypeResponse;
@@ -165,7 +166,8 @@ public final class StunClientDistributedNatEmulatorMain extends ComponentDefinit
             logger.log(Level.INFO, "my ip is {0}\n", addr);
             Address stunClientAddress = new Address(addr, CLIENT_PORT, CLIENT_ID);
 
-            trigger(new NettyInit(stunClientAddress, false, SEED), network.getControl());
+            trigger(new NettyInit(stunClientAddress, false, SEED, BaseMsgFrameDecoder.class), 
+                    network.getControl());
 
             trigger(new DistributedNatGatewayEmulatorInit(
                     50000 /*start port range */,

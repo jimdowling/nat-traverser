@@ -52,6 +52,7 @@ import se.sics.gvod.net.VodAddress;
     private int clientSecondRandomPort;
     private long ruleDeterminationStartTime;
     private long ruleLifeTime;
+    private final long startTime;
     private int natRuleExpirationTime;
     private final Address privateAddress;
     private Logger Logger = LoggerFactory.getLogger(getClass().getName());
@@ -62,8 +63,13 @@ import se.sics.gvod.net.VodAddress;
         this.privateAddress = privateAddress;
         this.server1 = stunServer;
         this.measureNatBindingTimeout = measureNatBindingTimeout;
+        startTime = System.currentTimeMillis();
     }
 
+    public long getStartTime() {
+        return startTime;
+    }
+    
     public boolean isMeasureNatBindingTimeout() {
         return measureNatBindingTimeout;
     }

@@ -19,6 +19,7 @@ import se.sics.gvod.net.VodNetwork;
 import se.sics.gvod.address.Address;
 import se.sics.gvod.common.UtilityVod;
 import se.sics.gvod.config.VodConfig;
+import se.sics.gvod.net.BaseMsgFrameDecoder;
 import se.sics.gvod.net.NettyInit;
 import se.sics.gvod.net.NettyNetwork;
 import se.sics.gvod.timer.ScheduleTimeout;
@@ -100,9 +101,9 @@ public class SetsExchangeTest
             subscribe(handleSetsExchangeResponse, client.getPositive(VodNetwork.class));
             subscribe(handleSetsExchangeResponse, server.getPositive(VodNetwork.class));
 
-            trigger(new NettyInit(clientAddr.getPeerAddress(), true, (int) 132),
+            trigger(new NettyInit(clientAddr.getPeerAddress(), true, (int) 132, BaseMsgFrameDecoder.class),
                     client.getControl());
-            trigger(new NettyInit(serverAddr.getPeerAddress(), true, (int) 132),
+            trigger(new NettyInit(serverAddr.getPeerAddress(), true, (int) 132, BaseMsgFrameDecoder.class),
                     server.getControl());
 
         }

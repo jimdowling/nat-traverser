@@ -43,6 +43,7 @@ import se.sics.gvod.net.VodAddress;
 import se.sics.gvod.config.ParentMakerConfiguration;
 import se.sics.gvod.config.StunClientConfiguration;
 import se.sics.gvod.config.StunServerConfiguration;
+import se.sics.gvod.net.BaseMsgFrameDecoder;
 import se.sics.gvod.timer.ScheduleTimeout;
 import se.sics.gvod.timer.Timeout;
 import se.sics.gvod.timer.UUID;
@@ -162,7 +163,7 @@ public final class HpNatTraverserMain extends ComponentDefinition {
 
                 localAddress = new Address(localIp, VodConfig.getPort(), myId);
                 trigger(new NettyInit(localAddress, true,
-                        VodConfig.getSeed()), network.getControl());
+                        VodConfig.getSeed(), BaseMsgFrameDecoder.class), network.getControl());
 
                 Address server = servers.iterator().next();
                 // Add this server to the RTTStore, so that ParentMaker can find it

@@ -43,6 +43,7 @@ import se.sics.gvod.net.NettyInit;
 import se.sics.gvod.net.NettyNetwork;
 import se.sics.gvod.net.msgs.RewriteableMsg;
 import se.sics.gvod.config.StunClientConfiguration;
+import se.sics.gvod.net.BaseMsgFrameDecoder;
 import static se.sics.gvod.stun.clientmain.StunClientMain.MINIMUM_RTT;
 import static se.sics.gvod.stun.clientmain.StunClientMain.MSG_RETRY_TIMEOUT;
 import static se.sics.gvod.stun.clientmain.StunClientMain.RULE_EXPIRATION_INCREMENT;
@@ -221,7 +222,7 @@ public class StunClientDistributedTest
                 connect(natComp.getNegative(NatNetworkControl.class), net.getPositive(NatNetworkControl.class));
                 connect(natComp.getNegative(Timer.class), timer.getPositive(Timer.class));
 
-                trigger(new NettyInit(natAddress, false, seed), net.getControl());
+                trigger(new NettyInit(natAddress, false, seed, BaseMsgFrameDecoder.class), net.getControl());
 
 
                 VodAddress sca = ToVodAddr.stunClient(privateAddress);

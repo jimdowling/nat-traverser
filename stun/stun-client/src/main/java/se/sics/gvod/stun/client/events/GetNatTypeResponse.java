@@ -1,11 +1,9 @@
 package se.sics.gvod.stun.client.events;
 
 import java.net.InetAddress;
-import java.util.List;
 import se.sics.gvod.net.Nat;
 import se.sics.kompics.Event;
 import se.sics.gvod.address.Address;
-import se.sics.gvod.stun.client.RoundTripTime;
 
 public final class GetNatTypeResponse extends Event {
 
@@ -26,24 +24,25 @@ public final class GetNatTypeResponse extends Event {
     private final InetAddress externalUpnpIp;
     private final int mappedUpnpPort;
     private final Address stunServer;
-    private final List<RoundTripTime> roundTripTimes;
-
-    public GetNatTypeResponse(Nat nat, Status status, Address stunServer, List<RoundTripTime> rtts) {
+    private final long timeTaken;
+    
+    public GetNatTypeResponse(Nat nat, Status status, Address stunServer, long timeTaken) {
         this.nat = nat;
         this.status = status;
         this.mappedUpnpPort = 0;
         this.externalUpnpIp = null;
         this.stunServer = stunServer;
-        this.roundTripTimes = rtts;
+        this.timeTaken = timeTaken;
     }
 
-    public GetNatTypeResponse(Nat natType, Status status, InetAddress externalUpnpIp, int mappedUpnpPort, List<RoundTripTime> pingTimes) {
+    public GetNatTypeResponse(Nat natType, Status status, InetAddress externalUpnpIp, 
+            int mappedUpnpPort, long timeTaken) {
         this.nat = natType;
         this.status = status;
         this.externalUpnpIp = externalUpnpIp;
         this.mappedUpnpPort = mappedUpnpPort;
         this.stunServer = null;
-        this.roundTripTimes = pingTimes;
+        this.timeTaken = timeTaken;
     }
 
     public Address getStunServer() {
@@ -66,7 +65,7 @@ public final class GetNatTypeResponse extends Event {
         return status;
     }
 
-    public List<RoundTripTime> getRoundTripTimes() {
-        return roundTripTimes;
+    public long getTimeTaken() {
+        return timeTaken;
     }
 }

@@ -11,14 +11,14 @@ import se.sics.gvod.address.Address;
  *
  */
 public class RoundTripTime implements Serializable, Comparable<RoundTripTime> {
-    
-    //round-trip time
+
+    private final long MAX_RTT = 2000;
     private final long rtt;
     private final Address address;
 
     public RoundTripTime(long rtt, Address address) {
         this.address = address;
-        this.rtt = rtt;
+        this.rtt = (rtt < MAX_RTT) ? rtt : MAX_RTT;
     }
 
     public long getRtt() {

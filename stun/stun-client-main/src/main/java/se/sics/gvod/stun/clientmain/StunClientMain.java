@@ -26,6 +26,7 @@ import se.sics.gvod.net.NettyInit;
 import se.sics.gvod.stun.client.StunClient;
 import se.sics.gvod.config.StunClientConfiguration;
 import se.sics.gvod.config.VodConfig;
+import se.sics.gvod.net.BaseMsgFrameDecoder;
 import se.sics.gvod.stun.client.StunPort;
 import se.sics.gvod.stun.client.events.GetNatTypeRequest;
 import se.sics.gvod.stun.client.events.GetNatTypeResponse;
@@ -86,7 +87,7 @@ public final class StunClientMain extends ComponentDefinition {
         // This initializes the Kompics runtime, and creates an instance of Root
         if (args.length < 3) {
             System.out.println("Usage: <prog> server enable-upnp 0|1|2 "
-                    + "(publicIp|privIp1|privIp2) [enable-natBindingTimeoutMeasure] [clientPort] ");
+                    + "(publicIp/192Ip|TenDotIp1|TenDotIp2) [enable-natBindingTimeoutMeasure] [clientPort] ");
             System.exit(0);
         }
 
@@ -154,8 +155,8 @@ public final class StunClientMain extends ComponentDefinition {
             if (pickIp == 0) {
                 trigger(new GetIpRequest(false, EnumSet.of(
                         GetIpRequest.NetworkInterfacesMask.IGNORE_LOOPBACK,
-                        GetIpRequest.NetworkInterfacesMask.IGNORE_TEN_DOT_PRIVATE,
-                        GetIpRequest.NetworkInterfacesMask.IGNORE_PRIVATE)),
+                        GetIpRequest.NetworkInterfacesMask.IGNORE_TEN_DOT_PRIVATE
+                        )),
                         resolveIp.getPositive(ResolveIpPort.class));
             } else {
                 trigger(new GetIpRequest(false, EnumSet.of(
@@ -193,7 +194,7 @@ public final class StunClientMain extends ComponentDefinition {
 //            addr = event.getIpAddress();
             logger.info("my ip is " + addr);
             Address stunClientAddress = new Address(addr, CLIENT_PORT, CLIENT_ID);
-            trigger(new NettyInit(stunClientAddress, false, SEED), network.getControl());
+            trigger(new NettyInit(stunClientAddress, false, SEED, BaseMsgFrameDecoder.class), network.getControl());
 
             VodAddress sca = ToVodAddr.stunClient(stunClientAddress);
 
@@ -205,8 +206,8 @@ public final class StunClientMain extends ComponentDefinition {
                     setRuleExpirationMinWait(RULE_EXPIRATION_TIMEOUT).
                     setMinimumRtt(MINIMUM_RTT).
                     setRandTolerance(10).
-                    setRtoRetries(20).
-                    setRtoScale(1.0);
+                    setRtoRetries(1).
+                    setRtoScale(1.5);
 
             self = new SelfImpl(sca);
             trigger(new StunClientInit(self, SEED,
@@ -234,6 +235,7 @@ public final class StunClientMain extends ComponentDefinition {
             self.setNat(event.getNat());
 
             String report = "REPORT:\t" + event.getStatus() + " - " + self.getAddress() + "\n"
+                    + "Time taken:" + event.getTimeTaken() + "\n" 
                     + event.getNat();
             logger.info(report);
             sendReport(report);

@@ -23,6 +23,7 @@ import se.sics.gvod.config.VodConfig;
 import se.sics.gvod.common.util.ToVodAddr;
 import se.sics.gvod.config.BaseCommandLineConfig;
 import se.sics.gvod.config.StunServerConfiguration;
+import se.sics.gvod.net.BaseMsgFrameDecoder;
 import se.sics.gvod.stun.server.StunServer;
 import se.sics.gvod.stun.server.events.StunServerInit;
 import se.sics.kompics.nat.utils.getip.events.GetIpRequest;
@@ -161,7 +162,8 @@ public final class StunServerMain extends ComponentDefinition {
             VodAddress gSa = ToVodAddr.stunServer(serverAddr);
             trigger(new StunServerInit(new SelfNoParents(gSa), partnerAddrs, ssc),
                     stunServer.getControl());
-            trigger(new NettyInit(serverAddr, serverAltAddr, true, SEED, mtu), net.getControl());
+            trigger(new NettyInit(serverAddr, serverAltAddr, true, SEED, mtu
+                    , BaseMsgFrameDecoder.class), net.getControl());
 
         }
     };
