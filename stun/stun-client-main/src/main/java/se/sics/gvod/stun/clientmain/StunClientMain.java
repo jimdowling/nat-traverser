@@ -111,11 +111,11 @@ public final class StunClientMain extends ComponentDefinition {
         }
 
         try {
-            Thread.sleep(5 * 1000);
+            Thread.sleep(1 * 1000);
         } catch (InterruptedException ex) {
             java.util.logging.Logger.getLogger(StunClientMain.class.getName()).log(Level.SEVERE, null, ex);
         }
-        Kompics.createAndStart(StunClientMain.class, 2);
+        Kompics.createAndStart(StunClientMain.class, 1);
     }
 
     public StunClientMain() {
