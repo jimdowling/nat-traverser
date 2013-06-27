@@ -1,2 +1,2 @@
 #!/bin/bash
-mvn assembly:assembly -DskipTests
+mvn assembly:assembly -DskipTests -o

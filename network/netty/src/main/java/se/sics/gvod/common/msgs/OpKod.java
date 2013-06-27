@@ -13,6 +13,13 @@ import java.util.Map;
  */
 public class OpKod {
 
+    // Used for O(1) lookup of msgs when decoding a msg header
+    protected static Map<Byte,OpKod> cache;
+
+    static {
+        cache = new HashMap<Byte,OpKod>();
+    }
+    
     public static final OpKod CONNECT_REQUEST       = new OpKod(0x01);
     public static final OpKod CONNECT_RESPONSE      = new OpKod(0x02);
     public static final OpKod DISCONNECT_REQUEST    = new OpKod(0x03);
@@ -113,8 +120,6 @@ public class OpKod {
     // Byte for the msg header
     private final int b;
 
-    // Used for O(1) lookup of msgs when decoding a msg header
-    protected static Map<Byte,OpKod> cache = new HashMap<Byte,OpKod>();
 
     // Not public
     protected OpKod(int b) {
