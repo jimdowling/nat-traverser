@@ -58,7 +58,7 @@ public final class StunClientMain extends ComponentDefinition {
     public static final int RULE_EXPIRATION_TIMEOUT = 60 * 1000;
     public static final int RULE_EXPIRATION_INCREMENT = 60 * 1000;
     public static final int MINIMUM_RTT = 50;
-    private static int CLIENT_PORT = 4444;
+    private static int CLIENT_PORT = 45678;
     private static final int CLIENT_ID = 0;
     private static int SEED;
     private static String SERVER;
