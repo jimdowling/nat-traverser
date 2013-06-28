@@ -154,10 +154,7 @@ public final class StunServerMain extends ComponentDefinition {
             connect(stunServer.getNegative(Timer.class), timer.getPositive(Timer.class));
             connect(stunServer.getNegative(VodNetwork.class), net.getPositive(VodNetwork.class));
 
-            StunServerConfiguration ssc = StunServerConfiguration.build().
-                    setRto(300).
-                    setRtoRetries(8).
-                    setRtoScale(1.3);
+            StunServerConfiguration ssc = StunServerConfiguration.build();
 
             VodAddress gSa = ToVodAddr.stunServer(serverAddr);
             trigger(new StunServerInit(new SelfNoParents(gSa), partnerAddrs, ssc),
