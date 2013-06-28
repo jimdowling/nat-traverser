@@ -285,7 +285,7 @@ public class StunClient extends MsgRetryComponent {
 
     private void sendEchoRequest(VodAddress target, EchoMsg.Test testType, long transactionId) {
         int rto = calculateRto(target.getPeerAddress(), 0);
-        
+
         EchoMsg.Request bindingReq = new EchoMsg.Request(self.getAddress(),
                 target, testType, transactionId);
         ScheduleRetryTimeout st =
@@ -306,13 +306,13 @@ public class StunClient extends MsgRetryComponent {
         return (int) ((client2ServerRtt * 1.5) + (additional)
                 + config.getMinimumRtt());
     }
-    
+
     private void sendEchoChangeIpAndPortRequest(VodAddress target, long transactionId) {
 
         Session session = sessionMap.get(transactionId);
         long server2PartnerRto = session.getBestPartnerRtt();
-        int rto = calculateRto(target.getPeerAddress(), 
-                server2PartnerRto * VodConfig.STUN_PARTNER_RTO_MULTIPLIER 
+        int rto = calculateRto(target.getPeerAddress(),
+                server2PartnerRto * VodConfig.STUN_PARTNER_RTO_MULTIPLIER
                 + config.getMinimumRtt());
         logger.debug(compName + "sendEchoChangeIpAndPortRequest " + " Rto=" + rto + " - "
                 + transactionId);
@@ -360,10 +360,6 @@ public class StunClient extends MsgRetryComponent {
         // algo: http://tools.ietf.org/html/draft-ietf-behave-nat-behavior-discovery-07#page-11
         session.setRuleDeterminationStartTime(System.currentTimeMillis());
         session.setRuleLifeTime(config.getRuleExpirationMinWait());
-
-        if (session.isMeasureNatBindingTimeout()) {
-            startHeartBeatRequestTimer(transactionId);
-        }
 
         // first determining the mapping policy
         determineMappingPolicy(session);
@@ -678,7 +674,7 @@ public class StunClient extends MsgRetryComponent {
                 new EchoMsg.RequestRetryTimeout(st, pingReq);
 
         delegator.doRetry(requestRetryTimeout);
-        logger.debug(compName + "Sending Echo Ping " + tryId 
+        logger.debug(compName + "Sending Echo Ping " + tryId
                 + " to " + dest.getPeerAddress()
                 + " Rto=" + rto
                 + " tid: " + transactionId);
@@ -705,11 +701,6 @@ public class StunClient extends MsgRetryComponent {
                 Session session = sessionMap.get(transactionId);
                 Address serverAddress = event.getSource();
 
-                if (session == null) {
-                    sendResponse(GetNatTypeResponse.Status.NO_SESSION);
-                    return;
-                }
-
                 if (event.getTestType() == EchoMsg.Test.UDP_BLOCKED) {
                     Long echoTs = echoTimestamps.get(serverAddress);
                     if (echoTs != null) {
@@ -735,7 +726,7 @@ public class StunClient extends MsgRetryComponent {
                     }
 
                     if (partners.isEmpty()) {
-                        manageHostFailure(serverAddress,
+                        manageHostFailure(session, serverAddress,
                                 GetNatTypeResponse.Status.SECOND_SERVER_FAILED);
                         return;
                     } else {
@@ -778,7 +769,7 @@ public class StunClient extends MsgRetryComponent {
                             + config.getRuleExpirationIncrement());
                     startHeartBeatRequestTimer(transactionId);
                 } else if (event.getTestType() == EchoMsg.Test.FAILED_NO_PARTNER) {
-                    sendResponse(GetNatTypeResponse.Status.SECOND_SERVER_FAILED);
+                    sendResponse(session, GetNatTypeResponse.Status.SECOND_SERVER_FAILED);
                 }
             } else {
                 logger.debug(compName + "EchoMsg.Response rcvd late. Flag: "
@@ -808,12 +799,12 @@ public class StunClient extends MsgRetryComponent {
                     VodAddress server = session.getServer1();
                     echoTimeoutedServers.add(server.getPeerAddress());
                     echoTimestamps.remove(server.getPeerAddress());
-                    manageHostFailure(server.getPeerAddress(), GetNatTypeResponse.Status.FIRST_SERVER_FAILED);
+                    manageHostFailure(session, server.getPeerAddress(), GetNatTypeResponse.Status.FIRST_SERVER_FAILED);
                 } else if (testType == EchoMsg.Test.PING) {
                     logger.debug(compName + "FAILED: EchoMsg.Test.PING response failed for Try-ID "
                             + event.getRequestMsg().getTryId() + " tid: " + transactionId);
                     // server or server' has failed while executing STUN.
-                    manageTest2Failure(session.getServer1().getPeerAddress());
+                    manageTest2Failure(session, session.getServer1().getPeerAddress());
                 } else if (testType == EchoMsg.Test.HEARTBEAT) {
                     long ruleTimeout = System.currentTimeMillis() - session.getRuleDeterminationStartTime()
                             - config.getRuleExpirationIncrement();
@@ -829,7 +820,7 @@ public class StunClient extends MsgRetryComponent {
         }
     };
 
-    private void manageTest2Failure(Address server) {
+    private void manageTest2Failure(Session session, Address server) {
         //No server remains that is progressing test II or III, 
         // so dequeue a heldback server and let it to progress        
         test1Finished = false;
@@ -839,18 +830,17 @@ public class StunClient extends MsgRetryComponent {
             test2HoldbackResponses.remove(0);
             startTest2(response);
         }
-        manageHostFailure(server, GetNatTypeResponse.Status.ALL_HOSTS_TIMED_OUT);
+        manageHostFailure(session, server, GetNatTypeResponse.Status.ALL_HOSTS_TIMED_OUT);
     }
 
-    private void manageHostFailure(Address server, GetNatTypeResponse.Status status) {
+    private void manageHostFailure(Session session, Address server, GetNatTypeResponse.Status status) {
         failedHosts.add(server);
         if (echoTimeoutedServers.containsAll(initialServers)) {
             logger.debug(compName + " All hosts have timed-out stun");
-            sendResponse(status);
         } else if (failedHosts.containsAll(initialServers)) {
             logger.debug(compName + " All hosts are identified as failed");
-            sendResponse(status);
         }
+        sendResponse(session, status);
     }
 
     private void startTest2(EchoMsg.Response event) {
@@ -902,7 +892,7 @@ public class StunClient extends MsgRetryComponent {
 
                 if (event.getStatus() == EchoChangeIpAndPortMsg.Response.Status.FAIL) {
                     logger.debug(compName + " Server " + server1 + " failed because of no remaining alive partner");
-                    manageTest2Failure(server1.getPeerAddress());
+                    manageTest2Failure(session, server1.getPeerAddress());
                     return;
                 }
 
@@ -1076,6 +1066,15 @@ public class StunClient extends MsgRetryComponent {
 
         delegator.doTrigger(new GetNatTypeResponse(nat, status, null, timeTaken), stunPort);
         ongoing = false;
+
+        if (session != null) {
+            if (session.isMeasureNatBindingTimeout()) {
+                startHeartBeatRequestTimer(session.getTransactionId());
+            } else {
+                sessionMap.remove(session.getTransactionId());
+
+            }
+        }
     }
 
     ////////////////////////////////////////////////////////////////////////////
