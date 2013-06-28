@@ -319,7 +319,8 @@ public final class StunServer extends MsgRetryComponent {
 
                 RTT rtt = RTTStore.getRtt(self.getId(), dest);
                 long altServerRto = (rtt != null) ? rtt.getRTO() : config.getRto();
-                long worstCaseRto = altServerRto * VodConfig.STUN_PARTNER_RTO_MULTIPLIER
+                long worstCaseRto = altServerRto
+                        * VodConfig.STUN_PARTNER_RTO_MULTIPLIER
                         + config.getMinimumRtt();
                 logger.debug(compName + "ServerHostChangeMsg.Request sent to " + p.getAddress().getId()
                         + " , src=" + clientPublicIp.getId() + " privSrc="
