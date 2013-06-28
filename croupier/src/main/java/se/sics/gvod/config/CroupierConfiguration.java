@@ -53,7 +53,7 @@ public class CroupierConfiguration
      */
     public CroupierConfiguration() {
         this(VodConfig.getSeed(),
-                VodConfig.CROUPIER__VIEW_SIZE,
+                VodConfig.CROUPIER_VIEW_SIZE,
                 VodConfig.CROUPIER_SHUFFLE_LENGTH,
                 VodConfig.CROUPIER_SHUFFLE_PERIOD,
                 VodConfig.CROUPIER_SELECTION_POLICY.name(),

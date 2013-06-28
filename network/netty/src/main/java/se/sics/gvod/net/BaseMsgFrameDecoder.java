@@ -10,14 +10,8 @@ import org.jboss.netty.channel.ChannelHandlerContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import se.sics.gvod.common.msgs.ConnectMsgFactory;
-import se.sics.gvod.common.msgs.DataMsgFactory;
-import se.sics.gvod.common.msgs.DataOfferMsgFactory;
-import se.sics.gvod.common.msgs.DisconnectMsgFactory;
-import se.sics.gvod.common.msgs.LeaveMsgFactory;
 import se.sics.gvod.common.msgs.MessageDecodingException;
-import se.sics.gvod.common.msgs.ReferencesMsgFactory;
 import se.sics.gvod.common.msgs.SearchMsgFactory;
-import se.sics.gvod.common.msgs.UploadingRateMsgFactory;
 import se.sics.gvod.croupier.msgs.ShuffleMsgFactory;
 import se.sics.gvod.gradient.msgs.GradientSearchMsgFactory;
 import se.sics.gvod.gradient.msgs.SetsExchangeMsgFactory;
@@ -59,25 +53,8 @@ public class BaseMsgFrameDecoder extends MsgFrameDecoder {
 
     public static final byte CONNECT_REQUEST       = 0x01;
     public static final byte CONNECT_RESPONSE      = 0x02;
-    public static final byte DISCONNECT_REQUEST    = 0x03;
-    public static final byte DISCONNECT_RESPONSE   = 0x04;
-    public static final byte DATAOFFER             = 0x05;
-    public static final byte LEAVE                 = 0x06;
     public static final byte SHUFFLE_REQUEST       = 0x07;
     public static final byte SHUFFLE_RESPONSE      = 0x08;
-    public static final byte REPORT_REQUEST        = 0x09;
-    public static final byte REPORT_RESPONSE       = 0x0a;
-    public static final byte REFERENCES_REQUEST    = 0x0b;
-    public static final byte REFERENCES_RESPONSE   = 0x0c;
-    public static final byte UPLOADING_RATE_REQUEST= 0x0d;
-    public static final byte UPLOADING_RATE_RESPONSE=0x0e;
-    public static final byte D_REQUEST             = 0x0f;
-    public static final byte D_RESPONSE            = 0x10;
-    public static final byte PIECE_NOT_AVAILABLE   = 0x11;
-    public static final byte SATURATED             = 0x12;
-    public static final byte ACK                   = 0x13;
-    public static final byte HASH_REQUEST          = 0x14;
-    public static final byte HASH_RESPONSE         = 0x15;
     public static final byte VOD_MESSAGE           = 0x16;
     public static final byte REWRITEABLE_MESSAGE   = 0x17;
     // OTHER MSGS
@@ -147,6 +124,9 @@ public class BaseMsgFrameDecoder extends MsgFrameDecoder {
     public static final byte PRP_PREALLOCATED_PORTS_RESPONSE= 0x50;
     public static final byte HP_KEEP_ALIVE_REQUEST         = 0x51;
     public static final byte HP_KEEP_ALIVE_RESPONSE        = 0x52;
+    public static final byte REPORT_REQUEST                = 0x53;
+    public static final byte REPORT_RESPONSE               = 0x54;
+    public static final byte ACK                           = 0x55;
     // PEERSEARCH MESSAGES
     public static final byte SEARCH_REQUEST                = 0x60;
     public static final byte SEARCH_RESPONSE               = 0x62;
@@ -175,45 +155,14 @@ public class BaseMsgFrameDecoder extends MsgFrameDecoder {
 
         // PEERSEARCH MSGS
         switch (opKod) {
-            case SEARCH_REQUEST:
-                return SearchMsgFactory.Request.fromBuffer(buffer);
-            case SEARCH_RESPONSE:
-                return SearchMsgFactory.Response.fromBuffer(buffer);
-            // COMMON MSGS
             case CONNECT_REQUEST:
                 return ConnectMsgFactory.Request.fromBuffer(buffer);
             case CONNECT_RESPONSE:
                 return ConnectMsgFactory.Response.fromBuffer(buffer);
-            case DISCONNECT_REQUEST:
-                return DisconnectMsgFactory.Request.fromBuffer(buffer);
-            case DISCONNECT_RESPONSE:
-                return DisconnectMsgFactory.Response.fromBuffer(buffer);
-            case DATAOFFER:
-                return DataOfferMsgFactory.fromBuffer(buffer);
-            case LEAVE:
-                return LeaveMsgFactory.fromBuffer(buffer);
-            case REFERENCES_REQUEST:
-                return ReferencesMsgFactory.Request.fromBuffer(buffer);
-            case REFERENCES_RESPONSE:
-                return ReferencesMsgFactory.Response.fromBuffer(buffer);
-            case UPLOADING_RATE_REQUEST:
-                return UploadingRateMsgFactory.Request.fromBuffer(buffer);
-            case UPLOADING_RATE_RESPONSE:
-                return UploadingRateMsgFactory.Response.fromBuffer(buffer);
-            case D_REQUEST:
-                return DataMsgFactory.Request.fromBuffer(buffer);
-            case D_RESPONSE:
-                return DataMsgFactory.Response.fromBuffer(buffer);
-            case PIECE_NOT_AVAILABLE:
-                return DataMsgFactory.PieceNotAvailable.fromBuffer(buffer);
-            case SATURATED:
-                return DataMsgFactory.Saturated.fromBuffer(buffer);
-            case ACK:
-                return DataMsgFactory.Ack.fromBuffer(buffer);
-            case HASH_REQUEST:
-                return DataMsgFactory.HashRequest.fromBuffer(buffer);
-            case HASH_RESPONSE:
-                return DataMsgFactory.HashResponse.fromBuffer(buffer);
+            case SEARCH_REQUEST:
+                return SearchMsgFactory.Request.fromBuffer(buffer);
+            case SEARCH_RESPONSE:
+                return SearchMsgFactory.Response.fromBuffer(buffer);
             // GRADIENT MSGS
             case SETS_EXCHANGE_REQUEST:
                 return SetsExchangeMsgFactory.Request.fromBuffer(buffer);

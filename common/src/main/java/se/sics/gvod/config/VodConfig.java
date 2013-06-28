@@ -81,7 +81,7 @@ public class VodConfig extends BaseCommandLineConfig {
     //Croupier parameters
     public static final int CROUPIER_SHUFFLE_PERIOD = 30 * 1000;
     public static final int CROUPIER_SHUFFLE_LENGTH = 15;
-    public static final int CROUPIER__VIEW_SIZE = 15;
+    public static final int CROUPIER_VIEW_SIZE = 15;
 
     public static enum CroupierSelectionPolicy {
 

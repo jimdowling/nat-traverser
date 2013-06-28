@@ -18,27 +18,15 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import se.sics.gvod.common.msgs.DataMsg;
 import se.sics.gvod.common.DescriptorBuffer;
 import se.sics.gvod.net.VodAddress;
 import se.sics.gvod.common.VodDescriptor;
 import se.sics.gvod.config.BaseCommandLineConfig;
-import se.sics.gvod.common.msgs.ConnectMsg;
-import se.sics.gvod.common.msgs.ConnectMsgFactory;
-import se.sics.gvod.common.msgs.DataMsgFactory;
-import se.sics.gvod.common.msgs.DataOfferMsg;
-import se.sics.gvod.common.msgs.DataOfferMsgFactory;
-import se.sics.gvod.common.msgs.DisconnectMsg;
-import se.sics.gvod.common.msgs.DisconnectMsgFactory;
 import se.sics.gvod.common.msgs.Encodable;
-import se.sics.gvod.common.msgs.LeaveMsg;
-import se.sics.gvod.common.msgs.LeaveMsgFactory;
 import se.sics.gvod.common.msgs.MessageDecodingException;
 import se.sics.gvod.common.msgs.MessageEncodingException;
 import se.sics.gvod.gradient.msgs.SetsExchangeMsg;
 import se.sics.gvod.gradient.msgs.SetsExchangeMsgFactory;
-import se.sics.gvod.common.msgs.UploadingRateMsg;
-import se.sics.gvod.common.msgs.UploadingRateMsgFactory;
 import se.sics.gvod.hp.msgs.GoMsg;
 import se.sics.gvod.hp.msgs.GoMsgFactory;
 import se.sics.gvod.hp.msgs.HolePunchingMsg;
@@ -359,138 +347,6 @@ public class EncodingDecodingTest {
         }
     }
 
-    @Test
-    public void connectMsgRequest() {
-        ConnectMsg.Request msg = new ConnectMsg.Request(gSrc, gSrc,
-                utility, true, BaseCommandLineConfig.DEFAULT_MTU);
-        // setTimeoutId() is called by MsgRetryComponent
-        msg.setTimeoutId(UUID.nextUUID());
-        try {
-            ChannelBuffer buffer = msg.toByteArray();
-            opCodeCorrect(buffer, msg);
-            ConnectMsg.Request res = ConnectMsgFactory.Request.fromBuffer(buffer);
-            assert (true);
-        } catch (MessageDecodingException ex) {
-            Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
-            assert (false);
-        } catch (MessageEncodingException ex) {
-            Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
-            assert (false);
-        }
-    }
-
-    @Test
-    public void connectMsgResponse1() {
-        TimeoutId id = UUID.nextUUID();
-        ConnectMsg.Response msg = new ConnectMsg.Response(gSrc, gSrc,
-                id, ConnectMsg.ResponseType.OK,
-                utility, availableChunks, availablePieces, true,
-                BaseCommandLineConfig.DEFAULT_MTU);
-        try {
-            ChannelBuffer buffer = msg.toByteArray();
-            opCodeCorrect(buffer, msg);
-            ConnectMsg.Response res = ConnectMsgFactory.Response.fromBuffer(buffer);
-            assert (true);
-        } catch (MessageDecodingException ex) {
-            Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
-            assert (false);
-        } catch (MessageEncodingException ex) {
-            Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
-            assert (false);
-        }
-    }
-
-    @Test
-    public void connectMsgResponse2() {
-        ConnectMsg.Response msg = new ConnectMsg.Response(gSrc, gSrc,
-                UUID.nextUUID(), ConnectMsg.ResponseType.OK,
-                utility, null, null, true, BaseCommandLineConfig.DEFAULT_MTU);
-        try {
-            ChannelBuffer buffer = msg.toByteArray();
-            opCodeCorrect(buffer, msg);
-            ConnectMsg.Response res = ConnectMsgFactory.Response.fromBuffer(buffer);
-            assert (true);
-        } catch (MessageDecodingException ex) {
-            Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
-            assert (false);
-        } catch (MessageEncodingException ex) {
-            Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
-            assert (false);
-        }
-    }
-
-    @Test
-    public void disconnectMsgRequest() {
-        DisconnectMsg.Request msg = new DisconnectMsg.Request(gSrc, gSrc);
-        // setTimeoutId() is called by MsgRetryComponent
-        msg.setTimeoutId(UUID.nextUUID());
-        try {
-            ChannelBuffer buffer = msg.toByteArray();
-            opCodeCorrect(buffer, msg);
-            DisconnectMsg.Request res = DisconnectMsgFactory.Request.fromBuffer(buffer);
-            assert (msg.getTimeoutId().getId() == res.getTimeoutId().getId());
-        } catch (MessageDecodingException ex) {
-            Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
-            assert (false);
-        } catch (MessageEncodingException ex) {
-            Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
-            assert (false);
-        }
-    }
-
-    @Test
-    public void disconnectMsgResponse() {
-        TimeoutId id = UUID.nextUUID();
-        DisconnectMsg.Response msg = new DisconnectMsg.Response(gSrc, gSrc, id, 4);
-        try {
-            ChannelBuffer buffer = msg.toByteArray();
-            opCodeCorrect(buffer, msg);
-            DisconnectMsg.Response res = DisconnectMsgFactory.Response.fromBuffer(buffer);
-            assert (true);
-        } catch (MessageDecodingException ex) {
-            Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
-            assert (false);
-        } catch (MessageEncodingException ex) {
-            Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
-            assert (false);
-        }
-    }
-
-    @Test
-    public void dataOffer() {
-        List<VodAddress> listChildren = new ArrayList<VodAddress>();
-        listChildren.add(gSrc);
-        DataOfferMsg msg = new DataOfferMsg(gSrc, gDest, utility, availableChunks);
-        try {
-            ChannelBuffer buffer = msg.toByteArray();
-            opCodeCorrect(buffer, msg);
-            DataOfferMsg res = DataOfferMsgFactory.fromBuffer(buffer);
-            assert (true);
-        } catch (MessageDecodingException ex) {
-            Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
-            assert (false);
-        } catch (MessageEncodingException ex) {
-            Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
-            assert (false);
-        }
-    }
-
-    @Test
-    public void leaveMsg() {
-        LeaveMsg msg = new LeaveMsg(gSrc, gSrc);
-        try {
-            ChannelBuffer buffer = msg.toByteArray();
-            opCodeCorrect(buffer, msg);
-            LeaveMsg res = LeaveMsgFactory.fromBuffer(buffer);
-            assert (true);
-        } catch (MessageDecodingException ex) {
-            Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
-            assert (false);
-        } catch (MessageEncodingException ex) {
-            Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
-            assert (false);
-        }
-    }
 
     @Test
     public void setsExchangeRequestMsg() {
@@ -520,151 +376,6 @@ public class EncodingDecodingTest {
             opCodeCorrect(buffer, msg);
             SetsExchangeMsg.Response res =
                     SetsExchangeMsgFactory.Response.fromBuffer(buffer);
-            assert (true);
-        } catch (MessageDecodingException ex) {
-            Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
-            assert (false);
-        } catch (MessageEncodingException ex) {
-            Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
-            assert (false);
-        }
-    }
-
-    @Test
-    public void uploadingRateRequestMsg() {
-        UploadingRateMsg.Request msg = new UploadingRateMsg.Request(
-                gSrc, gSrc, id, gSrc);
-        try {
-            ChannelBuffer buffer = msg.toByteArray();
-            opCodeCorrect(buffer, msg);
-            UploadingRateMsg.Request res =
-                    UploadingRateMsgFactory.Request.fromBuffer(buffer);
-            assert (true);
-        } catch (MessageDecodingException ex) {
-            Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
-            assert (false);
-        } catch (MessageEncodingException ex) {
-            Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
-            assert (false);
-        }
-    }
-
-    @Test
-    public void dataRequestMsg() {
-        DataMsg.Request msg = new DataMsg.Request(gSrc, gSrc, id, 222, 12, 1000);
-        // called by MsgRetryComponent
-        msg.setTimeoutId(UUID.nextUUID());
-        try {
-            ChannelBuffer buffer = msg.toByteArray();
-            opCodeCorrect(buffer, msg);
-            DataMsg.Request res =
-                    DataMsgFactory.Request.fromBuffer(buffer);
-            assert (msg.getTimeoutId().equals(res.getTimeoutId()));
-        } catch (MessageDecodingException ex) {
-            Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
-            assert (false);
-        } catch (MessageEncodingException ex) {
-            Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
-            assert (false);
-        }
-    }
-
-    @Test
-    public void dataResponseMsg() {
-        DataMsg.Response msg = new DataMsg.Response(gSrc, gSrc, id, id, availableChunks, 12, 2222,
-                1000, 103);
-        try {
-            ChannelBuffer buffer = msg.toByteArray();
-            opCodeCorrect(buffer, msg);
-            DataMsg.Response res = DataMsgFactory.Response.fromBuffer(buffer);
-            assert (true);
-        } catch (MessageDecodingException ex) {
-            Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
-            assert (false);
-        } catch (MessageEncodingException ex) {
-            Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
-            assert (false);
-        }
-    }
-
-    @Test
-    public void PieceNotAvailableMsg() {
-        DataMsg.PieceNotAvailable msg = new DataMsg.PieceNotAvailable(gSrc, gSrc, availableChunks,
-                utility, 1212, availablePieces);
-        try {
-            ChannelBuffer buffer = msg.toByteArray();
-            opCodeCorrect(buffer, msg);
-            DataMsg.PieceNotAvailable res = DataMsgFactory.PieceNotAvailable.fromBuffer(buffer);
-            assert (true);
-        } catch (MessageDecodingException ex) {
-            Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
-            assert (false);
-        } catch (MessageEncodingException ex) {
-            Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
-            assert (false);
-        }
-    }
-
-    @Test
-    public void saturatedMsg() {
-        DataMsg.Saturated msg = new DataMsg.Saturated(gSrc, gSrc, age, 23);
-        try {
-            ChannelBuffer buffer = msg.toByteArray();
-            opCodeCorrect(buffer, msg);
-            DataMsg.Saturated res = DataMsgFactory.Saturated.fromBuffer(buffer);
-            assert (true);
-        } catch (MessageDecodingException ex) {
-            Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
-            assert (false);
-        } catch (MessageEncodingException ex) {
-            Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
-            assert (false);
-        }
-    }
-
-    @Test
-    public void hashRequestMsg() {
-        DataMsg.HashRequest msg = new DataMsg.HashRequest(gSrc, gSrc, id, 23);
-        try {
-            ChannelBuffer buffer = msg.toByteArray();
-            opCodeCorrect(buffer, msg);
-            DataMsg.HashRequest res = DataMsgFactory.HashRequest.fromBuffer(buffer);
-            assert (true);
-        } catch (MessageDecodingException ex) {
-            Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
-            assert (false);
-        } catch (MessageEncodingException ex) {
-            Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
-            assert (false);
-        }
-    }
-
-    @Test
-    public void hashResponseMsg() {
-
-        DataMsg.HashResponse msg = new DataMsg.HashResponse(gSrc, gSrc, id, 23,
-                availableChunks, 0, 1);
-        try {
-            ChannelBuffer buffer = msg.toByteArray();
-            opCodeCorrect(buffer, msg);
-            DataMsg.HashRequest res = DataMsgFactory.HashRequest.fromBuffer(buffer);
-            assert (true);
-        } catch (MessageDecodingException ex) {
-            Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
-            assert (false);
-        } catch (MessageEncodingException ex) {
-            Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
-            assert (false);
-        }
-    }
-
-    @Test
-    public void ackMsg() {
-        DataMsg.Ack msg = new DataMsg.Ack(gSrc, gSrc, id, 23);
-        try {
-            ChannelBuffer buffer = msg.toByteArray();
-            opCodeCorrect(buffer, msg);
-            DataMsg.Ack res = DataMsgFactory.Ack.fromBuffer(buffer);
             assert (true);
         } catch (MessageDecodingException ex) {
             Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
@@ -1126,9 +837,10 @@ public class EncodingDecodingTest {
 
     @Test
     public void RelayRequestMsg() {
-        ConnectMsg.Request req = new ConnectMsg.Request(gSrc, gSrc, utility, true, age);
-        RelayRequestMsg.ClientToServer msg = new RelayRequestMsg.ClientToServer(gSrc, gDest, remoteClientId,
-                req);
+        ParentKeepAliveMsg.Pong req = new ParentKeepAliveMsg.Pong(gSrc, gDest, UUID.nextUUID());
+        
+        RelayRequestMsg.ClientToServer msg = new RelayRequestMsg.ClientToServer(gSrc, gDest, 
+                remoteClientId, req);
         msg.setTimeoutId(UUID.nextUUID());
         try {
             ChannelBuffer buffer = msg.toByteArray();
@@ -1142,8 +854,7 @@ public class EncodingDecodingTest {
             assert (false);
         }
 
-        RelayRequestMsg.ServerToClient msg2 = new RelayRequestMsg.ServerToClient(gSrc, gDest, remoteClientId,
-                req);
+        ParentKeepAliveMsg.Pong msg2 = new ParentKeepAliveMsg.Pong(gSrc, gDest, UUID.nextUUID());
         msg2.setTimeoutId(UUID.nextUUID());
         try {
             ChannelBuffer buffer = msg2.toByteArray();

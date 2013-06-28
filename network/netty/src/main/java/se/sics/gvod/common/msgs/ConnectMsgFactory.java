@@ -2,6 +2,8 @@ package se.sics.gvod.common.msgs;
 
 import org.jboss.netty.buffer.ChannelBuffer;
 import se.sics.gvod.common.UtilityVod;
+import se.sics.gvod.common.msgs.MessageDecodingException;
+import se.sics.gvod.common.msgs.VodMsgNettyFactory;
 import se.sics.gvod.net.msgs.VodMsg;
 import se.sics.gvod.net.util.UserTypesDecoderFactory;
 
