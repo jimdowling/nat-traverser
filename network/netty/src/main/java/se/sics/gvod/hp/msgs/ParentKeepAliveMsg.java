@@ -5,7 +5,7 @@ import se.sics.gvod.net.msgs.RewriteableRetryTimeout;
 import se.sics.gvod.net.msgs.ScheduleRetryTimeout;
 import se.sics.gvod.common.msgs.VodMsgNetty;
 import se.sics.gvod.common.msgs.MessageEncodingException;
-import se.sics.gvod.common.msgs.OpCode;
+import se.sics.gvod.net.BaseMsgFrameDecoder;
 import se.sics.gvod.net.VodAddress;
 import se.sics.gvod.net.msgs.RewriteableMsg;
 import se.sics.gvod.timer.TimeoutId;
@@ -34,8 +34,8 @@ public class ParentKeepAliveMsg {
         }
         
         @Override
-        public OpCode getOpcode() {
-            return OpCode.PARENT_KEEP_ALIVE_REQUEST;
+        public byte getOpcode() {
+            return BaseMsgFrameDecoder.PARENT_KEEP_ALIVE_REQUEST;
         }
 
         @Override
@@ -66,8 +66,8 @@ public class ParentKeepAliveMsg {
         }
 
          @Override
-        public OpCode getOpcode() {
-            return OpCode.PARENT_KEEP_ALIVE_RESPONSE;
+        public byte getOpcode() {
+            return BaseMsgFrameDecoder.PARENT_KEEP_ALIVE_RESPONSE;
         }
 
         @Override

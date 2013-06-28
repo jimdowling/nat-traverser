@@ -4,13 +4,12 @@
  */
 package se.sics.gvod.croupier.msgs;
 
-import java.util.Set;
 import org.jboss.netty.buffer.ChannelBuffer;
 import se.sics.gvod.common.DescriptorBuffer;
 import se.sics.gvod.common.VodDescriptor;
 import se.sics.gvod.common.msgs.MessageEncodingException;
-import se.sics.gvod.common.msgs.OpCode;
 import se.sics.gvod.common.msgs.RelayMsgNetty;
+import se.sics.gvod.net.BaseMsgFrameDecoder;
 import se.sics.gvod.net.VodAddress;
 import se.sics.gvod.net.msgs.RewriteableMsg;
 import se.sics.gvod.net.msgs.RewriteableRetryTimeout;
@@ -47,8 +46,8 @@ public class ShuffleMsg {
         }
 
         @Override
-        public OpCode getOpcode() {
-            return OpCode.SHUFFLE_REQUEST;
+        public byte getOpcode() {
+            return BaseMsgFrameDecoder.SHUFFLE_REQUEST;
         }
 
         @Override
@@ -105,8 +104,8 @@ public class ShuffleMsg {
         }
 
         @Override
-        public OpCode getOpcode() {
-            return OpCode.SHUFFLE_RESPONSE;
+        public byte getOpcode() {
+            return BaseMsgFrameDecoder.SHUFFLE_RESPONSE;
         }
 
         @Override

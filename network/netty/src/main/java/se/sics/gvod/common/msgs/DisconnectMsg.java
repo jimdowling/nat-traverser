@@ -5,6 +5,7 @@
 package se.sics.gvod.common.msgs;
 
 import org.jboss.netty.buffer.ChannelBuffer;
+import se.sics.gvod.net.BaseMsgFrameDecoder;
 import se.sics.gvod.net.VodAddress;
 import se.sics.gvod.net.msgs.RewriteableMsg;
 import se.sics.gvod.net.msgs.RewriteableRetryTimeout;
@@ -25,8 +26,8 @@ public class DisconnectMsg {
         }
 
         @Override
-        public OpCode getOpcode() {
-            return OpCode.DISCONNECT_REQUEST;
+        public byte getOpcode() {
+            return BaseMsgFrameDecoder.DISCONNECT_REQUEST;
         }
 
         @Override
@@ -62,8 +63,8 @@ public class DisconnectMsg {
         }
 
         @Override
-        public OpCode getOpcode() {
-            return OpCode.DISCONNECT_RESPONSE;
+        public byte getOpcode() {
+            return BaseMsgFrameDecoder.DISCONNECT_RESPONSE;
         }
 
         @Override

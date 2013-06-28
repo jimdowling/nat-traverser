@@ -59,8 +59,7 @@ public abstract class VodMsgNetty extends VodMsg implements Encodable
     }        
 
     protected void writeHeader(ChannelBuffer buffer) throws MessageEncodingException {
-        OpCode opCode = getOpcode();
-        byte b = opCode.getByte();
+        byte b = getOpcode();
         buffer.writeByte(b);
         if (hasTimeout()) {
             UserTypesEncoderFactory.writeTimeoutId(buffer, timeoutId);

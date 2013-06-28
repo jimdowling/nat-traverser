@@ -6,8 +6,8 @@ package se.sics.gvod.stun.msgs;
 
 import org.jboss.netty.buffer.ChannelBuffer;
 import se.sics.gvod.common.msgs.MessageEncodingException;
-import se.sics.gvod.common.msgs.OpCode;
 import se.sics.gvod.address.Address;
+import se.sics.gvod.net.BaseMsgFrameDecoder;
 import se.sics.gvod.net.VodAddress;
 import se.sics.gvod.net.msgs.RewriteableMsg;
 import se.sics.gvod.net.msgs.RewriteableRetryTimeout;
@@ -64,8 +64,8 @@ public class ServerHostChangeMsg {
         }
 
         @Override
-        public OpCode getOpcode() {
-            return OpCode.SERVER_HOST_CHANGE_REQUEST;
+        public byte getOpcode() {
+            return BaseMsgFrameDecoder.SERVER_HOST_CHANGE_REQUEST;
         }
 
         @Override
@@ -103,8 +103,8 @@ public class ServerHostChangeMsg {
         }
 
         @Override
-        public OpCode getOpcode() {
-            return OpCode.SERVER_HOST_CHANGE_RESPONSE;
+        public byte getOpcode() {
+            return BaseMsgFrameDecoder.SERVER_HOST_CHANGE_RESPONSE;
         }
 
         @Override

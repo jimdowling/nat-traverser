@@ -8,9 +8,9 @@ import java.io.Serializable;
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.buffer.ChannelBuffers;
 import se.sics.gvod.config.VodConfig;
+import se.sics.gvod.net.BaseMsgFrameDecoder;
 import se.sics.gvod.net.VodAddress;
 import se.sics.gvod.net.msgs.RelayMsg;
-import se.sics.gvod.net.msgs.RewriteableMsg;
 import se.sics.gvod.net.msgs.RewriteableRetryTimeout;
 import se.sics.gvod.net.msgs.ScheduleRetryTimeout;
 import se.sics.gvod.net.util.UserTypesEncoderFactory;
@@ -77,8 +77,7 @@ public class RelayMsgNetty {
         }
 
         protected void writeHeader(ChannelBuffer buffer) throws MessageEncodingException {
-            OpCode opCode = getOpcode();
-            byte b = opCode.getByte();
+            byte b = getOpcode();
             buffer.writeByte(b);
             if (hasTimeout()) {
                 buffer.writeInt(timeoutId.getId());
@@ -121,8 +120,8 @@ public class RelayMsgNetty {
         }
 
         @Override
-        public OpCode getOpcode() {
-            return OpCode.RELAY_REQUEST;
+        public byte getOpcode() {
+            return BaseMsgFrameDecoder.RELAY_REQUEST;
         }
 
         public boolean rewriteNextDestination(VodAddress newNextDest) {
@@ -194,8 +193,8 @@ public class RelayMsgNetty {
         }
 
         @Override
-        public OpCode getOpcode() {
-            return OpCode.RELAY_RESPONSE;
+        public byte getOpcode() {
+            return BaseMsgFrameDecoder.RELAY_RESPONSE;
         }
 
     }
@@ -212,8 +211,8 @@ public class RelayMsgNetty {
         }
 
         @Override
-        public OpCode getOpcode() {
-            return OpCode.RELAY_ONEWAY;
+        public byte getOpcode() {
+            return BaseMsgFrameDecoder.RELAY_ONEWAY;
         }
 
 

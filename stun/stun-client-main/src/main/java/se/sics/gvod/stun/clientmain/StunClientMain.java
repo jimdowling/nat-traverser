@@ -55,7 +55,7 @@ public final class StunClientMain extends ComponentDefinition {
     public static final int UPNP_DISCOVERY_TIMEOUT = 3 * 1000;
     public static final int STUN_UPNP_TIMEOUT = 6 * 1000;
     public static final int ROOT_DEVICE_TIMEOUT = 1 * 1000;
-    public static final int MSG_RETRY_TIMEOUT = 1 * 1000;
+    public static final int MSG_RETRY_TIMEOUT = 100 * 1000;
     public static final int RULE_EXPIRATION_TIMEOUT = 60 * 1000;
     public static final int RULE_EXPIRATION_INCREMENT = 60 * 1000;
     public static final int MINIMUM_RTT = 50;

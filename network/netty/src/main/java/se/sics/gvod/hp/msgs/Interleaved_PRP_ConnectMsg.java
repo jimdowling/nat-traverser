@@ -3,7 +3,7 @@ package se.sics.gvod.hp.msgs;
 import java.util.Set;
 import org.jboss.netty.buffer.ChannelBuffer;
 import se.sics.gvod.common.msgs.MessageEncodingException;
-import se.sics.gvod.common.msgs.OpCode;
+import se.sics.gvod.net.BaseMsgFrameDecoder;
 import se.sics.gvod.net.msgs.RewriteableRetryTimeout;
 import se.sics.gvod.net.msgs.ScheduleRetryTimeout;
 import se.sics.gvod.net.VodAddress;
@@ -52,8 +52,8 @@ public class Interleaved_PRP_ConnectMsg
         }
 
         @Override
-        public OpCode getOpcode() {
-            return OpCode.INTERLEAVED_PRP_SEND_AVAILABLE_PORTS_ZSERVER_REQUEST;
+        public byte getOpcode() {
+            return BaseMsgFrameDecoder.INTERLEAVED_PRP_SEND_AVAILABLE_PORTS_ZSERVER_REQUEST;
         }
 
         @Override
@@ -109,8 +109,8 @@ public class Interleaved_PRP_ConnectMsg
         }
 
         @Override
-        public OpCode getOpcode() {
-            return OpCode.INTERLEAVED_PRP_SEND_AVAILABLE_PORTS_ZSERVER_RESPONSE;
+        public byte getOpcode() {
+            return BaseMsgFrameDecoder.INTERLEAVED_PRP_SEND_AVAILABLE_PORTS_ZSERVER_RESPONSE;
         }
 
         @Override

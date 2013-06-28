@@ -8,6 +8,7 @@ import java.io.Serializable;
 import org.jboss.netty.buffer.ChannelBuffer;
 import se.sics.gvod.net.VodAddress;
 import se.sics.gvod.common.UtilityVod;
+import se.sics.gvod.net.BaseMsgFrameDecoder;
 import se.sics.gvod.net.msgs.RewriteableMsg;
 import se.sics.gvod.net.msgs.RewriteableRetryTimeout;
 import se.sics.gvod.net.msgs.ScheduleRetryTimeout;
@@ -52,8 +53,8 @@ public class ConnectMsg {
 
 
         @Override
-        public OpCode getOpcode() {
-            return OpCode.CONNECT_REQUEST;
+        public byte getOpcode() {
+            return BaseMsgFrameDecoder.CONNECT_REQUEST;
         }
 
         @Override
@@ -151,8 +152,8 @@ public class ConnectMsg {
         }
 
         @Override
-        public OpCode getOpcode() {
-            return OpCode.CONNECT_RESPONSE;
+        public byte getOpcode() {
+            return BaseMsgFrameDecoder.CONNECT_RESPONSE;
         }
 
         @Override

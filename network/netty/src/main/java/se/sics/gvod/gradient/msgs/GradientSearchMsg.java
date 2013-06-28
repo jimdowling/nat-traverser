@@ -10,9 +10,9 @@ import se.sics.gvod.common.Utility;
 import se.sics.gvod.common.VodDescriptor;
 import se.sics.gvod.config.VodConfig;
 import se.sics.gvod.common.msgs.MessageEncodingException;
-import se.sics.gvod.common.msgs.OpCode;
 import se.sics.gvod.common.msgs.RelayMsgNetty;
 import se.sics.gvod.common.msgs.RelayMsgNetty.Status;
+import se.sics.gvod.net.BaseMsgFrameDecoder;
 import se.sics.gvod.net.VodAddress;
 import se.sics.gvod.net.msgs.RewriteableMsg;
 import se.sics.gvod.net.util.UserTypesEncoderFactory;
@@ -64,8 +64,8 @@ public class GradientSearchMsg {
         }
 
         @Override
-        public OpCode getOpcode() {
-            return OpCode.TARGET_UTILITY_PROBE_REQUEST;
+        public byte getOpcode() {
+            return BaseMsgFrameDecoder.TARGET_UTILITY_PROBE_REQUEST;
         }
 
         /**
@@ -124,8 +124,8 @@ public class GradientSearchMsg {
         }
 
         @Override
-        public OpCode getOpcode() {
-            return OpCode.TARGET_UTILITY_PROBE_RESPONSE;
+        public byte getOpcode() {
+            return BaseMsgFrameDecoder.TARGET_UTILITY_PROBE_RESPONSE;
         }
 
         /**

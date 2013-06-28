@@ -35,7 +35,6 @@ import se.sics.gvod.common.msgs.LeaveMsg;
 import se.sics.gvod.common.msgs.LeaveMsgFactory;
 import se.sics.gvod.common.msgs.MessageDecodingException;
 import se.sics.gvod.common.msgs.MessageEncodingException;
-import se.sics.gvod.common.msgs.OpCode;
 import se.sics.gvod.gradient.msgs.SetsExchangeMsg;
 import se.sics.gvod.gradient.msgs.SetsExchangeMsgFactory;
 import se.sics.gvod.common.msgs.UploadingRateMsg;
@@ -232,8 +231,7 @@ public class EncodingDecodingTest {
 
     private void opCodeCorrect(ChannelBuffer buffer, Encodable msg) {
         byte type = buffer.readByte();
-        OpCode opCode = OpCode.fromByte(type);
-        assert (opCode.equals(msg.getOpcode()));
+        assert (type == msg.getOpcode());
     }
 
     @Test

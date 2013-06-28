@@ -6,7 +6,7 @@ package se.sics.kompics;
 
 import org.jboss.netty.buffer.ChannelBuffer;
 import se.sics.gvod.common.msgs.MessageEncodingException;
-import se.sics.gvod.common.msgs.OpCode;
+import se.sics.gvod.net.BaseMsgFrameDecoder;
 import se.sics.gvod.net.VodAddress;
 
 /**
@@ -25,8 +25,8 @@ import se.sics.gvod.net.VodAddress;
         }
 
         @Override
-        public OpCode getOpcode() {
-            return OpCode.ACK;
+        public byte getOpcode() {
+            return BaseMsgFrameDecoder.ACK;
         }
 
         @Override

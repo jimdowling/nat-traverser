@@ -16,5 +16,5 @@ public interface Encodable {
 
     public ChannelBuffer toByteArray() throws MessageEncodingException;
 
-    public OpCode getOpcode();
+    public byte getOpcode();
 }

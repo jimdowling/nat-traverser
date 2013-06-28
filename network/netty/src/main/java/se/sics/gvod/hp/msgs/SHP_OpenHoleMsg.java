@@ -2,7 +2,7 @@ package se.sics.gvod.hp.msgs;
 
 import org.jboss.netty.buffer.ChannelBuffer;
 import se.sics.gvod.common.msgs.MessageEncodingException;
-import se.sics.gvod.common.msgs.OpCode;
+import se.sics.gvod.net.BaseMsgFrameDecoder;
 import se.sics.gvod.net.VodAddress;
 import se.sics.gvod.net.msgs.RewriteableMsg;
 import se.sics.gvod.net.util.UserTypesEncoderFactory;
@@ -51,8 +51,8 @@ public class SHP_OpenHoleMsg {
         }
 
         @Override
-        public OpCode getOpcode() {
-            return OpCode.SHP_OPENHOLE_INITIATOR;
+        public byte getOpcode() {
+            return BaseMsgFrameDecoder.SHP_OPENHOLE_INITIATOR;
         }
 
         @Override

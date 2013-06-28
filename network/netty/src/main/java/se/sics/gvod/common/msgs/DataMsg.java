@@ -24,6 +24,7 @@ import org.jboss.netty.buffer.ChannelBuffer;
 
 import se.sics.gvod.net.VodAddress;
 import se.sics.gvod.common.UtilityVod;
+import se.sics.gvod.net.BaseMsgFrameDecoder;
 import se.sics.gvod.net.msgs.RewriteableMsg;
 import se.sics.gvod.net.msgs.RewriteableRetryTimeout;
 import se.sics.gvod.net.msgs.ScheduleRetryTimeout;
@@ -83,8 +84,8 @@ public class DataMsg {
         }
 
         @Override
-        public OpCode getOpcode() {
-            return OpCode.D_REQUEST;
+        public byte getOpcode() {
+            return BaseMsgFrameDecoder.D_REQUEST;
         }
 
         @Override
@@ -165,8 +166,8 @@ public class DataMsg {
         }
 
         @Override
-        public OpCode getOpcode() {
-            return OpCode.D_RESPONSE;
+        public byte getOpcode() {
+            return BaseMsgFrameDecoder.D_RESPONSE;
         }
 
         @Override
@@ -270,8 +271,8 @@ public class DataMsg {
         }
 
         @Override
-        public OpCode getOpcode() {
-            return OpCode.PIECE_NOT_AVAILABLE;
+        public byte getOpcode() {
+            return BaseMsgFrameDecoder.PIECE_NOT_AVAILABLE;
         }
 
         @Override
@@ -324,8 +325,8 @@ public class DataMsg {
         }
 
         @Override
-        public OpCode getOpcode() {
-            return OpCode.SATURATED;
+        public byte getOpcode() {
+            return BaseMsgFrameDecoder.SATURATED;
         }
 
         @Override
@@ -368,8 +369,8 @@ public class DataMsg {
         }
 
         @Override
-        public OpCode getOpcode() {
-            return OpCode.ACK;
+        public byte getOpcode() {
+            return BaseMsgFrameDecoder.ACK;
         }
 
         @Override
@@ -427,8 +428,8 @@ public class DataMsg {
         }
 
         @Override
-        public OpCode getOpcode() {
-            return OpCode.HASH_REQUEST;
+        public byte getOpcode() {
+            return BaseMsgFrameDecoder.HASH_REQUEST;
         }
 
         @Override
@@ -485,8 +486,8 @@ public class DataMsg {
         }
 
         @Override
-        public OpCode getOpcode() {
-            return OpCode.HASH_RESPONSE;
+        public byte getOpcode() {
+            return BaseMsgFrameDecoder.HASH_RESPONSE;
         }
 
         @Override

@@ -4,8 +4,8 @@ import java.util.HashSet;
 import java.util.Set;
 import org.jboss.netty.buffer.ChannelBuffer;
 import se.sics.gvod.common.msgs.MessageEncodingException;
-import se.sics.gvod.common.msgs.OpCode;
 import se.sics.gvod.common.msgs.VodMsgNetty;
+import se.sics.gvod.net.BaseMsgFrameDecoder;
 import se.sics.gvod.net.VodAddress;
 import se.sics.gvod.net.msgs.RewriteableMsg;
 import se.sics.gvod.net.msgs.RewriteableRetryTimeout;
@@ -66,8 +66,8 @@ public class HpRegisterMsg {
         }
 
         @Override
-        public OpCode getOpcode() {
-            return OpCode.HP_REGISTER_REQUEST;
+        public byte getOpcode() {
+            return BaseMsgFrameDecoder.HP_REGISTER_REQUEST;
         }
 
         @Override
@@ -125,8 +125,8 @@ public class HpRegisterMsg {
         }
 
         @Override
-        public OpCode getOpcode() {
-            return OpCode.HP_REGISTER_RESPONSE;
+        public byte getOpcode() {
+            return BaseMsgFrameDecoder.HP_REGISTER_RESPONSE;
         }
 
         @Override

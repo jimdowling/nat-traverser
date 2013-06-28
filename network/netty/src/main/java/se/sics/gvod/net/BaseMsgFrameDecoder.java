@@ -15,7 +15,6 @@ import se.sics.gvod.common.msgs.DataOfferMsgFactory;
 import se.sics.gvod.common.msgs.DisconnectMsgFactory;
 import se.sics.gvod.common.msgs.LeaveMsgFactory;
 import se.sics.gvod.common.msgs.MessageDecodingException;
-import se.sics.gvod.common.msgs.OpKod;
 import se.sics.gvod.common.msgs.ReferencesMsgFactory;
 import se.sics.gvod.common.msgs.SearchMsgFactory;
 import se.sics.gvod.common.msgs.UploadingRateMsgFactory;
@@ -58,6 +57,104 @@ public class BaseMsgFrameDecoder extends MsgFrameDecoder {
 
     private static final Logger logger = LoggerFactory.getLogger(BaseMsgFrameDecoder.class);
 
+    public static final byte CONNECT_REQUEST       = 0x01;
+    public static final byte CONNECT_RESPONSE      = 0x02;
+    public static final byte DISCONNECT_REQUEST    = 0x03;
+    public static final byte DISCONNECT_RESPONSE   = 0x04;
+    public static final byte DATAOFFER             = 0x05;
+    public static final byte LEAVE                 = 0x06;
+    public static final byte SHUFFLE_REQUEST       = 0x07;
+    public static final byte SHUFFLE_RESPONSE      = 0x08;
+    public static final byte REPORT_REQUEST        = 0x09;
+    public static final byte REPORT_RESPONSE       = 0x0a;
+    public static final byte REFERENCES_REQUEST    = 0x0b;
+    public static final byte REFERENCES_RESPONSE   = 0x0c;
+    public static final byte UPLOADING_RATE_REQUEST= 0x0d;
+    public static final byte UPLOADING_RATE_RESPONSE=0x0e;
+    public static final byte D_REQUEST             = 0x0f;
+    public static final byte D_RESPONSE            = 0x10;
+    public static final byte PIECE_NOT_AVAILABLE   = 0x11;
+    public static final byte SATURATED             = 0x12;
+    public static final byte ACK                   = 0x13;
+    public static final byte HASH_REQUEST          = 0x14;
+    public static final byte HASH_RESPONSE         = 0x15;
+    public static final byte VOD_MESSAGE           = 0x16;
+    public static final byte REWRITEABLE_MESSAGE   = 0x17;
+    // OTHER MSGS
+    public static final byte RELAY_REQUEST         = 0x18;
+    public static final byte RELAY_RESPONSE        = 0x19;
+    public static final byte RELAY_ONEWAY          = 0x1a;
+    public static final byte PONG                  = 0x1b;
+    //GRADIENT MSGS
+    public static final byte TARGET_UTILITY_PROBE_REQUEST  = 0x20;
+    public static final byte TARGET_UTILITY_PROBE_RESPONSE = 0x21;
+    public static final byte SETS_EXCHANGE_REQUEST         = 0x22;
+    public static final byte SETS_EXCHANGE_RESPONSE        = 0x23;
+    public static final byte GRADIENT_HEARTBEAT_REQUEST    = 0x24;
+    public static final byte GRADIENT_HEARTBEAT_RESPONSE   = 0x25;
+    public static final byte LEADER_SELECTION_REQUEST      = 0x26;
+    public static final byte LEADER_SELECTION_RESPONSE     = 0x27;
+    // STUN MSGS
+    public static final byte ECHO_REQUEST                  = 0x28;
+    public static final byte ECHO_RESPONSE                 = 0x29;
+    public static final byte ECHO_CHANGE_IP_AND_PORT_REQUEST = 0x2a;
+    public static final byte ECHO_CHANGE_IP_AND_PORT_RESPONSE = 0x2b;
+    public static final byte ECHO_CHANGE_PORT_REQUEST      = 0x2c;
+    public static final byte ECHO_CHANGE_PORT_RESPONSE     = 0x2d;
+    public static final byte SERVER_HOST_CHANGE_REQUEST    = 0x2e;
+    public static final byte SERVER_HOST_CHANGE_RESPONSE   = 0x2f;
+    // HOLE PUNCHING MSGS
+    public static final byte GO_MSG                        = 0x30;
+    public static final byte HP_FINISHED                   = 0x31;
+    public static final byte HP_FEASABILITY_REQUEST        = 0x32;
+    public static final byte HP_FEASABILITY_RESPONSE       = 0x33;
+    public static final byte HOLE_PUNCHING_REQUEST         = 0x34;
+    public static final byte HOLE_PUNCHING_RESPONSE        = 0x35;
+    public static final byte HOLE_PUNCHING_RESPONSE_ACK    = 0x36;
+    public static final byte 
+                          INTERLEAVED_PRC_OPENHOLE_REQUEST  = 0x37;
+    public static final byte 
+                          INTERLEAVED_PRC_OPENHOLE_RESPONSE = 0x38;
+    public static final byte 
+                        INTERLEAVED_PRC_SERVER_REQ_PRED_MSG = 0x39;
+    public static final byte 
+       INTERLEAVED_PRP_SEND_AVAILABLE_PORTS_ZSERVER_REQUEST = 0x3a;
+    public static final byte 
+      INTERLEAVED_PRP_SEND_AVAILABLE_PORTS_ZSERVER_RESPONSE = 0x3b;
+    public static final byte 
+            INTERLEAVED_PRP_SERVERS_REQ_AVAILABLE_PORTS_MSG = 0x3c;
+    public static final byte PRC_OPENHOLE_REQUEST          = 0x3d;
+    public static final byte PRC_OPENHOLE_RESPONSE         = 0x3e;
+    public static final byte PRC_SERVER_REQ_CONSEC_MSG     = 0x3f;
+    public static final byte PRP_SEND_PORTS_ZSERVER_REQUEST= 0x40;
+    public static final byte 
+                            PRP_SEND_PORTS_ZSERVER_RESPONSE = 0x41;
+    public static final byte 
+                        PRP_SERVER_REQ_AVAILABLE_PORTS_MSG  = 0x42;
+    public static final byte HP_REGISTER_REQUEST           = 0x43;
+    public static final byte HP_REGISTER_RESPONSE          = 0x44;
+    public static final byte RELAY_CLIENT_TO_SERVER        = 0x45;
+    public static final byte RELAY_SERVER_TO_CLIENT        = 0x46;
+    public static final byte SHP_INITIATE_SHP              = 0x47;
+    public static final byte SHP_OPENHOLE_REQUEST          = 0x48;
+    public static final byte SHP_OPENHOLE_INITIATOR        = 0x49;
+    public static final byte HP_UNREGISTER_REQUEST         = 0x4a;
+    public static final byte HP_UNREGISTER_RESPONSE        = 0x4b;
+    public static final byte PARENT_KEEP_ALIVE_REQUEST     = 0x4c;
+    public static final byte PARENT_KEEP_ALIVE_RESPONSE    = 0x4d;
+    public static final byte DELETE_CONNECTION             = 0x4e;
+    public static final byte PRP_PREALLOCATED_PORTS_REQUEST= 0x4f;
+    public static final byte PRP_PREALLOCATED_PORTS_RESPONSE= 0x50;
+    public static final byte HP_KEEP_ALIVE_REQUEST         = 0x51;
+    public static final byte HP_KEEP_ALIVE_RESPONSE        = 0x52;
+    // PEERSEARCH MESSAGES
+    public static final byte SEARCH_REQUEST                = 0x60;
+    public static final byte SEARCH_RESPONSE               = 0x62;
+    //
+    // NB: RANGE OF +VE BYTES ENDS AT 0x7F
+    
+    
+    
     public BaseMsgFrameDecoder() {
         super();
     }
@@ -78,147 +175,147 @@ public class BaseMsgFrameDecoder extends MsgFrameDecoder {
 
         // PEERSEARCH MSGS
         switch (opKod) {
-            case OpKod.SEARCH_REQUEST:
+            case SEARCH_REQUEST:
                 return SearchMsgFactory.Request.fromBuffer(buffer);
-            case OpKod.SEARCH_RESPONSE:
+            case SEARCH_RESPONSE:
                 return SearchMsgFactory.Response.fromBuffer(buffer);
             // COMMON MSGS
-            case OpKod.CONNECT_REQUEST:
+            case CONNECT_REQUEST:
                 return ConnectMsgFactory.Request.fromBuffer(buffer);
-            case OpKod.CONNECT_RESPONSE:
+            case CONNECT_RESPONSE:
                 return ConnectMsgFactory.Response.fromBuffer(buffer);
-            case OpKod.DISCONNECT_REQUEST:
+            case DISCONNECT_REQUEST:
                 return DisconnectMsgFactory.Request.fromBuffer(buffer);
-            case OpKod.DISCONNECT_RESPONSE:
+            case DISCONNECT_RESPONSE:
                 return DisconnectMsgFactory.Response.fromBuffer(buffer);
-            case OpKod.DATAOFFER:
+            case DATAOFFER:
                 return DataOfferMsgFactory.fromBuffer(buffer);
-            case OpKod.LEAVE:
+            case LEAVE:
                 return LeaveMsgFactory.fromBuffer(buffer);
-            case OpKod.REFERENCES_REQUEST:
+            case REFERENCES_REQUEST:
                 return ReferencesMsgFactory.Request.fromBuffer(buffer);
-            case OpKod.REFERENCES_RESPONSE:
+            case REFERENCES_RESPONSE:
                 return ReferencesMsgFactory.Response.fromBuffer(buffer);
-            case OpKod.UPLOADING_RATE_REQUEST:
+            case UPLOADING_RATE_REQUEST:
                 return UploadingRateMsgFactory.Request.fromBuffer(buffer);
-            case OpKod.UPLOADING_RATE_RESPONSE:
+            case UPLOADING_RATE_RESPONSE:
                 return UploadingRateMsgFactory.Response.fromBuffer(buffer);
-            case OpKod.D_REQUEST:
+            case D_REQUEST:
                 return DataMsgFactory.Request.fromBuffer(buffer);
-            case OpKod.D_RESPONSE:
+            case D_RESPONSE:
                 return DataMsgFactory.Response.fromBuffer(buffer);
-            case OpKod.PIECE_NOT_AVAILABLE:
+            case PIECE_NOT_AVAILABLE:
                 return DataMsgFactory.PieceNotAvailable.fromBuffer(buffer);
-            case OpKod.SATURATED:
+            case SATURATED:
                 return DataMsgFactory.Saturated.fromBuffer(buffer);
-            case OpKod.ACK:
+            case ACK:
                 return DataMsgFactory.Ack.fromBuffer(buffer);
-            case OpKod.HASH_REQUEST:
+            case HASH_REQUEST:
                 return DataMsgFactory.HashRequest.fromBuffer(buffer);
-            case OpKod.HASH_RESPONSE:
+            case HASH_RESPONSE:
                 return DataMsgFactory.HashResponse.fromBuffer(buffer);
             // GRADIENT MSGS
-            case OpKod.SETS_EXCHANGE_REQUEST:
+            case SETS_EXCHANGE_REQUEST:
                 return SetsExchangeMsgFactory.Request.fromBuffer(buffer);
-            case OpKod.SETS_EXCHANGE_RESPONSE:
+            case SETS_EXCHANGE_RESPONSE:
                 return SetsExchangeMsgFactory.Response.fromBuffer(buffer);
-            case OpKod.TARGET_UTILITY_PROBE_REQUEST:
+            case TARGET_UTILITY_PROBE_REQUEST:
                 return GradientSearchMsgFactory.Request.fromBuffer(buffer);
-            case OpKod.TARGET_UTILITY_PROBE_RESPONSE:
+            case TARGET_UTILITY_PROBE_RESPONSE:
                 return GradientSearchMsgFactory.Response.fromBuffer(buffer);
             // STUN MSGS
-            case OpKod.ECHO_REQUEST:
+            case ECHO_REQUEST:
                 return EchoMsgFactory.Request.fromBuffer(buffer);
-            case OpKod.ECHO_RESPONSE:
+            case ECHO_RESPONSE:
                 return EchoMsgFactory.Response.fromBuffer(buffer);
-            case OpKod.ECHO_CHANGE_IP_AND_PORT_REQUEST:
+            case ECHO_CHANGE_IP_AND_PORT_REQUEST:
                 return EchoChangeIpAndPortMsgFactory.Request.fromBuffer(buffer);
-            case OpKod.ECHO_CHANGE_IP_AND_PORT_RESPONSE:
+            case ECHO_CHANGE_IP_AND_PORT_RESPONSE:
                 return EchoChangeIpAndPortMsgFactory.Response.fromBuffer(buffer);
-            case OpKod.ECHO_CHANGE_PORT_REQUEST:
+            case ECHO_CHANGE_PORT_REQUEST:
                 return EchoChangePortMsgFactory.Request.fromBuffer(buffer);
-            case OpKod.ECHO_CHANGE_PORT_RESPONSE:
+            case ECHO_CHANGE_PORT_RESPONSE:
                 return EchoChangePortMsgFactory.Response.fromBuffer(buffer);
-            case OpKod.SERVER_HOST_CHANGE_REQUEST:
+            case SERVER_HOST_CHANGE_REQUEST:
                 return ServerHostChangeMsgFactory.Request.fromBuffer(buffer);
-            case OpKod.SERVER_HOST_CHANGE_RESPONSE:
+            case SERVER_HOST_CHANGE_RESPONSE:
                 return ServerHostChangeMsgFactory.Response.fromBuffer(buffer);
-            case OpKod.REPORT_REQUEST:
+            case REPORT_REQUEST:
                 return ReportMsgFactory.Request.fromBuffer(buffer);
-            case OpKod.REPORT_RESPONSE:
+            case REPORT_RESPONSE:
                 return ReportMsgFactory.Response.fromBuffer(buffer);
             // HOLE PUNCHING MSGS
-            case OpKod.GO_MSG:
+            case GO_MSG:
                 return GoMsgFactory.Request.fromBuffer(buffer);
-            case OpKod.DELETE_CONNECTION:
+            case DELETE_CONNECTION:
                 return DeleteConnectionMsgFactory.fromBuffer(buffer);
-            case OpKod.HOLE_PUNCHING_REQUEST:
+            case HOLE_PUNCHING_REQUEST:
                 return HolePunchingMsgFactory.Request.fromBuffer(buffer);
-            case OpKod.HOLE_PUNCHING_RESPONSE:
+            case HOLE_PUNCHING_RESPONSE:
                 return HolePunchingMsgFactory.Response.fromBuffer(buffer);
-            case OpKod.HOLE_PUNCHING_RESPONSE_ACK:
+            case HOLE_PUNCHING_RESPONSE_ACK:
                 return HolePunchingMsgFactory.ResponseAck.fromBuffer(buffer);
-            case OpKod.HP_FINISHED:
+            case HP_FINISHED:
                 return HpFinishedMsgFactory.Request.fromBuffer(buffer);
-            case OpKod.INTERLEAVED_PRC_OPENHOLE_REQUEST:
+            case INTERLEAVED_PRC_OPENHOLE_REQUEST:
                 return Interleaved_PRC_OpenHoleMsgFactory.Request.fromBuffer(buffer);
-            case OpKod.INTERLEAVED_PRC_OPENHOLE_RESPONSE:
+            case INTERLEAVED_PRC_OPENHOLE_RESPONSE:
                 return Interleaved_PRC_OpenHoleMsgFactory.Response.fromBuffer(buffer);
-            case OpKod.INTERLEAVED_PRC_SERVER_REQ_PRED_MSG:
+            case INTERLEAVED_PRC_SERVER_REQ_PRED_MSG:
                 return Interleaved_PRC_ServersRequestForPredictionMsgFactory.Request.fromBuffer(buffer);
-            case OpKod.INTERLEAVED_PRP_SEND_AVAILABLE_PORTS_ZSERVER_REQUEST:
+            case INTERLEAVED_PRP_SEND_AVAILABLE_PORTS_ZSERVER_REQUEST:
                 return Interleaved_PRP_ConnectMsgFactory.Request.fromBuffer(buffer);
-            case OpKod.INTERLEAVED_PRP_SEND_AVAILABLE_PORTS_ZSERVER_RESPONSE:
+            case INTERLEAVED_PRP_SEND_AVAILABLE_PORTS_ZSERVER_RESPONSE:
                 return Interleaved_PRP_ConnectMsgFactory.Response.fromBuffer(buffer);
-            case OpKod.INTERLEAVED_PRP_SERVERS_REQ_AVAILABLE_PORTS_MSG:
+            case INTERLEAVED_PRP_SERVERS_REQ_AVAILABLE_PORTS_MSG:
                 return Interleaved_PRP_ServerRequestForAvailablePortsMsgFactory.Request.fromBuffer(buffer);
-            case OpKod.PRC_OPENHOLE_REQUEST:
+            case PRC_OPENHOLE_REQUEST:
                 return PRC_OpenHoleMsgFactory.Request.fromBuffer(buffer);
-            case OpKod.PRC_OPENHOLE_RESPONSE:
+            case PRC_OPENHOLE_RESPONSE:
                 return PRC_OpenHoleMsgFactory.Response.fromBuffer(buffer);
-            case OpKod.PRC_SERVER_REQ_CONSEC_MSG:
+            case PRC_SERVER_REQ_CONSEC_MSG:
                 return PRC_ServerRequestForConsecutiveMsgFactory.Request.fromBuffer(buffer);
-            case OpKod.PRP_SEND_PORTS_ZSERVER_REQUEST:
+            case PRP_SEND_PORTS_ZSERVER_REQUEST:
                 return PRP_ConnectMsgFactory.Request.fromBuffer(buffer);
-            case OpKod.PRP_SEND_PORTS_ZSERVER_RESPONSE:
+            case PRP_SEND_PORTS_ZSERVER_RESPONSE:
                 return PRP_ConnectMsgFactory.Response.fromBuffer(buffer);
-            case OpKod.PRP_SERVER_REQ_AVAILABLE_PORTS_MSG:
+            case PRP_SERVER_REQ_AVAILABLE_PORTS_MSG:
                 return PRP_ServerRequestForAvailablePortsMsgFactory.Request.fromBuffer(buffer);
-            case OpKod.PRP_PREALLOCATED_PORTS_REQUEST:
+            case PRP_PREALLOCATED_PORTS_REQUEST:
                 return PRP_PreallocatedPortsMsgFactory.Request.fromBuffer(buffer);
-            case OpKod.PRP_PREALLOCATED_PORTS_RESPONSE:
+            case PRP_PREALLOCATED_PORTS_RESPONSE:
                 return PRP_PreallocatedPortsMsgFactory.Response.fromBuffer(buffer);
-            case OpKod.HP_REGISTER_REQUEST:
+            case HP_REGISTER_REQUEST:
                 return HpRegisterMsgFactory.Request.fromBuffer(buffer);
-            case OpKod.HP_REGISTER_RESPONSE:
+            case HP_REGISTER_RESPONSE:
                 return HpRegisterMsgFactory.Response.fromBuffer(buffer);
-            case OpKod.HP_UNREGISTER_REQUEST:
+            case HP_UNREGISTER_REQUEST:
                 return HpUnregisterMsgFactory.Request.fromBuffer(buffer);
-            case OpKod.HP_UNREGISTER_RESPONSE:
+            case HP_UNREGISTER_RESPONSE:
                 return HpUnregisterMsgFactory.Response.fromBuffer(buffer);
-            case OpKod.RELAY_CLIENT_TO_SERVER:
+            case RELAY_CLIENT_TO_SERVER:
                 return RelayRequestMsgFactory.Request.fromBuffer(buffer);
-            case OpKod.RELAY_SERVER_TO_CLIENT:
+            case RELAY_SERVER_TO_CLIENT:
                 return RelayRequestMsgFactory.Response.fromBuffer(buffer);
-            case OpKod.SHP_INITIATE_SHP:
+            case SHP_INITIATE_SHP:
                 return SHP_InitiateSimpleHolePunchingMsgFactory.Request.fromBuffer(buffer);
-            case OpKod.SHP_OPENHOLE_INITIATOR:
+            case SHP_OPENHOLE_INITIATOR:
                 return SHP_OpenHoleMsgFactory.Initiator.fromBuffer(buffer);
-            case OpKod.PARENT_KEEP_ALIVE_REQUEST:
+            case PARENT_KEEP_ALIVE_REQUEST:
                 return ParentKeepAliveMsgFactory.Request.fromBuffer(buffer);
-            case OpKod.PARENT_KEEP_ALIVE_RESPONSE:
+            case PARENT_KEEP_ALIVE_RESPONSE:
                 return ParentKeepAliveMsgFactory.Response.fromBuffer(buffer);
-            case OpKod.HP_KEEP_ALIVE_REQUEST:
+            case HP_KEEP_ALIVE_REQUEST:
                 return HpKeepAliveMsgFactory.Request.fromBuffer(buffer);
-            case OpKod.HP_KEEP_ALIVE_RESPONSE:
+            case HP_KEEP_ALIVE_RESPONSE:
                 return HpKeepAliveMsgFactory.Response.fromBuffer(buffer);
-            case OpKod.HP_FEASABILITY_REQUEST:
+            case HP_FEASABILITY_REQUEST:
                 return HpConnectMsgFactory.Request.fromBuffer(buffer);
-            case OpKod.HP_FEASABILITY_RESPONSE:
+            case HP_FEASABILITY_RESPONSE:
                 return HpConnectMsgFactory.Response.fromBuffer(buffer);
-            case OpKod.SHUFFLE_REQUEST:
+            case SHUFFLE_REQUEST:
                 return ShuffleMsgFactory.Request.fromBuffer(buffer);
-            case OpKod.SHUFFLE_RESPONSE:
+            case SHUFFLE_RESPONSE:
                 return ShuffleMsgFactory.Response.fromBuffer(buffer);
             default:
                 break;

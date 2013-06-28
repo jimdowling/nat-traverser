@@ -24,8 +24,8 @@ import java.util.List;
 import org.jboss.netty.buffer.ChannelBuffer;
 import se.sics.gvod.common.VodDescriptor;
 import se.sics.gvod.common.msgs.MessageEncodingException;
-import se.sics.gvod.common.msgs.OpCode;
 import se.sics.gvod.common.msgs.RelayMsgNetty;
+import se.sics.gvod.net.BaseMsgFrameDecoder;
 import se.sics.gvod.net.VodAddress;
 import se.sics.gvod.net.msgs.RewriteableMsg;
 import se.sics.gvod.net.util.UserTypesEncoderFactory;
@@ -55,8 +55,8 @@ public class SetsExchangeMsg {
         }
 
         @Override
-        public OpCode getOpcode() {
-            return OpCode.SETS_EXCHANGE_REQUEST;
+        public byte getOpcode() {
+            return BaseMsgFrameDecoder.SETS_EXCHANGE_REQUEST;
         }
 
         @Override
@@ -99,8 +99,8 @@ public class SetsExchangeMsg {
         }
 
         @Override
-        public OpCode getOpcode() {
-            return OpCode.SETS_EXCHANGE_RESPONSE;
+        public byte getOpcode() {
+            return BaseMsgFrameDecoder.SETS_EXCHANGE_RESPONSE;
         }
 
         @Override

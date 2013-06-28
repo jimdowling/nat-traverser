@@ -51,8 +51,7 @@ public abstract class RewriteableMsgNetty extends RewriteableMsg
     public abstract int getSize();
 
     protected void writeHeader(ChannelBuffer buffer) throws MessageEncodingException {
-        OpCode opCode = getOpcode();
-        byte b = opCode.getByte();
+        byte b = getOpcode();
         buffer.writeByte(b);
         if (hasTimeout()) {
             buffer.writeInt(timeoutId.getId());

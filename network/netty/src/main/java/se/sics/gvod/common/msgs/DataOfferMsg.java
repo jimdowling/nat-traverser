@@ -20,11 +20,10 @@
  */
 package se.sics.gvod.common.msgs;
 
-import java.util.List;
 import org.jboss.netty.buffer.ChannelBuffer;
 import se.sics.gvod.net.VodAddress;
-import se.sics.gvod.common.Utility;
 import se.sics.gvod.common.UtilityVod;
+import se.sics.gvod.net.BaseMsgFrameDecoder;
 import se.sics.gvod.net.msgs.RewriteableMsg;
 import se.sics.gvod.net.util.UserTypesEncoderFactory;
 
@@ -73,8 +72,8 @@ public class DataOfferMsg extends VodMsgNetty {
     }
 
     @Override
-    public OpCode getOpcode() {
-        return OpCode.DATAOFFER;
+    public byte getOpcode() {
+        return BaseMsgFrameDecoder.DATAOFFER;
     }
 
     @Override

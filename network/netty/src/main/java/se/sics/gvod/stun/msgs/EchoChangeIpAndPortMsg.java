@@ -6,10 +6,10 @@ package se.sics.gvod.stun.msgs;
 
 import org.jboss.netty.buffer.ChannelBuffer;
 import se.sics.gvod.common.msgs.MessageEncodingException;
-import se.sics.gvod.common.msgs.OpCode;
 import se.sics.gvod.net.msgs.RewriteableRetryTimeout;
 import se.sics.gvod.net.msgs.ScheduleRetryTimeout;
 import se.sics.gvod.address.Address;
+import se.sics.gvod.net.BaseMsgFrameDecoder;
 import se.sics.gvod.net.VodAddress;
 import se.sics.gvod.net.msgs.RewriteableMsg;
 import se.sics.gvod.net.util.UserTypesEncoderFactory;
@@ -42,8 +42,8 @@ public class EchoChangeIpAndPortMsg {
         }
 
         @Override
-        public OpCode getOpcode() {
-            return OpCode.ECHO_CHANGE_IP_AND_PORT_REQUEST;
+        public byte getOpcode() {
+            return BaseMsgFrameDecoder.ECHO_CHANGE_IP_AND_PORT_REQUEST;
         }
 
         @Override
@@ -103,8 +103,8 @@ public class EchoChangeIpAndPortMsg {
         }
 
         @Override
-        public OpCode getOpcode() {
-            return OpCode.ECHO_CHANGE_IP_AND_PORT_RESPONSE;
+        public byte getOpcode() {
+            return BaseMsgFrameDecoder.ECHO_CHANGE_IP_AND_PORT_RESPONSE;
         }
 
         @Override

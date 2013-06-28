@@ -8,8 +8,8 @@ import java.util.ArrayList;
 import java.util.List;
 import org.jboss.netty.buffer.ChannelBuffer;
 import se.sics.gvod.net.VodAddress;
-import se.sics.gvod.common.Utility;
 import se.sics.gvod.common.UtilityVod;
+import se.sics.gvod.net.BaseMsgFrameDecoder;
 import se.sics.gvod.net.msgs.RewriteableMsg;
 import se.sics.gvod.net.util.UserTypesEncoderFactory;
 import se.sics.gvod.timer.ScheduleTimeout;
@@ -52,8 +52,8 @@ public class ReferencesMsg {
         }
 
         @Override
-        public OpCode getOpcode() {
-            return OpCode.REFERENCES_REQUEST;
+        public byte getOpcode() {
+            return BaseMsgFrameDecoder.REFERENCES_REQUEST;
         }
 
         @Override
@@ -110,8 +110,8 @@ public class ReferencesMsg {
         }
 
         @Override
-        public OpCode getOpcode() {
-            return OpCode.REFERENCES_RESPONSE;
+        public byte getOpcode() {
+            return BaseMsgFrameDecoder.REFERENCES_RESPONSE;
         }
 
         @Override

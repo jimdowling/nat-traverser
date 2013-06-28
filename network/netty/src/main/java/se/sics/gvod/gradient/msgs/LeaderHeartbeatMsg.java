@@ -5,10 +5,9 @@
 package se.sics.gvod.gradient.msgs;
 
 import org.jboss.netty.buffer.ChannelBuffer;
-import se.sics.gvod.config.VodConfig;
 import se.sics.gvod.common.msgs.MessageEncodingException;
-import se.sics.gvod.common.msgs.OpCode;
 import se.sics.gvod.common.msgs.RelayMsgNetty;
+import se.sics.gvod.net.BaseMsgFrameDecoder;
 import se.sics.gvod.net.VodAddress;
 import se.sics.gvod.net.msgs.RewriteableMsg;
 import se.sics.gvod.net.msgs.ScheduleRetryTimeout;
@@ -53,8 +52,8 @@ public class LeaderHeartbeatMsg {
         }
 
         @Override
-        public OpCode getOpcode() {
-            return OpCode.GRADIENT_HEARTBEAT_REQUEST;
+        public byte getOpcode() {
+            return BaseMsgFrameDecoder.GRADIENT_HEARTBEAT_REQUEST;
         }
 
         @Override
@@ -107,8 +106,8 @@ public class LeaderHeartbeatMsg {
         }
 
         @Override
-        public OpCode getOpcode() {
-            return OpCode.GRADIENT_HEARTBEAT_RESPONSE;
+        public byte getOpcode() {
+            return BaseMsgFrameDecoder.GRADIENT_HEARTBEAT_RESPONSE;
         }
 
         @Override

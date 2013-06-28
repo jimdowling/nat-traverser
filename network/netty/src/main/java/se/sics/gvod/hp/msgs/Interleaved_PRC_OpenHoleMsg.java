@@ -2,7 +2,7 @@ package se.sics.gvod.hp.msgs;
 
 import org.jboss.netty.buffer.ChannelBuffer;
 import se.sics.gvod.common.msgs.MessageEncodingException;
-import se.sics.gvod.common.msgs.OpCode;
+import se.sics.gvod.net.BaseMsgFrameDecoder;
 import se.sics.gvod.net.msgs.RewriteableRetryTimeout;
 import se.sics.gvod.net.msgs.ScheduleRetryTimeout;
 import se.sics.gvod.net.VodAddress;
@@ -41,8 +41,8 @@ public class Interleaved_PRC_OpenHoleMsg
         }
 
         @Override
-        public OpCode getOpcode() {
-            return OpCode.INTERLEAVED_PRC_OPENHOLE_REQUEST;
+        public byte getOpcode() {
+            return BaseMsgFrameDecoder.INTERLEAVED_PRC_OPENHOLE_REQUEST;
         }
 
         @Override
@@ -94,8 +94,8 @@ public class Interleaved_PRC_OpenHoleMsg
         }
 
         @Override
-        public OpCode getOpcode() {
-            return OpCode.INTERLEAVED_PRC_OPENHOLE_REQUEST;
+        public byte getOpcode() {
+            return BaseMsgFrameDecoder.INTERLEAVED_PRC_OPENHOLE_REQUEST;
         }
 
         @Override

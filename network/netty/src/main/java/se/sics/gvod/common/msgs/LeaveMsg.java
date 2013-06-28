@@ -21,6 +21,7 @@
 package se.sics.gvod.common.msgs;
 
 import org.jboss.netty.buffer.ChannelBuffer;
+import se.sics.gvod.net.BaseMsgFrameDecoder;
 import se.sics.gvod.net.VodAddress;
 import se.sics.gvod.net.msgs.RewriteableMsg;
 
@@ -40,8 +41,8 @@ public class LeaveMsg extends VodMsgNetty {
     }
 
     @Override
-    public OpCode getOpcode() {
-        return OpCode.LEAVE;
+    public byte getOpcode() {
+        return BaseMsgFrameDecoder.LEAVE;
     }
 
     @Override

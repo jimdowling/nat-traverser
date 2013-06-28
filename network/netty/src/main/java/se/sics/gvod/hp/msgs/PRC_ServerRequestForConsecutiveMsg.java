@@ -2,13 +2,13 @@ package se.sics.gvod.hp.msgs;
 
 import org.jboss.netty.buffer.ChannelBuffer;
 import se.sics.gvod.common.msgs.MessageEncodingException;
-import se.sics.gvod.common.msgs.OpCode;
 import se.sics.gvod.net.msgs.RewriteableRetryTimeout;
 import se.sics.gvod.net.msgs.ScheduleRetryTimeout;
 import se.sics.gvod.net.VodAddress;
 import se.sics.gvod.net.msgs.RewriteableMsg;
 import se.sics.gvod.common.hp.HPMechanism;
 import se.sics.gvod.common.hp.HPRole;
+import se.sics.gvod.net.BaseMsgFrameDecoder;
 import se.sics.gvod.net.util.UserTypesEncoderFactory;
 import se.sics.gvod.timer.TimeoutId;
 
@@ -66,8 +66,8 @@ public class PRC_ServerRequestForConsecutiveMsg
         }
 
         @Override
-        public OpCode getOpcode() {
-            return OpCode.PRC_SERVER_REQ_CONSEC_MSG;
+        public byte getOpcode() {
+            return BaseMsgFrameDecoder.PRC_SERVER_REQ_CONSEC_MSG;
         }
 
         @Override

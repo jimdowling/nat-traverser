@@ -22,6 +22,7 @@ package se.sics.gvod.common.msgs;
 
 import se.sics.gvod.net.VodAddress;
 import org.jboss.netty.buffer.ChannelBuffer;
+import se.sics.gvod.net.BaseMsgFrameDecoder;
 import se.sics.gvod.net.msgs.RewriteableMsg;
 import se.sics.gvod.net.util.UserTypesEncoderFactory;
 import se.sics.gvod.timer.ScheduleTimeout;
@@ -49,8 +50,8 @@ public class UploadingRateMsg {
         }
 
         @Override
-        public OpCode getOpcode() {
-            return OpCode.UPLOADING_RATE_REQUEST;
+        public byte getOpcode() {
+            return BaseMsgFrameDecoder.UPLOADING_RATE_REQUEST;
         }
 
         @Override
@@ -95,8 +96,8 @@ public class UploadingRateMsg {
         }
 
         @Override
-        public OpCode getOpcode() {
-            return OpCode.UPLOADING_RATE_RESPONSE;
+        public byte getOpcode() {
+            return BaseMsgFrameDecoder.UPLOADING_RATE_RESPONSE;
         }
 
         @Override
