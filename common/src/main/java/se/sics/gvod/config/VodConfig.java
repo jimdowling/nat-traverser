@@ -113,7 +113,7 @@ public class VodConfig extends BaseCommandLineConfig {
     public static final int STUN_MAX_NUM_PARTNERS = 5;
     public static final int STUN_PARTNER_RTO_RETRIES = 0;
     public static final int STUN_PARTNER_RTO = 500;
-    public static final int STUN_PARTNER_RTO_MULTIPLIER = 3;
+    public static final int STUN_PARTNER_RTO_MULTIPLIER = 2;
     public static final int STUN_PARTNER_NUM_PARALLEL = 3;
     
     //Parent Maker's params

@@ -56,7 +56,7 @@ public class Partner implements Comparable<Partner>, Serializable {
             return false;
         }
         Partner that = (Partner) obj;
-        return addr.equals(that.getVodAddress());
+        return addr.getPeerAddress().equals(that.getAddress());
     }
 
     @Override

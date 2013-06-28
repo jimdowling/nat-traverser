@@ -48,7 +48,6 @@ public final class StunServer extends MsgRetryComponent {
     private static final Logger logger = LoggerFactory.getLogger(StunServer.class);
     private Positive<NatNetworkControl> netControl = positive(NatNetworkControl.class);
     private List<Partner> partners = new ArrayList<Partner>();
-    private Map<Integer, Partner> partnerMap = new HashMap<Integer, Partner>();
     private Map<TimeoutId, Long> partnerRTTs = new HashMap<TimeoutId, Long>();
     private Set<Long> outstandingHostChangeRequests = new HashSet<Long>();
     private String compName;
@@ -283,11 +282,12 @@ public final class StunServer extends MsgRetryComponent {
             // then tell the client that EchoChangeIpAndPort has failed.
             ServerHostChangeMsg.Request req = (ServerHostChangeMsg.Request) event.getMsg();
             Address dest = event.getMsg().getDestination();
-            logger.warn(compName + " ServerHostChangeMsg Timeout for " + dest.getId() + ". Num partners left now: " + partners.size());
             TimeoutId timeoutId = event.getTimeoutId();
             if (partnerRTTs.remove(timeoutId) != null) {
                 VodAddress vodDest = ToVodAddr.stunServer(dest);
                 failedPartner(vodDest);
+                logger.warn(compName + " ServerHostChangeMsg Timeout for " + dest.getId()
+                        + ". Num partners left now: " + partners.size());
             }
             if (outstandingHostChangeRequests.remove(req.getTransactionId()) == true) {
                 delegator.doTrigger(new EchoChangeIpAndPortMsg.Response(self.getAddress(),
@@ -319,12 +319,12 @@ public final class StunServer extends MsgRetryComponent {
 
                 RTT rtt = RTTStore.getRtt(self.getId(), dest);
                 long altServerRto = (rtt != null) ? rtt.getRTO() : config.getRto();
-                long worstCaseRto = altServerRto * VodConfig.STUN_PARTNER_RTO_MULTIPLIER 
+                long worstCaseRto = altServerRto * VodConfig.STUN_PARTNER_RTO_MULTIPLIER
                         + config.getMinimumRtt();
-            logger.debug(compName + "ServerHostChangeMsg.Request sent to " + p.getAddress().getId()
+                logger.debug(compName + "ServerHostChangeMsg.Request sent to " + p.getAddress().getId()
                         + " , src=" + clientPublicIp.getId() + " privSrc="
                         + clientPublicIp.getId() + " rto = " + worstCaseRto);
-    
+
                 // Setting timeouts based on RTOs was not good enough for Guifi.net,
                 // user-supplied values taken instead.
                 ServerHostChangeMsg.Request req = new ServerHostChangeMsg.Request(self.getAddress(),
@@ -374,15 +374,13 @@ public final class StunServer extends MsgRetryComponent {
             return;
         }
 
-        Partner existingPartner = partnerMap.get(addr.getId());
-        if (existingPartner != null) {
+        Partner newPartner = new Partner(self.getId(), addr);
+        if (partners.contains(newPartner)) {
             logger.trace(compName + "Tried to re-add existing partner.");
             return;
         }
 
-        Partner newPartner = new Partner(self.getId(), addr);
         partners.add(newPartner);
-        partnerMap.put(addr.getId(), newPartner);
 
         logger.debug(compName + "Stun server (" + self.getId() + ") added partner: " + newPartner.getAddress().getId());
 
@@ -390,7 +388,6 @@ public final class StunServer extends MsgRetryComponent {
             Partner worst = getWorstPartner();
             if (worst != null) {
                 partners.remove(worst);
-                partnerMap.remove(worst.getAddress().getId());
                 logger.trace("Stun server (" + self.getId() + ") removed partner: " + worst.getAddress().getId());
             }
         }
@@ -399,9 +396,7 @@ public final class StunServer extends MsgRetryComponent {
 //------------------------------------------------------------------------    
     private boolean failedPartner(VodAddress node) {
         logger.debug(compName + "Removed partner: " + node.getId());
-        partnerMap.remove(node.getId());
         RTTStore.removeSamples(self.getId(), node);
-
         return partners.remove(new Partner(self.getId(), node));
     }
 
