@@ -315,16 +315,16 @@ public final class StunServer extends MsgRetryComponent {
 
             outstandingHostChangeRequests.add(transactionId);
             for (Partner p : bestPartners) {
-                logger.debug(compName + "ServerHostChangeMsg.Request sent to " + p.getAddress().getId()
-                        + " , src=" + clientPublicIp.getId() + " privSrc="
-                        + clientPublicIp.getId());
                 VodAddress dest = ToVodAddr.stunServer(p.getAddress());
 
                 RTT rtt = RTTStore.getRtt(self.getId(), dest);
                 long altServerRto = (rtt != null) ? rtt.getRTO() : config.getRto();
                 long worstCaseRto = altServerRto * VodConfig.STUN_PARTNER_RTO_MULTIPLIER 
                         + config.getMinimumRtt();
-
+            logger.debug(compName + "ServerHostChangeMsg.Request sent to " + p.getAddress().getId()
+                        + " , src=" + clientPublicIp.getId() + " privSrc="
+                        + clientPublicIp.getId() + " rto = " + worstCaseRto);
+    
                 // Setting timeouts based on RTOs was not good enough for Guifi.net,
                 // user-supplied values taken instead.
                 ServerHostChangeMsg.Request req = new ServerHostChangeMsg.Request(self.getAddress(),
@@ -363,6 +363,7 @@ public final class StunServer extends MsgRetryComponent {
 
 //------------------------------------------------------------------------    
     private void addPartner(VodAddress addr) {
+
         if (addr == null) {
             logger.warn(compName + "New stun partner was null");
             return;
