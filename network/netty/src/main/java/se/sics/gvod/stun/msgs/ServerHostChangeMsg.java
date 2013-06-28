@@ -121,8 +121,7 @@ public class ServerHostChangeMsg {
     }
 
     public static final class RequestTimeout extends RewriteableRetryTimeout {
-
-
+        
         public RequestTimeout(ScheduleRetryTimeout request, 
                 ServerHostChangeMsg.Request msg) {
             super(request, msg);

@@ -21,8 +21,8 @@ public final class StunServerConfiguration extends AbstractConfiguration<StunSer
                 VodConfig.STUN_MAX_NUM_PARTNERS, 
                 VodConfig.STUN_PARTNER_HEARTBEAT_PERIOD, 
                 VodConfig.STUN_MIN_RTT, 
-                VodConfig.STUN_RTO, 
-                VodConfig.STUN_RTO_RETRIES, 
+                VodConfig.STUN_PARTNER_RTO, 
+                VodConfig.STUN_PARTNER_RTO_RETRIES, 
                 VodConfig.STUN_RTO_SCALE
                 );
     }

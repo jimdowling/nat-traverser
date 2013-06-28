@@ -109,8 +109,12 @@ public class VodConfig extends BaseCommandLineConfig {
     static int STUN_UPNP_DISCOVERY_TIMEOUT = 3*1000;
     static boolean STUN_UPNP_ENABLED = false;
     static boolean STUN_MEASURE_NAT_BINDING_TIMEOUT = false;
-    static final int STUN_PARTNER_HEARTBEAT_PERIOD = 10 * 1000;
-    static final int STUN_MAX_NUM_PARTNERS = 10;
+    public static final int STUN_PARTNER_HEARTBEAT_PERIOD = 10 * 1000;
+    public static final int STUN_MAX_NUM_PARTNERS = 5;
+    public static final int STUN_PARTNER_RTO_RETRIES = 0;
+    public static final int STUN_PARTNER_RTO = 500;
+    public static final int STUN_PARTNER_RTO_MULTIPLIER = 3;
+    public static final int STUN_PARTNER_NUM_PARALLEL = 3;
     
     //Parent Maker's params
     public static int PM_PARENT_RTO = DEFAULT_RTO;

@@ -9,6 +9,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import se.sics.gvod.timer.TimeoutId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,6 +23,7 @@ import se.sics.gvod.net.VodAddress;
 import se.sics.kompics.Handler;
 import se.sics.gvod.address.Address;
 import se.sics.gvod.common.RTTStore;
+import se.sics.gvod.common.RTTStore.RTT;
 import se.sics.gvod.common.RetryComponentDelegator;
 import se.sics.gvod.common.Self;
 import se.sics.gvod.common.SelfImpl;
@@ -33,6 +36,7 @@ import se.sics.gvod.net.NatNetworkControl;
 import se.sics.gvod.net.events.PortBindRequest;
 import se.sics.gvod.net.events.PortBindResponse;
 import se.sics.gvod.net.msgs.ScheduleRetryTimeout;
+import se.sics.gvod.timer.CancelTimeout;
 import se.sics.kompics.Stop;
 import se.sics.gvod.timer.SchedulePeriodicTimeout;
 import se.sics.gvod.timer.Timeout;
@@ -47,10 +51,11 @@ public final class StunServer extends MsgRetryComponent {
     private List<Partner> partners = new ArrayList<Partner>();
     private Map<Integer, Partner> partnerMap = new HashMap<Integer, Partner>();
     private Map<TimeoutId, Long> partnerRTTs = new HashMap<TimeoutId, Long>();
+    private Set<Long> outstandingHostChangeRequests = new HashSet<Long>();
     private String compName;
     private Self self;
     private StunServerConfiguration config;
-    
+
     private class PingPartnersTimeout extends Timeout {
 
         public PingPartnersTimeout(SchedulePeriodicTimeout st) {
@@ -83,7 +88,7 @@ public final class StunServer extends MsgRetryComponent {
                     s.getIp(), VodConfig.DEFAULT_STUN_PORT, s.getId(), s.getOverlayId());
             compName = "(" + self.getId() + ") ";
             config = init.getConfig();
-            
+
             StringBuilder sb = new StringBuilder();
             sb.append(compName).append("Starting SunServer: ").append(self.getAddress()).append("\n");
             sb.append(compName).append(self.getAddress().getPeerAddress().getId()).append(" - partners: ");
@@ -92,7 +97,7 @@ public final class StunServer extends MsgRetryComponent {
                 sb.append(p.getPeerAddress().getId()).append(", ");
             }
 
-            SchedulePeriodicTimeout spt = new SchedulePeriodicTimeout(config.getPartnerHeartbeatPeriod(), 
+            SchedulePeriodicTimeout spt = new SchedulePeriodicTimeout(config.getPartnerHeartbeatPeriod(),
                     config.getPartnerHeartbeatPeriod());
             PingPartnersTimeout ppt = new PingPartnersTimeout(spt);
             spt.setTimeoutEvent(ppt);
@@ -176,8 +181,10 @@ public final class StunServer extends MsgRetryComponent {
             }
             logger.debug("For {} . ReplyTo is " + replyTo, message.getTestType());
 
-            Partner p = getBestPartner(message.getSource().getId());
-            int rto = (p == null) ? 9999 : (int) p.getRTO();
+            Set<Partner> partners = getBestPartners(message.getSource().getId(),
+                    VodConfig.STUN_PARTNER_NUM_PARALLEL);
+            Partner p = (partners.isEmpty()) ? null : partners.iterator().next();
+            int rto = (p == null) ? (int) config.getRto() : (int) p.getRTO();
             EchoMsg.Response responseMsg = new EchoMsg.Response(sourceAddress,
                     ToVodAddr.stunClient(replyTo),
                     message.getSource(),
@@ -246,7 +253,7 @@ public final class StunServer extends MsgRetryComponent {
 
             delegator.doTrigger(new ServerHostChangeMsg.Response(
                     self.getAddress(), message.getVodSource(),
-                    message.getTransactionId(), message.getTimeoutId()), network);
+                    transactionId, message.getTimeoutId()), network);
             logger.debug(compName + "Sending ServerHostChangeMsg.Response "
                     + "response from 2nd server to: "
                     + message.getSource().getId());
@@ -258,51 +265,46 @@ public final class StunServer extends MsgRetryComponent {
         public void handle(ServerHostChangeMsg.Response message) {
             logger.debug(compName + "Recvd: " + message.getClass().getName());
 
-            Long sendTime = partnerRTTs.get(message.getTimeoutId());
+            Long sendTime = partnerRTTs.remove(message.getTimeoutId());
+            delegator.doCancelRetry(message.getTimeoutId());
             if (sendTime != null) {
-                delegator.doCancelRetry(message.getTimeoutId());
-                Long rtt = System.currentTimeMillis() - sendTime;
-                addPartner(message.getVodSource(), rtt);
-                partnerRTTs.remove(message.getTimeoutId());
+                addPartner(message.getVodSource(), System.currentTimeMillis() - sendTime);
             } else {
-                logger.debug(compName + "ServerHostChangeMsg.Response came too late. for TimeoutId = " + message.getTimeoutId() + " UUIDS = {");
-
-                for (TimeoutId id : partnerRTTs.keySet()) {
-                    logger.trace(compName + id + ", ");
-                }
-
-                logger.debug("}");
+                logger.warn(compName + " Couldn't find send timer for partner: " + message.getSource());
             }
-
             printPartners();
+            outstandingHostChangeRequests.remove(message.getTransactionId());
         }
     };
 //------------------------------------------------------------------------    
     Handler<ServerHostChangeMsg.RequestTimeout> handleServerHostChangeTimeout = new Handler<ServerHostChangeMsg.RequestTimeout>() {
         @Override
-        public void handle(ServerHostChangeMsg.RequestTimeout message) {
-            ServerHostChangeMsg.Request req = (ServerHostChangeMsg.Request) message.getMsg();
-            Address dest = message.getMsg().getDestination();
-            Address src = message.getMsg().getSource();
+        public void handle(ServerHostChangeMsg.RequestTimeout event) {
+            // If I haven't already received a response for a ServerHostChangeMsg.Request
+            // then tell the client that EchoChangeIpAndPort has failed.
+            ServerHostChangeMsg.Request req = (ServerHostChangeMsg.Request) event.getMsg();
+            Address dest = event.getMsg().getDestination();
             logger.warn(compName + " ServerHostChangeMsg Timeout for " + dest.getId() + ". Num partners left now: " + partners.size());
-            TimeoutId timeoutId = message.getTimeoutId();
-
+            TimeoutId timeoutId = event.getTimeoutId();
             if (partnerRTTs.remove(timeoutId) != null) {
-                VodAddress gDest = ToVodAddr.stunServer(dest);
-                removePartner(gDest);
-                int srcId = src.getId();
-                sendHostChange(srcId, ToVodAddr.stunClient(src), req.getTransactionId(),
-                        message.getTimeoutId());
-            } else {
-                logger.warn(compName + "ServerHostChangeMsg.RequestTimeout not executed. Response must have arrived in time.");
+                VodAddress vodDest = ToVodAddr.stunServer(dest);
+                removePartner(vodDest);
+            }
+            if (outstandingHostChangeRequests.remove(req.getTransactionId()) == true) {
+                delegator.doTrigger(new EchoChangeIpAndPortMsg.Response(self.getAddress(),
+                        req.getVodSource(),
+                        req.getTransactionId(),
+                        req.getOriginalTimeoutId(),
+                        EchoChangeIpAndPortMsg.Response.Status.FAIL),
+                        network);
             }
         }
     };
 
 //------------------------------------------------------------------------    
     private void sendHostChange(int srcId, VodAddress clientPublicIp, long transactionId, TimeoutId originalTimeoutId) {
-        Partner bestPartner = getBestPartner(srcId);
-        if (bestPartner == null) {
+        Set<Partner> bestPartners = getBestPartners(srcId, VodConfig.STUN_PARTNER_NUM_PARALLEL);
+        if (bestPartners.isEmpty()) {
             delegator.doTrigger(new EchoChangeIpAndPortMsg.Response(self.getAddress(),
                     clientPublicIp,
                     transactionId,
@@ -311,22 +313,30 @@ public final class StunServer extends MsgRetryComponent {
                     network);
             logger.error("No partner found for sending ServerHostChangeMsg.Request.");
         } else {
-            logger.debug(compName + "ServerHostChangeMsg.Request sent to " + bestPartner.getAddress().getId()
-                    + " , src=" + clientPublicIp.getId() + " privSrc="
-                    + clientPublicIp.getId());
 
-            VodAddress dest = ToVodAddr.stunServer(bestPartner.getAddress());
-            Partner partner = partnerMap.get(bestPartner.getAddress().getId());
+            outstandingHostChangeRequests.add(transactionId);
+            for (Partner p : bestPartners) {
+                logger.debug(compName + "ServerHostChangeMsg.Request sent to " + p.getAddress().getId()
+                        + " , src=" + clientPublicIp.getId() + " privSrc="
+                        + clientPublicIp.getId());
+                VodAddress dest = ToVodAddr.stunServer(p.getAddress());
 
-             // Setting timeouts based on RTOs was not good enough for Guifi.net,
-            // user-supplied values taken instead.
-            ServerHostChangeMsg.Request req = new ServerHostChangeMsg.Request(self.getAddress(),
-                    dest, clientPublicIp.getPeerAddress(), transactionId, originalTimeoutId);
-            ScheduleRetryTimeout st = new ScheduleRetryTimeout(config.getRto(), 
-                    config.getRtoRetries(), config.getRtoScale());
-            ServerHostChangeMsg.RequestTimeout shct = new ServerHostChangeMsg.RequestTimeout(st, req);
-            TimeoutId timeoutId = delegator.doRetry(shct);
-            partnerRTTs.put(timeoutId, System.currentTimeMillis());
+                RTT rtt = RTTStore.getRtt(self.getId(), dest);
+                long altServerRto = (rtt != null) ? rtt.getRTO() : config.getRto();
+                long worstCaseRto = altServerRto * VodConfig.STUN_PARTNER_RTO_MULTIPLIER 
+                        + config.getMinimumRtt();
+
+                // Setting timeouts based on RTOs was not good enough for Guifi.net,
+                // user-supplied values taken instead.
+                ServerHostChangeMsg.Request req = new ServerHostChangeMsg.Request(self.getAddress(),
+                        dest, clientPublicIp.getPeerAddress(), transactionId, originalTimeoutId);
+                ScheduleRetryTimeout st = new ScheduleRetryTimeout(worstCaseRto,
+                        config.getRtoRetries(), config.getRtoScale());
+                ServerHostChangeMsg.RequestTimeout shct =
+                        new ServerHostChangeMsg.RequestTimeout(st, req);
+                TimeoutId timeoutId = delegator.doRetry(shct);
+                partnerRTTs.put(timeoutId, System.currentTimeMillis());
+            }
         }
     }
 
@@ -395,18 +405,21 @@ public final class StunServer extends MsgRetryComponent {
     }
 
 //------------------------------------------------------------------------    
-    private Partner getBestPartner(int srcId) {
+    private SortedSet<Partner> getBestPartners(int srcId, int numPartners) {
         Collections.sort(partners);
+        SortedSet<Partner> candidates = new TreeSet<Partner>();
         Iterator<Partner> iter = partners.iterator();
         Partner candidate = null;
-        while (iter.hasNext()) {
+        int i = 0;
+        while (iter.hasNext() && i < numPartners) {
             candidate = iter.next();
             if (srcId != candidate.getAddress().getId()) {
-                break;
+                i++;
+                candidates.add(candidate);
             }
         }
 
-        return candidate == null ? null : candidate;
+        return candidates;
     }
 
 //------------------------------------------------------------------------    

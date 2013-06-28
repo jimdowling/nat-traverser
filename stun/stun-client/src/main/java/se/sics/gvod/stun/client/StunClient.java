@@ -311,7 +311,9 @@ public class StunClient extends MsgRetryComponent {
 
         Session session = sessionMap.get(transactionId);
         long server2PartnerRto = session.getBestPartnerRtt();
-        int rto = calculateRto(target.getPeerAddress(), server2PartnerRto);
+        int rto = calculateRto(target.getPeerAddress(), 
+                server2PartnerRto * VodConfig.STUN_PARTNER_RTO_MULTIPLIER 
+                + config.getMinimumRtt());
         logger.debug(compName + "sendEchoChangeIpAndPortRequest " + " Rto=" + rto + " - "
                 + transactionId);
         EchoChangeIpAndPortMsg.Request echoChangeIpReq = new EchoChangeIpAndPortMsg.Request(
@@ -890,6 +892,7 @@ public class StunClient extends MsgRetryComponent {
         public void handle(EchoChangeIpAndPortMsg.Response event) {
             printMsgDetails(event);
 
+            // ignore duplicate responses..
             if (delegator.doCancelRetry(event.getTimeoutId())) {
                 long transactionId = event.getTransactionId();
                 Session session = sessionMap.get(transactionId);
@@ -898,7 +901,7 @@ public class StunClient extends MsgRetryComponent {
                 logger.debug(compName + "StunClient: EchoChangeIpandPort.ResponseMsg received. from " + event.getSource());
 
                 if (event.getStatus() == EchoChangeIpAndPortMsg.Response.Status.FAIL) {
-                    logger.debug(compName + " Server " + server1 + " failed because of no remained alive partner");
+                    logger.debug(compName + " Server " + server1 + " failed because of no remaining alive partner");
                     manageTest2Failure(server1.getPeerAddress());
                     return;
                 }
@@ -924,7 +927,7 @@ public class StunClient extends MsgRetryComponent {
                     }
                 }
             } else {
-                logger.debug(compName + event.getClass().getName() + " Cancel Retry FAILED");
+                logger.debug(compName + event.getClass().getName() + " Duplicate response..");
             }
         }
     };
