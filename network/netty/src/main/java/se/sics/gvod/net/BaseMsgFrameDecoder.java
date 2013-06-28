@@ -73,151 +73,155 @@ public class BaseMsgFrameDecoder extends MsgFrameDecoder {
      * @throws MessageDecodingException
      */
     @Override
-    protected RewriteableMsg decodeMsg(ChannelHandlerContext ctx, Channel channel, ChannelBuffer buffer) throws MessageDecodingException {
+    protected RewriteableMsg decodeMsg(ChannelHandlerContext ctx,
+            Channel channel, ChannelBuffer buffer) throws MessageDecodingException {
 
         // PEERSEARCH MSGS
-        if (opKod.getByte() == OpKod.SEARCH_REQUEST.getByte()) {
-            return SearchMsgFactory.Request.fromBuffer(buffer);
-        } else if (opKod.getByte() == OpKod.SEARCH_RESPONSE.getByte()) {
-            return SearchMsgFactory.Response.fromBuffer(buffer);
-        } // COMMON MSGS
-        else if (opKod.getByte() == OpKod.CONNECT_REQUEST.getByte()) {
-            return ConnectMsgFactory.Request.fromBuffer(buffer);
-        } else if (opKod.getByte() == OpKod.CONNECT_RESPONSE.getByte()) {
-            return ConnectMsgFactory.Response.fromBuffer(buffer);
-        } else if (opKod.getByte() == OpKod.DISCONNECT_REQUEST.getByte()) {
-            return DisconnectMsgFactory.Request.fromBuffer(buffer);
-        } else if (opKod.getByte() == OpKod.DISCONNECT_RESPONSE.getByte()) {
-            return DisconnectMsgFactory.Response.fromBuffer(buffer);
-        } else if (opKod.getByte() == OpKod.DATAOFFER.getByte()) {
-            return DataOfferMsgFactory.fromBuffer(buffer);
-        } else if (opKod.getByte() == OpKod.LEAVE.getByte()) {
-            return LeaveMsgFactory.fromBuffer(buffer);
-        } else if (opKod.getByte() == OpKod.REFERENCES_REQUEST.getByte()) {
-            return ReferencesMsgFactory.Request.fromBuffer(buffer);
-        } else if (opKod.getByte() == OpKod.REFERENCES_RESPONSE.getByte()) {
-            return ReferencesMsgFactory.Response.fromBuffer(buffer);
-        } else if (opKod.getByte() == OpKod.UPLOADING_RATE_REQUEST.getByte()) {
-            return UploadingRateMsgFactory.Request.fromBuffer(buffer);
-        } else if (opKod.getByte() == OpKod.UPLOADING_RATE_RESPONSE.getByte()) {
-            return UploadingRateMsgFactory.Response.fromBuffer(buffer);
-        } else if (opKod.getByte() == OpKod.D_REQUEST.getByte()) {
-            return DataMsgFactory.Request.fromBuffer(buffer);
-        } else if (opKod.getByte() == OpKod.D_RESPONSE.getByte()) {
-            return DataMsgFactory.Response.fromBuffer(buffer);
-        } else if (opKod.getByte() == OpKod.PIECE_NOT_AVAILABLE.getByte()) {
-            return DataMsgFactory.PieceNotAvailable.fromBuffer(buffer);
-        } else if (opKod.getByte() == OpKod.SATURATED.getByte()) {
-            return DataMsgFactory.Saturated.fromBuffer(buffer);
-        } else if (opKod.getByte() == OpKod.ACK.getByte()) {
-            return DataMsgFactory.Ack.fromBuffer(buffer);
-        } else if (opKod.getByte() == OpKod.HASH_REQUEST.getByte()) {
-            return DataMsgFactory.HashRequest.fromBuffer(buffer);
-        } else if (opKod.getByte() == OpKod.HASH_RESPONSE.getByte()) {
-            return DataMsgFactory.HashResponse.fromBuffer(buffer);
-        } // GRADIENT MSGS
-        else if (opKod.getByte() == OpKod.SETS_EXCHANGE_REQUEST.getByte()) {
-            return SetsExchangeMsgFactory.Request.fromBuffer(buffer);
-        } else if (opKod.getByte() == OpKod.SETS_EXCHANGE_RESPONSE.getByte()) {
-            return SetsExchangeMsgFactory.Response.fromBuffer(buffer);
-        } else if (opKod.getByte() == OpKod.TARGET_UTILITY_PROBE_REQUEST.getByte()) {
-            return GradientSearchMsgFactory.Request.fromBuffer(buffer);
-        } else if (opKod.getByte() == OpKod.TARGET_UTILITY_PROBE_RESPONSE.getByte()) {
-            return GradientSearchMsgFactory.Response.fromBuffer(buffer);
-        } // STUN MSGS
-        else if (opKod.getByte() == OpKod.ECHO_REQUEST.getByte()) {
-            return EchoMsgFactory.Request.fromBuffer(buffer);
-        } else if (opKod.getByte() == OpKod.ECHO_RESPONSE.getByte()) {
-            return EchoMsgFactory.Response.fromBuffer(buffer);
-        } else if (opKod.getByte() == OpKod.ECHO_CHANGE_IP_AND_PORT_REQUEST.getByte()) {
-            return EchoChangeIpAndPortMsgFactory.Request.fromBuffer(buffer);
-        } else if (opKod.getByte() == OpKod.ECHO_CHANGE_IP_AND_PORT_RESPONSE.getByte()) {
-            return EchoChangeIpAndPortMsgFactory.Response.fromBuffer(buffer);
-        } else if (opKod.getByte() == OpKod.ECHO_CHANGE_PORT_REQUEST.getByte()) {
-            return EchoChangePortMsgFactory.Request.fromBuffer(buffer);
-        } else if (opKod.getByte() == OpKod.ECHO_CHANGE_PORT_RESPONSE.getByte()) {
-            return EchoChangePortMsgFactory.Response.fromBuffer(buffer);
-        } else if (opKod.getByte() == OpKod.SERVER_HOST_CHANGE_REQUEST.getByte()) {
-            return ServerHostChangeMsgFactory.Request.fromBuffer(buffer);
-        } else if (opKod.getByte() == OpKod.SERVER_HOST_CHANGE_RESPONSE.getByte()) {
-            return ServerHostChangeMsgFactory.Response.fromBuffer(buffer);
-        } else if (opKod.getByte() == OpKod.REPORT_REQUEST.getByte()) {
-            return ReportMsgFactory.Request.fromBuffer(buffer);
-        } else if (opKod.getByte() == OpKod.REPORT_RESPONSE.getByte()) {
-            return ReportMsgFactory.Response.fromBuffer(buffer);
-        } // HOLE PUNCHING MSGS
-        else if (opKod.getByte() == OpKod.GO_MSG.getByte()) {
-            return GoMsgFactory.Request.fromBuffer(buffer);
-        } else if (opKod.getByte() == OpKod.DELETE_CONNECTION.getByte()) {
-            return DeleteConnectionMsgFactory.fromBuffer(buffer);
-        } else if (opKod.getByte() == OpKod.HOLE_PUNCHING_REQUEST.getByte()) {
-            return HolePunchingMsgFactory.Request.fromBuffer(buffer);
-        } else if (opKod.getByte() == OpKod.HOLE_PUNCHING_RESPONSE.getByte()) {
-            return HolePunchingMsgFactory.Response.fromBuffer(buffer);
-        } else if (opKod.getByte() == OpKod.HOLE_PUNCHING_RESPONSE_ACK.getByte()) {
-            return HolePunchingMsgFactory.ResponseAck.fromBuffer(buffer);
-        } else if (opKod.getByte() == OpKod.HP_FINISHED.getByte()) {
-            return HpFinishedMsgFactory.Request.fromBuffer(buffer);
-        } else if (opKod.getByte() == OpKod.INTERLEAVED_PRC_OPENHOLE_REQUEST.getByte()) {
-            return Interleaved_PRC_OpenHoleMsgFactory.Request.fromBuffer(buffer);
-        } else if (opKod.getByte() == OpKod.INTERLEAVED_PRC_OPENHOLE_RESPONSE.getByte()) {
-            return Interleaved_PRC_OpenHoleMsgFactory.Response.fromBuffer(buffer);
-        } else if (opKod.getByte() == OpKod.INTERLEAVED_PRC_SERVER_REQ_PRED_MSG.getByte()) {
-            return Interleaved_PRC_ServersRequestForPredictionMsgFactory.Request.fromBuffer(buffer);
-        } else if (opKod.getByte() == OpKod.INTERLEAVED_PRP_SEND_AVAILABLE_PORTS_ZSERVER_REQUEST.getByte()) {
-            return Interleaved_PRP_ConnectMsgFactory.Request.fromBuffer(buffer);
-        } else if (opKod.getByte() == OpKod.INTERLEAVED_PRP_SEND_AVAILABLE_PORTS_ZSERVER_RESPONSE.getByte()) {
-            return Interleaved_PRP_ConnectMsgFactory.Response.fromBuffer(buffer);
-        } else if (opKod.getByte() == OpKod.INTERLEAVED_PRP_SERVERS_REQ_AVAILABLE_PORTS_MSG.getByte()) {
-            return Interleaved_PRP_ServerRequestForAvailablePortsMsgFactory.Request.fromBuffer(buffer);
-        } else if (opKod.getByte() == OpKod.PRC_OPENHOLE_REQUEST.getByte()) {
-            return PRC_OpenHoleMsgFactory.Request.fromBuffer(buffer);
-        } else if (opKod.getByte() == OpKod.PRC_OPENHOLE_RESPONSE.getByte()) {
-            return PRC_OpenHoleMsgFactory.Response.fromBuffer(buffer);
-        } else if (opKod.getByte() == OpKod.PRC_SERVER_REQ_CONSEC_MSG.getByte()) {
-            return PRC_ServerRequestForConsecutiveMsgFactory.Request.fromBuffer(buffer);
-        } else if (opKod.getByte() == OpKod.PRP_SEND_PORTS_ZSERVER_REQUEST.getByte()) {
-            return PRP_ConnectMsgFactory.Request.fromBuffer(buffer);
-        } else if (opKod.getByte() == OpKod.PRP_SEND_PORTS_ZSERVER_RESPONSE.getByte()) {
-            return PRP_ConnectMsgFactory.Response.fromBuffer(buffer);
-        } else if (opKod.getByte() == OpKod.PRP_SERVER_REQ_AVAILABLE_PORTS_MSG.getByte()) {
-            return PRP_ServerRequestForAvailablePortsMsgFactory.Request.fromBuffer(buffer);
-        } else if (opKod.getByte() == OpKod.PRP_PREALLOCATED_PORTS_REQUEST.getByte()) {
-            return PRP_PreallocatedPortsMsgFactory.Request.fromBuffer(buffer);
-        } else if (opKod.getByte() == OpKod.PRP_PREALLOCATED_PORTS_RESPONSE.getByte()) {
-            return PRP_PreallocatedPortsMsgFactory.Response.fromBuffer(buffer);
-        } else if (opKod.getByte() == OpKod.HP_REGISTER_REQUEST.getByte()) {
-            return HpRegisterMsgFactory.Request.fromBuffer(buffer);
-        } else if (opKod.getByte() == OpKod.HP_REGISTER_RESPONSE.getByte()) {
-            return HpRegisterMsgFactory.Response.fromBuffer(buffer);
-        } else if (opKod.getByte() == OpKod.HP_UNREGISTER_REQUEST.getByte()) {
-            return HpUnregisterMsgFactory.Request.fromBuffer(buffer);
-        } else if (opKod.getByte() == OpKod.HP_UNREGISTER_RESPONSE.getByte()) {
-            return HpUnregisterMsgFactory.Response.fromBuffer(buffer);
-        } else if (opKod.getByte() == OpKod.RELAY_CLIENT_TO_SERVER.getByte()) {
-            return RelayRequestMsgFactory.Request.fromBuffer(buffer);
-        } else if (opKod.getByte() == OpKod.RELAY_SERVER_TO_CLIENT.getByte()) {
-            return RelayRequestMsgFactory.Response.fromBuffer(buffer);
-        } else if (opKod.getByte() == OpKod.SHP_INITIATE_SHP.getByte()) {
-            return SHP_InitiateSimpleHolePunchingMsgFactory.Request.fromBuffer(buffer);
-        } else if (opKod.getByte() == OpKod.SHP_OPENHOLE_INITIATOR.getByte()) {
-            return SHP_OpenHoleMsgFactory.Initiator.fromBuffer(buffer);
-        } else if (opKod.getByte() == OpKod.PARENT_KEEP_ALIVE_REQUEST.getByte()) {
-            return ParentKeepAliveMsgFactory.Request.fromBuffer(buffer);
-        } else if (opKod.getByte() == OpKod.PARENT_KEEP_ALIVE_RESPONSE.getByte()) {
-            return ParentKeepAliveMsgFactory.Response.fromBuffer(buffer);
-        } else if (opKod.getByte() == OpKod.HP_KEEP_ALIVE_REQUEST.getByte()) {
-            return HpKeepAliveMsgFactory.Request.fromBuffer(buffer);
-        } else if (opKod.getByte() == OpKod.HP_KEEP_ALIVE_RESPONSE.getByte()) {
-            return HpKeepAliveMsgFactory.Response.fromBuffer(buffer);
-        } else if (opKod.getByte() == OpKod.HP_FEASABILITY_REQUEST.getByte()) {
-            return HpConnectMsgFactory.Request.fromBuffer(buffer);
-        } else if (opKod.getByte() == OpKod.HP_FEASABILITY_RESPONSE.getByte()) {
-            return HpConnectMsgFactory.Response.fromBuffer(buffer);
-        } else if (opKod.getByte() == OpKod.SHUFFLE_REQUEST.getByte()) {
-            return ShuffleMsgFactory.Request.fromBuffer(buffer);
-        } else if (opKod.getByte() == OpKod.SHUFFLE_RESPONSE.getByte()) {
-            return ShuffleMsgFactory.Response.fromBuffer(buffer);
+        switch (opKod) {
+            case OpKod.SEARCH_REQUEST:
+                return SearchMsgFactory.Request.fromBuffer(buffer);
+            case OpKod.SEARCH_RESPONSE:
+                return SearchMsgFactory.Response.fromBuffer(buffer);
+            // COMMON MSGS
+            case OpKod.CONNECT_REQUEST:
+                return ConnectMsgFactory.Request.fromBuffer(buffer);
+            case OpKod.CONNECT_RESPONSE:
+                return ConnectMsgFactory.Response.fromBuffer(buffer);
+            case OpKod.DISCONNECT_REQUEST:
+                return DisconnectMsgFactory.Request.fromBuffer(buffer);
+            case OpKod.DISCONNECT_RESPONSE:
+                return DisconnectMsgFactory.Response.fromBuffer(buffer);
+            case OpKod.DATAOFFER:
+                return DataOfferMsgFactory.fromBuffer(buffer);
+            case OpKod.LEAVE:
+                return LeaveMsgFactory.fromBuffer(buffer);
+            case OpKod.REFERENCES_REQUEST:
+                return ReferencesMsgFactory.Request.fromBuffer(buffer);
+            case OpKod.REFERENCES_RESPONSE:
+                return ReferencesMsgFactory.Response.fromBuffer(buffer);
+            case OpKod.UPLOADING_RATE_REQUEST:
+                return UploadingRateMsgFactory.Request.fromBuffer(buffer);
+            case OpKod.UPLOADING_RATE_RESPONSE:
+                return UploadingRateMsgFactory.Response.fromBuffer(buffer);
+            case OpKod.D_REQUEST:
+                return DataMsgFactory.Request.fromBuffer(buffer);
+            case OpKod.D_RESPONSE:
+                return DataMsgFactory.Response.fromBuffer(buffer);
+            case OpKod.PIECE_NOT_AVAILABLE:
+                return DataMsgFactory.PieceNotAvailable.fromBuffer(buffer);
+            case OpKod.SATURATED:
+                return DataMsgFactory.Saturated.fromBuffer(buffer);
+            case OpKod.ACK:
+                return DataMsgFactory.Ack.fromBuffer(buffer);
+            case OpKod.HASH_REQUEST:
+                return DataMsgFactory.HashRequest.fromBuffer(buffer);
+            case OpKod.HASH_RESPONSE:
+                return DataMsgFactory.HashResponse.fromBuffer(buffer);
+            // GRADIENT MSGS
+            case OpKod.SETS_EXCHANGE_REQUEST:
+                return SetsExchangeMsgFactory.Request.fromBuffer(buffer);
+            case OpKod.SETS_EXCHANGE_RESPONSE:
+                return SetsExchangeMsgFactory.Response.fromBuffer(buffer);
+            case OpKod.TARGET_UTILITY_PROBE_REQUEST:
+                return GradientSearchMsgFactory.Request.fromBuffer(buffer);
+            case OpKod.TARGET_UTILITY_PROBE_RESPONSE:
+                return GradientSearchMsgFactory.Response.fromBuffer(buffer);
+            // STUN MSGS
+            case OpKod.ECHO_REQUEST:
+                return EchoMsgFactory.Request.fromBuffer(buffer);
+            case OpKod.ECHO_RESPONSE:
+                return EchoMsgFactory.Response.fromBuffer(buffer);
+            case OpKod.ECHO_CHANGE_IP_AND_PORT_REQUEST:
+                return EchoChangeIpAndPortMsgFactory.Request.fromBuffer(buffer);
+            case OpKod.ECHO_CHANGE_IP_AND_PORT_RESPONSE:
+                return EchoChangeIpAndPortMsgFactory.Response.fromBuffer(buffer);
+            case OpKod.ECHO_CHANGE_PORT_REQUEST:
+                return EchoChangePortMsgFactory.Request.fromBuffer(buffer);
+            case OpKod.ECHO_CHANGE_PORT_RESPONSE:
+                return EchoChangePortMsgFactory.Response.fromBuffer(buffer);
+            case OpKod.SERVER_HOST_CHANGE_REQUEST:
+                return ServerHostChangeMsgFactory.Request.fromBuffer(buffer);
+            case OpKod.SERVER_HOST_CHANGE_RESPONSE:
+                return ServerHostChangeMsgFactory.Response.fromBuffer(buffer);
+            case OpKod.REPORT_REQUEST:
+                return ReportMsgFactory.Request.fromBuffer(buffer);
+            case OpKod.REPORT_RESPONSE:
+                return ReportMsgFactory.Response.fromBuffer(buffer);
+            // HOLE PUNCHING MSGS
+            case OpKod.GO_MSG:
+                return GoMsgFactory.Request.fromBuffer(buffer);
+            case OpKod.DELETE_CONNECTION:
+                return DeleteConnectionMsgFactory.fromBuffer(buffer);
+            case OpKod.HOLE_PUNCHING_REQUEST:
+                return HolePunchingMsgFactory.Request.fromBuffer(buffer);
+            case OpKod.HOLE_PUNCHING_RESPONSE:
+                return HolePunchingMsgFactory.Response.fromBuffer(buffer);
+            case OpKod.HOLE_PUNCHING_RESPONSE_ACK:
+                return HolePunchingMsgFactory.ResponseAck.fromBuffer(buffer);
+            case OpKod.HP_FINISHED:
+                return HpFinishedMsgFactory.Request.fromBuffer(buffer);
+            case OpKod.INTERLEAVED_PRC_OPENHOLE_REQUEST:
+                return Interleaved_PRC_OpenHoleMsgFactory.Request.fromBuffer(buffer);
+            case OpKod.INTERLEAVED_PRC_OPENHOLE_RESPONSE:
+                return Interleaved_PRC_OpenHoleMsgFactory.Response.fromBuffer(buffer);
+            case OpKod.INTERLEAVED_PRC_SERVER_REQ_PRED_MSG:
+                return Interleaved_PRC_ServersRequestForPredictionMsgFactory.Request.fromBuffer(buffer);
+            case OpKod.INTERLEAVED_PRP_SEND_AVAILABLE_PORTS_ZSERVER_REQUEST:
+                return Interleaved_PRP_ConnectMsgFactory.Request.fromBuffer(buffer);
+            case OpKod.INTERLEAVED_PRP_SEND_AVAILABLE_PORTS_ZSERVER_RESPONSE:
+                return Interleaved_PRP_ConnectMsgFactory.Response.fromBuffer(buffer);
+            case OpKod.INTERLEAVED_PRP_SERVERS_REQ_AVAILABLE_PORTS_MSG:
+                return Interleaved_PRP_ServerRequestForAvailablePortsMsgFactory.Request.fromBuffer(buffer);
+            case OpKod.PRC_OPENHOLE_REQUEST:
+                return PRC_OpenHoleMsgFactory.Request.fromBuffer(buffer);
+            case OpKod.PRC_OPENHOLE_RESPONSE:
+                return PRC_OpenHoleMsgFactory.Response.fromBuffer(buffer);
+            case OpKod.PRC_SERVER_REQ_CONSEC_MSG:
+                return PRC_ServerRequestForConsecutiveMsgFactory.Request.fromBuffer(buffer);
+            case OpKod.PRP_SEND_PORTS_ZSERVER_REQUEST:
+                return PRP_ConnectMsgFactory.Request.fromBuffer(buffer);
+            case OpKod.PRP_SEND_PORTS_ZSERVER_RESPONSE:
+                return PRP_ConnectMsgFactory.Response.fromBuffer(buffer);
+            case OpKod.PRP_SERVER_REQ_AVAILABLE_PORTS_MSG:
+                return PRP_ServerRequestForAvailablePortsMsgFactory.Request.fromBuffer(buffer);
+            case OpKod.PRP_PREALLOCATED_PORTS_REQUEST:
+                return PRP_PreallocatedPortsMsgFactory.Request.fromBuffer(buffer);
+            case OpKod.PRP_PREALLOCATED_PORTS_RESPONSE:
+                return PRP_PreallocatedPortsMsgFactory.Response.fromBuffer(buffer);
+            case OpKod.HP_REGISTER_REQUEST:
+                return HpRegisterMsgFactory.Request.fromBuffer(buffer);
+            case OpKod.HP_REGISTER_RESPONSE:
+                return HpRegisterMsgFactory.Response.fromBuffer(buffer);
+            case OpKod.HP_UNREGISTER_REQUEST:
+                return HpUnregisterMsgFactory.Request.fromBuffer(buffer);
+            case OpKod.HP_UNREGISTER_RESPONSE:
+                return HpUnregisterMsgFactory.Response.fromBuffer(buffer);
+            case OpKod.RELAY_CLIENT_TO_SERVER:
+                return RelayRequestMsgFactory.Request.fromBuffer(buffer);
+            case OpKod.RELAY_SERVER_TO_CLIENT:
+                return RelayRequestMsgFactory.Response.fromBuffer(buffer);
+            case OpKod.SHP_INITIATE_SHP:
+                return SHP_InitiateSimpleHolePunchingMsgFactory.Request.fromBuffer(buffer);
+            case OpKod.SHP_OPENHOLE_INITIATOR:
+                return SHP_OpenHoleMsgFactory.Initiator.fromBuffer(buffer);
+            case OpKod.PARENT_KEEP_ALIVE_REQUEST:
+                return ParentKeepAliveMsgFactory.Request.fromBuffer(buffer);
+            case OpKod.PARENT_KEEP_ALIVE_RESPONSE:
+                return ParentKeepAliveMsgFactory.Response.fromBuffer(buffer);
+            case OpKod.HP_KEEP_ALIVE_REQUEST:
+                return HpKeepAliveMsgFactory.Request.fromBuffer(buffer);
+            case OpKod.HP_KEEP_ALIVE_RESPONSE:
+                return HpKeepAliveMsgFactory.Response.fromBuffer(buffer);
+            case OpKod.HP_FEASABILITY_REQUEST:
+                return HpConnectMsgFactory.Request.fromBuffer(buffer);
+            case OpKod.HP_FEASABILITY_RESPONSE:
+                return HpConnectMsgFactory.Response.fromBuffer(buffer);
+            case OpKod.SHUFFLE_REQUEST:
+                return ShuffleMsgFactory.Request.fromBuffer(buffer);
+            case OpKod.SHUFFLE_RESPONSE:
+                return ShuffleMsgFactory.Response.fromBuffer(buffer);
+            default:
+                break;
         }
 
         return null;

@@ -11,7 +11,6 @@ import org.jboss.netty.handler.codec.replay.ReplayingDecoder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import se.sics.gvod.common.msgs.MessageDecodingException;
-import se.sics.gvod.common.msgs.OpKod;
 import static se.sics.gvod.net.DecoderState.READ_CONTENT;
 import static se.sics.gvod.net.DecoderState.READ_TYPE;
 import se.sics.gvod.net.msgs.RewriteableMsg;
@@ -26,7 +25,7 @@ public abstract class MsgFrameDecoder
         extends ReplayingDecoder<DecoderState> {
 
     private static final Logger logger = LoggerFactory.getLogger(MsgFrameDecoder.class);
-    protected OpKod opKod;
+    protected byte opKod;
 
     public MsgFrameDecoder() {
         // Set the initial state.
@@ -49,8 +48,7 @@ public abstract class MsgFrameDecoder
 
         switch (state) {
             case READ_TYPE:
-                Byte type = buffer.readByte();
-                opKod = OpKod.fromByte(type);
+                opKod = buffer.readByte();
                 checkpoint(DecoderState.READ_CONTENT);
             case READ_CONTENT:
 

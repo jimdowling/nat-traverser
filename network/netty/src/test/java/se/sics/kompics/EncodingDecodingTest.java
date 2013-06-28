@@ -84,6 +84,8 @@ import se.sics.gvod.hp.msgs.*;
 import se.sics.gvod.common.hp.HPMechanism;
 import se.sics.gvod.common.hp.HPRole;
 import se.sics.gvod.common.msgs.SearchMsgFactory;
+import se.sics.gvod.common.msgs.VodMsgNettyFactory;
+import se.sics.gvod.net.BaseMsgFrameDecoder;
 import se.sics.gvod.net.util.UserTypesDecoderFactory;
 import se.sics.gvod.net.util.UserTypesEncoderFactory;
 import se.sics.gvod.stun.msgs.EchoChangeIpAndPortMsg;
@@ -146,6 +148,7 @@ public class EncodingDecodingTest {
                 Nat.FilteringPolicy.PORT_DEPENDENT,
                 1,
                 100 * 1000l);
+        VodMsgNettyFactory.setMsgFrameDecoder(BaseMsgFrameDecoder.class);
     }
 
     @AfterClass
