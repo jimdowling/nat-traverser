@@ -36,7 +36,6 @@ import se.sics.gvod.net.NatNetworkControl;
 import se.sics.gvod.net.events.PortBindRequest;
 import se.sics.gvod.net.events.PortBindResponse;
 import se.sics.gvod.net.msgs.ScheduleRetryTimeout;
-import se.sics.gvod.timer.CancelTimeout;
 import se.sics.kompics.Stop;
 import se.sics.gvod.timer.SchedulePeriodicTimeout;
 import se.sics.gvod.timer.Timeout;
@@ -288,7 +287,7 @@ public final class StunServer extends MsgRetryComponent {
             TimeoutId timeoutId = event.getTimeoutId();
             if (partnerRTTs.remove(timeoutId) != null) {
                 VodAddress vodDest = ToVodAddr.stunServer(dest);
-                removePartner(vodDest);
+                failedPartner(vodDest);
             }
             if (outstandingHostChangeRequests.remove(req.getTransactionId()) == true) {
                 delegator.doTrigger(new EchoChangeIpAndPortMsg.Response(self.getAddress(),
@@ -397,9 +396,10 @@ public final class StunServer extends MsgRetryComponent {
     }
 
 //------------------------------------------------------------------------    
-    private boolean removePartner(VodAddress node) {
+    private boolean failedPartner(VodAddress node) {
         logger.debug(compName + "Removed partner: " + node.getId());
         partnerMap.remove(node.getId());
+        RTTStore.removeSamples(self.getId(), node);
 
         return partners.remove(new Partner(self.getId(), node));
     }
