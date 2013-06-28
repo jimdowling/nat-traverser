@@ -109,7 +109,7 @@ public class VodConfig extends BaseCommandLineConfig {
     static int STUN_UPNP_DISCOVERY_TIMEOUT = 3*1000;
     static boolean STUN_UPNP_ENABLED = false;
     static boolean STUN_MEASURE_NAT_BINDING_TIMEOUT = false;
-    public static final int STUN_PARTNER_HEARTBEAT_PERIOD = 10 * 1000;
+    public static final int STUN_PARTNER_HEARTBEAT_PERIOD = 30 * 1000;
     public static final int STUN_MAX_NUM_PARTNERS = 5;
     public static final int STUN_PARTNER_RTO_RETRIES = 0;
     public static final int STUN_PARTNER_RTO = 500;
