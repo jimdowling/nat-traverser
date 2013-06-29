@@ -938,12 +938,11 @@ public class EncodingDecodingTest {
 
     }
 
-    @Test
+  @Test
     public void RelayRequestMsg() {
-        ParentKeepAliveMsg.Pong req = new ParentKeepAliveMsg.Pong(gSrc, gDest, UUID.nextUUID());
-        
-        RelayRequestMsg.ClientToServer msg = new RelayRequestMsg.ClientToServer(gSrc, gDest, 
-                remoteClientId, req);
+        ConnectMsg.Request req = new ConnectMsg.Request(gSrc, gSrc, utility, true, age);
+        RelayRequestMsg.ClientToServer msg = new RelayRequestMsg.ClientToServer(gSrc, gDest, remoteClientId,
+                req);
         msg.setTimeoutId(UUID.nextUUID());
         try {
             ChannelBuffer buffer = msg.toByteArray();
@@ -957,7 +956,8 @@ public class EncodingDecodingTest {
             assert (false);
         }
 
-        ParentKeepAliveMsg.Pong msg2 = new ParentKeepAliveMsg.Pong(gSrc, gDest, UUID.nextUUID());
+        RelayRequestMsg.ServerToClient msg2 = new RelayRequestMsg.ServerToClient(gSrc, gDest, remoteClientId,
+                req);
         msg2.setTimeoutId(UUID.nextUUID());
         try {
             ChannelBuffer buffer = msg2.toByteArray();
@@ -971,6 +971,7 @@ public class EncodingDecodingTest {
             assert (false);
         }
     }
+
 
     @Test
     public void SHP_InitiateSimpleHolePunchingMsg() {
