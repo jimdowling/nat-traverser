@@ -10,6 +10,7 @@ import org.jboss.netty.channel.ChannelHandlerContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import se.sics.gvod.common.msgs.ConnectMsgFactory;
+import se.sics.gvod.common.msgs.DisconnectMsgFactory;
 import se.sics.gvod.common.msgs.MessageDecodingException;
 import se.sics.gvod.common.msgs.SearchMsgFactory;
 import se.sics.gvod.croupier.msgs.ShuffleMsgFactory;
@@ -53,6 +54,8 @@ public class BaseMsgFrameDecoder extends MsgFrameDecoder {
 
     public static final byte CONNECT_REQUEST       = 0x01;
     public static final byte CONNECT_RESPONSE      = 0x02;
+    public static final byte DISCONNECT_REQUEST = 0x03;
+    public static final byte DISCONNECT_RESPONSE = 0x04;
     public static final byte SHUFFLE_REQUEST       = 0x07;
     public static final byte SHUFFLE_RESPONSE      = 0x08;
     public static final byte VOD_MESSAGE           = 0x16;
@@ -159,6 +162,10 @@ public class BaseMsgFrameDecoder extends MsgFrameDecoder {
                 return ConnectMsgFactory.Request.fromBuffer(buffer);
             case CONNECT_RESPONSE:
                 return ConnectMsgFactory.Response.fromBuffer(buffer);
+            case DISCONNECT_REQUEST:
+                return DisconnectMsgFactory.Request.fromBuffer(buffer);
+            case DISCONNECT_RESPONSE:
+                return DisconnectMsgFactory.Response.fromBuffer(buffer);
             case SEARCH_REQUEST:
                 return SearchMsgFactory.Request.fromBuffer(buffer);
             case SEARCH_RESPONSE:

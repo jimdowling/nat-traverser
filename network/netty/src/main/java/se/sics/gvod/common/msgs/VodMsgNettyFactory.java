@@ -1,12 +1,9 @@
 package se.sics.gvod.common.msgs;
 
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.jboss.netty.buffer.ChannelBuffer;
 import se.sics.gvod.net.VodAddress;
 import se.sics.gvod.address.Address;
-import se.sics.gvod.hp.msgs.RelayRequestMsgFactory;
 import se.sics.gvod.net.MsgFrameDecoder;
 import se.sics.gvod.net.msgs.VodMsg;
 import se.sics.gvod.net.util.UserTypesDecoderFactory;
@@ -14,7 +11,8 @@ import se.sics.gvod.timer.NoTimeoutId;
 import se.sics.gvod.timer.TimeoutId;
 import se.sics.gvod.timer.UUID;
 
-public abstract class VodMsgNettyFactory {
+public abstract class VodMsgNettyFactory 
+{
 
     protected VodAddress vodDest;
     protected VodAddress vodSrc;

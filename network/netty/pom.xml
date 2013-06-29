@@ -10,16 +10,14 @@
     <groupId>se.sics.net</groupId>
     <artifactId>netty</artifactId>
     <packaging>jar</packaging>
-    <name>Netty Component</name>
+    <name>Netty</name>
 
     <dependencies>
-
         <dependency>
             <groupId>se.sics.hp</groupId>
             <artifactId>hp-common</artifactId>
             <version>${project.version}</version>
         </dependency>
-
         <dependency>
             <groupId>se.sics.common</groupId>
             <artifactId>common</artifactId>

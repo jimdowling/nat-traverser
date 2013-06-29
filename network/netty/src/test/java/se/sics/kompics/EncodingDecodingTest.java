@@ -70,6 +70,10 @@ import se.sics.gvod.hp.events.OpenConnectionResponseType;
 import se.sics.gvod.hp.msgs.*;
 import se.sics.gvod.common.hp.HPMechanism;
 import se.sics.gvod.common.hp.HPRole;
+import se.sics.gvod.common.msgs.ConnectMsg;
+import se.sics.gvod.common.msgs.ConnectMsgFactory;
+import se.sics.gvod.common.msgs.DisconnectMsg;
+import se.sics.gvod.common.msgs.DisconnectMsgFactory;
 import se.sics.gvod.common.msgs.SearchMsgFactory;
 import se.sics.gvod.common.msgs.VodMsgNettyFactory;
 import se.sics.gvod.net.BaseMsgFrameDecoder;
@@ -222,6 +226,105 @@ public class EncodingDecodingTest {
         assert (type == msg.getOpcode());
     }
 
+    @Test
+    public void connectMsgRequest() {
+        ConnectMsg.Request msg = new ConnectMsg.Request(gSrc, gSrc,
+                utility, true, BaseCommandLineConfig.DEFAULT_MTU);
+        // setTimeoutId() is called by MsgRetryComponent
+        msg.setTimeoutId(UUID.nextUUID());
+        try {
+            ChannelBuffer buffer = msg.toByteArray();
+            opCodeCorrect(buffer, msg);
+            ConnectMsg.Request res = ConnectMsgFactory.Request.fromBuffer(buffer);
+            assert (true);
+        } catch (MessageDecodingException ex) {
+            Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
+            assert (false);
+        } catch (MessageEncodingException ex) {
+            Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
+            assert (false);
+        }
+    }
+
+    @Test
+    public void connectMsgResponse1() {
+        TimeoutId id = UUID.nextUUID();
+        ConnectMsg.Response msg = new ConnectMsg.Response(gSrc, gSrc,
+                id, ConnectMsg.ResponseType.OK,
+                utility, availableChunks, availablePieces, true,
+                BaseCommandLineConfig.DEFAULT_MTU);
+        try {
+            ChannelBuffer buffer = msg.toByteArray();
+            opCodeCorrect(buffer, msg);
+            ConnectMsg.Response res = ConnectMsgFactory.Response.fromBuffer(buffer);
+            assert (true);
+        } catch (MessageDecodingException ex) {
+            Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
+            assert (false);
+        } catch (MessageEncodingException ex) {
+            Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
+            assert (false);
+        }
+    }
+
+    @Test
+    public void connectMsgResponse2() {
+        ConnectMsg.Response msg = new ConnectMsg.Response(gSrc, gSrc,
+                UUID.nextUUID(), ConnectMsg.ResponseType.OK,
+                utility, null, null, true, BaseCommandLineConfig.DEFAULT_MTU);
+        try {
+            ChannelBuffer buffer = msg.toByteArray();
+            opCodeCorrect(buffer, msg);
+            ConnectMsg.Response res = ConnectMsgFactory.Response.fromBuffer(buffer);
+            assert (true);
+        } catch (MessageDecodingException ex) {
+            Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
+            assert (false);
+        } catch (MessageEncodingException ex) {
+            Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
+            assert (false);
+        }
+    }
+    
+    @Test
+    public void disconnectMsgRequest() {
+        DisconnectMsg.Request msg = new DisconnectMsg.Request(gSrc, gSrc);
+        // setTimeoutId() is called by MsgRetryComponent
+        msg.setTimeoutId(UUID.nextUUID());
+        try {
+            ChannelBuffer buffer = msg.toByteArray();
+            opCodeCorrect(buffer, msg);
+            DisconnectMsg.Request res = DisconnectMsgFactory.Request.fromBuffer(buffer);
+            assert (msg.getTimeoutId().getId() == res.getTimeoutId().getId());
+        } catch (MessageDecodingException ex) {
+            Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
+            assert (false);
+        } catch (MessageEncodingException ex) {
+            Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
+            assert (false);
+        }
+    }
+
+    @Test
+    public void disconnectMsgResponse() {
+        TimeoutId id = UUID.nextUUID();
+        DisconnectMsg.Response msg = new DisconnectMsg.Response(gSrc, gSrc, id, 4);
+        try {
+            ChannelBuffer buffer = msg.toByteArray();
+            opCodeCorrect(buffer, msg);
+            DisconnectMsg.Response res = DisconnectMsgFactory.Response.fromBuffer(buffer);
+            assert (true);
+        } catch (MessageDecodingException ex) {
+            Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
+            assert (false);
+        } catch (MessageEncodingException ex) {
+            Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
+            assert (false);
+        }
+    }
+
+    
+    
     @Test
     public void shuffleRequest() {
         try {
