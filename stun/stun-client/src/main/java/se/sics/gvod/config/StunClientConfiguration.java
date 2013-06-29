@@ -123,7 +123,7 @@ public final class StunClientConfiguration extends AbstractConfiguration<StunCli
     }
 
     public double getRtoScale() {
-        return rtoRetries;
+        return rtoScale;
     }
 
     public boolean isMeasureNatBindingTimeout() {

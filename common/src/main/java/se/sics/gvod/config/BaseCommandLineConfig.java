@@ -156,6 +156,11 @@ public abstract class BaseCommandLineConfig {
     protected static boolean PLANET_LAB = false;
     protected static boolean SKIP_UPNP = true;
     protected static boolean SKIP_GRADIENT = true;
+
+    // All protocol default params
+    public static final int DEFAULT_RTO = 2 * 1000;
+    public static final int DEFAULT_RTO_RETRIES = 2;
+    public static final double DEFAULT_RTO_SCALE = 1.5;
     
     // Bootstrap defaults
     public final static int DEFAULT_BS_CLIENT_RETRY_PERIOD = 10 * 1000;

@@ -74,10 +74,6 @@ public class VodConfig extends BaseCommandLineConfig {
     protected Option controlPortOption;
     protected Option bootstrapRefreshOption;
     
-    // All protocol default params
-    public static final int DEFAULT_RTO = 2 * 1000;
-    public static final int DEFAULT_RTO_RETRIES = 2;
-    public static final double DEFAULT_RTO_SCALE = 1.5;
     //Croupier parameters
     public static final int CROUPIER_SHUFFLE_PERIOD = 30 * 1000;
     public static final int CROUPIER_SHUFFLE_LENGTH = 15;
@@ -102,8 +98,8 @@ public class VodConfig extends BaseCommandLineConfig {
     
     //Stun parameters
     static int STUN_MIN_RTT = 250;
-    static int STUN_RTO = 2*1000;
-    static int STUN_RTO_RETRIES = 2;
+    static int STUN_RTO = 2500;
+    static int STUN_RTO_RETRIES = 1;
     static double STUN_RTO_SCALE = 1.5d;
     static int STUN_UPNP_TIMEOUT = 6*1000;
     static int STUN_UPNP_DISCOVERY_TIMEOUT = 3*1000;

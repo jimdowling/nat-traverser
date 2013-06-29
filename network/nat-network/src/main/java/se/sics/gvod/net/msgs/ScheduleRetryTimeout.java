@@ -33,6 +33,11 @@ public class ScheduleRetryTimeout {
         this.rtoScaleAfterRetry = rtoScaleAfterRetry;
     }
 
+    /**
+     * Don't scale retry timeouts after a retry.
+     * @param delay
+     * @param rtoRetries 
+     */
     public ScheduleRetryTimeout(long delay, int rtoRetries) {
         this(delay, rtoRetries, 1.0d);
     }

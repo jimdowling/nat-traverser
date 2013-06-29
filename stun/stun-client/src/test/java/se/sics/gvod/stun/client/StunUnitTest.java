@@ -96,8 +96,6 @@ public class StunUnitTest extends VodRetryComponentTestCase {
                 pubAddrs.get(0), getAddress(), transId, ecip.getTimeoutId());
         stunClient.handleEchoChangeIpAndPortResponse.handle(changIpResp);
         events = pollEvent(1);
-        assertSequence(events, CancelTimeout.class);
-        events = pollEvent(1);
         assertSequence(events, GetNatTypeResponse.class);
         GetNatTypeResponse resp = (GetNatTypeResponse) events.get(0);
         assert (resp.getNat().getType() == Nat.Type.OPEN);

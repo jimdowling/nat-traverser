@@ -137,21 +137,19 @@ public class HpClientUnitTest extends VodRetryComponentTestCase {
                 new OpenConnectionRequest(privAddrs.get(0), false, true, UUID.nextUUID()));
         events = pollEvent(1);
         assertSequence(events, HpConnectMsg.Request.class);
-//        assertSequence(events, OpenConnectionResponse.class);
-//        OpenConnectionResponse r = (OpenConnectionResponse) events.pop();
-//        assert (r.getResponseType() == OpenConnectionResponseType.HP_ALREADY_ONGOING);
-
 
         hpClient.handleHolePunchingMsgRequest.handle(
                 new HolePunchingMsg.Request(privAddrs.get(0), getAddress(), 
                         pubAddrs.get(0).getId(), UUID.nextUUID()));
-        events = pollEvent(1);
-        assert (hpClient.openedConnections.isEmpty());
-        assertSequence(events, HolePunchingMsg.Response.class);
-        HolePunchingMsg.Response r = (HolePunchingMsg.Response) events.pop();
+        assert (hpClient.openedConnections.size() == 1);
+        events = pollEvent(3);
+        assertSequence(events, HpClient.DeleteSessionTimeout.class, 
+                HolePunchingMsg.Response.class
+                , OpenConnectionResponse.class);
+        HolePunchingMsg.Response r = (HolePunchingMsg.Response) events.get(1);
         hpClient.handleHolePunchingResponseAck.handle(
                 new HolePunchingMsg.ResponseAck(privAddrs.get(0), getAddress(), 
-                r.getTimeoutId(), UUID.nextUUID()));        
+                r.getTimeoutId(), UUID.nextUUID()));
         assert (hpClient.openedConnections.size() == 1);
 
         events = pollEvent(1);
@@ -163,6 +161,7 @@ public class HpClientUnitTest extends VodRetryComponentTestCase {
         hpClient.handleDeleteConnectionRequest.handle(new DeleteConnectionRequest(k));
         events = pollEvent(1);
         assertSequence(events, DeleteConnectionMsg.class);
+        assert (hpClient.openedConnections.isEmpty());
 
 
     }

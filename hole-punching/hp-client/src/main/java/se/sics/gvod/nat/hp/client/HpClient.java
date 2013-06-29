@@ -379,7 +379,7 @@ public class HpClient extends MsgRetryComponent {
         }
     }
 
-    private class DeleteSessionTimeout extends Timeout {
+    public static class DeleteSessionTimeout extends Timeout {
 
         private final int remoteId;
 
@@ -886,8 +886,7 @@ public class HpClient extends MsgRetryComponent {
                 HolePunchingMsg.Response hpResponse = new HolePunchingMsg.Response(sourceAddress,
                         request.getVodSource(),
                         request.getTimeoutId());
-                ScheduleRetryTimeout st = new ScheduleRetryTimeout(rto,
-                        rtoRetries, msgRetryRTO);
+                ScheduleRetryTimeout st = new ScheduleRetryTimeout(rto, rtoRetries, msgRetryRTO);
                 HolePunchingMsg.ResponseRetryTimeout hrrt = new HolePunchingMsg.ResponseRetryTimeout(st, hpResponse);
                 delegator.doRetry(hrrt);
 
@@ -905,8 +904,7 @@ public class HpClient extends MsgRetryComponent {
                         request.getVodSource().getNatBindingTimeout(),
                         heartbeatConnection, null);
 
-                openedConnections.put(remoteId,
-                        openedConnection);
+                openedConnections.put(remoteId, openedConnection);
 
                 if (req != null) {
                     logger.debug(compName + "sending response to the outer component. remote client id ("

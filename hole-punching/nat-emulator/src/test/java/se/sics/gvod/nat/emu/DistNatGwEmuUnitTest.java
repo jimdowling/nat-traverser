@@ -93,6 +93,9 @@ public class DistNatGwEmuUnitTest extends VodRetryComponentTestCase {
             assertSequence(events, ShuffleMsg.Request.class);
             ShuffleMsg.Request r = (ShuffleMsg.Request) events.getFirst();
 
+            // TODO - assert that the port allocated is the expected one.
+            // TODO - try to create a new port and assert that the port mapping is correct
+            // TODO - test filtering, assert it is as expected.
 
             emu.handleLowerMessage.handle(new ShuffleMsg.Response(r.getVodDestination(), 
                     r.getVodSource(), r.getClientId(),
