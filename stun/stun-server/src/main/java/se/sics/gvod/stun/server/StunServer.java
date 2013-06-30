@@ -317,11 +317,17 @@ public final class StunServer extends MsgRetryComponent {
             for (Partner p : bestPartners) {
                 VodAddress dest = ToVodAddr.stunServer(p.getAddress());
 
-                RTT rtt = RTTStore.getRtt(self.getId(), dest);
-                long altServerRto = (rtt != null) ? rtt.getRTO() : config.getRto();
-                long worstCaseRto = altServerRto
+                // This can produce long RTO that will cause the protocol to deadlock.
+                // Using a fixed RTO
+//                RTT rtt = RTTStore.getRtt(self.getId(), dest);
+//                long altServerRto = (rtt != null) ? rtt.getRTO() : config.getRto();
+//                long worstCaseRto = altServerRto
 //                        * VodConfig.STUN_PARTNER_RTO_MULTIPLIER
-                        + config.getMinimumRtt();
+//                        + config.getMinimumRtt()
+//                        ;
+                 long worstCaseRto  = config.getRto() * VodConfig.STUN_PARTNER_RTO_MULTIPLIER
+                         + config.getMinimumRtt();
+                 
                 logger.debug(compName + "ServerHostChangeMsg.Request sent to " + p.getAddress().getId()
                         + " , src=" + clientPublicIp.getId() + " privSrc="
                         + clientPublicIp.getId() + " rto = " + worstCaseRto);

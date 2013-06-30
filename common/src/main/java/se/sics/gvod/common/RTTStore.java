@@ -110,6 +110,9 @@ public class RTTStore {
         }
     }
 
+    /**
+     * TODO: Need a max RTO - upper bound on the RTO?
+     */
     public static final class RTT {
 
         private static Logger log = LoggerFactory.getLogger(RTT.class);
