@@ -42,6 +42,17 @@ import se.sics.gvod.timer.Timeout;
 import se.sics.kompics.Fault;
 import se.sics.kompics.Positive;
 
+/**
+ * A partner is required to provide the stun service.
+ * Only nodes with the same polarity can be partners -
+ * even or odd IDs can be partners.
+ * The reason is that clients can then send 2 echo requests to 2 servers
+ * in parallel, knowing that it won't mess up the NAT type identification
+ * by creating a NAT binding to a partner as a side-effect of parallelizing
+ * the first Echo test.
+ * 
+ * @author jdowling
+ */
 public final class StunServer extends MsgRetryComponent {
 
     private static final int NUM_NEW_PARTNERS_PER_CYCLE = 2;
@@ -179,15 +190,11 @@ public final class StunServer extends MsgRetryComponent {
             }
             logger.debug("For {} . ReplyTo is " + replyTo, message.getTestType());
 
-            Set<Partner> partners = getBestPartners(message.getSource().getId(),
-                    VodConfig.STUN_PARTNER_NUM_PARALLEL);
-            Partner p = (partners.isEmpty()) ? null : partners.iterator().next();
-            int rto = (p == null) ? (int) config.getRto() : (int) p.getRTO();
             EchoMsg.Response responseMsg = new EchoMsg.Response(sourceAddress,
                     ToVodAddr.stunClient(replyTo),
                     message.getSource(),
                     getPartnerAddresses(),
-                    rto,
+                    (int) config.getRto(),
                     message.getTestType(),
                     message.getTransactionId(),
                     message.getTimeoutId(),
@@ -208,7 +215,6 @@ public final class StunServer extends MsgRetryComponent {
             printMsgDetails(message);
 
             // reply using the other port i.e. "VodConfig.DEFAULT_STUN_PORT_2"
-            // changed address will be
             VodAddress changedAddress = ToVodAddr.stunServer2(self.getAddress().getPeerAddress());
 
             delegator.doTrigger(new EchoChangePortMsg.Response(changedAddress,
@@ -234,8 +240,7 @@ public final class StunServer extends MsgRetryComponent {
         public void handle(ServerHostChangeMsg.Request message) {
             printMsgDetails(message);
 
-            // TODO - add this node to the RandomView or some list of
-            // previously seen nodes.
+            // TODO - add this node to the RandomView or some list of previously seen nodes.
             Address clientPublicAddr = message.getClientPublicAddr();
             long transactionId = message.getTransactionId();
             TimeoutId originalTimeoutId = message.getOriginalTimeoutId();
@@ -317,14 +322,13 @@ public final class StunServer extends MsgRetryComponent {
             for (Partner p : bestPartners) {
                 VodAddress dest = ToVodAddr.stunServer(p.getAddress());
 
-                // This can produce long RTO that will cause the protocol to deadlock.
-                // Using a fixed RTO
-//                RTT rtt = RTTStore.getRtt(self.getId(), dest);
-//                long altServerRto = (rtt != null) ? rtt.getRTO() : config.getRto();
-//                long worstCaseRto = altServerRto
-//                        * VodConfig.STUN_PARTNER_RTO_MULTIPLIER
-//                        + config.getMinimumRtt()
-//                        ;
+                // Using a fixed RTO that must always be lower than
+                // EchoMsgChangeIpAndPort.RequestTimeout, so that a EchoMsgChangeIpAndPort.Response
+                // returns before EchoMsgChangeIpAndPort.RequestTimeout if the 2nd server is alive.
+                // The only edge case not covered is if the 2nd server acks this msg, but it's
+                // reply to the client is lost. In this case, the client will believe it has a more
+                // restrictive nat than it actually has (it's Filtering will be HD or PD, instead
+                // of EI
                  long worstCaseRto  = config.getRto() * VodConfig.STUN_PARTNER_RTO_MULTIPLIER
                          + config.getMinimumRtt();
                  
@@ -380,8 +384,11 @@ public final class StunServer extends MsgRetryComponent {
             logger.warn(compName + "Cannot add self as partner");
             return;
         }
+        if ((self.getId() % 2) != (addr.getId() % 2)) {
+            logger.trace("Only accept partners of the same polarity.");
+        }
 
-        Partner newPartner = new Partner(self.getId(), addr);
+        Partner newPartner = new Partner(self.getId(), addr, config.getRto());
         if (partners.contains(newPartner)) {
             logger.trace(compName + "Tried to re-add existing partner.");
             return;
@@ -404,7 +411,7 @@ public final class StunServer extends MsgRetryComponent {
     private boolean failedPartner(VodAddress node) {
         logger.debug(compName + "Removed partner: " + node.getId());
         RTTStore.removeSamples(self.getId(), node);
-        return partners.remove(new Partner(self.getId(), node));
+        return partners.remove(new Partner(self.getId(), node, config.getRto()));
     }
 
 //------------------------------------------------------------------------    
@@ -467,7 +474,7 @@ public final class StunServer extends MsgRetryComponent {
     private Set<Address> getPartnerAddresses() {
         Set<Address> partnerAddresses = new HashSet<Address>();
         for (Partner p : partners) {
-            partnerAddresses.add(p.getAddress());
+            partnerAddresses.add(ToVodAddr.stunServer2(p.getAddress()).getPeerAddress());
         }
 
         return partnerAddresses;

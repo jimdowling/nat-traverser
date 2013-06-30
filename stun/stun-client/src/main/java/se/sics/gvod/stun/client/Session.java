@@ -24,6 +24,7 @@ import se.sics.gvod.net.VodAddress;
  * @author Jim
  */
  class Session {
+    private Logger Logger = LoggerFactory.getLogger(getClass().getName());
 
     private SessionState state = SessionState.UDP_BLOCKED;
     private final long transactionId;
@@ -55,7 +56,6 @@ import se.sics.gvod.net.VodAddress;
     private final long startTime;
     private int natRuleExpirationTime;
     private final Address privateAddress;
-    private Logger Logger = LoggerFactory.getLogger(getClass().getName());
 
     public Session(long transactionId, Address privateAddress, Address stunServer, 
             boolean measureNatBindingTimeout) {
@@ -150,8 +150,18 @@ import se.sics.gvod.net.VodAddress;
         this.clientSecondRandomPort = clientSecondRandomPort;
     }
 
-    public int getTotalTryMessagesReceived() {
+    public int getTotalTryMessagesFinished() {
         return tries.size();
+    }
+    
+    public int getTotalTryMessagesReceived() {
+        int sz = 0;
+        for (Address a : tries.values()) {
+            if (a != null) {
+                sz++;
+            }
+        }
+        return sz;
     }
 
     public Address getTry(int i) {

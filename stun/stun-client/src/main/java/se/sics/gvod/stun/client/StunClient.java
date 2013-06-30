@@ -271,10 +271,25 @@ public class StunClient extends MsgRetryComponent {
             return;
         }
 
+        // Even and Odd Ids:
+        // If a 
+        boolean evenId = false, oddId = false;
         for (Address serverAddress : initialServers) {
+            if (serverAddress.getId() % 2 == 0) {
+                if (evenId) {
+                    continue;
+                }
+                evenId = true;
+            } else if (serverAddress.getId() % 2 == 1) {
+                if (oddId) {
+                    continue;
+                }
+            }
+            oddId = true;
             long transactionId = random.nextLong();
+            VodAddress sVodAddr = ToVodAddr.stunServer(serverAddress);
             Session session = new Session(transactionId,
-                    self.getAddress().getPeerAddress(), serverAddress,
+                    self.getAddress().getPeerAddress(), sVodAddr.getPeerAddress(),
                     measureNatBindingTimeout);
             sessionMap.put(transactionId, session);
             transactionMap.put(serverAddress, transactionId);
@@ -282,8 +297,8 @@ public class StunClient extends MsgRetryComponent {
             sendEchoRequest(ToVodAddr.stunServer(serverAddress), EchoMsg.Test.UDP_BLOCKED, transactionId);
         }
     }
-
-    private void sendEchoRequest(VodAddress target, EchoMsg.Test testType, long transactionId) {
+    
+private void sendEchoRequest(VodAddress target, EchoMsg.Test testType, long transactionId) {
         int rto = calculateRto(target.getPeerAddress(), 0);
 
         EchoMsg.Request bindingReq = new EchoMsg.Request(self.getAddress(),
@@ -752,8 +767,10 @@ public class StunClient extends MsgRetryComponent {
                             //                            .getId()
                             + ". Total received tries: " + session.getTotalTryMessagesReceived()
                             + " tid: " + transactionId);
-                    if (session.getTotalTryMessagesReceived() == NUM_PING_TRIES) {
-                        if (session.getState() != SessionState.FINISHED) {
+                    if (session.getTotalTryMessagesFinished() == NUM_PING_TRIES) {
+                        if (session.getTotalTryMessagesReceived() != NUM_PING_TRIES) {
+                            manageTest2Failure(session, session.getServer1().getPeerAddress());
+                        } else if (session.getState() != SessionState.FINISHED) {
                             // TODO - Do not just wait for other responses 
                             // don't need to do anything - when branch 1 finishes, it responds.
                             testIfFinished(session, transactionId);
@@ -804,7 +821,10 @@ public class StunClient extends MsgRetryComponent {
                     logger.debug(compName + "FAILED: EchoMsg.Test.PING response failed for Try-ID "
                             + event.getRequestMsg().getTryId() + " tid: " + transactionId);
                     // server or server' has failed while executing STUN.
-                    manageTest2Failure(session, session.getServer1().getPeerAddress());
+                    session.setTry(event.getRequestMsg().getTryId(), null);
+                    if (session.getTotalTryMessagesFinished() == NUM_PING_TRIES) {
+                        manageTest2Failure(session, session.getServer1().getPeerAddress());
+                    }
                 } else if (testType == EchoMsg.Test.HEARTBEAT) {
                     long ruleTimeout = System.currentTimeMillis() - session.getRuleDeterminationStartTime()
                             - config.getRuleExpirationIncrement();
@@ -1106,16 +1126,27 @@ public class StunClient extends MsgRetryComponent {
         ScheduleTimeout st = new ScheduleTimeout(config.getUpnpTimeout());
         UpnpTimeout timedOutUpnp = new UpnpTimeout(st, requestId);
         st.setTimeoutEvent(timedOutUpnp);
-        delegator.doTrigger(new UpnpGetPublicIpRequest(requestId),
-                upnp.getPositive(UpnpPort.class));
+        delegator
+
+
+
+.doTrigger(new UpnpGetPublicIpRequest(requestId),
+                upnp.getPositive(UpnpPort.class  
+
+    ));
 
         MapPortRequest.Protocol upnpProtocol = MapPortRequest.Protocol.UDP;
+    MapPortsRequest request = new MapPortsRequest(requestId,
+            privatePublicPorts, upnpProtocol);
 
-        MapPortsRequest request = new MapPortsRequest(requestId,
-                privatePublicPorts, upnpProtocol);
+    delegator.doTrigger (request, upnp.getPositive
 
-        delegator.doTrigger(request, upnp.getPositive(UpnpPort.class));
-        delegator.doTrigger(st, timer);
+    
+
+    (UpnpPort.class  
+
+        ));
+        delegator.doTrigger (st, timer);
     }
 
     private void upnpTimedOut(TimeoutId requestId) {

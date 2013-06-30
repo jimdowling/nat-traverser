@@ -9,6 +9,7 @@ import se.sics.gvod.net.VodAddress;
 import se.sics.gvod.common.net.RttStats;
 import se.sics.gvod.address.Address;
 import se.sics.gvod.common.RTTStore;
+import se.sics.gvod.common.RTTStore.RTT;
 
 /**
  *
@@ -17,17 +18,14 @@ import se.sics.gvod.common.RTTStore;
 public class Partner implements Comparable<Partner>, Serializable {
 
     private static final long serialVersionUID = 1L;
-    public final static int DEFAULT_RTT = 1000;
     private final VodAddress addr;
-    private RTTStore.RTT rtt;
+    private final int nodeId;
+    private final long defaultRto;
 
-    public Partner(int nodeId, VodAddress partner) {
+    public Partner(int nodeId, VodAddress partner, long defaultRto) {
         this.addr = partner;
-        rtt = RTTStore.getRtt(nodeId, addr);
-        if (rtt == null) {
-            RTTStore.addSample(nodeId, addr, DEFAULT_RTT);
-            rtt = RTTStore.getRtt(nodeId, addr);
-        }
+        this.nodeId = nodeId;
+        this.defaultRto = defaultRto;
     }
 
     public VodAddress getVodAddress() {
@@ -39,15 +37,23 @@ public class Partner implements Comparable<Partner>, Serializable {
     }
 
     public long getRTO() {
-        return rtt.getRTO();
+        RTT r = RTTStore.getRtt(nodeId, addr);
+        if (r == null) {
+            return defaultRto;
+        }
+        return r.getRTO();
     }
 
-    public void updateRtt(int nodeId, long rtt) {
+    public void updateRtt(long rtt) {
         RTTStore.addSample(nodeId, addr, rtt);
     }
 
     public RttStats getRttStats() {
-        return rtt.getRttStats();
+        RTT r = RTTStore.getRtt(nodeId, addr);
+        if (r == null) {
+            throw new NullPointerException("Cannot get RTTStats on partner, as none exist");
+        }
+        return r.getRttStats();
     }
 
     @Override
