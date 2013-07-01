@@ -44,7 +44,6 @@ public abstract class RewriteableMsgNetty extends RewriteableMsg
         return 4 // srcId
                 + 4 // destId
                 + (hasTimeout() ? 4 : 0); // timeoutId
-//                + UserTypesEncoderFactory.UUID_LEN;
     }
 
     @Override

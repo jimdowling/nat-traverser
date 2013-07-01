@@ -12,7 +12,6 @@ import org.slf4j.LoggerFactory;
 import se.sics.gvod.common.msgs.ConnectMsgFactory;
 import se.sics.gvod.common.msgs.DisconnectMsgFactory;
 import se.sics.gvod.common.msgs.MessageDecodingException;
-import se.sics.gvod.common.msgs.SearchMsgFactory;
 import se.sics.gvod.croupier.msgs.ShuffleMsgFactory;
 import se.sics.gvod.gradient.msgs.GradientSearchMsgFactory;
 import se.sics.gvod.gradient.msgs.SetsExchangeMsgFactory;
@@ -54,8 +53,8 @@ public class BaseMsgFrameDecoder extends MsgFrameDecoder {
 
     public static final byte CONNECT_REQUEST       = 0x01;
     public static final byte CONNECT_RESPONSE      = 0x02;
-    public static final byte DISCONNECT_REQUEST = 0x03;
-    public static final byte DISCONNECT_RESPONSE = 0x04;
+    public static final byte DISCONNECT_REQUEST    = 0x03;
+    public static final byte DISCONNECT_RESPONSE   = 0x04;
     public static final byte SHUFFLE_REQUEST       = 0x07;
     public static final byte SHUFFLE_RESPONSE      = 0x08;
     public static final byte VOD_MESSAGE           = 0x16;
@@ -130,9 +129,6 @@ public class BaseMsgFrameDecoder extends MsgFrameDecoder {
     public static final byte REPORT_REQUEST                = 0x53;
     public static final byte REPORT_RESPONSE               = 0x54;
     public static final byte ACK                           = 0x55;
-    // PEERSEARCH MESSAGES
-    public static final byte SEARCH_REQUEST                = 0x60;
-    public static final byte SEARCH_RESPONSE               = 0x62;
     //
     // NB: RANGE OF +VE BYTES ENDS AT 0x7F
     
@@ -166,10 +162,6 @@ public class BaseMsgFrameDecoder extends MsgFrameDecoder {
                 return DisconnectMsgFactory.Request.fromBuffer(buffer);
             case DISCONNECT_RESPONSE:
                 return DisconnectMsgFactory.Response.fromBuffer(buffer);
-            case SEARCH_REQUEST:
-                return SearchMsgFactory.Request.fromBuffer(buffer);
-            case SEARCH_RESPONSE:
-                return SearchMsgFactory.Response.fromBuffer(buffer);
             // GRADIENT MSGS
             case SETS_EXCHANGE_REQUEST:
                 return SetsExchangeMsgFactory.Request.fromBuffer(buffer);

@@ -74,7 +74,6 @@ import se.sics.gvod.common.msgs.ConnectMsg;
 import se.sics.gvod.common.msgs.ConnectMsgFactory;
 import se.sics.gvod.common.msgs.DisconnectMsg;
 import se.sics.gvod.common.msgs.DisconnectMsgFactory;
-import se.sics.gvod.common.msgs.SearchMsgFactory;
 import se.sics.gvod.common.msgs.VodMsgNettyFactory;
 import se.sics.gvod.net.BaseMsgFrameDecoder;
 import se.sics.gvod.net.util.UserTypesDecoderFactory;
@@ -91,7 +90,6 @@ import se.sics.gvod.stun.msgs.ServerHostChangeMsg;
 import se.sics.gvod.stun.msgs.ServerHostChangeMsgFactory;
 import se.sics.gvod.timer.TimeoutId;
 import se.sics.gvod.timer.UUID;
-import se.sics.peersearch.msgs.SearchMsg;
 
 /**
  *
@@ -1334,65 +1332,5 @@ public class EncodingDecodingTest {
     }
     
     
-    @Test
-    public void searchRequest() {
-        try {
-            String query = "bbbbbbbbbbbbbbbbbbb";
-            SearchMsg.Request msg = new SearchMsg.Request(gSrc, gDest, UUID.nextUUID(), query);
-            try {
-                ChannelBuffer buffer = msg.toByteArray();
-                opCodeCorrect(buffer, msg);
-                SearchMsg.Request request =
-                        SearchMsgFactory.Request.fromBuffer(buffer);
-                assert (query.equals(request.getQuery()));
-            } catch (MessageDecodingException ex) {
-                Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
-                assert (false);
-            } catch (MessageEncodingException ex) {
-                Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
-                assert (false);
-            }
-        } catch (SearchMsg.IllegalSearchString ex) {
-            Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
-            assert(false);
-        }
-    }    
-    
-    
-    @Test
-    public void searchResponse() {
-        try {
-            TimeoutId id = UUID.nextUUID();
-            int numResponses = 5, responseNum = 1;
-            String res = "day of the diesels day of the diesels day of the diesels"
-                    + "day of the diesels" + "day of the diesels" + "day of the diesels" + "day of the diesels" + "day of the diesels"
-                    + "day of the diesels" + "day of the diesels" + "day of the diesels"+ "day of the diesels" + "day of the diesels"
-                    + "day of the diesels" + "day of the diesels" + "day of the diesels"+ "day of the diesels" + "day of the diesels"
-                    + "day of the diesels" + "day of the diesels" + "day of the diesels"+ "day of the diesels" + "day of the diesels"
-                    + "day of the diesels" + "day of the diesels" + "day of the diesels"+ "day of the diesels" + "day of the diesels"
-                    + "day of the diesels" + "day of the diesels" + "day of the diesels"+ "day of the diesels" + "day of the diesels"
-                    + "day of the diesels" + "day of the diesels" + "day of the diesels"+ "day of the diesels" + "day of the diesels"
-                    + "day of the diesels" + "day of the diesels" + "day of the diesels"+ "day of the diesels" + "day of the diesels";
-            SearchMsg.Response msg = new SearchMsg.Response(gSrc, gDest, id, numResponses, responseNum, res);
-            try {
-                ChannelBuffer buffer = msg.toByteArray();
-                opCodeCorrect(buffer, msg);
-                SearchMsg.Response response =
-                        SearchMsgFactory.Response.fromBuffer(buffer);
-                assert (id.equals(response.getTimeoutId()));
-                assert (response.getNumResponses() == numResponses);
-                assert (response.getResponseNumber() == responseNum);
-                assert (res.compareTo(response.getResults()) == 0);
-            } catch (MessageDecodingException ex) {
-                Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
-                assert (false);
-            } catch (MessageEncodingException ex) {
-                Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
-                assert (false);
-            }
-        } catch (SearchMsg.IllegalSearchString ex) {
-            Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
-                assert (false);
-        }
-    }    
+
 }

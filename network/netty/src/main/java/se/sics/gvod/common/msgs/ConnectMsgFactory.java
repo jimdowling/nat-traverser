@@ -23,8 +23,7 @@ public class ConnectMsgFactory  {
             UtilityVod utility = (UtilityVod) UserTypesDecoderFactory.readUtility(buffer);
             boolean isUSet = UserTypesDecoderFactory.readBoolean(buffer);
             int mtu = UserTypesDecoderFactory.readUnsignedIntAsTwoBytes(buffer);
-            return new ConnectMsg.Request(vodSrc, vodDest,
-                    utility, isUSet, mtu);
+            return new ConnectMsg.Request(vodSrc, vodDest, utility, isUSet, mtu);
         }
 
     }
