@@ -5,7 +5,7 @@
 package se.sics.gvod.net;
 
 import se.sics.gvod.common.msgs.RelayMsgNetty;
-import se.sics.gvod.net.msgs.VodMsg;
+import se.sics.gvod.net.msgs.DirectMsg;
 import se.sics.gvod.net.msgs.RewriteableMsg;
 import se.sics.kompics.PortType;
 
@@ -19,8 +19,8 @@ public class VodNetwork extends PortType {
         positive(RewriteableMsg.class);
         negative(RewriteableMsg.class);
 
-        positive(VodMsg.class);
-        negative(VodMsg.class);
+        positive(DirectMsg.class);
+        negative(DirectMsg.class);
 
         negative(RelayMsgNetty.Request.class);
         negative(RelayMsgNetty.Response.class);

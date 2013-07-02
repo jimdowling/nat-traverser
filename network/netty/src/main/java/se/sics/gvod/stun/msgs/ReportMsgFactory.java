@@ -3,7 +3,7 @@ package se.sics.gvod.stun.msgs;
 import org.jboss.netty.buffer.ChannelBuffer;
 import se.sics.gvod.common.msgs.MessageDecodingException;
 import se.sics.gvod.common.msgs.VodMsgNettyFactory;
-import se.sics.gvod.net.msgs.VodMsg;
+import se.sics.gvod.net.msgs.DirectMsg;
 import se.sics.gvod.net.util.UserTypesDecoderFactory;
 
 public class ReportMsgFactory  {
@@ -20,7 +20,7 @@ public class ReportMsgFactory  {
         }
 
         @Override
-        protected VodMsg process(ChannelBuffer buffer) throws MessageDecodingException {
+        protected DirectMsg process(ChannelBuffer buffer) throws MessageDecodingException {
          
             String msg = UserTypesDecoderFactory.readStringLength256(buffer);
             ReportMsg.Request r = new ReportMsg.Request(vodSrc, vodDest, timeoutId, msg);
@@ -41,7 +41,7 @@ public class ReportMsgFactory  {
         }
 
         @Override
-        protected VodMsg process(ChannelBuffer buffer) throws MessageDecodingException {
+        protected DirectMsg process(ChannelBuffer buffer) throws MessageDecodingException {
             return new ReportMsg.Response(vodSrc, vodDest, timeoutId);
         }
 

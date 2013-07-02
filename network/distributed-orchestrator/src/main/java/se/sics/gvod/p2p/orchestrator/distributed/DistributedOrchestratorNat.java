@@ -28,7 +28,7 @@ import java.util.Random;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import se.sics.gvod.net.VodNetwork;
-import se.sics.gvod.net.msgs.VodMsg;
+import se.sics.gvod.net.msgs.DirectMsg;
 import se.sics.gvod.net.msgs.RewriteableMsg;
 import se.sics.gvod.network.model.common.NetworkModel;
 
@@ -255,10 +255,10 @@ public final class DistributedOrchestratorNat extends ComponentDefinition {
             logger.info("Orchestration started");
         }
     };
-    Handler<VodMsg> handleUpperMessage = new Handler<VodMsg>() {
+    Handler<DirectMsg> handleUpperMessage = new Handler<DirectMsg>() {
 
         @Override
-        public void handle(VodMsg msg) {
+        public void handle(DirectMsg msg) {
             random.nextInt();
             logger.debug("Upper Message recvd: {}", msg);
 
@@ -284,10 +284,10 @@ public final class DistributedOrchestratorNat extends ComponentDefinition {
             }
         }
     };
-    Handler<VodMsg> handleLowerMessage = new Handler<VodMsg>() {
+    Handler<DirectMsg> handleLowerMessage = new Handler<DirectMsg>() {
 
         @Override
-        public void handle(VodMsg event) {
+        public void handle(DirectMsg event) {
             trigger(event, upperNet);
         }
     };

@@ -3,7 +3,7 @@ package se.sics.gvod.hp.msgs;
 import se.sics.gvod.common.msgs.*;
 import org.jboss.netty.buffer.ChannelBuffer;
 import se.sics.gvod.hp.events.OpenConnectionResponseType;
-import se.sics.gvod.net.msgs.VodMsg;
+import se.sics.gvod.net.msgs.DirectMsg;
 import se.sics.gvod.net.util.UserTypesDecoderFactory;
 import se.sics.gvod.common.hp.HPMechanism;
 

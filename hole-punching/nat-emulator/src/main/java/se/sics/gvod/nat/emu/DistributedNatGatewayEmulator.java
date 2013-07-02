@@ -19,7 +19,7 @@ import se.sics.gvod.net.NatNetworkControl;
 import se.sics.gvod.net.VodNetwork;
 import se.sics.gvod.net.events.*;
 import se.sics.gvod.net.msgs.RewriteableMsg;
-import se.sics.gvod.net.msgs.VodMsg;
+import se.sics.gvod.net.msgs.DirectMsg;
 import se.sics.gvod.stun.upnp.UpnpPort;
 import se.sics.gvod.stun.upnp.events.*;
 import se.sics.gvod.timer.SchedulePeriodicTimeout;
@@ -620,8 +620,8 @@ public class DistributedNatGatewayEmulator extends MsgRetryComponent {
                                     StringBuilder sb = new StringBuilder();
                                     sb.append("Drop PD-2 ").append(msg.getClass()).append(" - ");
                                     sb.append(mappingPolicy).append(":").append(allocationPolicy).append(":").append(filteringPolicy).append(" - ");
-                                    if (msg instanceof VodMsg) {
-                                        VodMsg vm = (VodMsg) msg;
+                                    if (msg instanceof DirectMsg) {
+                                        DirectMsg vm = (DirectMsg) msg;
                                         sb.append(vm.getVodSource());
                                         sb.append(vm.getVodDestination());
                                     } else if (msg instanceof RelayMsgNetty.Response) {

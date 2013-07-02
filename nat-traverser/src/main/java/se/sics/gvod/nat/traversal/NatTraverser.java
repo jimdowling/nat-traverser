@@ -51,7 +51,7 @@ import se.sics.gvod.net.Nat;
 import se.sics.gvod.net.VodAddress;
 import se.sics.gvod.net.NatNetworkControl;
 import se.sics.gvod.net.VodNetwork;
-import se.sics.gvod.net.msgs.VodMsg;
+import se.sics.gvod.net.msgs.DirectMsg;
 import se.sics.gvod.net.msgs.RelayMsg;
 import se.sics.gvod.net.msgs.RewriteableMsg;
 import se.sics.gvod.parentmaker.ParentMaker;
@@ -109,8 +109,8 @@ public class NatTraverser extends MsgRetryComponent {
     // map to store the messages before the hole in the nat is created. 
     // here the Integer is the id of the destination peer
     // TODO: bound list in size, priority?
-    private HashMap<Integer, LinkedList<VodMsg>> pendingMsgs =
-            new HashMap<Integer, LinkedList<VodMsg>>();
+    private HashMap<Integer, LinkedList<DirectMsg>> pendingMsgs =
+            new HashMap<Integer, LinkedList<DirectMsg>>();
     // for each destination we have to do hole punching
     // hole punching consists of multiple stages. to store which
     // state the hole punching is going through following map is used
@@ -386,9 +386,9 @@ public class NatTraverser extends MsgRetryComponent {
             }
         }
     };
-    Handler<VodMsg> handleUpperMessage = new Handler<VodMsg>() {
+    Handler<DirectMsg> handleUpperMessage = new Handler<DirectMsg>() {
         @Override
-        public void handle(VodMsg msg) {
+        public void handle(DirectMsg msg) {
             logger.trace("{} handleUpperMessage dest ID (" + msg.getDestination().getId()
                     + ") message class :" + msg.getClass().getName(), msg.getTimeoutId());
             // if the connection for the destination
@@ -407,12 +407,12 @@ public class NatTraverser extends MsgRetryComponent {
                     // No open connection to dest. Start hole-punching.
                     // if hole punching for the destion peer is going
                     // on then save the mesage; otherwise start hp
-                    LinkedList<VodMsg> msgList;
+                    LinkedList<DirectMsg> msgList;
                     if (onGoingHP.containsKey(remoteId)) {
                         msgList = pendingMsgs.get(remoteId);
                     } else {
                         // start the hole punching process
-                        msgList = new LinkedList<VodMsg>();
+                        msgList = new LinkedList<DirectMsg>();
                         pendingMsgs.put(remoteId, msgList);
                         // create a session
                         startHolePunchingProcess(msg.getVodDestination(), false, 0,
@@ -439,9 +439,9 @@ public class NatTraverser extends MsgRetryComponent {
             initializeServerComponents(event.getNodes());
         }
     };
-    Handler<VodMsg> handleLowerMessages = new Handler<VodMsg>() {
+    Handler<DirectMsg> handleLowerMessages = new Handler<DirectMsg>() {
         @Override
-        public void handle(VodMsg msg) {
+        public void handle(DirectMsg msg) {
             logger.trace("handleLowerMessage dest ID (" + msg.getDestination().getId()
                     + ") message class :" + msg.getClass().getName());
 
@@ -905,11 +905,11 @@ public class NatTraverser extends MsgRetryComponent {
                 + " took " + ((System.currentTimeMillis() - session.getHpStartTime()) / 1000)
                 + " secs");
 
-        List<VodMsg> msgs = pendingMsgs.get(destId);
+        List<DirectMsg> msgs = pendingMsgs.get(destId);
 
-        Iterator<VodMsg> itr = msgs.iterator();
+        Iterator<DirectMsg> itr = msgs.iterator();
         while (itr.hasNext()) {
-            VodMsg msg = itr.next();
+            DirectMsg msg = itr.next();
             sendMsgUsingConnection(msg, destId);
         }
 

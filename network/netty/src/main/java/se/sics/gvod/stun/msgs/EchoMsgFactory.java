@@ -4,7 +4,7 @@ import java.util.Set;
 import org.jboss.netty.buffer.ChannelBuffer;
 import se.sics.gvod.common.msgs.MessageDecodingException;
 import se.sics.gvod.address.Address;
-import se.sics.gvod.net.msgs.VodMsg;
+import se.sics.gvod.net.msgs.DirectMsg;
 import se.sics.gvod.net.util.UserTypesDecoderFactory;
 
 public class EchoMsgFactory  {
@@ -21,7 +21,7 @@ public class EchoMsgFactory  {
         }
 
         @Override
-        protected VodMsg process(ChannelBuffer buffer) throws MessageDecodingException {
+        protected DirectMsg process(ChannelBuffer buffer) throws MessageDecodingException {
          
             int typeId = UserTypesDecoderFactory.readUnsignedIntAsOneByte(buffer);
             EchoMsg.Test testType = EchoMsg.Test.create(typeId);
@@ -44,7 +44,7 @@ public class EchoMsgFactory  {
         }
 
         @Override
-        protected VodMsg process(ChannelBuffer buffer) throws MessageDecodingException {
+        protected DirectMsg process(ChannelBuffer buffer) throws MessageDecodingException {
             int partnerPort  = UserTypesDecoderFactory.readUnsignedIntAsTwoBytes(buffer);
             int typeId = UserTypesDecoderFactory.readUnsignedIntAsOneByte(buffer);
             int tryId = UserTypesDecoderFactory.readUnsignedIntAsOneByte(buffer);

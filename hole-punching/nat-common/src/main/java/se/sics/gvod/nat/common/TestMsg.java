@@ -6,13 +6,13 @@ package se.sics.gvod.nat.common;
 
 import se.sics.gvod.net.VodAddress;
 import se.sics.gvod.net.msgs.RewriteableMsg;
-import se.sics.gvod.net.msgs.VodMsg;
+import se.sics.gvod.net.msgs.DirectMsg;
 
 /**
  *
  * @author Jim Dowling<jdowling@sics.se>
  */
-public class TestMsg extends VodMsg
+public class TestMsg extends DirectMsg
 {
 
     public TestMsg(VodAddress source, VodAddress destination) {

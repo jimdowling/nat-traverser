@@ -18,7 +18,7 @@ import se.sics.gvod.common.RetryComponentDelegator;
 import se.sics.gvod.common.util.ToVodAddr;
 import se.sics.gvod.net.VodAddress;
 import se.sics.gvod.net.VodNetwork;
-import se.sics.gvod.net.msgs.VodMsg;
+import se.sics.gvod.net.msgs.DirectMsg;
 import se.sics.gvod.net.msgs.RewriteableMsg;
 import se.sics.gvod.net.msgs.RewriteableRetryTimeout;
 import se.sics.gvod.net.msgs.ScheduleRetryTimeout;
@@ -72,7 +72,7 @@ public class RetryClientTest
 
     public static class SimpleTimeout extends RewriteableRetryTimeout {
 
-        public SimpleTimeout(ScheduleRetryTimeout st, VodMsg retryMsg) {
+        public SimpleTimeout(ScheduleRetryTimeout st, DirectMsg retryMsg) {
             super(st,retryMsg);
         }
     }

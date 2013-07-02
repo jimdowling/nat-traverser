@@ -6,7 +6,7 @@ package se.sics.gvod.stun.msgs;
 
 import org.jboss.netty.buffer.ChannelBuffer;
 import se.sics.gvod.common.msgs.MessageEncodingException;
-import se.sics.gvod.common.msgs.VodMsgNetty;
+import se.sics.gvod.common.msgs.DirectMsgNetty;
 import se.sics.gvod.net.BaseMsgFrameDecoder;
 import se.sics.gvod.net.VodAddress;
 import se.sics.gvod.net.msgs.RewriteableMsg;
@@ -21,7 +21,7 @@ import se.sics.gvod.timer.TimeoutId;
  */
 public class ReportMsg {
 
-    public final static class Request extends VodMsgNetty {
+    public final static class Request extends DirectMsgNetty {
 
         private final String report;
 
@@ -61,7 +61,7 @@ public class ReportMsg {
         }
     }
 
-    public final static class Response extends VodMsgNetty {
+    public final static class Response extends DirectMsgNetty {
 
         public Response(VodAddress src, VodAddress dest, TimeoutId timeoutId) {
             super(src, dest, timeoutId);

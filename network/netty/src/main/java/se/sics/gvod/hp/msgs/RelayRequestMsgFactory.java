@@ -5,7 +5,7 @@ import java.util.logging.Logger;
 import se.sics.gvod.common.msgs.*;
 import org.jboss.netty.buffer.ChannelBuffer;
 import se.sics.gvod.net.MsgFrameDecoder;
-import se.sics.gvod.net.msgs.VodMsg;
+import se.sics.gvod.net.msgs.DirectMsg;
 
 public class RelayRequestMsgFactory {
 
@@ -32,9 +32,9 @@ public class RelayRequestMsgFactory {
             } catch (IllegalAccessException ex) {
                 Logger.getLogger(RelayRequestMsgFactory.class.getName()).log(Level.SEVERE, null, ex);
             }
-            VodMsg message = null;
+            DirectMsg message = null;
             try {
-                message = (VodMsg) decoder.parse(buffer);
+                message = (DirectMsg) decoder.parse(buffer);
             } catch (Exception ex) {
                 Logger.getLogger(RelayRequestMsgFactory.class.getName()).log(Level.SEVERE, null, ex);
                 throw new MessageDecodingException(ex);
@@ -69,9 +69,9 @@ public class RelayRequestMsgFactory {
                 Logger.getLogger(RelayRequestMsgFactory.class.getName()).log(Level.SEVERE, null, ex);
                 throw new MessageDecodingException(ex.getMessage());
             }
-            VodMsg message = null;
+            DirectMsg message = null;
             try {
-                message = (VodMsg) decoder.parse(buffer);
+                message = (DirectMsg) decoder.parse(buffer);
             } catch (Exception ex) {
                 Logger.getLogger(RelayRequestMsgFactory.class.getName()).log(Level.SEVERE, null, ex);
             }

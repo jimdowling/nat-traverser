@@ -6,14 +6,14 @@ package se.sics.gvod.nat.common;
 
 import se.sics.gvod.net.VodAddress;
 import se.sics.gvod.net.msgs.RewriteableMsg;
-import se.sics.gvod.net.msgs.VodMsg;
+import se.sics.gvod.net.msgs.DirectMsg;
 import se.sics.gvod.timer.TimeoutId;
 
 /**
  *
  * @author Jim Dowling<jdowling@sics.se>
  */
-public final class TestMsgId extends VodMsg {
+public final class TestMsgId extends DirectMsg {
 
     static final long serialVersionUID = 1L;
 

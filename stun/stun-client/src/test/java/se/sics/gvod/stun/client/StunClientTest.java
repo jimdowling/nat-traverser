@@ -31,7 +31,7 @@ import se.sics.gvod.net.VodAddress;
 import se.sics.gvod.net.Nat;
 import se.sics.gvod.net.VodNetwork;
 import se.sics.gvod.net.NatNetworkControl;
-import se.sics.gvod.net.msgs.VodMsg;
+import se.sics.gvod.net.msgs.DirectMsg;
 import se.sics.gvod.stun.client.events.GetNatTypeRequest;
 import se.sics.gvod.stun.client.events.GetNatTypeResponse;
 import se.sics.gvod.stun.client.events.GetNatTypeResponseRuleExpirationTime;
@@ -311,28 +311,28 @@ public class StunClientTest {
         }
 
         // no need to filter the packets based on port. a peer may have many opened ports
-        final class MessageDestinationFilterBasedOnIPandID extends ChannelFilter<VodMsg, IpIntPair> {
+        final class MessageDestinationFilterBasedOnIPandID extends ChannelFilter<DirectMsg, IpIntPair> {
 
             public MessageDestinationFilterBasedOnIPandID(IpIntPair IpIntPair) {
-                super(VodMsg.class, IpIntPair, true);
+                super(DirectMsg.class, IpIntPair, true);
             }
 
             @Override
-            public IpIntPair getValue(VodMsg event) {
+            public IpIntPair getValue(DirectMsg event) {
                 IpIntPair IpIntPair = new IpIntPair(event.getDestination().getIp(),
                         event.getDestination().getId());
                 return IpIntPair;
             }
         }
 
-        final class MessageDestinationFilterBasedOnIp extends ChannelFilter<VodMsg, InetAddress> {
+        final class MessageDestinationFilterBasedOnIp extends ChannelFilter<DirectMsg, InetAddress> {
 
             public MessageDestinationFilterBasedOnIp(InetAddress ip) {
-                super(VodMsg.class, ip, true);
+                super(DirectMsg.class, ip, true);
             }
 
             @Override
-            public InetAddress getValue(VodMsg event) {
+            public InetAddress getValue(DirectMsg event) {
                 return event.getDestination().getIp();
             }
         }

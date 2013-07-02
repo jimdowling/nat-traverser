@@ -3,12 +3,12 @@ package se.sics.gvod.stun.msgs;
 import org.jboss.netty.buffer.ChannelBuffer;
 import se.sics.gvod.common.msgs.MessageEncodingException;
 import se.sics.gvod.address.Address;
-import se.sics.gvod.common.msgs.VodMsgNetty;
+import se.sics.gvod.common.msgs.DirectMsgNetty;
 import se.sics.gvod.net.VodAddress;
 import se.sics.gvod.net.util.UserTypesEncoderFactory;
 import se.sics.gvod.timer.TimeoutId;
 
-public abstract class StunResponseMsg extends VodMsgNetty {
+public abstract class StunResponseMsg extends DirectMsgNetty {
 
     protected final long transactionId;
     protected final Address replyAddr;

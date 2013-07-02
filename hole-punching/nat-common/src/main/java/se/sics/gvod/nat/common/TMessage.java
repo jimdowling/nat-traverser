@@ -4,7 +4,7 @@ import se.sics.gvod.net.VodAddress;
 import se.sics.gvod.net.msgs.RewriteableMsg;
 import se.sics.gvod.net.msgs.RewriteableRetryTimeout;
 import se.sics.gvod.net.msgs.ScheduleRetryTimeout;
-import se.sics.gvod.net.msgs.VodMsg;
+import se.sics.gvod.net.msgs.DirectMsg;
 import se.sics.gvod.timer.TimeoutId;
 
 /**
@@ -15,7 +15,7 @@ import se.sics.gvod.timer.TimeoutId;
  */
 public class TMessage {
 
-    public final static class RequestMsg extends VodMsg {
+    public final static class RequestMsg extends DirectMsg {
 
         public int getSize() {
             return 38;
@@ -33,7 +33,7 @@ public class TMessage {
         }
     }
 
-    public final static class ResponseMsg extends VodMsg {
+    public final static class ResponseMsg extends DirectMsg {
 
         static final long serialVersionUID = 1L;
 

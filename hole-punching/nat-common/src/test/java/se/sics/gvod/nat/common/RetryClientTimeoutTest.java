@@ -18,7 +18,7 @@ import se.sics.gvod.common.RetryComponentDelegator;
 import se.sics.gvod.common.util.ToVodAddr;
 import se.sics.gvod.net.VodAddress;
 import se.sics.gvod.net.VodNetwork;
-import se.sics.gvod.net.msgs.VodMsg;
+import se.sics.gvod.net.msgs.DirectMsg;
 import se.sics.gvod.net.msgs.ScheduleRetryTimeout;
 import se.sics.gvod.timer.TimeoutId;
 import se.sics.kompics.Component;

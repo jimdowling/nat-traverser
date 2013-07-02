@@ -2,7 +2,7 @@ package se.sics.gvod.stun.msgs;
 
 import org.jboss.netty.buffer.ChannelBuffer;
 import se.sics.gvod.common.msgs.MessageDecodingException;
-import se.sics.gvod.net.msgs.VodMsg;
+import se.sics.gvod.net.msgs.DirectMsg;
 
 public class EchoChangePortMsgFactory  {
 
@@ -19,7 +19,7 @@ public class EchoChangePortMsgFactory  {
         }
 
         @Override
-        protected VodMsg process(ChannelBuffer buffer) throws MessageDecodingException {
+        protected DirectMsg process(ChannelBuffer buffer) throws MessageDecodingException {
             return new EchoChangePortMsg.Request(vodSrc, vodDest, transactionId);
         }
     }
@@ -37,7 +37,7 @@ public class EchoChangePortMsgFactory  {
         }
 
         @Override
-        protected VodMsg process(ChannelBuffer buffer) throws MessageDecodingException {
+        protected DirectMsg process(ChannelBuffer buffer) throws MessageDecodingException {
             EchoChangePortMsg.Response response = new EchoChangePortMsg.Response(
                     vodSrc, vodDest, transactionId, timeoutId);
             return response;

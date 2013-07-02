@@ -3,7 +3,7 @@ package se.sics.gvod.hp.msgs;
 import org.jboss.netty.buffer.ChannelBuffer;
 import se.sics.gvod.net.msgs.RewriteableRetryTimeout;
 import se.sics.gvod.net.msgs.ScheduleRetryTimeout;
-import se.sics.gvod.common.msgs.VodMsgNetty;
+import se.sics.gvod.common.msgs.DirectMsgNetty;
 import se.sics.gvod.common.msgs.MessageEncodingException;
 import se.sics.gvod.net.BaseMsgFrameDecoder;
 import se.sics.gvod.net.VodAddress;
@@ -16,7 +16,7 @@ import se.sics.gvod.timer.TimeoutId;
  */
 public class ParentKeepAliveMsg {
 
-    public static final class Ping extends VodMsgNetty {
+    public static final class Ping extends DirectMsgNetty {
 
         static final long serialVersionUID = 12342356463L;
         
@@ -52,7 +52,7 @@ public class ParentKeepAliveMsg {
         
     }
 
-    public final static class Pong extends VodMsgNetty {
+    public final static class Pong extends DirectMsgNetty {
 
         static final long serialVersionUID = 6624678722345L;
         

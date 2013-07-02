@@ -12,7 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import se.sics.gvod.address.Address;
 import se.sics.gvod.net.VodNetwork;
-import se.sics.gvod.net.msgs.VodMsg;
+import se.sics.gvod.net.msgs.DirectMsg;
 import se.sics.gvod.net.msgs.RewriteableMsg;
 import se.sics.gvod.net.msgs.RewriteableRetryTimeout;
 import se.sics.gvod.net.msgs.ScheduleRetryTimeout;
@@ -402,8 +402,8 @@ public abstract class MsgRetryComponent extends AutoSubscribeComponent
                 retryData.decRetriesLeft();
                 retryData.rtoScale();
                 RewriteableMsg msg = retryData.getMessage();
-                if (msg instanceof VodMsg) {
-                    VodMsg m = (VodMsg) msg;
+                if (msg instanceof DirectMsg) {
+                    DirectMsg m = (DirectMsg) msg;
 
                     logger.info("Message Retry Comp (" + m.getSource().getId() + ")"
                             + " : Retrying Src: " + m.getVodSource().getId()

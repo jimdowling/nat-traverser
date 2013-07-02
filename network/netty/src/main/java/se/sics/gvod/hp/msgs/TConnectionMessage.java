@@ -4,7 +4,7 @@ import se.sics.gvod.net.msgs.RewriteableRetryTimeout;
 import se.sics.gvod.net.msgs.ScheduleRetryTimeout;
 import se.sics.gvod.net.VodAddress;
 import se.sics.gvod.net.msgs.RewriteableMsg;
-import se.sics.gvod.net.msgs.VodMsg;
+import se.sics.gvod.net.msgs.DirectMsg;
 import se.sics.gvod.timer.TimeoutId;
 
 /**
@@ -14,7 +14,7 @@ import se.sics.gvod.timer.TimeoutId;
 public class TConnectionMessage
 {
 
-    public static final class Ping extends VodMsg
+    public static final class Ping extends DirectMsg
     {
         static final long serialVersionUID = 1L;
         private final String message;
@@ -56,7 +56,7 @@ public class TConnectionMessage
         }
     }
 
-    public final static class Pong extends VodMsg
+    public final static class Pong extends DirectMsg
     {
         static final long serialVersionUID = 1L;
         private final String message;

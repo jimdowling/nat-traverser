@@ -3,7 +3,7 @@ package se.sics.gvod.stun.client.simulator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import se.sics.gvod.net.VodNetwork;
-import se.sics.gvod.net.msgs.VodMsg;
+import se.sics.gvod.net.msgs.DirectMsg;
 import se.sics.kompics.ComponentDefinition;
 import se.sics.kompics.Handler;
 import se.sics.kompics.Negative;
@@ -30,10 +30,10 @@ public class NetworkSimulator extends ComponentDefinition
         }
     };
 
-    private Handler<VodMsg> handleUpperMessage = new Handler<VodMsg>()
+    private Handler<DirectMsg> handleUpperMessage = new Handler<DirectMsg>()
     {
         @Override
-        public void handle(VodMsg msg)
+        public void handle(DirectMsg msg)
         {
             logger.debug(msg.getClass().getCanonicalName() + " - " + msg.getVodSource()+" dest: "+msg.getVodDestination());
             trigger(msg, upperNet);

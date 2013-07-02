@@ -5,7 +5,7 @@ import org.jboss.netty.buffer.ChannelBuffer;
 import se.sics.gvod.net.VodAddress;
 import se.sics.gvod.address.Address;
 import se.sics.gvod.net.MsgFrameDecoder;
-import se.sics.gvod.net.msgs.VodMsg;
+import se.sics.gvod.net.msgs.DirectMsg;
 import se.sics.gvod.net.util.UserTypesDecoderFactory;
 import se.sics.gvod.timer.NoTimeoutId;
 import se.sics.gvod.timer.TimeoutId;
@@ -32,18 +32,18 @@ public abstract class VodMsgNettyFactory
      * @return
      * @throws MessageDecodingException
      */
-    protected VodMsg decode(ChannelBuffer buffer, boolean timeout) throws MessageDecodingException {
+    protected DirectMsg decode(ChannelBuffer buffer, boolean timeout) throws MessageDecodingException {
         if (VodMsgNettyFactory.msgFrameDecoder == null) {
             throw new NullPointerException("VodMsgNettyFactory.setMsgFrameDecoder() must be called before decoding any messages");
         }
         decodeHeader(buffer, timeout);
 
-        VodMsg msg = process(buffer);
+        DirectMsg msg = process(buffer);
         finish(msg);
         return msg;
     }
 
-    protected void finish(VodMsg msg) {
+    protected void finish(DirectMsg msg) {
         msg.setTimeoutId(timeoutId);
     }
 
@@ -69,5 +69,5 @@ public abstract class VodMsgNettyFactory
         vodDest = new VodAddress(dest, destOverlayId, (short) destNatPolicy, null);
     }
 
-    protected abstract VodMsg process(ChannelBuffer buffer) throws MessageDecodingException;
+    protected abstract DirectMsg process(ChannelBuffer buffer) throws MessageDecodingException;
 };

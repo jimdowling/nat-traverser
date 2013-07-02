@@ -10,7 +10,7 @@ import se.sics.gvod.common.msgs.MessageEncodingException;
 import se.sics.gvod.net.BaseMsgFrameDecoder;
 import se.sics.gvod.net.VodAddress;
 import se.sics.gvod.net.msgs.RewriteableMsg;
-import se.sics.gvod.net.msgs.VodMsg;
+import se.sics.gvod.net.msgs.DirectMsg;
 
 /**
  *
@@ -31,7 +31,7 @@ public class RelayRequestMsg
         private final Encodable message;
 
         public ClientToServer(VodAddress src, VodAddress dest,
-                int remoteClientID, VodMsg msg)
+                int remoteClientID, DirectMsg msg)
         {
             super(src, dest, remoteClientID, msg.getTimeoutId());
             if (msg instanceof Encodable == false) {
@@ -41,15 +41,15 @@ public class RelayRequestMsg
             this.message = (Encodable) msg;
         }
 
-        public VodMsg getMessage()
+        public DirectMsg getMessage()
         {
-            return (VodMsg) message;
+            return (DirectMsg) message;
         }
 
   
         @Override
         public int getSize() {
-            VodMsg msg = (VodMsg) message;
+            DirectMsg msg = (DirectMsg) message;
             return getHeaderSize()
                     + msg.getSize();
         }
@@ -85,20 +85,20 @@ public class RelayRequestMsg
         private final Encodable message;
 
         public ServerToClient(VodAddress src, VodAddress dest,
-                int remoteClientId, VodMsg msg)
+                int remoteClientId, DirectMsg msg)
         {
             super(src, dest, remoteClientId, msg.getTimeoutId());
             this.message = (Encodable) msg;
         }
 
-        public VodMsg getMessage()
+        public DirectMsg getMessage()
         {
-            return (VodMsg) message;
+            return (DirectMsg) message;
         }
 
         @Override
         public int getSize() {
-            VodMsg msg = (VodMsg) message;
+            DirectMsg msg = (DirectMsg) message;
             return getHeaderSize()
                     + msg.getSize();
         }

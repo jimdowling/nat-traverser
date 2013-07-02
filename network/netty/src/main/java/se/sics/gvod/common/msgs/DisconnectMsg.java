@@ -19,7 +19,7 @@ import se.sics.gvod.timer.TimeoutId;
  */
 public class DisconnectMsg {
 
-    public static class Request extends VodMsgNetty {
+    public static class Request extends DirectMsgNetty {
 
         public Request(VodAddress source, VodAddress destination) {
             super(source, destination);
@@ -49,7 +49,7 @@ public class DisconnectMsg {
         }
     }
 
-    public static class Response extends VodMsgNetty {
+    public static class Response extends DirectMsgNetty {
 
         private final int ref;
 

@@ -49,7 +49,7 @@ import se.sics.gvod.common.SelfNoUtility;
 import se.sics.gvod.common.util.ToVodAddr;
 import se.sics.gvod.net.VodNetwork;
 import se.sics.gvod.net.NatNetworkControl;
-import se.sics.gvod.net.msgs.VodMsg;
+import se.sics.gvod.net.msgs.DirectMsg;
 import se.sics.gvod.nat.hp.client.events.OpenConnectionRequest;
 import se.sics.gvod.nat.hp.client.events.OpenConnectionResponse;
 import se.sics.gvod.hp.events.OpenConnectionResponseType;
@@ -228,7 +228,7 @@ public class HolePunchingTestSimulator
         int retryDelay = 1 * 1000;
         int ruleCleanupTimer = 500;
 
-        public static class TestMessage extends VodMsg {
+        public static class TestMessage extends DirectMsg {
 
             static final long serialVersionUID = 1L;
             private TimeoutId id;

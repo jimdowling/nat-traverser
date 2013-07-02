@@ -4,7 +4,7 @@
  */
 package se.sics.kompics;
 
-import se.sics.gvod.net.msgs.VodMsg;
+import se.sics.gvod.net.msgs.DirectMsg;
 import se.sics.gvod.net.msgs.RewriteableMsg;
 
 /**
@@ -19,6 +19,6 @@ public final class Evt extends PortType {
         negative(Ping.class);
         negative(Pong.class);
         negative(RewriteableMsg.class);
-        negative(VodMsg.class);
+        negative(DirectMsg.class);
     }
 }    
