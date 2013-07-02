@@ -3,6 +3,7 @@ package se.sics.gvod.nat.hp.clientmain;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.EnumSet;
 import java.util.Set;
 import java.util.HashSet;
 import se.sics.gvod.timer.TimeoutId;
@@ -26,6 +27,7 @@ import org.slf4j.LoggerFactory;
 import se.sics.gvod.common.RTTStore;
 import se.sics.gvod.common.Self;
 import se.sics.gvod.common.SelfImpl;
+import se.sics.gvod.common.util.ToVodAddr;
 import se.sics.gvod.config.VodConfig;
 import se.sics.gvod.hp.msgs.TConnectionMessage;
 import se.sics.gvod.config.HpClientConfiguration;
@@ -75,32 +77,35 @@ public final class HpNatTraverserMain extends ComponentDefinition {
     private static final int SERVER_ID = 1;
     private static String server;
     private static boolean openServer = false;
+    private static Integer pickIp;
 
     public static void main(String[] args) {
         // This initializes the Kompics runtime, and creates an instance of Root
-        logger.trace("Starting hp client");
-        if (args.length < 2) {
-            logger.warn("Usage: <prog> upnp id server [openServer] [destId destNatType]");
-            logger.warn("e.g.  <prog> true 1 cloud7.sics.se false 2 NAT_EI_PP_PD");
+        logger.trace("Starting nat-traverser client");
+        if (args.length < 3) {
+            logger.info("Usage: <prog> upnp id bindIp bootstrapNode [openServer] [destId destNatType]");
+            logger.info("       bindIp: 0=publicIp, 1=privateIp1, 2=privateIp2");
+            logger.info("e.g.  <prog> true 1 0 cloud7.sics.se false 2 NAT_EI_PP_PD");
             System.exit(-1);
         }
         upnpEnabled = Boolean.parseBoolean(args[0]);
         myId = Integer.parseInt(args[1]);
-        server = args[2];
+        pickIp = Integer.parseInt(args[2]);
+        server = args[3];
         try {
-            Address s = new Address(InetAddress.getByName(server), VodConfig.DEFAULT_STUN_PORT, 
+            Address s = new Address(InetAddress.getByName(server), VodConfig.DEFAULT_STUN_PORT,
                     SERVER_ID);
             servers.add(s);
         } catch (UnknownHostException ex) {
             java.util.logging.Logger.getLogger(HpNatTraverserMain.class.getName()).log(Level.SEVERE, null, ex);
             return;
         }
-        if (args.length > 3) {
-            openServer = Boolean.parseBoolean(args[3]);
-        }
         if (args.length > 4) {
-            targetId = Integer.parseInt(args[4]);
-            targetNatType = Nat.parseToNat(args[5]);
+            openServer = Boolean.parseBoolean(args[4]);
+        }
+        if (args.length > 5) {
+            targetId = Integer.parseInt(args[5]);
+            targetNatType = Nat.parseToNat(args[6]);
         }
 
         System.setProperty("java.net.preferIPv4Stack", "true");
@@ -110,10 +115,11 @@ public final class HpNatTraverserMain extends ComponentDefinition {
             java.util.logging.Logger.getLogger(HpNatTraverserMain.class.getName()).log(Level.SEVERE, null, ex);
         }
 
-        Kompics.createAndStart(HpNatTraverserMain.class, 4);
+        Kompics.createAndStart(HpNatTraverserMain.class, 3);
     }
-    
+
     public static class HolePunch extends Timeout {
+
         public HolePunch(ScheduleTimeout st) {
             super(st);
         }
@@ -122,9 +128,9 @@ public final class HpNatTraverserMain extends ComponentDefinition {
     public HpNatTraverserMain() throws IOException {
 
         ntConfig = NatTraverserConfiguration.build();
-        rendezvousServerConfig =           
+        rendezvousServerConfig =
                 RendezvousServerConfiguration.build().
-                setSessionExpirationTime(120*1000);
+                setSessionExpirationTime(120 * 1000);
         timer = create(JavaTimer.class);
         network = create(NettyNetwork.class);
         resolveIp = create(ResolveIp.class);
@@ -149,27 +155,33 @@ public final class HpNatTraverserMain extends ComponentDefinition {
     private Handler<Start> handleStart = new Handler<Start>() {
         @Override
         public void handle(Start event) {
-            trigger(new GetIpRequest(false),
-                    resolveIp.getPositive(ResolveIpPort.class));
+                trigger(new GetIpRequest(false, EnumSet.of(
+                        GetIpRequest.NetworkInterfacesMask.IGNORE_LOOPBACK)),
+                        resolveIp.getPositive(ResolveIpPort.class));
         }
     };
     public Handler<GetIpResponse> handleGetIpResponse = new Handler<GetIpResponse>() {
         @Override
         public void handle(GetIpResponse event) {
 
-            InetAddress localIp = event.getIpAddress();
+
+            InetAddress localIp = null;
+            if (pickIp > 0) {
+                localIp = event.getTenDotIpAddress(pickIp);
+                if (localIp == null) {
+                    System.err.println("No 10.* IP address found. Exiting.");
+                    System.exit(0);
+                }
+            } else {
+                localIp = event.getBoundIp();
+            }
+
             if (localIp != null) {
                 logger.info("Found net i/f with ip address: " + localIp);
 
                 localAddress = new Address(localIp, VodConfig.getPort(), myId);
                 trigger(new NettyInit(localAddress, true,
                         VodConfig.getSeed(), BaseMsgFrameDecoder.class), network.getControl());
-
-                Address server = servers.iterator().next();
-                // Add this server to the RTTStore, so that ParentMaker can find it
-                RTTStore.addSample(server.getId(),
-                        new VodAddress(server, VodConfig.HP_OVERLAY_ID),
-                        1);
 
                 self = new SelfImpl(null, localAddress.getIp(), localAddress.getPort(),
                         localAddress.getId(), OVERLAY_ID);
@@ -198,7 +210,7 @@ public final class HpNatTraverserMain extends ComponentDefinition {
             logger.info("Nat type is: " + event.getNat());
 
             if (targetId != -1) {
-                ScheduleTimeout st = new ScheduleTimeout(5*1000);
+                ScheduleTimeout st = new ScheduleTimeout(5 * 1000);
                 HolePunch hp = new HolePunch(st);
                 st.setTimeoutEvent(hp);
                 trigger(st, timer.getPositive(Timer.class));
@@ -239,25 +251,23 @@ public final class HpNatTraverserMain extends ComponentDefinition {
             System.exit(-1);
         }
     };
-    
     Handler<HolePunch> handleHolePunch = new Handler<HolePunch>() {
         @Override
         public void handle(HolePunch msg) {
-                VodAddress dest = new VodAddress(new Address(self.getIp(),
-                        self.getPort(), targetId),
-                        OVERLAY_ID,
-                        targetNatType, servers);
-                trigger(new TConnectionMessage.Ping(self.getAddress(),
-                        dest, "Hi there"),
-                        natTraverser.getPositive(VodNetwork.class));
+            VodAddress dest = new VodAddress(new Address(self.getIp(),
+                    self.getPort(), targetId),
+                    OVERLAY_ID,
+                    targetNatType, servers);
+            trigger(new TConnectionMessage.Ping(self.getAddress(),
+                    dest, "Hi there"),
+                    natTraverser.getPositive(VodNetwork.class));
         }
-    };    
-    
+    };
     Handler<Fault> handleNettyFault = new Handler<Fault>() {
         @Override
         public void handle(Fault msg) {
             logger.error("Problem in Netty: {}", msg.getFault().getMessage());
             System.exit(-1);
         }
-    };    
+    };
 }

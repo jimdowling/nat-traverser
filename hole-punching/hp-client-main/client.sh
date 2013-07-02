@@ -16,9 +16,9 @@ fi
 ID=$1
 shift
 if [ $# -gt 1 ] ; then
-    java -jar deploy/hp.jar false $ID cloud7.sics.se false $@
+    java -jar deploy/hp.jar false $ID 0 cloud7.sics.se false $@
 elif [ $# -eq 0 ] ; then 
-    java -jar deploy/hp.jar false $ID cloud7.sics.se false
+    java -jar deploy/hp.jar false $ID 0 cloud7.sics.se false
     sleep 5
     echo ""
     echo "Connect to this node using hole-punching by running:"

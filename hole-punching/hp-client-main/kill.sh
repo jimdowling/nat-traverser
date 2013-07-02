@@ -1,4 +1,8 @@
 #!/bin/bash
 
-ssh $USER@cloud6.sics.se "cd hpServer ; ./kill.sh "
-ssh $USER@cloud7.sics.se "cd hpServer ; ./kill.sh "
+#for i in 1 2 3 4 5 6 7
+for i in 5 7
+do
+ssh $USER@cloud$i.sics.se "cd hpServer ; ./kill.sh"
+done
+
