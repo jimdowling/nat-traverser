@@ -853,6 +853,7 @@ public class HolePunchingTestSimulator
                 TConnectionMessage.Ping ping = new TConnectionMessage.Ping(
                         ToVodAddr.hpServer(sourceAddress),
                         ToVodAddr.hpServer(openedConnection.getHoleOpened()),
+                        UUID.nextUUID(),
                         "Hello from client A");
                 trigger(ping, natComp_A.getPositive(VodNetwork.class));
             }
@@ -989,6 +990,7 @@ public class HolePunchingTestSimulator
                 TConnectionMessage.Ping ping = new TConnectionMessage.Ping(
                         ToVodAddr.hpServer(sourceAddress),
                         ToVodAddr.hpServer(openedConnection.getHoleOpened()),
+                        UUID.nextUUID(),
                         "Hello from client B");
                 HolePunchingTestSimulator.logger.debug("Test Comp B sending ping to dest " + ping.getDestination());
                 trigger(ping, natComp_B.getPositive(VodNetwork.class));

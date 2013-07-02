@@ -3,7 +3,8 @@ package se.sics.gvod.common;
 import java.io.Serializable;
 
 /**
- * A thread-safe class used to store the node's utility value.
+ * An interface that must be implemented by a thread-safe class 
+ * that stores   the node's utility value.
  * @author Jim Dowling<jdowling@sics.se>
  */
 public interface Utility extends Serializable {

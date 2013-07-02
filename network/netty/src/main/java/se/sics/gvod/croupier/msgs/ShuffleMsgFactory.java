@@ -4,8 +4,6 @@
  */
 package se.sics.gvod.croupier.msgs;
 
-import java.util.HashSet;
-import java.util.Set;
 import org.jboss.netty.buffer.ChannelBuffer;
 import se.sics.gvod.common.DescriptorBuffer;
 import se.sics.gvod.common.VodDescriptor;

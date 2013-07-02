@@ -24,10 +24,10 @@ public class TConnectionMessage
 		return 10 + 20 + 38;
 	}
 
-        public Ping(VodAddress src, VodAddress dest,
-                 String message)
+        public Ping(VodAddress src, VodAddress dest, 
+                TimeoutId timeoutId, String message)
         {
-            super(src, dest);
+            super(src, dest, timeoutId);
             this.message = message;
         }
 
@@ -50,7 +50,8 @@ public class TConnectionMessage
 
         @Override
         public RewriteableMsg copy() {
-            TConnectionMessage.Ping copy = new TConnectionMessage.Ping(vodSrc, vodDest, message);
+            TConnectionMessage.Ping copy = new TConnectionMessage.Ping(vodSrc, vodDest, 
+                    timeoutId, message);
             copy.setTimeoutId(timeoutId);
             return copy;
         }
@@ -68,11 +69,11 @@ public class TConnectionMessage
 	}
 
         public Pong(VodAddress src, VodAddress dest,
-                 String message, TimeoutId timeoutID)
+                 String message, TimeoutId timeoutId)
         {
             super(src, dest);
             this.message = message;
-            setTimeoutId(timeoutID);
+            setTimeoutId(timeoutId);
         }
 
         private Pong(Pong msg, VodAddress src)

@@ -16,7 +16,7 @@
     <module>rendezvous-server</module>
     <module>hp-client</module>
     <module>hp-common</module>
-    <module>hp-client-main</module>
+    <module>nattraverser-test</module>
     <module>nat-common</module>
     <module>nat-emulator</module>
   </modules>
