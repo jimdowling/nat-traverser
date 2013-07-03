@@ -216,9 +216,9 @@ public class ParentMaker extends MsgRetryComponent {
     Handler<Join> handleJoin = new Handler<Join>() {
         @Override
         public void handle(Join event) {
-            List<Address> candidateParents = event.getBootstrappers();
-            for (Address a : candidateParents) {
-                sendRequest(a, config.getRto(), new HashSet<Integer>());
+            List<VodAddress> candidateParents = event.getBootstrappers();
+            for (VodAddress a : candidateParents) {
+                sendRequest(a.getPeerAddress(), config.getRto(), new HashSet<Integer>());
             }
         }
     };
