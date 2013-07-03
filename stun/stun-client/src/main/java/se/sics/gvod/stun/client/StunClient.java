@@ -621,7 +621,8 @@ private void sendEchoRequest(VodAddress target, EchoMsg.Test testType, long tran
             // Try 0 to Try 7 to four addresses
             Session session = sessionMap.get(transactionId);
             VodAddress serverS1Address = session.getServer1();
-            VodAddress serverS2Address = session.getPartnerServer();
+            VodAddress serverS2Address = ToVodAddr.stunServer(
+                    session.getPartnerServer().getPeerAddress());
             int s1AlternativePort = session.getServer1Port2();
 
             //serverS1Address and serverS2Address   already have  it
