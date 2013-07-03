@@ -5,7 +5,7 @@ import org.jboss.netty.buffer.ChannelBuffer;
 
 public class ParentKeepAliveMsgFactory {
 
-    public static class Request extends VodMsgNettyFactory {
+    public static class Request extends DirectMsgNettyFactory {
 
         private Request() {
         }
@@ -22,7 +22,7 @@ public class ParentKeepAliveMsgFactory {
         }
     }
 
-    public static class Response extends VodMsgNettyFactory {
+    public static class Response extends DirectMsgNettyFactory {
 
         private Response() {
         }

@@ -216,7 +216,7 @@ public final class CroupierSimulator extends ComponentDefinition {
                 natTraverser.getNegative(VodNetwork.class));
         connect(natGateway.getPositive(VodNetwork.class),
                 parentMaker.getNegative(VodNetwork.class)
-//                ,new MsgDestFilterOverlayId(VodConfig.HP_OVERLAY_ID)
+//                ,new MsgDestFilterOverlayId(VodConfig.SYSTEM_OVERLAY_ID)
                 );
         connect(network, natGateway.getNegative(VodNetwork.class), new MsgDestFilterNodeId(filterId));
 
@@ -254,7 +254,7 @@ public final class CroupierSimulator extends ComponentDefinition {
             publicAddress.put(id, croupierPeerAddress);
         } else {
             privateAddress.put(id, croupierPeerAddress);
-            trigger(new ParentMakerInit(self.clone(VodConfig.HP_OVERLAY_ID),
+            trigger(new ParentMakerInit(self.clone(VodConfig.SYSTEM_OVERLAY_ID),
                     parentMakerConfiguration), parentMaker.control());
         }
 

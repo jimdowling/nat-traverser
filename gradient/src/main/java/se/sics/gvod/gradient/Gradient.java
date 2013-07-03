@@ -55,7 +55,6 @@ import se.sics.kompics.Positive;
  */
 public class Gradient extends MsgRetryComponent {
 
-    public final static int SYSTEM_GRADIENT_OVERLAY_ID = 11;
     private final Logger logger = LoggerFactory.getLogger(Gradient.class);
     private Negative<GradientPort> gradient = negative(GradientPort.class);
     private Positive<PeerSamplePort> croupier = positive(PeerSamplePort.class);

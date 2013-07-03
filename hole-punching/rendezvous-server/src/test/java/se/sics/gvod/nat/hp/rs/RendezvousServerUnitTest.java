@@ -43,7 +43,7 @@ import se.sics.kompics.Event;
 
 /**
  *
- * @author Owner
+ * @author Jim
  */
 public class RendezvousServerUnitTest extends VodRetryComponentTestCase {
 
@@ -149,7 +149,7 @@ public class RendezvousServerUnitTest extends VodRetryComponentTestCase {
     public void testConnectionReversal() {
         VodAddress client = pubAddrs.get(0);
         VodAddress responder = new VodAddress(privAddrs.get(0).getPeerAddress(),
-                VodConfig.HP_OVERLAY_ID, nf.getEiPpEi());
+                VodConfig.SYSTEM_OVERLAY_ID, nf.getEiPpEi());
         addPrivateChild(responder, HpRegisterMsg.RegisterStatus.ACCEPT, 1000, null);
         HpConnectMsg.Request c = new HpConnectMsg.Request(client, getAddress(), responder.getId(),
                 1, 1000, UUID.nextUUID());
@@ -167,10 +167,10 @@ public class RendezvousServerUnitTest extends VodRetryComponentTestCase {
     @Test
     public void testShpResponder() {
         VodAddress client = new VodAddress(privAddrs.get(0).getPeerAddress(),
-                VodConfig.HP_OVERLAY_ID, nf.getEiPpEi());
+                VodConfig.SYSTEM_OVERLAY_ID, nf.getEiPpEi());
         addPrivateChild(client, HpRegisterMsg.RegisterStatus.ACCEPT, 1000, null);
         VodAddress responder = new VodAddress(privAddrs.get(1).getPeerAddress(),
-                VodConfig.HP_OVERLAY_ID, nf.getPdRdPd());
+                VodConfig.SYSTEM_OVERLAY_ID, nf.getPdRdPd());
         
         HpConnectMsg.Request c = new HpConnectMsg.Request(responder, getAddress(), client.getId(),
                 1, 1000, UUID.nextUUID());
@@ -195,12 +195,12 @@ public class RendezvousServerUnitTest extends VodRetryComponentTestCase {
     @Test
     public void testShpInitiator() {
         VodAddress responder = new VodAddress(privAddrs.get(1).getPeerAddress(),
-                VodConfig.HP_OVERLAY_ID, nf.getPdRdPd());
+                VodConfig.SYSTEM_OVERLAY_ID, nf.getPdRdPd());
         addPrivateChild(responder, HpRegisterMsg.RegisterStatus.ACCEPT, 1000, null);
         LinkedList<Event> events;
 
         VodAddress client = new VodAddress(privAddrs.get(0).getPeerAddress(),
-                VodConfig.HP_OVERLAY_ID, nf.getEiPpEi());
+                VodConfig.SYSTEM_OVERLAY_ID, nf.getEiPpEi());
         HpConnectMsg.Request c = new HpConnectMsg.Request(client, getAddress(), responder.getId(),
                 1, 1000, UUID.nextUUID());
         zServer.handleHpConnect.handle(c);
@@ -220,7 +220,7 @@ public class RendezvousServerUnitTest extends VodRetryComponentTestCase {
         prpPorts.add(23445);
         prpPorts.add(55555);
         VodAddress client = new VodAddress(privAddrs.get(0).getPeerAddress(),
-                VodConfig.HP_OVERLAY_ID, nf.getEiPpHd());
+                VodConfig.SYSTEM_OVERLAY_ID, nf.getEiPpHd());
         addPrivateChild(client, HpRegisterMsg.RegisterStatus.ACCEPT, 1000, prpPorts);
         LinkedList<Event> events;
         try {
@@ -230,7 +230,7 @@ public class RendezvousServerUnitTest extends VodRetryComponentTestCase {
         }
 
         VodAddress responder = new VodAddress(privAddrs.get(1).getPeerAddress(),
-                VodConfig.HP_OVERLAY_ID, nf.getPdRdPd());
+                VodConfig.SYSTEM_OVERLAY_ID, nf.getPdRdPd());
         HpConnectMsg.Request c = new HpConnectMsg.Request(responder, getAddress(), client.getId(),
                 1, 1000, UUID.nextUUID());
 
@@ -250,12 +250,12 @@ public class RendezvousServerUnitTest extends VodRetryComponentTestCase {
     @Test
     public void testPrpInitiator() {
         VodAddress responder = new VodAddress(privAddrs.get(1).getPeerAddress(),
-                VodConfig.HP_OVERLAY_ID, nf.getPdRdPd());
+                VodConfig.SYSTEM_OVERLAY_ID, nf.getPdRdPd());
         addPrivateChild(responder, HpRegisterMsg.RegisterStatus.ACCEPT, 1000, null);
         LinkedList<Event> events;
 
         VodAddress client = new VodAddress(privAddrs.get(0).getPeerAddress(),
-                VodConfig.HP_OVERLAY_ID, nf.getEiPpHd());
+                VodConfig.SYSTEM_OVERLAY_ID, nf.getEiPpHd());
 
         Set<Integer> prpPorts = new HashSet<Integer>();
         prpPorts.add(23445);
@@ -289,7 +289,7 @@ public class RendezvousServerUnitTest extends VodRetryComponentTestCase {
         prpPorts.add(23445);
         prpPorts.add(55555);
         VodAddress client = new VodAddress(privAddrs.get(0).getPeerAddress(),
-                VodConfig.HP_OVERLAY_ID, nf.getEiPpPd());
+                VodConfig.SYSTEM_OVERLAY_ID, nf.getEiPpPd());
         addPrivateChild(client, HpRegisterMsg.RegisterStatus.ACCEPT, 1000, prpPorts);
         LinkedList<Event> events;
         try {
@@ -302,7 +302,7 @@ public class RendezvousServerUnitTest extends VodRetryComponentTestCase {
         prpPorts2.add(32323);
         prpPorts2.add(21212);
         VodAddress responder = new VodAddress(privAddrs.get(1).getPeerAddress(),
-                VodConfig.HP_OVERLAY_ID, nf.getPdPpPd());
+                VodConfig.SYSTEM_OVERLAY_ID, nf.getPdPpPd());
         Interleaved_PRP_ConnectMsg.Request reqMsg =
                 new Interleaved_PRP_ConnectMsg.Request(responder, getAddress(),
                 client.getId(), prpPorts2, UUID.nextUUID());
@@ -322,11 +322,11 @@ public class RendezvousServerUnitTest extends VodRetryComponentTestCase {
     @Test
     public void testPRC_initiator() {
         VodAddress client = new VodAddress(privAddrs.get(0).getPeerAddress(),
-                VodConfig.HP_OVERLAY_ID, nf.getPdPcPd());
+                VodConfig.SYSTEM_OVERLAY_ID, nf.getPdPcPd());
         addPrivateChild(client, HpRegisterMsg.RegisterStatus.ACCEPT, 1000, null);
         LinkedList<Event> events;
         VodAddress responder = new VodAddress(privAddrs.get(1).getPeerAddress(),
-                VodConfig.HP_OVERLAY_ID, nf.getEiPcHd());
+                VodConfig.SYSTEM_OVERLAY_ID, nf.getEiPcHd());
 
         HpConnectMsg.Request c = new HpConnectMsg.Request(responder, getAddress(), client.getId(),
                 1, 1000, UUID.nextUUID());
@@ -351,12 +351,12 @@ public class RendezvousServerUnitTest extends VodRetryComponentTestCase {
     @Test
     public void testPRC_responder() {
         VodAddress client = new VodAddress(privAddrs.get(0).getPeerAddress(),
-                VodConfig.HP_OVERLAY_ID, nf.getEiPcHd());
+                VodConfig.SYSTEM_OVERLAY_ID, nf.getEiPcHd());
         addPrivateChild(client, HpRegisterMsg.RegisterStatus.ACCEPT, 1000, null);
         LinkedList<Event> events;
 
         VodAddress responder = new VodAddress(privAddrs.get(1).getPeerAddress(),
-                VodConfig.HP_OVERLAY_ID, nf.getPdPcPd());
+                VodConfig.SYSTEM_OVERLAY_ID, nf.getPdPcPd());
 
         HpConnectMsg.Request c = new HpConnectMsg.Request(responder, getAddress(), client.getId(),
                 1, 1000, UUID.nextUUID());
@@ -381,11 +381,11 @@ public class RendezvousServerUnitTest extends VodRetryComponentTestCase {
     @Test
     public void testPRC_PRC() {
         VodAddress client = new VodAddress(privAddrs.get(0).getPeerAddress(),
-                VodConfig.HP_OVERLAY_ID, nf.getPdPcHd());
+                VodConfig.SYSTEM_OVERLAY_ID, nf.getPdPcHd());
         addPrivateChild(client, HpRegisterMsg.RegisterStatus.ACCEPT, 1000, null);
         LinkedList<Event> events;
         VodAddress responder = new VodAddress(privAddrs.get(1).getPeerAddress(),
-                VodConfig.HP_OVERLAY_ID, nf.getPdPcPd());
+                VodConfig.SYSTEM_OVERLAY_ID, nf.getPdPcPd());
 
         HpConnectMsg.Request c = new HpConnectMsg.Request(responder, getAddress(), client.getId(),
                 1, 1000, UUID.nextUUID());
@@ -424,11 +424,11 @@ public class RendezvousServerUnitTest extends VodRetryComponentTestCase {
         Set<Integer> ports = new HashSet<Integer>();
         ports.add(1212);
         VodAddress client = new VodAddress(privAddrs.get(0).getPeerAddress(),
-                VodConfig.HP_OVERLAY_ID, nf.getEiPpPd());
+                VodConfig.SYSTEM_OVERLAY_ID, nf.getEiPpPd());
         addPrivateChild(client, HpRegisterMsg.RegisterStatus.ACCEPT, 1000, ports);
         LinkedList<Event> events;        
         VodAddress responder = new VodAddress(privAddrs.get(1).getPeerAddress(),
-                VodConfig.HP_OVERLAY_ID, nf.getEiPcPd());
+                VodConfig.SYSTEM_OVERLAY_ID, nf.getEiPcPd());
         HpConnectMsg.Request c = new HpConnectMsg.Request(responder, getAddress(), client.getId(),
                 1, 1000, UUID.nextUUID());
         zServer.handleHpConnect.handle(c);

@@ -16,6 +16,7 @@ import org.junit.Test;
 import se.sics.gvod.common.UtilityVod;
 import se.sics.gvod.common.VodDescriptor;
 import se.sics.gvod.common.VodRetryComponentTestCase;
+import se.sics.gvod.config.VodConfig;
 import se.sics.gvod.croupier.events.CroupierSample;
 import se.sics.gvod.gradient.events.GradientSample;
 import se.sics.gvod.gradient.events.GradientSetsExchangeCycle;
@@ -59,13 +60,13 @@ public class GradientUnitTest extends VodRetryComponentTestCase {
         assertSequence(events, GradientSetsExchangeCycle.class);
 
         VodAddress v1 = new VodAddress(pubAddrs.get(0).getPeerAddress(), 
-                Gradient.SYSTEM_GRADIENT_OVERLAY_ID);
+                VodConfig.SYSTEM_OVERLAY_ID);
         VodAddress v2 = new VodAddress(pubAddrs.get(1).getPeerAddress(), 
-                Gradient.SYSTEM_GRADIENT_OVERLAY_ID);
+                VodConfig.SYSTEM_OVERLAY_ID);
         VodAddress v3 = new VodAddress(pubAddrs.get(2).getPeerAddress(), 
-                Gradient.SYSTEM_GRADIENT_OVERLAY_ID);
+                VodConfig.SYSTEM_OVERLAY_ID);
         VodAddress v4 = new VodAddress(pubAddrs.get(3).getPeerAddress(), 
-                Gradient.SYSTEM_GRADIENT_OVERLAY_ID);
+                VodConfig.SYSTEM_OVERLAY_ID);
         
         n1 = new VodDescriptor(v1, new UtilityVod(10), 0, 1500);
         n2 = new VodDescriptor(v2, new UtilityVod(12), 0, 1500);

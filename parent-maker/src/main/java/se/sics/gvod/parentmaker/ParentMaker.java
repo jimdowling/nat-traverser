@@ -224,7 +224,7 @@ public class ParentMaker extends MsgRetryComponent {
             List<RTT> currentRtts = getCurrentRtts();
 
             if (count++ > 5 && self.getParents().isEmpty()) {
-                Stats pi = CroupierStats.instance(self.clone(VodConfig.HP_OVERLAY_ID));
+                Stats pi = CroupierStats.instance(self.clone(VodConfig.SYSTEM_OVERLAY_ID));
                 if (pi == null) {
                     logger.warn(compName + " Cannot find peer");
                 } else {
@@ -440,7 +440,7 @@ public class ParentMaker extends MsgRetryComponent {
             if (delegator.doCancelRetry(event.getTimeoutId())) {
                 requestStartTimes.remove(event.getTimeoutId());
                 VodAddress parent = event.getRequestMsg().getVodDestination();
-                CroupierStats.instance(self.clone(VodConfig.HP_OVERLAY_ID)).parentChangeEvent(parent.getPeerAddress(),
+                CroupierStats.instance(self.clone(VodConfig.SYSTEM_OVERLAY_ID)).parentChangeEvent(parent.getPeerAddress(),
                         HpRegisterMsg.RegisterStatus.DEAD_PARENT);
                 removeParent(parent, true, true);
                 logger.debug(compName + "Ping timeout to parent {} . Removing.", parent.getPeerAddress());
@@ -467,7 +467,7 @@ public class ParentMaker extends MsgRetryComponent {
         public void handle(HpRegisterMsg.Response event) {
             // discard duplicate responses or late responses - unless I don't have any parents
             if (delegator.doCancelRetry(event.getTimeoutId()) || connections.isEmpty()) {
-                CroupierStats.instance(self.clone(VodConfig.HP_OVERLAY_ID)).parentChangeEvent(event.getSource(),
+                CroupierStats.instance(self.clone(VodConfig.SYSTEM_OVERLAY_ID)).parentChangeEvent(event.getSource(),
                         event.getResponseType());
                 outstandingBids = false;
                 VodAddress peer = event.getVodSource();
@@ -537,7 +537,7 @@ public class ParentMaker extends MsgRetryComponent {
                     pdr.setResponse(new PrpDeletePortsResponse(pdr, null));
                     trigger(pdr, natNetworkControl);
                 }
-                CroupierStats.instance(self.clone(VodConfig.HP_OVERLAY_ID)).parentChangeEvent(event.getSource(),
+                CroupierStats.instance(self.clone(VodConfig.SYSTEM_OVERLAY_ID)).parentChangeEvent(event.getSource(),
                         HpRegisterMsg.RegisterStatus.PARENT_REQUEST_FAILED);
             }
 
@@ -548,7 +548,7 @@ public class ParentMaker extends MsgRetryComponent {
         @Override
         public void handle(HpRegisterMsg.RequestRetryTimeout event) {
             if (delegator.doCancelRetry(event.getTimeoutId())) {
-                CroupierStats.instance(self.clone(VodConfig.HP_OVERLAY_ID)).parentChangeEvent(event.getRequest().getDestination(),
+                CroupierStats.instance(self.clone(VodConfig.SYSTEM_OVERLAY_ID)).parentChangeEvent(event.getRequest().getDestination(),
                         RegisterStatus.PARENT_REQUEST_FAILED);
                 outstandingBids = false;
                 requestStartTimes.remove(event.getTimeoutId());
@@ -583,7 +583,7 @@ public class ParentMaker extends MsgRetryComponent {
         public void handle(HpUnregisterMsg.Request event) {
             logger.info(compName + "Parent {} telling me to unregister: {}",
                     event.getVodSource().getId(), event.getStatus());
-            CroupierStats.instance(self.clone(VodConfig.HP_OVERLAY_ID)).parentChangeEvent(event.getSource(),
+            CroupierStats.instance(self.clone(VodConfig.SYSTEM_OVERLAY_ID)).parentChangeEvent(event.getSource(),
                     HpRegisterMsg.RegisterStatus.BETTER_CHILD);
             removeParent(event.getVodSource(), false, false);
             logger.info(compName + printMyParents());

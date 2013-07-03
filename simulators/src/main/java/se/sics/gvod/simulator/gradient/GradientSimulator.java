@@ -231,7 +231,7 @@ public final class GradientSimulator extends ComponentDefinition {
                 new MsgDestFilterOverlayId(VodConfig.SYSTEM_OVERLAY_ID));
         connect(natGateway.getPositive(VodNetwork.class),
                 parentMaker.getNegative(VodNetwork.class),
-                new MsgDestFilterOverlayId(VodConfig.HP_OVERLAY_ID));
+                new MsgDestFilterOverlayId(VodConfig.SYSTEM_OVERLAY_ID));
         connect(natGateway.getPositive(VodNetwork.class),
                 natTraverser.getNegative(VodNetwork.class));
         connect(network, natGateway.getNegative(VodNetwork.class),
@@ -275,7 +275,7 @@ public final class GradientSimulator extends ComponentDefinition {
             publicAddress.put(id, gVodAddr);
         } else {
             privateAddress.put(id, gVodAddr);
-            trigger(new ParentMakerInit(self.clone(VodConfig.HP_OVERLAY_ID),
+            trigger(new ParentMakerInit(self.clone(VodConfig.SYSTEM_OVERLAY_ID),
                     parentMakerConfiguration), parentMaker.control());
         }
 

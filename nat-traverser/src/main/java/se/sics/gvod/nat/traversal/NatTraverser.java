@@ -278,7 +278,7 @@ public class NatTraverser extends MsgRetryComponent {
 
         this.delegator.doConnect(hpClient.getNegative(Timer.class), timer);
         this.delegator.doConnect(hpClient.getNegative(VodNetwork.class), network,
-                new MsgDestFilterOverlayId(VodConfig.HP_OVERLAY_ID));
+                new MsgDestFilterOverlayId(VodConfig.SYSTEM_OVERLAY_ID));
         this.delegator.doConnect(hpClient.getNegative(NatNetworkControl.class), 
                 lowerNetControl);
 
@@ -326,7 +326,7 @@ public class NatTraverser extends MsgRetryComponent {
 
                 connect(stunClient.getNegative(Timer.class), timer);
                 connect(stunClient.getNegative(VodNetwork.class), network,
-                        new MsgDestFilterOverlayId(VodConfig.STUN_OVERLAY_ID));
+                        new MsgDestFilterOverlayId(VodConfig.SYSTEM_OVERLAY_ID));
                 connect(stunClient.getNegative(NatNetworkControl.class), lowerNetControl);
 
                 delegator.doTrigger(new StunClientInit(self, VodConfig.getSeed(),
@@ -349,7 +349,7 @@ public class NatTraverser extends MsgRetryComponent {
             }
             //initialize the hole punching client
             delegator.doTrigger(new HpClientInit(
-                    self.clone(VodConfig.HP_OVERLAY_ID), openedConnections,
+                    self.clone(VodConfig.SYSTEM_OVERLAY_ID), openedConnections,
                     hpClientConfig), hpClient.getControl());
 
         }
@@ -446,12 +446,11 @@ public class NatTraverser extends MsgRetryComponent {
                     + ") message class :" + msg.getClass().getName());
 
             // incoming msgs don't refresh the nat-binding, so no point in updating the OpenConnectionMap
-
             int overlayId = msg.getVodDestination().getOverlayId();
-            if (overlayId != VodConfig.STUN_OVERLAY_ID
-                    && overlayId != VodConfig.HP_OVERLAY_ID
-                    && overlayId != VodConfig.MONITOR_OVERLAY_ID
-                    && overlayId != VodConfig.SYSTEM_OVERLAY_ID) {
+            
+            // If the msg is destined for a system service (HP, Stun, System-Croupier, etc), don't
+            // forward it up the NatTraverser, as it should have been handled already.
+            if (overlayId != VodConfig.SYSTEM_OVERLAY_ID) {
                 delegator.doTrigger(msg, upperNet);
             } else {
                 logger.trace(compName + " Discarding msg of type {}", msg.getClass().getName());
@@ -812,15 +811,15 @@ public class NatTraverser extends MsgRetryComponent {
         zServer = create(RendezvousServer.class);
 
         connect(zServer.getNegative(Timer.class), timer);
-        connect(zServer.getNegative(VodNetwork.class), network, new MsgDestFilterOverlayId(VodConfig.HP_OVERLAY_ID));
+        connect(zServer.getNegative(VodNetwork.class), network, new MsgDestFilterOverlayId(VodConfig.SYSTEM_OVERLAY_ID));
         delegator.doTrigger(new RendezvousServerInit(
-                self.clone(VodConfig.HP_OVERLAY_ID),
+                self.clone(VodConfig.SYSTEM_OVERLAY_ID),
                 registeredClients, rendezvousServerConfig), zServer.getControl());
 
 
         connect(stunServer.getNegative(Timer.class), timer);
         connect(stunServer.getNegative(VodNetwork.class), network,
-                new MsgDestFilterOverlayId(VodConfig.STUN_OVERLAY_ID));
+                new MsgDestFilterOverlayId(VodConfig.SYSTEM_OVERLAY_ID));
         connect(stunServer.getNegative(NatNetworkControl.class), lowerNetControl);
 
         List<VodAddress> partners = new ArrayList<VodAddress>();
@@ -828,7 +827,7 @@ public class NatTraverser extends MsgRetryComponent {
             partners.add(ToVodAddr.stunServer(a.getPeerAddress()));
         }
         StunServerInit stunServerInit = new StunServerInit(
-                self.clone(VodConfig.STUN_OVERLAY_ID), partners, stunServerConfiguration);
+                self.clone(VodConfig.SYSTEM_OVERLAY_ID), partners, stunServerConfiguration);
 
         delegator.doTrigger(stunServerInit, stunServer.getControl());
 
@@ -1019,12 +1018,12 @@ public class NatTraverser extends MsgRetryComponent {
                 } else { // behind a NAT
                     parentMaker = create(ParentMaker.class);
                     delegator.doTrigger(
-                            new ParentMakerInit(self.clone(VodConfig.HP_OVERLAY_ID),
+                            new ParentMakerInit(self.clone(VodConfig.SYSTEM_OVERLAY_ID),
                             parentMakerConfig), parentMaker.control());
                     // TODO - do i need a filter for timer msgs too?
                     connect(parentMaker.getNegative(Timer.class), timer);
                     connect(parentMaker.getNegative(VodNetwork.class), network
-                            , new MsgDestFilterOverlayId(VodConfig.HP_OVERLAY_ID)
+                            , new MsgDestFilterOverlayId(VodConfig.SYSTEM_OVERLAY_ID)
                             );
                     connect(parentMaker.getNegative(NatNetworkControl.class), lowerNetControl);
                 }

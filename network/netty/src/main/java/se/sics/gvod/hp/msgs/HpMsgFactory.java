@@ -5,7 +5,7 @@ import org.jboss.netty.buffer.ChannelBuffer;
 import se.sics.gvod.net.util.UserTypesDecoderFactory;
 import se.sics.gvod.timer.TimeoutId;
 
-public abstract class HpMsgFactory extends VodMsgNettyFactory {
+public abstract class HpMsgFactory extends DirectMsgNettyFactory {
 
     protected int remoteClientId;
     protected TimeoutId msgTimeoutId;

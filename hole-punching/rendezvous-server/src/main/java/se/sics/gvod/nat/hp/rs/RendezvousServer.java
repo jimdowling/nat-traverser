@@ -738,7 +738,7 @@ public class RendezvousServer extends MsgRetryComponent {
                 Address openInitHole = new Address(request.getSource().getIp(),
                         selectedPort, request.getSource().getId());
                 VodAddress openedHoleOnInitiatorsNat = new VodAddress(openInitHole,
-                        VodConfig.HP_OVERLAY_ID, request.getVodSource().getNatPolicy(),
+                        VodConfig.SYSTEM_OVERLAY_ID, request.getVodSource().getNatPolicy(),
                         request.getVodSource().getParents());
 
                 GoMsg.Request goMessage = new GoMsg.Request(self.getAddress(),
@@ -922,7 +922,7 @@ public class RendezvousServer extends MsgRetryComponent {
                                 remoteClientInterleavedPort,
                                 remoteRecord.getClient().getId());
                         VodAddress remoteClientHole = new VodAddress(remoteClientH,
-                                VodConfig.HP_OVERLAY_ID,
+                                VodConfig.SYSTEM_OVERLAY_ID,
                                 remoteRecord.getClient().getNatPolicy(),
                                 remoteRecord.getClient().getParents());
 
@@ -942,7 +942,7 @@ public class RendezvousServer extends MsgRetryComponent {
                         Address thisClientH = new Address(request.getSource().getIp(),
                                 clientInterleavedPort, request.getSource().getId());
                         VodAddress thisClientHole = new VodAddress(thisClientH,
-                                VodConfig.HP_OVERLAY_ID, request.getVodSource().getNatPolicy(),
+                                VodConfig.SYSTEM_OVERLAY_ID, request.getVodSource().getNatPolicy(),
                                 request.getVodSource().getParents());
 
                         // inform the other client about the holes that will be opened on the opposite nats
@@ -1055,7 +1055,7 @@ public class RendezvousServer extends MsgRetryComponent {
 
             Address openedHole = new Address(client.getIp(), predictedPort, client.getId());
             VodAddress openedHoleOnInitiatorNat = new VodAddress(openedHole,
-                    VodConfig.HP_OVERLAY_ID, client.getNatPolicy(),
+                    VodConfig.SYSTEM_OVERLAY_ID, client.getNatPolicy(),
                     client.getParents());
 
 
@@ -1141,13 +1141,13 @@ public class RendezvousServer extends MsgRetryComponent {
                     Address openedHoleOnThisClient = new Address(request.getSource().getIp(),
                             thisClientInterleavedPort, request.getSource().getId());
                     VodAddress openedHoleOnThisClientNat = new VodAddress(openedHoleOnThisClient,
-                            VodConfig.HP_OVERLAY_ID, request.getVodSource().getNatPolicy(),
+                            VodConfig.SYSTEM_OVERLAY_ID, request.getVodSource().getNatPolicy(),
                             request.getVodSource().getParents());
 
                     Address openedHoleOnRemoteClient = new Address(remoteClientRecord.getClient().getIp(),
                             remoteClientInterleavedPort, remoteClientRecord.getClient().getId());
                     VodAddress openedHoleOnRemoteClientNat = new VodAddress(openedHoleOnRemoteClient,
-                            VodConfig.HP_OVERLAY_ID,
+                            VodConfig.SYSTEM_OVERLAY_ID,
                             remoteClientRecord.getClient().getNatPolicy(),
                             remoteClientRecord.getClient().getParents());
 
@@ -1512,7 +1512,7 @@ public class RendezvousServer extends MsgRetryComponent {
             Address openInitHole = new Address(initiator.getClient().getIp(),
                     prpPort, initiator.getClient().getId());
             VodAddress openedHoleOnInitiatorsNat = new VodAddress(openInitHole,
-                    VodConfig.HP_OVERLAY_ID, initiator.getClient().getNatPolicy(),
+                    VodConfig.SYSTEM_OVERLAY_ID, initiator.getClient().getNatPolicy(),
                     initiator.getClient().getParents());
 
             GoMsg.Request goMessage = new GoMsg.Request(self.getAddress(),

@@ -2,13 +2,13 @@ package se.sics.gvod.stun.msgs;
 
 import org.jboss.netty.buffer.ChannelBuffer;
 import se.sics.gvod.common.msgs.MessageDecodingException;
-import se.sics.gvod.common.msgs.VodMsgNettyFactory;
+import se.sics.gvod.common.msgs.DirectMsgNettyFactory;
 import se.sics.gvod.net.msgs.DirectMsg;
 import se.sics.gvod.net.util.UserTypesDecoderFactory;
 
 public class ReportMsgFactory  {
 
-    public static class Request extends VodMsgNettyFactory {
+    public static class Request extends DirectMsgNettyFactory {
 
         private Request() {
         }
@@ -28,7 +28,7 @@ public class ReportMsgFactory  {
         }
     }
 
-    public static class Response extends VodMsgNettyFactory {
+    public static class Response extends DirectMsgNettyFactory {
 
         private Response() {
         }

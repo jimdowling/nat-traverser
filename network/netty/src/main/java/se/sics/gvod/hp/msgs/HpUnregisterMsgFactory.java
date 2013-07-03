@@ -6,7 +6,7 @@ import se.sics.gvod.net.util.UserTypesDecoderFactory;
 
 public class HpUnregisterMsgFactory {
 
-    public static class Request extends VodMsgNettyFactory {
+    public static class Request extends DirectMsgNettyFactory {
 
         private Request() {
         }
@@ -27,7 +27,7 @@ public class HpUnregisterMsgFactory {
         }
     }
 
-    public static class Response extends VodMsgNettyFactory {
+    public static class Response extends DirectMsgNettyFactory {
 
         private Response() {
         }

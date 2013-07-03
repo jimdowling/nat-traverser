@@ -43,7 +43,7 @@ import org.jboss.netty.util.DefaultObjectSizeEstimator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import se.sics.gvod.address.Address;
-import se.sics.gvod.common.msgs.VodMsgNettyFactory;
+import se.sics.gvod.common.msgs.DirectMsgNettyFactory;
 import se.sics.gvod.config.VodConfig;
 import se.sics.gvod.net.events.*;
 import se.sics.gvod.net.msgs.RewriteableMsg;
@@ -241,7 +241,7 @@ public final class NettyNetwork extends ComponentDefinition {
             }
 
             msgDecoderClass = init.getMsgDecoderClass();
-            VodMsgNettyFactory.setMsgFrameDecoder(msgDecoderClass);
+            DirectMsgNettyFactory.setMsgFrameDecoder(msgDecoderClass);
             
             // Executors.newCachedThreadPool is an unbounded thread pool, with automatic thread reclamation
             factoryDataChannel = new NioDatagramChannelFactory(Executors.newCachedThreadPool());

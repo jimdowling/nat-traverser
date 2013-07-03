@@ -65,9 +65,14 @@
             <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
                 <configuration>
+<!--                    <appendAssemblyId>true</appendAssemblyId>
+                    <descriptors>
+                        <descriptor>src/main/assembly/jar.xml</descriptor>
+                    </descriptors>-->
                     <descriptorRefs>
                         <descriptorRef>jar-with-dependencies</descriptorRef>
                     </descriptorRefs>
+                    
                     <archive>
                         <manifest>
                             <mainClass>se.sics.gvod.nat.hp.clientmain.HpNatTraverserMain</mainClass>

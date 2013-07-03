@@ -250,7 +250,7 @@ import se.sics.gvod.net.VodAddress;
         if (partnerServer == null) {
             partnerServer = popPartnerServer();
         }
-        return new VodAddress(partnerServer, VodConfig.STUN_OVERLAY_ID);
+        return new VodAddress(partnerServer, VodConfig.SYSTEM_OVERLAY_ID);
     }
 
     public AllocationPolicy getAllocationPolicy() {

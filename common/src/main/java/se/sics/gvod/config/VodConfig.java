@@ -200,9 +200,6 @@ public class VodConfig extends BaseCommandLineConfig {
     public static final int NUM_HASHES_IN_TORRENT_FILE = 20;
     // OVERLAY-ID RESERVATIONS. Don't change these.
     public static final int SYSTEM_OVERLAY_ID = 0; // System-croupier
-    public static final int STUN_OVERLAY_ID = 2; // stunClient, stunServer
-    public static final int HP_OVERLAY_ID = 3; // hpClient, zServer, ParentMaker
-    public static final int MONITOR_OVERLAY_ID = 4; // monitorClient, monitorServer
     public static long MAX_UPLOAD_BW_CAPACITY = 0;
     public static long UPLOAD_BW_USAGE = 0;
 

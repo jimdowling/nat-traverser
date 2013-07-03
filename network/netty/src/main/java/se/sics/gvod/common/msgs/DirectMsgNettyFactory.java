@@ -11,7 +11,7 @@ import se.sics.gvod.timer.NoTimeoutId;
 import se.sics.gvod.timer.TimeoutId;
 import se.sics.gvod.timer.UUID;
 
-public abstract class VodMsgNettyFactory 
+public abstract class DirectMsgNettyFactory 
 {
 
     protected VodAddress vodDest;
@@ -21,7 +21,7 @@ public abstract class VodMsgNettyFactory
     protected static Class<? extends MsgFrameDecoder> msgFrameDecoder;
 
     public static void setMsgFrameDecoder(Class<? extends MsgFrameDecoder> msgFrameDecoder) {
-        VodMsgNettyFactory.msgFrameDecoder = msgFrameDecoder;
+        DirectMsgNettyFactory.msgFrameDecoder = msgFrameDecoder;
     }
 
     /**
@@ -33,7 +33,7 @@ public abstract class VodMsgNettyFactory
      * @throws MessageDecodingException
      */
     protected DirectMsg decode(ChannelBuffer buffer, boolean timeout) throws MessageDecodingException {
-        if (VodMsgNettyFactory.msgFrameDecoder == null) {
+        if (DirectMsgNettyFactory.msgFrameDecoder == null) {
             throw new NullPointerException("VodMsgNettyFactory.setMsgFrameDecoder() must be called before decoding any messages");
         }
         decodeHeader(buffer, timeout);

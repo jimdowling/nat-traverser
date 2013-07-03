@@ -26,7 +26,7 @@ public class RelayRequestMsgFactory {
 
             MsgFrameDecoder decoder= null;
             try {
-                decoder = VodMsgNettyFactory.msgFrameDecoder.newInstance();
+                decoder = DirectMsgNettyFactory.msgFrameDecoder.newInstance();
             } catch (InstantiationException ex) {
                 Logger.getLogger(RelayRequestMsgFactory.class.getName()).log(Level.SEVERE, null, ex);
             } catch (IllegalAccessException ex) {
@@ -61,7 +61,7 @@ public class RelayRequestMsgFactory {
 
             MsgFrameDecoder decoder;
             try {
-                decoder = VodMsgNettyFactory.msgFrameDecoder.newInstance();
+                decoder = DirectMsgNettyFactory.msgFrameDecoder.newInstance();
             } catch (InstantiationException ex) {
                 Logger.getLogger(RelayRequestMsgFactory.class.getName()).log(Level.SEVERE, null, ex);
                 throw new MessageDecodingException(ex.getMessage());

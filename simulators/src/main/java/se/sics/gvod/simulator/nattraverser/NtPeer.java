@@ -77,13 +77,12 @@ public final class NtPeer extends ComponentDefinition {
             new Handler<Connect>() {
         @Override
         public void handle(Connect event) {
-            TConnectionMessage.Ping ping = new TConnectionMessage.Ping(self.getAddress(),
-                    event.getDest(), "Hi there");
             ScheduleTimeout st = new ScheduleTimeout(100 * 1000);
             HolePunch hp = new HolePunch(st, event.getDest(),
                     NatStr.pairAsStr(self.getNat(), event.getDest().getNat()));
             st.setTimeoutEvent(hp);
-            ping.setTimeoutId(hp.getTimeoutId());
+            TConnectionMessage.Ping ping = new TConnectionMessage.Ping(self.getAddress(),
+                    event.getDest(), hp.getTimeoutId(), "Hi there");
             trigger(st, timer);
             trigger(ping, network);
             activeMsgs.put(hp.getTimeoutId(), event.getDest().getNat());
