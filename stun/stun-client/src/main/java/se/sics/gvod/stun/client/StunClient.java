@@ -623,17 +623,15 @@ private void sendEchoRequest(VodAddress target, EchoMsg.Test testType, long tran
             VodAddress serverS1Address = session.getServer1();
             VodAddress serverS2Address = ToVodAddr.stunServer(
                     session.getPartnerServer().getPeerAddress());
-            int s1AlternativePort = session.getServer1Port2();
+            int s1AlternativePort = VodConfig.DEFAULT_STUN_PORT_2;
+//                    session.getServer1Port2();
 
-            //serverS1Address and serverS2Address   already have  it
             VodAddress serverS1AddressPrime = 
                     ToVodAddr.stunServer2(new Address(serverS1Address.getIp(),
                     s1AlternativePort, serverS1Address.getId()));
             VodAddress serverS2AddressPrime = ToVodAddr.stunServer2(
                     new Address(serverS2Address.getIp(),
                     s1AlternativePort, serverS2Address.getId()));
-            // get the alternative server port of the stun server 2
-            // right now i am assuming that the server2's alternative port is same as the alternative port of the first server
 
             session.setClientFirstRandomPort(firstRandPort);
             session.setClientSecondRandomPort(secondRandPort);
@@ -644,7 +642,7 @@ private void sendEchoRequest(VodAddress target, EchoMsg.Test testType, long tran
             VodAddress sourceAddress2 = ToVodAddr.stunClient(new Address(self.getIp(),
                     secondRandPort, self.getId()));
 
-            // now the magic part i.e. sending NUM_PING_TRIES try messages
+            // send NUM_PING_TRIES EchoMsg.Reqeuest for diferent source ports.
             int tryId = 0;
 
             sendPingRequest(sourceAddress1, serverS1Address, transactionId, tryId++);
