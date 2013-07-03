@@ -30,8 +30,8 @@
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
-     inkscape:window-width="1535"
-     inkscape:window-height="876"
+     inkscape:window-width="1855"
+     inkscape:window-height="1176"
      inkscape:window-x="65"
      inkscape:window-y="24"
      inkscape:window-maximized="1"
@@ -130,14 +130,14 @@
     <text
        xml:space="preserve"
        style="font-size:20px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans;-inkscape-font-specification:Sans"
-       x="98.194252"
+       x="84.194252"
        y="390.71228"
        id="text2987-21-9"
        sodipodi:linespacing="125%"><tspan
          id="tspan3098"
          sodipodi:role="line"
-         x="98.194252"
-         y="390.71228">HpMsg</tspan></text>
+         x="84.194252"
+         y="390.71228">DirectMsg</tspan></text>
     <rect
        style="fill:none;stroke:#000000;stroke-width:1;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0"
        id="rect2985-4-6"
@@ -270,13 +270,13 @@
          sodipodi:linespacing="125%"
          id="text2987-21-9-0"
          y="393.74274"
-         x="202.93912"
+         x="182.93912"
          style="font-size:20px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans;-inkscape-font-specification:Sans"
          xml:space="preserve"><tspan
            y="393.74274"
-           x="202.93912"
+           x="182.93912"
            sodipodi:role="line"
-           id="tspan3025">HpMsgNetty</tspan></text>
+           id="tspan3025">DirectMsgNetty</tspan></text>
     </g>
     <path
        inkscape:connection-end-point="d4"
@@ -336,7 +336,7 @@
        inkscape:connector-curvature="0"
        inkscape:connector-type="polyline"
        id="path3091"
-       d="m 155.25057,357.37723 39.42339,-43.43656"
+       d="m 151.39237,357.37723 32.7873,-43.43656"
        style="fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" />
     <path
        inkscape:connection-end-point="d4"
@@ -346,7 +346,7 @@
        inkscape:connector-curvature="0"
        inkscape:connector-type="polyline"
        id="path3093"
-       d="m 319.28465,355.35693 -64.7213,-41.41626"
+       d="M 315.58517,355.35693 244.79671,313.94067"
        style="fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" />
     <path
        inkscape:connection-end-point="d4"
@@ -356,7 +356,7 @@
        inkscape:connector-curvature="0"
        inkscape:connector-type="polyline"
        id="path3095"
-       d="m 262.44149,265.45334 51.52254,-27.29441"
+       d="m 253.88704,264.73904 55.25228,-26.58011"
        style="fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" />
     <path
        inkscape:connection-end-point="d4"
