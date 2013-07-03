@@ -25,7 +25,7 @@ public class ToVodAddr {
     }
 
     public static VodAddress stunClient(Address addr) {
-        return new VodAddress(new Address(addr.getIp(), VodConfig.getPort(),
+        return new VodAddress(new Address(addr.getIp(), addr.getPort(),
                 addr.getId()), VodConfig.SYSTEM_OVERLAY_ID);
     }
 
