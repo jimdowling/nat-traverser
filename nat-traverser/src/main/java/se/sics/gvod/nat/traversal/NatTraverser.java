@@ -27,6 +27,7 @@ import se.sics.gvod.common.Self;
 import se.sics.gvod.common.VodDescriptor;
 import se.sics.gvod.config.VodConfig;
 import se.sics.gvod.common.evts.GarbageCleanupTimeout;
+import se.sics.gvod.common.evts.Join;
 import se.sics.gvod.common.msgs.RelayMsgNetty;
 import se.sics.gvod.common.util.ToVodAddr;
 import se.sics.gvod.filters.MsgDestFilterOverlayId;
@@ -81,6 +82,7 @@ import se.sics.kompics.Kompics;
 import se.sics.gvod.common.hp.HPSessionKey;
 import se.sics.gvod.config.BaseCommandLineConfig;
 import se.sics.gvod.config.StunServerConfiguration;
+import se.sics.gvod.parentmaker.ParentMakerPort;
 
 /**
  *
@@ -1018,15 +1020,19 @@ public class NatTraverser extends MsgRetryComponent {
                     }
                 } else { // behind a NAT
                     parentMaker = create(ParentMaker.class);
-                    delegator.doTrigger(
-                            new ParentMakerInit(self.clone(VodConfig.SYSTEM_OVERLAY_ID),
-                            parentMakerConfig), parentMaker.control());
                     // TODO - do i need a filter for timer msgs too?
                     connect(parentMaker.getNegative(Timer.class), timer);
                     connect(parentMaker.getNegative(VodNetwork.class), network
-//                            , new MsgDestFilterOverlayId(VodConfig.SYSTEM_OVERLAY_ID)
+                            , new MsgDestFilterOverlayId(VodConfig.SYSTEM_OVERLAY_ID)
                             );
                     connect(parentMaker.getNegative(NatNetworkControl.class), lowerNetControl);
+                    delegator.doTrigger(
+                            new ParentMakerInit(self.clone(VodConfig.SYSTEM_OVERLAY_ID),
+                            parentMakerConfig), parentMaker.control());
+                    List<VodAddress> bootstrappers = new ArrayList<VodAddress>();
+                    bootstrappers.add(ToVodAddr.hpServer(event.getStunServer()));
+                    delegator.doTrigger(
+                            new Join(bootstrappers), parentMaker.getPositive(ParentMakerPort.class));
                 }
             } else {
                 retryStun(event.getStunServer());

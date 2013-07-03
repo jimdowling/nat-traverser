@@ -28,8 +28,7 @@ import se.sics.gvod.croupier.Croupier;
 import se.sics.gvod.config.CroupierConfiguration;
 import se.sics.gvod.croupier.CroupierPort;
 import se.sics.gvod.croupier.events.CroupierInit;
-import se.sics.gvod.croupier.events.CroupierJoin;
-import se.sics.gvod.croupier.events.CroupierJoinCompleted;
+import se.sics.gvod.common.evts.JoinCompleted;
 import se.sics.gvod.net.VodAddress;
 import se.sics.gvod.net.VodNetwork;
 import se.sics.gvod.net.Nat;
@@ -60,6 +59,7 @@ import se.sics.gvod.nat.traversal.events.NatTraverserInit;
 import se.sics.gvod.net.NatNetworkControl;
 import se.sics.gvod.config.StunServerConfiguration;
 import se.sics.gvod.croupier.PeerSamplePort;
+import se.sics.gvod.croupier.events.CroupierJoin;
 import se.sics.gvod.timer.SchedulePeriodicTimeout;
 import se.sics.gvod.timer.Timer;
 import se.sics.kompics.Component;
@@ -376,9 +376,9 @@ public final class GradientSimulator extends ComponentDefinition {
 //
 //        }
 //    };
-    Handler<CroupierJoinCompleted> handleCroupierJoinCompleted = new Handler<CroupierJoinCompleted>() {
+    Handler<JoinCompleted> handleCroupierJoinCompleted = new Handler<JoinCompleted>() {
         @Override
-        public void handle(CroupierJoinCompleted event) {
+        public void handle(JoinCompleted event) {
             // TODO
         }
     };
@@ -408,7 +408,6 @@ public final class GradientSimulator extends ComponentDefinition {
         Component newPeer = createAndStartNewPeer(id, croupierId, gradientId, peerType);
         view.addNode(id);
         peerTypes.put(id, peerType);
-
         trigger(new CroupierJoin(getNodes()), newPeer.getPositive(CroupierPort.class));
     }
 

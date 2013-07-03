@@ -20,28 +20,16 @@
  */
 package se.sics.gvod.parentmaker;
 
-import se.sics.gvod.config.ParentMakerConfiguration;
-import se.sics.gvod.common.Self;
-import se.sics.kompics.Init;
+import se.sics.gvod.common.evts.Join;
+import se.sics.gvod.common.evts.JoinCompleted;
+import se.sics.kompics.PortType;
 
 /**
  *
  */
-public class ParentMakerInit extends Init {
-    private final Self self;
-    private ParentMakerConfiguration config;
-    
-    public ParentMakerInit(Self self, ParentMakerConfiguration config) {
-        this.self = self;
-        this.config = config;
+public class ParentMakerPort extends PortType {
+    {
+        negative(Join.class);
+        positive(JoinCompleted.class);
     }
-
-    public Self getSelf() {
-        return self;
-    }
-
-    public ParentMakerConfiguration getConfig() {
-        return config;
-    }
-    
 }

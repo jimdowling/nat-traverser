@@ -24,7 +24,6 @@ import java.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import se.sics.gvod.common.*;
-import se.sics.gvod.config.VodConfig;
 import se.sics.gvod.common.msgs.RelayMsgNetty;
 import se.sics.gvod.config.CroupierConfiguration;
 import se.sics.gvod.croupier.events.*;

@@ -24,8 +24,8 @@ import se.sics.gvod.common.VodRetryComponentTestCase;
 import se.sics.gvod.config.VodConfig;
 import se.sics.gvod.common.util.ToVodAddr;
 import se.sics.gvod.croupier.events.CroupierInit;
-import se.sics.gvod.croupier.events.CroupierJoin;
-import se.sics.gvod.croupier.events.CroupierJoinCompleted;
+import se.sics.gvod.common.evts.Join;
+import se.sics.gvod.common.evts.JoinCompleted;
 import se.sics.gvod.croupier.events.CroupierShuffleCycle;
 import se.sics.gvod.net.VodAddress;
 import se.sics.kompics.Event;
@@ -48,9 +48,7 @@ public class CroupierTest extends VodRetryComponentTestCase {
     InetAddress address2;
     VodAddress vodAddress1;
     VodAddress vodAddress2;
-    VodDescriptor desc1;
-    VodDescriptor desc2;
-    List<VodDescriptor> neighbours;
+    List<VodAddress> neighbours;
 
     public CroupierTest() {
         super();
@@ -74,7 +72,7 @@ public class CroupierTest extends VodRetryComponentTestCase {
         shuffleTimeout = 500;
         seed = 300;
         viewSize = 2;
-        neighbours = new ArrayList<VodDescriptor>();
+        neighbours = new ArrayList<VodAddress>();
 
         try {
             address1 = InetAddress.getByName("192.168.0.2");
@@ -83,8 +81,6 @@ public class CroupierTest extends VodRetryComponentTestCase {
             vodAddress1 = ToVodAddr.systemAddr(new Address(address1, 8082, 2));
             vodAddress2 = ToVodAddr.systemAddr(new Address(address2, 8083, 3));
 
-            desc1 = new VodDescriptor(vodAddress1, new UtilityVod(0), 0, 0);
-            desc2 = new VodDescriptor(vodAddress2, new UtilityVod(0), 0, 0);
             VodConfig.init(new String[]{});
         } catch (IOException ex) {
             logger.error(null, ex);
@@ -110,18 +106,18 @@ public class CroupierTest extends VodRetryComponentTestCase {
     }
     @Test
     public void testJoinComplete() {
-        croupier.handleJoin.handle(new CroupierJoin(neighbours));
+        croupier.handleJoin.handle(new Join(neighbours));
         LinkedList<Event> events = pollEvent(2);
-        assertSequence(events, CroupierShuffleCycle.class, CroupierJoinCompleted.class);
+        assertSequence(events, CroupierShuffleCycle.class, JoinCompleted.class);
     }
     
 
 
     @Test
     public void testJoin() {
-        neighbours.add(desc1);
-        neighbours.add(desc2);
-        croupier.handleJoin.handle(new CroupierJoin(neighbours));
+        neighbours.add(vodAddress1);
+        neighbours.add(vodAddress2);
+        croupier.handleJoin.handle(new Join(neighbours));
         assert (croupier.privateView.isEmpty());
         assert (croupier.publicView.size() == 2);
     }
@@ -129,16 +125,16 @@ public class CroupierTest extends VodRetryComponentTestCase {
     
     @Test
     public void testShuffleCycle() {
-        neighbours.add(desc1);
-        neighbours.add(desc2);
-        croupier.handleJoin.handle(new CroupierJoin(neighbours));
+        neighbours.add(vodAddress1);
+        neighbours.add(vodAddress2);
+        croupier.handleJoin.handle(new Join(neighbours));
         croupier.handleCycle.handle(new CroupierShuffleCycle(new SchedulePeriodicTimeout(shufflePeriod, shufflePeriod)));
     }
 
     @Test
     public void testShuffleTimeout() {
-        neighbours.add(desc1);
-        neighbours.add(desc2);
-        croupier.handleJoin.handle(new CroupierJoin(neighbours));
+        neighbours.add(vodAddress1);
+        neighbours.add(vodAddress2);
+        croupier.handleJoin.handle(new Join(neighbours));
     }
 }

@@ -96,6 +96,14 @@ public class VodDescriptor implements Comparable<VodDescriptor>, Serializable {
         }
     }
 
+    public VodDescriptor(VodAddress vodAddress) {
+        this(vodAddress, 0,
+                new UtilityVod(0), 0, 0, new LinkedList<Block>(),
+                new CommunicationWindow(VodConfig.LB_WINDOW_SIZE,
+                VodConfig.LB_MAX_WINDOW_SIZE),
+                VodConfig.LB_DEFAULT_PIPELINE_SIZE, VodConfig.DEFAULT_MTU);
+    }
+    
     public VodDescriptor(VodAddress vodAddress, Utility utility,
             int age,
             int mtu) {

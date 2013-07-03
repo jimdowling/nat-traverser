@@ -38,6 +38,7 @@ import se.sics.gvod.common.RTTStore;
 import se.sics.gvod.common.RTTStore.RTT;
 import se.sics.gvod.common.RetryComponentDelegator;
 import se.sics.gvod.common.Self;
+import se.sics.gvod.common.evts.Join;
 import se.sics.gvod.config.VodConfig;
 import se.sics.gvod.common.util.ToVodAddr;
 import se.sics.gvod.config.ParentMakerConfiguration;
@@ -60,33 +61,28 @@ import se.sics.gvod.parentmaker.evts.PrpMorePortsResponse;
 import se.sics.gvod.parentmaker.evts.PrpPortsResponse;
 import se.sics.gvod.timer.*;
 import se.sics.kompics.Handler;
+import se.sics.kompics.Negative;
 import se.sics.kompics.Stop;
 import se.sics.kompics.Positive;
 
 /**
  *
- * overlayId == GVodConfig.RENDEZVOUS_SERVER_ID
  */
 public class ParentMaker extends MsgRetryComponent {
 
     private static Logger logger = LoggerFactory.getLogger(ParentMaker.class);
+    private Negative<ParentMakerPort> parentMakerPort = negative(ParentMakerPort.class);
     private Positive<NatNetworkControl> natNetworkControl = positive(NatNetworkControl.class);
     Self self;
     private String compName;
-    Map<VodAddress, Connection> connections = new HashMap<VodAddress, Connection>();
+    Map<Address, Connection> connections = new HashMap<Address, Connection>();
     Map<Address, Long> rejections = new HashMap<Address, Long>();
     private Map<TimeoutId, Long> requestStartTimes = new HashMap<TimeoutId, Long>();
     private ParentMakerConfiguration config;
-    
-//    private int numParents;
-//    private long keepParentRttRange;
-//    private long retryDelay;
     private long needParentsRoundTimeout, fullParentsRoundTimeout = 60 * 1000;
-//    private int numParentRetries;
-//    private long childRemoveTimeout;
     private TimeoutId periodicTimeoutId;
-//    private double scaleRetryDelay;
     private boolean outstandingBids = false;
+    private int count = 0;
 
     class Connection {
 
@@ -198,10 +194,10 @@ public class ParentMaker extends MsgRetryComponent {
             self = init.getSelf();
             compName = "PM(" + self.getId() + ") ";
             config = init.getConfig();
-            
+
 //            numParents = init.getConfig().getParentSize();
             VodConfig.PM_PARENT_SIZE = config.getParentSize();
-            
+
 //            keepParentRttRange = init.getConfig().getKeepParentRttRange();
 //            retryDelay = init.getConfig().getRto();
 //            numParentRetries = init.getConfig().getRtoRetries();
@@ -217,7 +213,15 @@ public class ParentMaker extends MsgRetryComponent {
             logger.info(compName + "started");
         }
     };
-    int count = 0;
+    Handler<Join> handleJoin = new Handler<Join>() {
+        @Override
+        public void handle(Join event) {
+            List<Address> candidateParents = event.getBootstrappers();
+            for (Address a : candidateParents) {
+                sendRequest(a, config.getRto(), new HashSet<Integer>());
+            }
+        }
+    };
     Handler<ParentMakerCycle> handleCycle = new Handler<ParentMakerCycle>() {
         @Override
         public void handle(ParentMakerCycle e) {
@@ -231,7 +235,7 @@ public class ParentMaker extends MsgRetryComponent {
                     logger.warn(compName + " no parents! " + self.getNat()
                             + pi
                             + " rejected: " + rejections.keySet().size()
-                            + " num better rtts " + RTTStore.getOnAvgBest(self.getId(), 
+                            + " num better rtts " + RTTStore.getOnAvgBest(self.getId(),
                             config.getParentSize(),
                             rejections.keySet()).size());
                 }
@@ -247,7 +251,7 @@ public class ParentMaker extends MsgRetryComponent {
                 }
             } else {
                 RTT worstRtt = Collections.max(currentRtts, RTT.Order.ByRto);
-                betterRtts = RTTStore.getAllOnAvgBetterRtts(self.getId(), worstRtt.getRTO(), 
+                betterRtts = RTTStore.getAllOnAvgBetterRtts(self.getId(), worstRtt.getRTO(),
                         config.getKeepParentRttRange());
             }
 
@@ -272,7 +276,7 @@ public class ParentMaker extends MsgRetryComponent {
                 if (!currentRtts.contains(min)) {
                     if (self.getAddress().getNat().preallocatePorts()) {
                         PortAllocRequest allocReq = new PortAllocRequest(self.getId(), 1);
-                        PrpPortsResponse allocResp = new PrpPortsResponse(allocReq, 
+                        PrpPortsResponse allocResp = new PrpPortsResponse(allocReq,
                                 ToVodAddr.hpServer(min.getAddress().getPeerAddress()),
                                 min.getRTO());
                         allocReq.setResponse(allocResp);
@@ -280,7 +284,7 @@ public class ParentMaker extends MsgRetryComponent {
                     } else {
 
                         // if i have no connections, bid for the parent's slot with RTO as '0'
-                        long normalizedRtt = 
+                        long normalizedRtt =
                                 (connections.isEmpty() && !outstandingBids) ? 0 : min.getRTO();
                         sendRequest(min.getAddress().getPeerAddress(), normalizedRtt, new HashSet<Integer>());
                     }
@@ -331,18 +335,17 @@ public class ParentMaker extends MsgRetryComponent {
     }
 
     private void addParent(VodAddress parent, RTT rtt, Set<Integer> prpPorts) {
-        if (!connections.containsKey(parent)) {
+        if (!connections.containsKey(parent.getPeerAddress())) {
             // Ping my parents 5 seconds before the NAT binding will timeout
             SchedulePeriodicTimeout spt = new SchedulePeriodicTimeout(
-                    self.getNat().getBindingTimeout() - 5000, 
-                    self.getNat().getBindingTimeout() - 5000
-                    );
+                    self.getNat().getBindingTimeout() - 5000,
+                    self.getNat().getBindingTimeout() - 5000);
             KeepBindingOpenTimeout pt = new KeepBindingOpenTimeout(spt, parent);
             spt.setTimeoutEvent(pt);
             TimeoutId timeoutId = pt.getTimeoutId();
             delegator.doTrigger(spt, timer);
             Connection connection = new Connection(System.currentTimeMillis(), rtt, timeoutId, prpPorts);
-            connections.put(parent, connection);
+            connections.put(parent.getPeerAddress(), connection);
             self.addParent(parent.getPeerAddress());
             logger.debug(compName + "updated parents: " + printMyParents());
         } else {
@@ -353,10 +356,10 @@ public class ParentMaker extends MsgRetryComponent {
         }
     }
 
-    private void removeParent(VodAddress parent, boolean failed, boolean sendUnregisterReq) {
+    private void removeParent(Address parent, boolean failed, boolean sendUnregisterReq) {
         if (failed) {
-            RTTStore.removeSamples(self.getId(), parent);
-            rejections.put(parent.getPeerAddress(), System.currentTimeMillis());
+            RTTStore.removeSamples(self.getId(), ToVodAddr.hpServer(parent));
+            rejections.put(parent, System.currentTimeMillis());
         }
 
         Connection c = connections.get(parent);
@@ -367,7 +370,7 @@ public class ParentMaker extends MsgRetryComponent {
             if (sendUnregisterReq) {
                 // unregister from z-server
                 HpUnregisterMsg.Request req = new HpUnregisterMsg.Request(self.getAddress(),
-                        parent, config.getChildRemoveTimeout(), HpRegisterMsg.RegisterStatus.BETTER_PARENT);
+                        ToVodAddr.hpServer(parent), config.getChildRemoveTimeout(), HpRegisterMsg.RegisterStatus.BETTER_PARENT);
                 delegator.doRetry(req, config.getRto(), config.getRtoRetries());
             }
             connections.remove(parent);
@@ -381,7 +384,7 @@ public class ParentMaker extends MsgRetryComponent {
             logger.warn(compName + "Tried to remove non-existant parent: " + parent.getId());
             logger.warn(compName + "Existing parents: " + printMyParents());
         }
-        self.removeParent(parent.getPeerAddress());
+        self.removeParent(parent);
     }
     Handler<PrpDeletePortsResponse> handlePrpDeletePortsResponse = new Handler<PrpDeletePortsResponse>() {
         @Override
@@ -397,8 +400,8 @@ public class ParentMaker extends MsgRetryComponent {
                 long now = System.currentTimeMillis();
                 c.setLastSentPing(now);
                 ParentKeepAliveMsg.Ping ping = new ParentKeepAliveMsg.Ping(self.getAddress(), event.getParent());
-                ScheduleRetryTimeout st = 
-                        new ScheduleRetryTimeout(config.getPingRto(), 
+                ScheduleRetryTimeout st =
+                        new ScheduleRetryTimeout(config.getPingRto(),
                         config.getPingRetries(), config.getPingRtoScale());
                 ParentKeepAliveMsg.PingTimeout pt = new ParentKeepAliveMsg.PingTimeout(st, ping);
                 TimeoutId id = delegator.doRetry(pt);
@@ -442,19 +445,24 @@ public class ParentMaker extends MsgRetryComponent {
                 VodAddress parent = event.getRequestMsg().getVodDestination();
                 CroupierStats.instance(self.clone(VodConfig.SYSTEM_OVERLAY_ID)).parentChangeEvent(parent.getPeerAddress(),
                         HpRegisterMsg.RegisterStatus.DEAD_PARENT);
-                removeParent(parent, true, true);
+                removeParent(parent.getPeerAddress(), true, true);
                 logger.debug(compName + "Ping timeout to parent {} . Removing.", parent.getPeerAddress());
             }
         }
     };
 
-
     private void sendRequest(Address hpServer, long rtt, Set<Integer> prpPorts) {
+        if (connections.containsKey(hpServer)) {
+            logger.warn(compName + " trying to re-add the parent: " + hpServer);
+            return;
+        }
+            
+            
         VodAddress dest = ToVodAddr.hpServer(hpServer);
         HpRegisterMsg.Request request = new HpRegisterMsg.Request(self.getAddress(),
                 dest, self.getAddress().getDelta(), rtt, prpPorts);
         outstandingBids = true;
-        ScheduleRetryTimeout st = new ScheduleRetryTimeout(config.getRto(), 
+        ScheduleRetryTimeout st = new ScheduleRetryTimeout(config.getRto(),
                 config.getRtoRetries(), config.getRtoScale());
         HpRegisterMsg.RequestRetryTimeout requestTimeout =
                 new HpRegisterMsg.RequestRetryTimeout(st, request);
@@ -513,7 +521,7 @@ public class ParentMaker extends MsgRetryComponent {
                             RTT worstRtt = Collections.max(currentRtts, RTT.Order.ByRto);
                             if (rttValue + config.getKeepParentRttRange() < worstRtt.getRTO()) {
                                 VodAddress hpAddr = ToVodAddr.hpServer(worstRtt.getAddress().getPeerAddress());
-                                removeParent(hpAddr, false, true);
+                                removeParent(hpAddr.getPeerAddress(), false, true);
                                 logger.info(compName + "Found a better parent {} . Removing {}."
                                         + "Old/new RTTS = " + worstRtt.getRTO() + " vs "
                                         + rttValue,
@@ -585,7 +593,7 @@ public class ParentMaker extends MsgRetryComponent {
                     event.getVodSource().getId(), event.getStatus());
             CroupierStats.instance(self.clone(VodConfig.SYSTEM_OVERLAY_ID)).parentChangeEvent(event.getSource(),
                     HpRegisterMsg.RegisterStatus.BETTER_CHILD);
-            removeParent(event.getVodSource(), false, false);
+            removeParent(event.getSource(), false, false);
             logger.info(compName + printMyParents());
         }
     };
@@ -612,7 +620,7 @@ public class ParentMaker extends MsgRetryComponent {
     private String printMyParents() {
         StringBuilder sb = new StringBuilder();
         sb.append(" Current parents: ");
-        for (VodAddress a : connections.keySet()) {
+        for (Address a : connections.keySet()) {
             sb.append(a.getId()).append(";");
         }
         return sb.toString();
@@ -622,7 +630,7 @@ public class ParentMaker extends MsgRetryComponent {
         public void handle(PRP_PreallocatedPortsMsg.Request request) {
 
             if (!connections.containsKey(request.getVodSource())) {
-                PRP_PreallocatedPortsMsg.Response resp = 
+                PRP_PreallocatedPortsMsg.Response resp =
                         new PRP_PreallocatedPortsMsg.Response(self.getAddress(),
                         request.getVodSource(), request.getTimeoutId(),
                         PRP_PreallocatedPortsMsg.ResponseType.INVALID_NOT_A_PARENT,
@@ -641,10 +649,10 @@ public class ParentMaker extends MsgRetryComponent {
         }
     };
 
-    private void allocPorts(VodAddress server, Long rto, TimeoutId timeoutId, 
+    private void allocPorts(VodAddress server, Long rto, TimeoutId timeoutId,
             TimeoutId msgTimeoutId) {
         PortAllocRequest allocReq = new PortAllocRequest(self.getId(), 10);
-        PrpMorePortsResponse allocResp = new PrpMorePortsResponse(allocReq, server, 
+        PrpMorePortsResponse allocResp = new PrpMorePortsResponse(allocReq, server,
                 timeoutId, rto, msgTimeoutId);
         allocReq.setResponse(allocResp);
         delegator.doTrigger(allocReq, natNetworkControl);
@@ -654,8 +662,8 @@ public class ParentMaker extends MsgRetryComponent {
         @Override
         public void handle(PrpMorePortsResponse response) {
             PRP_PreallocatedPortsMsg.Response resp = new PRP_PreallocatedPortsMsg.Response(
-                    self.getAddress(), (VodAddress) response.getKey(), 
-                    response.getTimeoutId(), 
+                    self.getAddress(), (VodAddress) response.getKey(),
+                    response.getTimeoutId(),
                     PRP_PreallocatedPortsMsg.ResponseType.OK,
                     response.getAllocatedPorts(), response.getMsgTimeoutId());
             delegator.doTrigger(resp, network);
@@ -686,7 +694,7 @@ public class ParentMaker extends MsgRetryComponent {
     Handler<Stop> handleStop = new Handler<Stop>() {
         @Override
         public void handle(Stop stop) {
-            for (VodAddress parent : connections.keySet()) {
+            for (Address parent : connections.keySet()) {
                 removeParent(parent, false, true);
             }
         }
