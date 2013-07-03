@@ -56,12 +56,11 @@ public class RendezvousServer extends MsgRetryComponent {
     private final static int THRESHOLD_SWAP_PARENT = 50;
     ConcurrentHashMap<Integer, RegisteredClientRecord> registeredClients;
     private HashMap<HPSessionKey, HolePunching> hpSessions = new HashMap<HPSessionKey, HolePunching>();
-    // only used for nats that have PP allocation policy
     /**
      * <identifier of nat, ports>
      */
-    private HashMap<InetAddress, Set<Integer>> allocatedPorts =
-            new HashMap<InetAddress, Set<Integer>>();
+//    private HashMap<InetAddress, Set<Integer>> allocatedPorts =
+//            new HashMap<InetAddress, Set<Integer>>();
     private Self self;   // z server address
     int dummyPort = 49997; // used to create dummy public addresses. used in prc and  prp etc
     String compName;

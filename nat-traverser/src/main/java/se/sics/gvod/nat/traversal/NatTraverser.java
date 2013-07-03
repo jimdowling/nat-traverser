@@ -811,7 +811,8 @@ public class NatTraverser extends MsgRetryComponent {
         zServer = create(RendezvousServer.class);
 
         connect(zServer.getNegative(Timer.class), timer);
-        connect(zServer.getNegative(VodNetwork.class), network, new MsgDestFilterOverlayId(VodConfig.SYSTEM_OVERLAY_ID));
+        connect(zServer.getNegative(VodNetwork.class), network, 
+                new MsgDestFilterOverlayId(VodConfig.SYSTEM_OVERLAY_ID));
         delegator.doTrigger(new RendezvousServerInit(
                 self.clone(VodConfig.SYSTEM_OVERLAY_ID),
                 registeredClients, rendezvousServerConfig), zServer.getControl());
@@ -1023,7 +1024,7 @@ public class NatTraverser extends MsgRetryComponent {
                     // TODO - do i need a filter for timer msgs too?
                     connect(parentMaker.getNegative(Timer.class), timer);
                     connect(parentMaker.getNegative(VodNetwork.class), network
-                            , new MsgDestFilterOverlayId(VodConfig.SYSTEM_OVERLAY_ID)
+//                            , new MsgDestFilterOverlayId(VodConfig.SYSTEM_OVERLAY_ID)
                             );
                     connect(parentMaker.getNegative(NatNetworkControl.class), lowerNetControl);
                 }

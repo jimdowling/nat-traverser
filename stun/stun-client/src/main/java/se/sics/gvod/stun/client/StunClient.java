@@ -6,7 +6,6 @@ package se.sics.gvod.stun.client;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import se.sics.gvod.stun.client.events.StunClientInit;
 import java.util.HashMap;
 import java.util.HashSet;
