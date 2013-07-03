@@ -625,9 +625,11 @@ private void sendEchoRequest(VodAddress target, EchoMsg.Test testType, long tran
             int s1AlternativePort = session.getServer1Port2();
 
             //serverS1Address and serverS2Address   already have  it
-            VodAddress serverS1AddressPrime = ToVodAddr.stunServer2(new Address(serverS1Address.getIp(),
+            VodAddress serverS1AddressPrime = 
+                    ToVodAddr.stunServer2(new Address(serverS1Address.getIp(),
                     s1AlternativePort, serverS1Address.getId()));
-            VodAddress serverS2AddressPrime = ToVodAddr.stunServer2(new Address(serverS2Address.getIp(),
+            VodAddress serverS2AddressPrime = ToVodAddr.stunServer2(
+                    new Address(serverS2Address.getIp(),
                     s1AlternativePort, serverS2Address.getId()));
             // get the alternative server port of the stun server 2
             // right now i am assuming that the server2's alternative port is same as the alternative port of the first server
@@ -690,6 +692,7 @@ private void sendEchoRequest(VodAddress target, EchoMsg.Test testType, long tran
         delegator.doRetry(requestRetryTimeout);
         logger.debug(compName + "Sending Echo Ping " + tryId
                 + " to " + dest.getPeerAddress()
+                + " from " + source 
                 + " Rto=" + rto
                 + " tid: " + transactionId);
     }
