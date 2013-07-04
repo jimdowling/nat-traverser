@@ -28,5 +28,5 @@ package se.sics.gvod.net;
  * @version $Id: Transport.java 475 2009-01-28 00:13:10Z Cosmin $
  */
 public enum Transport {
-	UDP, TCP;
+	UDP, TCP, UTP;
 }
