@@ -453,7 +453,7 @@ public class ParentMaker extends MsgRetryComponent {
             logger.debug(compName + " trying to re-add the parent: " + hpServer);
             return;
         }
-        if (hpServer.equals(self.getAddress().getPeerAddress())) {
+        if (hpServer.getId() == self.getId()) {
             logger.debug(compName + " trying to add myself as a parent.");
             return;
         }
