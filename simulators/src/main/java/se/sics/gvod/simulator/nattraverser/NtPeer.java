@@ -12,7 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import se.sics.gvod.common.Self;
 import se.sics.gvod.common.util.NatStr;
-import se.sics.gvod.hp.msgs.TConnectionMessage;
+import se.sics.gvod.hp.msgs.TConnectionMsg;
 import se.sics.gvod.nat.traversal.NatTraverserPort;
 import se.sics.gvod.nat.traversal.events.HpFailed;
 import se.sics.gvod.net.Nat;
@@ -81,8 +81,8 @@ public final class NtPeer extends ComponentDefinition {
             HolePunch hp = new HolePunch(st, event.getDest(),
                     NatStr.pairAsStr(self.getNat(), event.getDest().getNat()));
             st.setTimeoutEvent(hp);
-            TConnectionMessage.Ping ping = new TConnectionMessage.Ping(self.getAddress(),
-                    event.getDest(), hp.getTimeoutId(), "Hi there");
+            TConnectionMsg.Ping ping = new TConnectionMsg.Ping(self.getAddress(),
+                    event.getDest(), hp.getTimeoutId());
             trigger(st, timer);
             trigger(ping, network);
             activeMsgs.put(hp.getTimeoutId(), event.getDest().getNat());
@@ -97,25 +97,24 @@ public final class NtPeer extends ComponentDefinition {
             activeMsgs.remove(msg.getTimeoutId());
         }
     };
-    public Handler<TConnectionMessage.Ping> handlePing =
-            new Handler<TConnectionMessage.Ping>() {
+    public Handler<TConnectionMsg.Ping> handlePing =
+            new Handler<TConnectionMsg.Ping>() {
         @Override
-        public void handle(TConnectionMessage.Ping ping) {
+        public void handle(TConnectionMsg.Ping ping) {
 
             logger.info("Received ping from "
                     + ping.getSource());
-            TConnectionMessage.Pong pong =
-                    new TConnectionMessage.Pong(self.getAddress(),
-                    ping.getVodSource(),
-                    "here's a pong", ping.getTimeoutId());
+            TConnectionMsg.Pong pong =
+                    new TConnectionMsg.Pong(self.getAddress(),
+                    ping.getVodSource(), ping.getTimeoutId());
             trigger(pong, network);
         }
     };
-    public Handler<TConnectionMessage.Pong> handlePong =
-            new Handler<TConnectionMessage.Pong>() {
+    public Handler<TConnectionMsg.Pong> handlePong =
+            new Handler<TConnectionMsg.Pong>() {
         @Override
-        public void handle(TConnectionMessage.Pong pong) {
-            logger.debug("pong recvd " + pong.getMessage() + " from " + pong.getSource());
+        public void handle(TConnectionMsg.Pong pong) {
+            logger.debug("pong recvd " + " from " + pong.getSource());
             trigger(new CancelTimeout(pong.getTimeoutId()), timer);
             trigger(new ConnectionResult(self.getAddress(), pong.getVodSource(),
                     NatStr.pairAsStr(self.getNat(), pong.getVodSource().getNat()),

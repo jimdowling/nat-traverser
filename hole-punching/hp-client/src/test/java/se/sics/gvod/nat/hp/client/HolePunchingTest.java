@@ -21,7 +21,6 @@ import se.sics.gvod.common.SelfNoParents;
 import se.sics.gvod.common.util.ToVodAddr;
 import se.sics.gvod.hp.events.OpenConnectionResponseType;
 import se.sics.gvod.hp.msgs.HpRegisterMsg;
-import se.sics.gvod.hp.msgs.TConnectionMessage;
 import se.sics.gvod.nat.emu.DistributedNatGatewayEmulator;
 import se.sics.gvod.nat.emu.IpIntPair;
 import se.sics.gvod.nat.emu.events.DistributedNatGatewayEmulatorInit;
@@ -42,6 +41,7 @@ import se.sics.gvod.config.StunClientConfiguration;
 import se.sics.gvod.parentmaker.ParentMakerInit;
 import se.sics.gvod.stun.client.StunClient;
 import se.sics.gvod.config.StunServerConfiguration;
+import se.sics.gvod.hp.msgs.TConnectionMsg;
 import se.sics.gvod.stun.client.StunPort;
 import se.sics.gvod.stun.client.events.GetNatTypeRequest;
 import se.sics.gvod.stun.client.events.GetNatTypeResponse;
@@ -975,11 +975,10 @@ public class HolePunchingTest
                 Address sourceAddress = new Address(ipA,
                         openedConnection.getPortInUse(),
                         client_A_ID);
-                TConnectionMessage.Ping ping = new TConnectionMessage.Ping(
+                TConnectionMsg.Ping ping = new TConnectionMsg.Ping(
                         ToVodAddr.hpServer(sourceAddress),
                         ToVodAddr.hpServer(openedConnection.getHoleOpened()),
-                        UUID.nextUUID(),
-                        "Hello from client A");
+                        UUID.nextUUID());
                 trigger(ping, natComp_A.getPositive(VodNetwork.class));
 
 //                ScheduleTimeout st = new ScheduleTimeout(1000);
@@ -990,16 +989,17 @@ public class HolePunchingTest
 
             }
         };
-        public Handler<TConnectionMessage.Ping> handlePing_A =
-                new Handler<TConnectionMessage.Ping>() {
+        public Handler<TConnectionMsg.Ping> handlePing_A =
+                new Handler<TConnectionMsg.Ping>() {
             @Override
-            public void handle(TConnectionMessage.Ping event) {
+            public void handle(TConnectionMsg.Ping event) {
                 Enumeration<OpenedConnection> els = openedConnections_A.elements();
                 logger.warn(client_A_ID + " Existing connections");
                 while (els.hasMoreElements()) {
                     logger.warn(client_A_ID + " " + els.nextElement());
                 }
-                HolePunchingTest.logger.debug(client_A_ID + " Test Comp A: ping rcvd Message: " + event.getMessage());
+                HolePunchingTest.logger.debug(client_A_ID 
+                        + " Test Comp A: ping rcvd.");
                 // get the opened connection
                 OpenedConnection openedConnection =
                         openedConnections_A.get(event.getSource().getId());
@@ -1022,18 +1022,17 @@ public class HolePunchingTest
                         client_A_ID);
                 logger.debug("Ping received. Sending from port " + openedConnection.getPortInUse());
                 logger.debug("Test Comp A: ping received. Hole on Bs nat is " + openedConnection.getHoleOpened());
-                TConnectionMessage.Pong pong = new TConnectionMessage.Pong(
+                TConnectionMsg.Pong pong = new TConnectionMsg.Pong(
                         ToVodAddr.hpServer(sourceAddress),
-                        ToVodAddr.hpServer(openedConnection.getHoleOpened()),
-                        "Hello from A", null);
+                        ToVodAddr.hpServer(openedConnection.getHoleOpened()), null);
                 trigger(pong, natComp_A.getPositive(VodNetwork.class));
 
             }
         };
-        public Handler<TConnectionMessage.Pong> handlePong_A =
-                new Handler<TConnectionMessage.Pong>() {
+        public Handler<TConnectionMsg.Pong> handlePong_A =
+                new Handler<TConnectionMsg.Pong>() {
             @Override
-            public void handle(TConnectionMessage.Pong event) {
+            public void handle(TConnectionMsg.Pong event) {
                 if (event.getDestination().getId() != client_A_ID) {
                     logger.error("Client A: WASNT FOR ME: " + client_A_ID);
                 }
@@ -1041,7 +1040,7 @@ public class HolePunchingTest
                 trigger(ct, timer.getPositive(Timer.class));
 
                 expectedPongMessagesA--;
-                HolePunchingTest.logger.debug("Test Comp A: pong recvd Message: " + event.getMessage()
+                HolePunchingTest.logger.debug("Test Comp A: pong recvd. "
                         + " Pongs left to receive: " + expectedPongMessagesA
                         + " src: " + event.getSource() + " dest: " + event.getDestination());
                 if (expectedPongMessagesA == 0) {
@@ -1049,10 +1048,10 @@ public class HolePunchingTest
                 }
             }
         };
-        public Handler<TConnectionMessage.Ping> handlePing_B =
-                new Handler<TConnectionMessage.Ping>() {
+        public Handler<TConnectionMsg.Ping> handlePing_B =
+                new Handler<TConnectionMsg.Ping>() {
             @Override
-            public void handle(TConnectionMessage.Ping event) {
+            public void handle(TConnectionMsg.Ping event) {
                 Enumeration<OpenedConnection> els = openedConnections_B.elements();
                 logger.warn(client_B_ID + " Existing connections");
                 while (els.hasMoreElements()) {
@@ -1060,7 +1059,8 @@ public class HolePunchingTest
                 }
 
                 HolePunchingTest.logger.debug(client_B_ID
-                        + " Test Comp B: ping rcvd Message: " + event.getMessage());
+                        + " Test Comp B: ping rcvd."
+                        );
                 // sending pong back
                 // get the opened connection
                 OpenedConnection openedConnection =
@@ -1095,20 +1095,21 @@ public class HolePunchingTest
                             //                                    52586,
                             client_B_ID);
                 }
-                TConnectionMessage.Pong pong = new TConnectionMessage.Pong(
+                TConnectionMsg.Pong pong = new TConnectionMsg.Pong(
                         ToVodAddr.hpServer(sourceAddress),
-                        holeOpened, "Hello from B", null);
+                        holeOpened, null);
                 trigger(pong, natComp_B.getPositive(VodNetwork.class));
             }
         };
-        public Handler<TConnectionMessage.Pong> handlePong_B =
-                new Handler<TConnectionMessage.Pong>() {
+        public Handler<TConnectionMsg.Pong> handlePong_B =
+                new Handler<TConnectionMsg.Pong>() {
             @Override
-            public void handle(TConnectionMessage.Pong event) {
+            public void handle(TConnectionMsg.Pong event) {
                 CancelTimeout ct = new CancelTimeout(client_B_TimeoutId);
                 trigger(ct, timer.getPositive(Timer.class));
 
-                HolePunchingTest.logger.debug("Test Comp B: pong rcvd Message: " + event.getMessage() + " src: " + event.getSource() + " dest: " + event.getDestination());
+                HolePunchingTest.logger.debug("Test Comp B: pong rcvd." 
+                        + " src: " + event.getSource() + " dest: " + event.getDestination());
                 expectedPongMessagesB--;
                 if (expectedPongMessagesB == 0) {
                     destroyAndPass();
@@ -1154,11 +1155,10 @@ public class HolePunchingTest
                 Address sourceAddress = new Address(ipB,
                         openedConnection.getPortInUse(),
                         client_B_ID);
-                TConnectionMessage.Ping ping = new TConnectionMessage.Ping(
+                TConnectionMsg.Ping ping = new TConnectionMsg.Ping(
                         ToVodAddr.hpServer(sourceAddress),
                         ToVodAddr.hpServer(openedConnection.getHoleOpened()),
-                        UUID.nextUUID(),
-                        "Hello from client B");
+                        UUID.nextUUID());
                 HolePunchingTest.logger.debug("Test Comp B sending ping to dest " + ping.getDestination());
                 trigger(ping, natComp_B.getPositive(VodNetwork.class));
 

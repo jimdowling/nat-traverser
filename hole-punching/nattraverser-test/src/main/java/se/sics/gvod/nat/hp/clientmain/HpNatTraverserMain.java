@@ -33,7 +33,7 @@ import se.sics.gvod.common.VodDescriptor;
 import se.sics.gvod.common.util.ToVodAddr;
 import se.sics.gvod.config.CroupierConfiguration;
 import se.sics.gvod.config.VodConfig;
-import se.sics.gvod.hp.msgs.TConnectionMessage;
+import se.sics.gvod.hp.msgs.TConnectionMsg;
 import se.sics.gvod.config.HpClientConfiguration;
 import se.sics.gvod.net.NatNetworkControl;
 import se.sics.gvod.stun.client.events.GetNatTypeResponse;
@@ -196,7 +196,8 @@ public final class HpNatTraverserMain extends ComponentDefinition {
                 self = new SelfImpl(null, localAddress.getIp(), localAddress.getPort(),
                         localAddress.getId(), OVERLAY_ID);
 
-                trigger(new NatTraverserInit(self, servers, VodConfig.getSeed(),
+                trigger(new NatTraverserInit(self.clone(VodConfig.SYSTEM_OVERLAY_ID), 
+                        servers, VodConfig.getSeed(),
                         NatTraverserConfiguration.build(),
                         HpClientConfiguration.build(),
                         RendezvousServerConfiguration.build(),
@@ -229,27 +230,26 @@ public final class HpNatTraverserMain extends ComponentDefinition {
             trigger(new CroupierJoin(svd), croupier.getPositive(CroupierPort.class));
         }
     };
-    public Handler<TConnectionMessage.Ping> handlePing =
-            new Handler<TConnectionMessage.Ping>() {
+    public Handler<TConnectionMsg.Ping> handlePing =
+            new Handler<TConnectionMsg.Ping>() {
         @Override
-        public void handle(TConnectionMessage.Ping ping) {
+        public void handle(TConnectionMsg.Ping ping) {
 
             logger.info("Received ping from "
                     + ping.getSource().getId());
             TimeoutId id = UUID.nextUUID();
-            TConnectionMessage.Pong pong =
-                    new TConnectionMessage.Pong(self.getAddress(),
-                    ping.getVodSource(),
-                    "here's a pong", id);
+            TConnectionMsg.Pong pong =
+                    new TConnectionMsg.Pong(self.getAddress(),
+                    ping.getVodSource(), id);
             trigger(pong, network.getPositive(VodNetwork.class));
         }
     };
-    public Handler<TConnectionMessage.Pong> handlePong =
-            new Handler<TConnectionMessage.Pong>() {
+    public Handler<TConnectionMsg.Pong> handlePong =
+            new Handler<TConnectionMsg.Pong>() {
         @Override
-        public void handle(TConnectionMessage.Pong pong) {
+        public void handle(TConnectionMsg.Pong pong) {
 
-            logger.info("pong recvd " + pong.getMessage() + " from " + pong.getSource());
+            logger.info("pong recvd " + " from " + pong.getSource());
             numSuccess++;
             logger.info("Total Success/Failure ratio is: {}/{}", numSuccess, numFail);
         }
@@ -278,13 +278,14 @@ public final class HpNatTraverserMain extends ComponentDefinition {
             for (VodDescriptor vd : msg.getNodes()) {
                 VodAddress va = vd.getVodAddress();
                 if (alreadyConnected.contains(va) == false) {
-                    // try and send a msg to the new VodAddress
+                    // try and send a msg to the new VodAddress if it is private and
+                    // has parents
                     if (va.hasParents()) {
                         ScheduleTimeout st = new ScheduleTimeout(10 * 1000);
                         HolePunchTimeout hp = new HolePunchTimeout(st);
                         st.setTimeoutEvent(hp);
-                        trigger(new TConnectionMessage.Ping(self.getAddress(),
-                                va, hp.getTimeoutId(), "Hi there"),
+                        trigger(new TConnectionMsg.Ping(self.getAddress(),
+                                va, hp.getTimeoutId()),
                                 natTraverser.getPositive(VodNetwork.class));
                         trigger(st, timer.getPositive(Timer.class));
                         alreadyConnected.add(va);
@@ -297,6 +298,7 @@ public final class HpNatTraverserMain extends ComponentDefinition {
         @Override
         public void handle(Fault msg) {
             logger.error("Problem in Netty: {}", msg.getFault().getMessage());
+
             System.exit(-1);
         }
     };

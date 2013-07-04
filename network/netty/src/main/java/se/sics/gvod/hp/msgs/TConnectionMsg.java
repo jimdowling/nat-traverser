@@ -1,103 +1,109 @@
 package se.sics.gvod.hp.msgs;
 
+import org.jboss.netty.buffer.ChannelBuffer;
+import se.sics.gvod.common.msgs.DirectMsgNetty;
+import se.sics.gvod.common.msgs.MessageEncodingException;
+import se.sics.gvod.net.BaseMsgFrameDecoder;
 import se.sics.gvod.net.msgs.RewriteableRetryTimeout;
 import se.sics.gvod.net.msgs.ScheduleRetryTimeout;
 import se.sics.gvod.net.VodAddress;
 import se.sics.gvod.net.msgs.RewriteableMsg;
-import se.sics.gvod.net.msgs.DirectMsg;
 import se.sics.gvod.timer.TimeoutId;
 
 /**
  * This class uses the ObjectDecoder/Encoder and is only used for testing.
  * @author salman
  */
-public class TConnectionMessage
+public class TConnectionMsg
 {
 
-    public static final class Ping extends DirectMsg
+    public static final class Ping extends DirectMsgNetty
     {
         static final long serialVersionUID = 1L;
-        private final String message;
 
+        @Override
 	public int getSize()
 	{
-		return 10 + 20 + 38;
+		return getHeaderSize();
 	}
 
         public Ping(VodAddress src, VodAddress dest, 
-                TimeoutId timeoutId, String message)
+                TimeoutId timeoutId)
         {
             super(src, dest, timeoutId);
-            this.message = message;
         }
 
         private Ping(Ping msg, VodAddress src)
         {
             super(src, msg.getVodDestination());
-            message = msg.getMessage();
         }
 
         private Ping(VodAddress dest, Ping msg)
         {
             super(msg.getVodSource(), dest);
-            message = msg.getMessage();
-        }
-
-        public String getMessage()
-        {
-            return message;
         }
 
         @Override
         public RewriteableMsg copy() {
-            TConnectionMessage.Ping copy = new TConnectionMessage.Ping(vodSrc, vodDest, 
-                    timeoutId, message);
+            TConnectionMsg.Ping copy = new TConnectionMsg.Ping(vodSrc, vodDest, 
+                    timeoutId);
             copy.setTimeoutId(timeoutId);
             return copy;
         }
+
+        @Override
+        public ChannelBuffer toByteArray() throws MessageEncodingException {
+            return createChannelBufferWithHeader();
+        }
+
+        @Override
+        public byte getOpcode() {
+            return BaseMsgFrameDecoder.PING;
+        }
     }
 
-    public final static class Pong extends DirectMsg
+    public final static class Pong extends DirectMsgNetty
     {
         static final long serialVersionUID = 1L;
-        private final String message;
 
 
+        @Override
 	public int getSize()
 	{
-		return 10 + 20 + 38;
+		return getHeaderSize();
 	}
 
-        public Pong(VodAddress src, VodAddress dest,
-                 String message, TimeoutId timeoutId)
+        public Pong(VodAddress src, VodAddress dest, TimeoutId timeoutId)
         {
             super(src, dest);
-            this.message = message;
             setTimeoutId(timeoutId);
         }
 
         private Pong(Pong msg, VodAddress src)
         {
             super(src, msg.getVodDestination());
-            message = msg.getMessage();
             setTimeoutId(msg.getTimeoutId());
         }
 
         private Pong(VodAddress dest, Pong msg)
         {
             super(msg.getVodSource(), dest);
-            message = msg.getMessage();
             setTimeoutId(msg.getTimeoutId());
-        }
-
-        public String getMessage()
-        {
-            return message;
         }
 
         @Override
         public RewriteableMsg copy() {
-           return new TConnectionMessage.Pong(vodSrc, vodDest, message, timeoutId);
+           return new TConnectionMsg.Pong(vodSrc, vodDest, timeoutId);
+        }
+
+        @Override
+        public ChannelBuffer toByteArray() throws MessageEncodingException {
+            return createChannelBufferWithHeader();
+        }
+
+        @Override
+        public byte getOpcode() {
+            return BaseMsgFrameDecoder.PONG;
         }
 
     }

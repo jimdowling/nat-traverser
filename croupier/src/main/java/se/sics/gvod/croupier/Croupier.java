@@ -313,6 +313,7 @@ public class Croupier extends MsgRetryComponent {
 
     private void publishSample() {
         List<VodDescriptor> nodes = getAll();
+        nodes.remove(new VodDescriptor(self.getAddress()));
         if (!nodes.isEmpty()) {
             delegator.doTrigger(new CroupierSample(nodes), peerSamplePort);
         }

@@ -36,6 +36,7 @@ import se.sics.gvod.hp.msgs.ParentKeepAliveMsgFactory;
 import se.sics.gvod.hp.msgs.RelayRequestMsgFactory;
 import se.sics.gvod.hp.msgs.SHP_InitiateSimpleHolePunchingMsgFactory;
 import se.sics.gvod.hp.msgs.SHP_OpenHoleMsgFactory;
+import se.sics.gvod.hp.msgs.TConnectionMsgFactory;
 import se.sics.gvod.net.msgs.RewriteableMsg;
 import se.sics.gvod.stun.msgs.EchoChangeIpAndPortMsgFactory;
 import se.sics.gvod.stun.msgs.EchoChangePortMsgFactory;
@@ -63,7 +64,6 @@ public class BaseMsgFrameDecoder extends MsgFrameDecoder {
     public static final byte RELAY_REQUEST         = 0x18;
     public static final byte RELAY_RESPONSE        = 0x19;
     public static final byte RELAY_ONEWAY          = 0x1a;
-    public static final byte PONG                  = 0x1b;
     //GRADIENT MSGS
     public static final byte TARGET_UTILITY_PROBE_REQUEST  = 0x20;
     public static final byte TARGET_UTILITY_PROBE_RESPONSE = 0x21;
@@ -129,6 +129,9 @@ public class BaseMsgFrameDecoder extends MsgFrameDecoder {
     public static final byte REPORT_REQUEST                = 0x53;
     public static final byte REPORT_RESPONSE               = 0x54;
     public static final byte ACK                           = 0x55;
+    // TEST MSGS
+    public static final byte PING                          = 0x56;
+    public static final byte PONG                          = 0x57;
     //
     // NB: RANGE OF +VE BYTES ENDS AT 0x7F
     
@@ -265,6 +268,11 @@ public class BaseMsgFrameDecoder extends MsgFrameDecoder {
                 return ShuffleMsgFactory.Request.fromBuffer(buffer);
             case SHUFFLE_RESPONSE:
                 return ShuffleMsgFactory.Response.fromBuffer(buffer);
+                // TEST MSGS
+            case PING:
+                return TConnectionMsgFactory.Ping.fromBuffer(buffer);
+            case PONG:
+                return TConnectionMsgFactory.Pong.fromBuffer(buffer);
             default:
                 break;
         }

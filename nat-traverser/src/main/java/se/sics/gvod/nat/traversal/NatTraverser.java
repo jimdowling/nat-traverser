@@ -1031,8 +1031,8 @@ public class NatTraverser extends MsgRetryComponent {
                             parentMakerConfig), parentMaker.control());
                     List<VodAddress> bootstrappers = new ArrayList<VodAddress>();
                     bootstrappers.add(ToVodAddr.hpServer(event.getStunServer()));
-                    delegator.doTrigger(
-                            new Join(bootstrappers), parentMaker.getPositive(ParentMakerPort.class));
+                    delegator.doTrigger(new Join(bootstrappers), 
+                            parentMaker.getPositive(ParentMakerPort.class));
                 }
             } else {
                 retryStun(event.getStunServer());
