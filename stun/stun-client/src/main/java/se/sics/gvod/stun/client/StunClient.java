@@ -296,8 +296,8 @@ public class StunClient extends MsgRetryComponent {
             sendEchoRequest(ToVodAddr.stunServer(serverAddress), EchoMsg.Test.UDP_BLOCKED, transactionId);
         }
     }
-    
-private void sendEchoRequest(VodAddress target, EchoMsg.Test testType, long transactionId) {
+
+    private void sendEchoRequest(VodAddress target, EchoMsg.Test testType, long transactionId) {
         int rto = calculateRto(target.getPeerAddress(), 0);
 
         EchoMsg.Request bindingReq = new EchoMsg.Request(self.getAddress(),
@@ -626,7 +626,7 @@ private void sendEchoRequest(VodAddress target, EchoMsg.Test testType, long tran
             int s1AlternativePort = VodConfig.DEFAULT_STUN_PORT_2;
 //                    session.getServer1Port2();
 
-            VodAddress serverS1AddressPrime = 
+            VodAddress serverS1AddressPrime =
                     ToVodAddr.stunServer2(new Address(serverS1Address.getIp(),
                     s1AlternativePort, serverS1Address.getId()));
             VodAddress serverS2AddressPrime = ToVodAddr.stunServer2(
@@ -691,7 +691,7 @@ private void sendEchoRequest(VodAddress target, EchoMsg.Test testType, long tran
         delegator.doRetry(requestRetryTimeout);
         logger.debug(compName + "Sending Echo Ping " + tryId
                 + " to " + dest.getPeerAddress()
-                + " from " + source 
+                + " from " + source
                 + " Rto=" + rto
                 + " tid: " + transactionId);
     }
@@ -1085,7 +1085,9 @@ private void sendEchoRequest(VodAddress target, EchoMsg.Test testType, long tran
 
         logger.debug(compName + status + ": Nat Type is " + nat.toString());
 
-        delegator.doTrigger(new GetNatTypeResponse(nat, status, null, timeTaken), stunPort);
+        Address stunServer = (session == null) ? null : session.getPublicAddrTest1();
+        delegator.doTrigger(new GetNatTypeResponse(nat, status, stunServer,
+                timeTaken), stunPort);
         ongoing = false;
 
         if (session != null) {
@@ -1093,7 +1095,6 @@ private void sendEchoRequest(VodAddress target, EchoMsg.Test testType, long tran
                 startHeartBeatRequestTimer(session.getTransactionId());
             } else {
                 sessionMap.remove(session.getTransactionId());
-
             }
         }
     }
@@ -1128,26 +1129,15 @@ private void sendEchoRequest(VodAddress target, EchoMsg.Test testType, long tran
         UpnpTimeout timedOutUpnp = new UpnpTimeout(st, requestId);
         st.setTimeoutEvent(timedOutUpnp);
         delegator
-
-
-
-.doTrigger(new UpnpGetPublicIpRequest(requestId),
-                upnp.getPositive(UpnpPort.class  
-
-    ));
+                .doTrigger(new UpnpGetPublicIpRequest(requestId),
+                upnp.getPositive(UpnpPort.class));
 
         MapPortRequest.Protocol upnpProtocol = MapPortRequest.Protocol.UDP;
-    MapPortsRequest request = new MapPortsRequest(requestId,
-            privatePublicPorts, upnpProtocol);
+        MapPortsRequest request = new MapPortsRequest(requestId,
+                privatePublicPorts, upnpProtocol);
 
-    delegator.doTrigger (request, upnp.getPositive
-
-    
-
-    (UpnpPort.class  
-
-        ));
-        delegator.doTrigger (st, timer);
+        delegator.doTrigger(request, upnp.getPositive(UpnpPort.class));
+        delegator.doTrigger(st, timer);
     }
 
     private void upnpTimedOut(TimeoutId requestId) {

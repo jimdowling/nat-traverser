@@ -156,7 +156,7 @@ public final class HpNatTraverserMain extends ComponentDefinition {
         subscribe(handleGetIpResponse, resolveIp.getPositive(ResolveIpPort.class));
         subscribe(handlePing, natTraverser.getPositive(VodNetwork.class));
         subscribe(handlePong, natTraverser.getPositive(VodNetwork.class));
-        subscribe(handleFault, natTraverser.getControl());
+//        subscribe(handleFault, natTraverser.getControl());    
         subscribe(handleNettyFault, network.getControl());
         subscribe(handleHolePunchTimeout, timer.getPositive(Timer.class));
         subscribe(handleCroupierSample, croupier.getPositive(PeerSamplePort.class));
@@ -254,15 +254,15 @@ public final class HpNatTraverserMain extends ComponentDefinition {
             logger.info("Total Success/Failure ratio is: {}/{}", numSuccess, numFail);
         }
     };
-    public Handler<Fault> handleFault =
-            new Handler<Fault>() {
-        @Override
-        public void handle(Fault ex) {
-
-            logger.debug(ex.getFault().toString());
-            System.exit(-1);
-        }
-    };
+//    public Handler<Fault> handleFault =
+//            new Handler<Fault>() {
+//        @Override
+//        public void handle(Fault ex) {
+//
+//            logger.debug(ex.getFault().toString());
+//            System.exit(-1);
+//        }
+//    };
     Handler<HolePunchTimeout> handleHolePunchTimeout = new Handler<HolePunchTimeout>() {
         @Override
         public void handle(HolePunchTimeout msg) {
