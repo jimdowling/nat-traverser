@@ -119,7 +119,8 @@ public class ParentMakerTest extends VodRetryComponentTestCase {
         assertSequence(events, KeepBindingOpenTimeout.class);
 
         SchedulePeriodicTimeout spt2 = new SchedulePeriodicTimeout(0, 5000);
-        parentMaker.handleKeepBindingOpenTimeout.handle(new KeepBindingOpenTimeout(spt2, pubAddrs.get(0)));
+        parentMaker.handleKeepBindingOpenTimeout.handle(
+                new KeepBindingOpenTimeout(spt2, pubAddrs.get(0).getPeerAddress()));
         events = pollEvent(1);
         assertSequence(events, ParentKeepAliveMsg.Ping.class);
 

@@ -113,6 +113,8 @@ public final class NettyNetwork extends ComponentDefinition {
     private NettyNetwork component;
     private ConcurrentMap<InetSocketAddress, InetSocketAddress> upnpLocalSocket =
             new ConcurrentHashMap<InetSocketAddress, InetSocketAddress>();
+    // Bandwidth Measurement statistics
+    private boolean enableBandwidthStats;
     private long prevTotalWrote;
     private long prevTotalRead;
     private static long totalWrittenBytes, totalReadBytes;
@@ -242,7 +244,9 @@ public final class NettyNetwork extends ComponentDefinition {
 
             msgDecoderClass = init.getMsgDecoderClass();
             DirectMsgNettyFactory.setMsgFrameDecoder(msgDecoderClass);
-            
+
+            enableBandwidthStats = init.isEnableBandwidthStats();
+
             // Executors.newCachedThreadPool is an unbounded thread pool, with automatic thread reclamation
             factoryDataChannel = new NioDatagramChannelFactory(Executors.newCachedThreadPool());
 
@@ -261,9 +265,11 @@ public final class NettyNetwork extends ComponentDefinition {
                 bindPort(alt.getIp(), alt.getPort(), upnpIp, alt.getPort());
             }
 
-            SchedulePeriodicTimeout spt = new SchedulePeriodicTimeout(0, 1000);
-//            ByteCounterTimeout bct = new ByteCounterTimeout(spt);
-//            trigger(spt, timer);
+            if (enableBandwidthStats) {
+                SchedulePeriodicTimeout spt = new SchedulePeriodicTimeout(0, 1000);
+                ByteCounterTimeout bct = new ByteCounterTimeout(spt);
+                trigger(spt, timer);
+            }
         }
     };
     /**
@@ -417,12 +423,12 @@ public final class NettyNetwork extends ComponentDefinition {
                 new FixedReceiveBufferSizePredictorFactory(1500));
         // see http://docs.jboss.org/netty/3.1/api/org/jboss/netty/channel/ChannelConfig.html
 
+        // see http://docs.jboss.org/netty/3.2/api/org/jboss/netty/channel/socket/DatagramChannelConfig.html
         bootstrap.setOption("receiveBufferSize", RECV_BUFFER_SIZE);
         bootstrap.setOption("sendBufferSize", SEND_BUFFER_SIZE);
 //            bootstrap.setOption("trafficClass", trafficClass);
 //            bootstrap.setOption("soTimeout", soTimeout);
 //            bootstrap.setOption("broadcast", broadcast);
-//            http://docs.jboss.org/netty/3.2/api/org/jboss/netty/channel/socket/DatagramChannelConfig.html
         bootstrap.setOption("connectTimeoutMillis", CONNECT_TIMEOUT_MS);
         bootstrap.setOption("reuseAddress", true);
 
@@ -555,7 +561,6 @@ public final class NettyNetwork extends ComponentDefinition {
         if (localAddr instanceof InetSocketAddress) {
             clientSocketAddress = (InetSocketAddress) localAddr;
             removeLocalSocket(clientSocketAddress);
-//            logger.trace("Channel closed to " + clientSocketAddress.toString());
             logger.trace("Channel closed");
         }
 

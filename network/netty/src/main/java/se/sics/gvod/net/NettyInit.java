@@ -37,34 +37,35 @@ public final class NettyInit extends Init {
     private final int seed;
     private final int maxPacketSize;
     private final Class<? extends MsgFrameDecoder> msgDecoderClass;
+    private final boolean enableBandwidthStats;
     
-    public NettyInit(Address bind, boolean bindToAllNetInterfaces, int seed,
-            Class<? extends MsgFrameDecoder> msgDecoderClass) {
-        this(bind, bind, null, bindToAllNetInterfaces, seed, 
-                BaseCommandLineConfig.DEFAULT_MTU, msgDecoderClass);
-    }
-
-    public NettyInit(Address bind, boolean bindToAllNetInterfaces, int seed, int mtu,
-            Class<? extends MsgFrameDecoder> msgDecoderClass) {
-        this(bind, bind, null, bindToAllNetInterfaces, seed, mtu,
-                msgDecoderClass);
-    }
-
     public NettyInit(Address bind, Address alt1, boolean bindToAllNetInterfaces, int seed,
             Class<? extends MsgFrameDecoder> msgDecoderClass) {
         this(bind, alt1, bindToAllNetInterfaces, seed, 
                 BaseCommandLineConfig.DEFAULT_MTU, msgDecoderClass);
     }
 
+    public NettyInit(Address bind, boolean bindToAllNetInterfaces, int seed,
+            Class<? extends MsgFrameDecoder> msgDecoderClass) {
+        this(bind, bind, null, bindToAllNetInterfaces, seed, 
+                BaseCommandLineConfig.DEFAULT_MTU, msgDecoderClass, false);
+    }
+
+    public NettyInit(Address bind, boolean bindToAllNetInterfaces, int seed, int mtu,
+            Class<? extends MsgFrameDecoder> msgDecoderClass) {
+        this(bind, bind, null, bindToAllNetInterfaces, seed, mtu,
+                msgDecoderClass, false);
+    }
+
     public NettyInit(Address bind, Address alt1, boolean bindToAllNetInterfaces,
             int seed, int mtu, Class<? extends MsgFrameDecoder> msgDecoderClass) {
         this(bind, bind, alt1, bindToAllNetInterfaces, seed, mtu,
-                msgDecoderClass);
+                msgDecoderClass, false);
     }
 
     public NettyInit(Address bind, Address upnp, Address alt1,
             boolean bindToAllNetInterfaces, int seed, int mtu,
-            Class<? extends MsgFrameDecoder> msgDecoderClass) {
+            Class<? extends MsgFrameDecoder> msgDecoderClass, boolean enableBandwidthStats) {
         super();
         this.bind = bind;
         this.upnp = upnp;
@@ -73,6 +74,11 @@ public final class NettyInit extends Init {
         this.seed = seed;
         this.maxPacketSize = mtu;
         this.msgDecoderClass = msgDecoderClass;
+        this.enableBandwidthStats = enableBandwidthStats;
+    }
+
+    public boolean isEnableBandwidthStats() {
+        return enableBandwidthStats;
     }
 
     public Class<? extends MsgFrameDecoder> getMsgDecoderClass() {
@@ -92,11 +98,6 @@ public final class NettyInit extends Init {
         return maxPacketSize;
     }
 
-    /**
-     * Gets the self.
-     *
-     * @return the self
-     */
     public final Address getSelf() {
         return bind;
     }
