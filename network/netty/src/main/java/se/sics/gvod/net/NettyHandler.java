@@ -79,8 +79,9 @@ public class NettyHandler extends SimpleChannelHandler {
 
         RewriteableMsg rewrittenMsg = (RewriteableMsg) e.getMessage();
 
-        // session-less UDP means that remoteAddresses cannot be found in
-        // the channel object, but only in the MessageEvent object.
+        // A messages ip and port are now set here.
+        // ip is null and port is 0, and we use the SocketAddress returned by
+        // Netty to set the messages srcIp, destIp, and srcPort and destPort values.
         SocketAddress srcAddr = e.getRemoteAddress();
 
         if (srcAddr instanceof InetSocketAddress) {
@@ -94,8 +95,8 @@ public class NettyHandler extends SimpleChannelHandler {
             
             //  TODO - this is terrible code. All we need to do is change
             // the VodAddress in VodMsg, not Address in RewriteableMsg
-            rewrittenMsg.rewriteDestination(rewrittenMsg.getDestination());
-            rewrittenMsg.rewritePublicSource(rewrittenMsg.getSource());
+//            rewrittenMsg.rewriteDestination(rewrittenMsg.getDestination());
+//            rewrittenMsg.rewritePublicSource(rewrittenMsg.getSource());
             
                 // TODO - for UPNP, the port on which the data is sent from the NAT
                 // may not be the same as the mapped port - see
@@ -126,3 +127,4 @@ public class NettyHandler extends SimpleChannelHandler {
         }
     }
 }
+    

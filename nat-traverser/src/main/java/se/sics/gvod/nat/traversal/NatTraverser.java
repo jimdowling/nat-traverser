@@ -138,7 +138,6 @@ public class NatTraverser extends MsgRetryComponent {
     private Map<Integer, Long> outstandingTimestamps = new HashMap<Integer, Long>();
     private boolean stunTypeDetermined = false;
     private Set<Address> failedStunServers = new HashSet<Address>();
-
     private List<VodAddress> croupierSamples = new ArrayList<VodAddress>();
 
     class ServersInitTimeout extends Timeout {
@@ -270,7 +269,7 @@ public class NatTraverser extends MsgRetryComponent {
         this.delegator.doSubscribe(handleGarbageCleanupTimeout, timer);
         this.delegator.doSubscribe(handleStunRetryTimeout, timer);
         this.delegator.doSubscribe(handleServersInitTimeout, timer);
-        
+
         this.delegator.doSubscribe(handleCroupierSample, croupier);
 
         this.delegator.doSubscribe(handleOpenConnectionResponse, hpClient.getPositive(HpClientPort.class));
@@ -281,7 +280,7 @@ public class NatTraverser extends MsgRetryComponent {
         this.delegator.doConnect(hpClient.getNegative(Timer.class), timer);
         this.delegator.doConnect(hpClient.getNegative(VodNetwork.class), network,
                 new MsgDestFilterOverlayId(VodConfig.SYSTEM_OVERLAY_ID));
-        this.delegator.doConnect(hpClient.getNegative(NatNetworkControl.class), 
+        this.delegator.doConnect(hpClient.getNegative(NatNetworkControl.class),
                 lowerNetControl);
 
     }
@@ -337,7 +336,7 @@ public class NatTraverser extends MsgRetryComponent {
                 Set<Address> stunServers = new HashSet<Address>();
                 if (!init.getPublicNodes().isEmpty()) {
                     Address a = init.getPublicNodes().iterator().next();
-                    stunServers.add(new Address(a.getIp(), BaseCommandLineConfig.DEFAULT_STUN_PORT, 
+                    stunServers.add(new Address(a.getIp(), BaseCommandLineConfig.DEFAULT_STUN_PORT,
                             a.getId()));
                 };
 
@@ -360,7 +359,7 @@ public class NatTraverser extends MsgRetryComponent {
         @Override
         public void handle(OpenConnectionResponse response) {
             logger.debug(compName + "connection response recvd flag." + response.getResponseType()
-                    + " destination id (" 
+                    + " destination id ("
                     + response.getOpenConnectionRequest().getRemoteClientId() + ") - "
                     + response.getMsgTimeoutId());
             int destId = response.getOpenConnectionRequest().getRemoteClientId();
@@ -374,16 +373,16 @@ public class NatTraverser extends MsgRetryComponent {
                     // cleanup, set the retry counter to zero
                     NatTraverser.HpProcess session = onGoingHP.get(destId);
                     session.setRemainingConnectionRetries(0);
-                    holePunchingFailed(true, destId, flag, 
+                    holePunchingFailed(true, destId, flag,
                             response.getHpMechanismUsed(), response.getMsgTimeoutId());
 
                 } else {
                     logger.warn(compName + "cant establish connection with remote client ID (" + destId
                             + ") flag: " + response.getResponseType() + " hp mechanism: " + response.getHpMechanismUsed()
                             + " - " + response.getMsgTimeoutId());
-                    holePunchingFailed(true, destId, flag, 
-                            response.getHpMechanismUsed(), 
-                             response.getMsgTimeoutId());
+                    holePunchingFailed(true, destId, flag,
+                            response.getHpMechanismUsed(),
+                            response.getMsgTimeoutId());
                 }
             }
         }
@@ -449,7 +448,7 @@ public class NatTraverser extends MsgRetryComponent {
 
             // incoming msgs don't refresh the nat-binding, so no point in updating the OpenConnectionMap
             int overlayId = msg.getVodDestination().getOverlayId();
-            
+
             // If the msg is destined for a system service (HP, Stun, System-Croupier, etc), don't
             // forward it up the NatTraverser, as it should have been handled already.
             if (overlayId != VodConfig.SYSTEM_OVERLAY_ID) {
@@ -494,18 +493,18 @@ public class NatTraverser extends MsgRetryComponent {
             // I can get a public node sample using either RTTStore or
             // Croupier
 //            if (!rtts.isEmpty() || !croupierSamples.isEmpty()) {
-                List<VodAddress> nodes = new ArrayList<VodAddress>();
-                for (RTT rtt : rtts) {
-                    nodes.add(rtt.getAddress());
-                }
-                if (nodes.isEmpty()) {
-                    for (VodAddress va : croupierSamples) {
-                        if (va.isOpen()) {
-                            nodes.add(va);
-                        }
+            List<VodAddress> nodes = new ArrayList<VodAddress>();
+            for (RTT rtt : rtts) {
+                nodes.add(rtt.getAddress());
+            }
+            if (nodes.isEmpty()) {
+                for (VodAddress va : croupierSamples) {
+                    if (va.isOpen()) {
+                        nodes.add(va);
                     }
                 }
-                initialized = initializeServerComponents(nodes);
+            }
+            initialized = initializeServerComponents(nodes);
 //            }
             if (!initialized) {
                 startServerComponents();
@@ -813,7 +812,7 @@ public class NatTraverser extends MsgRetryComponent {
         zServer = create(RendezvousServer.class);
 
         connect(zServer.getNegative(Timer.class), timer);
-        connect(zServer.getNegative(VodNetwork.class), network, 
+        connect(zServer.getNegative(VodNetwork.class), network,
                 new MsgDestFilterOverlayId(VodConfig.SYSTEM_OVERLAY_ID));
         delegator.doTrigger(new RendezvousServerInit(
                 self.clone(VodConfig.SYSTEM_OVERLAY_ID),
@@ -920,8 +919,7 @@ public class NatTraverser extends MsgRetryComponent {
 
     public void holePunchingFailed(boolean cancelTimer, int destId,
             OpenConnectionResponseType flag,
-            HPMechanism hpMechanism, TimeoutId msgTimeoutId 
-            ) {
+            HPMechanism hpMechanism, TimeoutId msgTimeoutId) {
         NatTraverser.HpProcess session = onGoingHP.get(destId);
         onGoingHP.remove(destId);
 
@@ -973,7 +971,7 @@ public class NatTraverser extends MsgRetryComponent {
                         // remove the connection
 
                         logger.trace(compName + " deleting the connection " + connectionKey);
-                        DeleteConnectionRequest request = 
+                        DeleteConnectionRequest request =
                                 new DeleteConnectionRequest(connectionKey);
                         delegator.doTrigger(request, hpClient.getPositive(HpClientPort.class));
                     }
@@ -1011,8 +1009,8 @@ public class NatTraverser extends MsgRetryComponent {
                 failedStunServers.clear();
                 // Only start RendezvousServer if we can run it on the default port
                 if (event.getNat().isOpen()) {
-                        // start the server components, when we have some partner for the stun server
-                        startServerComponents();
+                    // start the server components, when we have some partner for the stun server
+                    startServerComponents();
                 } else if (event.getNat().isUpnp()) {
                     logger.info("UPnP is supported.");
                     if (parentMaker != null) {
@@ -1022,16 +1020,14 @@ public class NatTraverser extends MsgRetryComponent {
                     parentMaker = create(ParentMaker.class);
                     // TODO - do i need a filter for timer msgs too?
                     connect(parentMaker.getNegative(Timer.class), timer);
-                    connect(parentMaker.getNegative(VodNetwork.class), network
-                            , new MsgDestFilterOverlayId(VodConfig.SYSTEM_OVERLAY_ID)
-                            );
+                    connect(parentMaker.getNegative(VodNetwork.class), network, new MsgDestFilterOverlayId(VodConfig.SYSTEM_OVERLAY_ID));
                     connect(parentMaker.getNegative(NatNetworkControl.class), lowerNetControl);
                     delegator.doTrigger(
                             new ParentMakerInit(self.clone(VodConfig.SYSTEM_OVERLAY_ID),
                             parentMakerConfig), parentMaker.control());
                     List<VodAddress> bootstrappers = new ArrayList<VodAddress>();
                     bootstrappers.add(ToVodAddr.hpServer(event.getStunServer()));
-                    delegator.doTrigger(new Join(bootstrappers), 
+                    delegator.doTrigger(new Join(bootstrappers),
                             parentMaker.getPositive(ParentMakerPort.class));
                 }
             } else {
@@ -1064,19 +1060,21 @@ public class NatTraverser extends MsgRetryComponent {
             new Handler<StunRetryTimeout>() {
         @Override
         public void handle(StunRetryTimeout timeout) {
-            Set<Address> stunServers = new HashSet<Address>();
-            List<RTT> rtts = RTTStore.getOnAvgBest(self.getId(), 1, failedStunServers);
-            if (rtts.isEmpty()) { // couldn't find any new samples
-                retryStun(null);
-            } else {
-                stunServers.add(rtts.get(0).getAddress().getPeerAddress());
-                delegator.doTrigger(new GetNatTypeRequest(stunServers,
-                        0 /*timeout before starting stun*/,
-                        stunClientConfiguration.isMeasureNatBindingTimeout(),
-                        stunClientConfiguration.getRto(),
-                        stunClientConfiguration.getRtoRetries(),
-                        stunClientConfiguration.getRtoScale()),
-                        stunClient.getPositive(StunPort.class));
+            if (!stunTypeDetermined) {
+                Set<Address> stunServers = new HashSet<Address>();
+                List<RTT> rtts = RTTStore.getOnAvgBest(self.getId(), 1, failedStunServers);
+                if (rtts.isEmpty()) { // couldn't find any new samples
+                    retryStun(null);
+                } else {
+                    stunServers.add(rtts.get(0).getAddress().getPeerAddress());
+                    delegator.doTrigger(new GetNatTypeRequest(stunServers,
+                            0 /*timeout before starting stun*/,
+                            stunClientConfiguration.isMeasureNatBindingTimeout(),
+                            stunClientConfiguration.getRto(),
+                            stunClientConfiguration.getRtoRetries(),
+                            stunClientConfiguration.getRtoScale()),
+                            stunClient.getPositive(StunPort.class));
+                }
             }
         }
     };
@@ -1090,9 +1088,7 @@ public class NatTraverser extends MsgRetryComponent {
             }
         }
     };
-
     Handler<CroupierSample> handleCroupierSample = new Handler<CroupierSample>() {
-
         @Override
         public void handle(CroupierSample event) {
             logger.trace("Received {} samples from Croupier.", event.getNodes().size());

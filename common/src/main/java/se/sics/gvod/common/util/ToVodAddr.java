@@ -37,22 +37,22 @@ public class ToVodAddr {
     }
 
     public static VodAddress hpClient(Address addr) {
-        return new VodAddress(new Address(addr.getIp(), VodConfig.getPort(),
+        return new VodAddress(new Address(addr.getIp(), addr.getPort(),
                 addr.getId()), VodConfig.SYSTEM_OVERLAY_ID);
     }
 
     public static VodAddress systemAddr(Address addr) {
-        return new VodAddress(new Address(addr.getIp(), VodConfig.getPort(),
+        return new VodAddress(new Address(addr.getIp(), addr.getPort(),
                 addr.getId()), VodConfig.SYSTEM_OVERLAY_ID);
     }
 
     public static VodAddress monitor(Address addr) {
-        return new VodAddress(new Address(addr.getIp(), VodConfig.getPort(),
+        return new VodAddress(new Address(addr.getIp(), addr.getPort(),
                 addr.getId()), VodConfig.SYSTEM_OVERLAY_ID);
     }
 
     public static VodAddress overlay(Address addr, int overlayId) {
-        return new VodAddress(new Address(addr.getIp(), VodConfig.getPort(),
+        return new VodAddress(new Address(addr.getIp(), addr.getPort(),
                 addr.getId()), overlayId);
     }
 }

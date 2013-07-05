@@ -76,6 +76,7 @@ import se.sics.gvod.common.msgs.DisconnectMsg;
 import se.sics.gvod.common.msgs.DisconnectMsgFactory;
 import se.sics.gvod.common.msgs.DirectMsgNettyFactory;
 import se.sics.gvod.net.BaseMsgFrameDecoder;
+import se.sics.gvod.net.msgs.NatMsg;
 import se.sics.gvod.net.util.UserTypesDecoderFactory;
 import se.sics.gvod.net.util.UserTypesEncoderFactory;
 import se.sics.gvod.stun.msgs.EchoChangeIpAndPortMsg;
@@ -120,7 +121,6 @@ public class EncodingDecodingTest {
 
     @BeforeClass
     public static void setUpClass() throws Exception {
-//        InetAddress self = InetAddress.getLocalHost();
         InetAddress self = InetAddress.getByName("127.0.0.1");
         src = new Address(self, 58027, 123);
         dest = new Address(self, 65535, 123);
@@ -187,15 +187,6 @@ public class EncodingDecodingTest {
         assert (t1 == t2);
     }
 
-//    @Test
-//    public void TimeoutIdNetty() throws MessageEncodingException, MessageDecodingException {
-//        UUID id1 = UUID.
-//        ChannelBuffer buffer = ChannelBuffers.dynamicBuffer(8);
-////        UserTypesEncoderFactory.writeTimeoutId(buffer, id1);
-//        buffer.writeInt(id1.getId());
-//        TimeoutId id2 = UserTypesDecoderFactory.readTimeoutId(buffer);
-//        assert (id1.equals(id2));
-//    }
     @Test
     public void booleanNetty() throws MessageEncodingException, MessageDecodingException {
         boolean yes = true;
@@ -228,13 +219,12 @@ public class EncodingDecodingTest {
     public void connectMsgRequest() {
         ConnectMsg.Request msg = new ConnectMsg.Request(gSrc, gSrc,
                 utility, true, BaseCommandLineConfig.DEFAULT_MTU);
-        // setTimeoutId() is called by MsgRetryComponent
         msg.setTimeoutId(UUID.nextUUID());
         try {
             ChannelBuffer buffer = msg.toByteArray();
             opCodeCorrect(buffer, msg);
             ConnectMsg.Request res = ConnectMsgFactory.Request.fromBuffer(buffer);
-            assert (true);
+            compareNatMsgs(msg, res);
         } catch (MessageDecodingException ex) {
             Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
             assert (false);
@@ -255,7 +245,7 @@ public class EncodingDecodingTest {
             ChannelBuffer buffer = msg.toByteArray();
             opCodeCorrect(buffer, msg);
             ConnectMsg.Response res = ConnectMsgFactory.Response.fromBuffer(buffer);
-            assert (true);
+            compareNatMsgs(msg, res);
         } catch (MessageDecodingException ex) {
             Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
             assert (false);
@@ -274,7 +264,7 @@ public class EncodingDecodingTest {
             ChannelBuffer buffer = msg.toByteArray();
             opCodeCorrect(buffer, msg);
             ConnectMsg.Response res = ConnectMsgFactory.Response.fromBuffer(buffer);
-            assert (true);
+            compareNatMsgs(msg, res);
         } catch (MessageDecodingException ex) {
             Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
             assert (false);
@@ -283,17 +273,16 @@ public class EncodingDecodingTest {
             assert (false);
         }
     }
-    
+
     @Test
     public void disconnectMsgRequest() {
         DisconnectMsg.Request msg = new DisconnectMsg.Request(gSrc, gSrc);
-        // setTimeoutId() is called by MsgRetryComponent
         msg.setTimeoutId(UUID.nextUUID());
         try {
             ChannelBuffer buffer = msg.toByteArray();
             opCodeCorrect(buffer, msg);
             DisconnectMsg.Request res = DisconnectMsgFactory.Request.fromBuffer(buffer);
-            assert (msg.getTimeoutId().getId() == res.getTimeoutId().getId());
+            compareNatMsgs(msg, res);
         } catch (MessageDecodingException ex) {
             Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
             assert (false);
@@ -311,7 +300,7 @@ public class EncodingDecodingTest {
             ChannelBuffer buffer = msg.toByteArray();
             opCodeCorrect(buffer, msg);
             DisconnectMsg.Response res = DisconnectMsgFactory.Response.fromBuffer(buffer);
-            assert (true);
+            compareNatMsgs(msg, res);
         } catch (MessageDecodingException ex) {
             Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
             assert (false);
@@ -321,8 +310,6 @@ public class EncodingDecodingTest {
         }
     }
 
-    
-    
     @Test
     public void shuffleRequest() {
         try {
@@ -351,6 +338,7 @@ public class EncodingDecodingTest {
             ChannelBuffer channelBuffer = request.toByteArray();
             opCodeCorrect(channelBuffer, request);
             ShuffleMsg.Request fromBuffer = ShuffleMsgFactory.Request.fromBuffer(channelBuffer);
+            compareNatMsgs(request, fromBuffer);
 
             assert (fromBuffer.getBuffer().getPublicDescriptors().isEmpty());
             assert (fromBuffer.getBuffer().getPrivateDescriptors().isEmpty());
@@ -372,6 +360,8 @@ public class EncodingDecodingTest {
             assert (fromBuffer2.getBuffer().getPublicDescriptors().get(0).equals(desc1));
             assert (fromBuffer2.getBuffer().getPublicDescriptors().get(1).equals(desc2));
             assert (fromBuffer2.getBuffer().getPrivateDescriptors().get(0).equals(desc5));
+            compareNatMsgs(request2, fromBuffer2);
+            
         } catch (MessageDecodingException ex) {
             assert (false);
             Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
@@ -415,6 +405,7 @@ public class EncodingDecodingTest {
             ChannelBuffer channelBuffer = response.toByteArray();
             opCodeCorrect(channelBuffer, response);
             ShuffleMsg.Response fromBuffer = ShuffleMsgFactory.Response.fromBuffer(channelBuffer);
+            compareNatMsgs(response, fromBuffer);
 
             assert (fromBuffer.getBuffer().getPublicDescriptors().isEmpty());
 
@@ -436,6 +427,8 @@ public class EncodingDecodingTest {
             assert (fromBuffer2.getBuffer().getPublicDescriptors().get(0).equals(desc3));
             assert (fromBuffer2.getBuffer().getPublicDescriptors().get(1).equals(desc4));
             assert (fromBuffer2.getBuffer().getPrivateDescriptors().get(0).equals(desc5));
+            compareNatMsgs(response2, fromBuffer2);
+
         } catch (MessageDecodingException ex) {
             assert (false);
             Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
@@ -448,7 +441,6 @@ public class EncodingDecodingTest {
         }
     }
 
-
     @Test
     public void setsExchangeRequestMsg() {
         SetsExchangeMsg.Request msg = new SetsExchangeMsg.Request(
@@ -458,7 +450,7 @@ public class EncodingDecodingTest {
             opCodeCorrect(buffer, msg);
             SetsExchangeMsg.Request res =
                     SetsExchangeMsgFactory.Request.fromBuffer(buffer);
-            assert (true);
+            compareNatMsgs(msg, res);
         } catch (MessageDecodingException ex) {
             Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
             assert (false);
@@ -477,7 +469,7 @@ public class EncodingDecodingTest {
             opCodeCorrect(buffer, msg);
             SetsExchangeMsg.Response res =
                     SetsExchangeMsgFactory.Response.fromBuffer(buffer);
-            assert (true);
+            compareNatMsgs(msg, res);
         } catch (MessageDecodingException ex) {
             Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
             assert (false);
@@ -489,15 +481,14 @@ public class EncodingDecodingTest {
 
     @Test
     public void GoMsg() {
-        GoMsg.Request msg = new GoMsg.Request(gSrc, gDest, gDest, 
+        GoMsg.Request msg = new GoMsg.Request(gSrc, gDest, gDest,
                 hpMechanism, hpRole, 1,
                 UUID.nextUUID());
         try {
             ChannelBuffer buffer = msg.toByteArray();
             opCodeCorrect(buffer, msg);
             GoMsg.Request res = GoMsgFactory.Request.fromBuffer(buffer);
-
-            assert (true);
+            compareNatMsgsNoTimeout(msg, res);
         } catch (MessageDecodingException ex) {
             Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
             assert (false);
@@ -518,6 +509,7 @@ public class EncodingDecodingTest {
             HolePunchingMsg.Request res =
                     HolePunchingMsgFactory.Request.fromBuffer(buffer);
             assert (msg.getRemoteClientId() == res.getRemoteClientId());
+            compareNatMsgs(msg, res);            
         } catch (MessageDecodingException ex) {
             Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
             assert (false);
@@ -537,7 +529,7 @@ public class EncodingDecodingTest {
             opCodeCorrect(buffer, msg);
             HolePunchingMsg.Response res =
                     HolePunchingMsgFactory.Response.fromBuffer(buffer);
-            assert (true);
+            compareNatMsgs(msg, res);
         } catch (MessageDecodingException ex) {
             Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
             assert (false);
@@ -549,14 +541,14 @@ public class EncodingDecodingTest {
 
     @Test
     public void HolePunchingResponseAckMsg() {
-        HolePunchingMsg.ResponseAck msg = new HolePunchingMsg.ResponseAck(gSrc, gDest, 
+        HolePunchingMsg.ResponseAck msg = new HolePunchingMsg.ResponseAck(gSrc, gDest,
                 UUID.nextUUID(), UUID.nextUUID());
         try {
             ChannelBuffer buffer = msg.toByteArray();
             opCodeCorrect(buffer, msg);
             HolePunchingMsg.ResponseAck res =
                     HolePunchingMsgFactory.ResponseAck.fromBuffer(buffer);
-            assert (true);
+            compareNatMsgs(msg, res);
         } catch (MessageDecodingException ex) {
             Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
             assert (false);
@@ -575,7 +567,7 @@ public class EncodingDecodingTest {
             opCodeCorrect(buffer, msg);
             HpFinishedMsg res =
                     HpFinishedMsgFactory.Request.fromBuffer(buffer);
-            assert (true);
+            compareNatMsgsNoTimeout(msg, res);
         } catch (MessageDecodingException ex) {
             Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
             assert (false);
@@ -595,6 +587,7 @@ public class EncodingDecodingTest {
             opCodeCorrect(buffer, msg);
             HpConnectMsg.Request res =
                     HpConnectMsgFactory.Request.fromBuffer(buffer);
+            compareNatMsgs(msg, res);
         } catch (MessageDecodingException ex) {
             Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
             assert (false);
@@ -611,8 +604,7 @@ public class EncodingDecodingTest {
             opCodeCorrect(buffer, response);
             HpConnectMsg.Response res2 =
                     HpConnectMsgFactory.Response.fromBuffer(buffer);
-
-            assert (true);
+            compareNatMsgs(response, res2);
         } catch (MessageDecodingException ex) {
             Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
             assert (false);
@@ -630,6 +622,7 @@ public class EncodingDecodingTest {
             ChannelBuffer buffer = msg.toByteArray();
             opCodeCorrect(buffer, msg);
             HpRegisterMsg.Request res = HpRegisterMsgFactory.Request.fromBuffer(buffer);
+            compareNatMsgs(msg, res);
         } catch (MessageDecodingException ex) {
             Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
             assert (false);
@@ -647,7 +640,7 @@ public class EncodingDecodingTest {
             ChannelBuffer buffer = resp.toByteArray();
             opCodeCorrect(buffer, resp);
             HpRegisterMsg.Response res2 = HpRegisterMsgFactory.Response.fromBuffer(buffer);
-            assert (true);
+            compareNatMsgs(resp, res2);
         } catch (MessageDecodingException ex) {
             Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
             assert (false);
@@ -655,7 +648,7 @@ public class EncodingDecodingTest {
             Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
             assert (false);
         }
-        
+
         Set<Integer> ports2 = new HashSet<Integer>();
         HpRegisterMsg.Response resp2 = new HpRegisterMsg.Response(gSrc, gDest,
                 HpRegisterMsg.RegisterStatus.ACCEPT, UUID.nextUUID(), ports2);
@@ -663,15 +656,15 @@ public class EncodingDecodingTest {
             ChannelBuffer buffer = resp2.toByteArray();
             opCodeCorrect(buffer, resp2);
             HpRegisterMsg.Response res3 = HpRegisterMsgFactory.Response.fromBuffer(buffer);
-            assert (true);
+            compareNatMsgs(resp2, res3);
         } catch (MessageDecodingException ex) {
             Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
             assert (false);
         } catch (MessageEncodingException ex) {
             Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
             assert (false);
-        }        
-        
+        }
+
     }
 
     @Test
@@ -683,6 +676,7 @@ public class EncodingDecodingTest {
             ChannelBuffer buffer = msg.toByteArray();
             opCodeCorrect(buffer, msg);
             HpUnregisterMsg.Request res = HpUnregisterMsgFactory.Request.fromBuffer(buffer);
+            compareNatMsgs(msg, res);
         } catch (MessageDecodingException ex) {
             Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
             assert (false);
@@ -697,7 +691,7 @@ public class EncodingDecodingTest {
             ChannelBuffer buffer = resp.toByteArray();
             opCodeCorrect(buffer, resp);
             HpUnregisterMsg.Response res2 = HpUnregisterMsgFactory.Response.fromBuffer(buffer);
-            assert (true);
+            compareNatMsgs(resp, res2);
         } catch (MessageDecodingException ex) {
             Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
             assert (false);
@@ -709,13 +703,14 @@ public class EncodingDecodingTest {
 
     @Test
     public void Interleaved_PRC_OpenHoleMsg() {
-        Interleaved_PRC_OpenHoleMsg.Request msg = 
+        Interleaved_PRC_OpenHoleMsg.Request msg =
                 new Interleaved_PRC_OpenHoleMsg.Request(gSrc, gDest, remoteClientId, UUID.nextUUID());
         msg.setTimeoutId(UUID.nextUUID());
         try {
             ChannelBuffer buffer = msg.toByteArray();
             opCodeCorrect(buffer, msg);
             Interleaved_PRC_OpenHoleMsg.Request res = Interleaved_PRC_OpenHoleMsgFactory.Request.fromBuffer(buffer);
+            compareNatMsgs(msg, res);
         } catch (MessageDecodingException ex) {
             Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
             assert (false);
@@ -731,7 +726,7 @@ public class EncodingDecodingTest {
             ChannelBuffer buffer = resp.toByteArray();
             opCodeCorrect(buffer, resp);
             Interleaved_PRC_OpenHoleMsg.Response res2 = Interleaved_PRC_OpenHoleMsgFactory.Response.fromBuffer(buffer);
-            assert (true);
+            compareNatMsgs(resp, res2);
         } catch (MessageDecodingException ex) {
             Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
             assert (false);
@@ -744,15 +739,14 @@ public class EncodingDecodingTest {
     @Test
     public void Interleaved_PRC_ServersRequestForPredictionMsg() {
         Interleaved_PRC_ServersRequestForPredictionMsg.Request msg =
-                new Interleaved_PRC_ServersRequestForPredictionMsg.Request(gSrc, gDest, 
+                new Interleaved_PRC_ServersRequestForPredictionMsg.Request(gSrc, gDest,
                 remoteClientId, HPMechanism.PRP_PRP, HPRole.PRC_INITIATOR, gDest, UUID.nextUUID());
-//        msg.setTimeoutId(UUID.nextUUID());
         try {
             ChannelBuffer buffer = msg.toByteArray();
             opCodeCorrect(buffer, msg);
             Interleaved_PRC_ServersRequestForPredictionMsg.Request res =
                     Interleaved_PRC_ServersRequestForPredictionMsgFactory.Request.fromBuffer(buffer);
-            assert (true);
+            compareNatMsgsNoTimeout(msg, res);
         } catch (MessageDecodingException ex) {
             Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
             assert (false);
@@ -775,6 +769,7 @@ public class EncodingDecodingTest {
             ChannelBuffer buffer = msg.toByteArray();
             opCodeCorrect(buffer, msg);
             Interleaved_PRP_ConnectMsg.Request res = Interleaved_PRP_ConnectMsgFactory.Request.fromBuffer(buffer);
+            compareNatMsgs(msg, res);
         } catch (MessageDecodingException ex) {
             Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
             assert (false);
@@ -790,7 +785,7 @@ public class EncodingDecodingTest {
             ChannelBuffer buffer = resp.toByteArray();
             opCodeCorrect(buffer, resp);
             Interleaved_PRP_ConnectMsg.Response res2 = Interleaved_PRP_ConnectMsgFactory.Response.fromBuffer(buffer);
-            assert (true);
+            compareNatMsgs(resp, res2);
         } catch (MessageDecodingException ex) {
             Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
             assert (false);
@@ -805,13 +800,12 @@ public class EncodingDecodingTest {
         Interleaved_PRP_ServerRequestForAvailablePortsMsg.Request msg = new Interleaved_PRP_ServerRequestForAvailablePortsMsg.Request(
                 gSrc, gDest, remoteClientId,
                 HPMechanism.PRP_PRP, HPRole.PRC_INITIATOR, UUID.nextUUID());
-//        msg.setTimeoutId(UUID.nextUUID());
         try {
             ChannelBuffer buffer = msg.toByteArray();
             opCodeCorrect(buffer, msg);
             Interleaved_PRP_ServerRequestForAvailablePortsMsg.Request res =
                     Interleaved_PRP_ServerRequestForAvailablePortsMsgFactory.Request.fromBuffer(buffer);
-            assert (true);
+            compareNatMsgsNoTimeout(msg, res);
         } catch (MessageDecodingException ex) {
             Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
             assert (false);
@@ -823,13 +817,14 @@ public class EncodingDecodingTest {
 
     @Test
     public void PRC_OpenHoleMsg() {
-        PRC_OpenHoleMsg.Request msg = new PRC_OpenHoleMsg.Request(gSrc, gDest, 
+        PRC_OpenHoleMsg.Request msg = new PRC_OpenHoleMsg.Request(gSrc, gDest,
                 remoteClientId, UUID.nextUUID());
         msg.setTimeoutId(UUID.nextUUID());
         try {
             ChannelBuffer buffer = msg.toByteArray();
             opCodeCorrect(buffer, msg);
             PRC_OpenHoleMsg.Request res = PRC_OpenHoleMsgFactory.Request.fromBuffer(buffer);
+            compareNatMsgs(msg, res);
         } catch (MessageDecodingException ex) {
             Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
             assert (false);
@@ -838,14 +833,14 @@ public class EncodingDecodingTest {
             assert (false);
         }
 
-        PRC_OpenHoleMsg.Response resp = new PRC_OpenHoleMsg.Response(gSrc, gDest, 
+        PRC_OpenHoleMsg.Response resp = new PRC_OpenHoleMsg.Response(gSrc, gDest,
                 UUID.nextUUID(), PRC_OpenHoleMsg.ResponseType.OK, remoteClientId,
                 UUID.nextUUID());
         try {
             ChannelBuffer buffer = resp.toByteArray();
             opCodeCorrect(buffer, resp);
             PRC_OpenHoleMsg.Response res2 = PRC_OpenHoleMsgFactory.Response.fromBuffer(buffer);
-            assert (true);
+            compareNatMsgs(resp, res2);
         } catch (MessageDecodingException ex) {
             Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
             assert (false);
@@ -866,7 +861,7 @@ public class EncodingDecodingTest {
             opCodeCorrect(buffer, msg);
             PRC_ServerRequestForConsecutiveMsg.Request res =
                     PRC_ServerRequestForConsecutiveMsgFactory.Request.fromBuffer(buffer);
-            assert (true);
+            compareNatMsgs(msg, res);
         } catch (MessageDecodingException ex) {
             Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
             assert (false);
@@ -882,13 +877,14 @@ public class EncodingDecodingTest {
         setPorts.add(1222);
         setPorts.add(65535);
         PRP_ConnectMsg.Request msg =
-                new PRP_ConnectMsg.Request(gSrc, gDest, remoteClientId, 
+                new PRP_ConnectMsg.Request(gSrc, gDest, remoteClientId,
                 setPorts, UUID.nextUUID());
         msg.setTimeoutId(UUID.nextUUID());
         try {
             ChannelBuffer buffer = msg.toByteArray();
             opCodeCorrect(buffer, msg);
             PRP_ConnectMsg.Request res = PRP_ConnectMsgFactory.Request.fromBuffer(buffer);
+            compareNatMsgs(msg, res);
         } catch (MessageDecodingException ex) {
             Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
             assert (false);
@@ -897,15 +893,15 @@ public class EncodingDecodingTest {
             assert (false);
         }
 
-        PRP_ConnectMsg.Response resp =
+        PRP_ConnectMsg.Response res =
                 new PRP_ConnectMsg.Response(gSrc, gDest, UUID.nextUUID(),
                 PRP_ConnectMsg.ResponseType.OK, remoteClientId,
                 gDest, 1088, false, UUID.nextUUID());
         try {
-            ChannelBuffer buffer = resp.toByteArray();
-            opCodeCorrect(buffer, resp);
+            ChannelBuffer buffer = res.toByteArray();
+            opCodeCorrect(buffer, res);
             PRP_ConnectMsg.Response res2 = PRP_ConnectMsgFactory.Response.fromBuffer(buffer);
-            assert (true);
+            compareNatMsgs(res, res2);
         } catch (MessageDecodingException ex) {
             Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
             assert (false);
@@ -919,13 +915,12 @@ public class EncodingDecodingTest {
     public void PRP_ServerRequestForAvailablePortsMsg() {
         PRP_ServerRequestForAvailablePortsMsg.Request msg = new PRP_ServerRequestForAvailablePortsMsg.Request(gSrc, gDest, remoteClientId,
                 HPMechanism.PRP_PRP, HPRole.PRC_INITIATOR, UUID.nextUUID());
-//        msg.setTimeoutId(UUID.nextUUID());
         try {
             ChannelBuffer buffer = msg.toByteArray();
             opCodeCorrect(buffer, msg);
             PRP_ServerRequestForAvailablePortsMsg.Request res =
                     PRP_ServerRequestForAvailablePortsMsgFactory.Request.fromBuffer(buffer);
-            assert (true);
+            compareNatMsgsNoTimeout(msg, res);
         } catch (MessageDecodingException ex) {
             Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
             assert (false);
@@ -936,7 +931,7 @@ public class EncodingDecodingTest {
 
     }
 
-  @Test
+    @Test
     public void RelayRequestMsg() {
         ConnectMsg.Request req = new ConnectMsg.Request(gSrc, gSrc, utility, true, age);
         RelayRequestMsg.ClientToServer msg = new RelayRequestMsg.ClientToServer(gSrc, gDest, remoteClientId,
@@ -946,6 +941,7 @@ public class EncodingDecodingTest {
             ChannelBuffer buffer = msg.toByteArray();
             opCodeCorrect(buffer, msg);
             RelayRequestMsg.ClientToServer res = RelayRequestMsgFactory.Request.fromBuffer(buffer);
+            compareNatMsgs(msg, res);
         } catch (MessageDecodingException ex) {
             Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
             assert (false);
@@ -961,6 +957,7 @@ public class EncodingDecodingTest {
             ChannelBuffer buffer = msg2.toByteArray();
             opCodeCorrect(buffer, msg2);
             RelayRequestMsg.ServerToClient res = RelayRequestMsgFactory.Response.fromBuffer(buffer);
+            compareNatMsgs(msg2, res);
         } catch (MessageDecodingException ex) {
             Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
             assert (false);
@@ -970,18 +967,16 @@ public class EncodingDecodingTest {
         }
     }
 
-
     @Test
     public void SHP_InitiateSimpleHolePunchingMsg() {
         SHP_InitiateSimpleHolePunchingMsg.Request msg = new SHP_InitiateSimpleHolePunchingMsg.Request(gSrc, gDest, remoteClientId,
                 HPMechanism.PRP_PRP, HPRole.PRC_INITIATOR, UUID.nextUUID());
-//        msg.setTimeoutId(UUID.nextUUID());
         try {
             ChannelBuffer buffer = msg.toByteArray();
             opCodeCorrect(buffer, msg);
             SHP_InitiateSimpleHolePunchingMsg.Request res =
                     SHP_InitiateSimpleHolePunchingMsgFactory.Request.fromBuffer(buffer);
-            assert (true);
+            compareNatMsgsNoTimeout(msg, res);
         } catch (MessageDecodingException ex) {
             Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
             assert (false);
@@ -995,12 +990,13 @@ public class EncodingDecodingTest {
     @Test
     public void SHP_OpenHoleMsg() {
 
-        SHP_OpenHoleMsg.Initiator msg2 = new SHP_OpenHoleMsg.Initiator(gSrc, gDest, gDest,
+        SHP_OpenHoleMsg.Initiator msg = new SHP_OpenHoleMsg.Initiator(gSrc, gDest, gDest,
                 SHP_OpenHoleMsg.ResponseType.OK, UUID.nextUUID());
         try {
-            ChannelBuffer buffer = msg2.toByteArray();
-            opCodeCorrect(buffer, msg2);
+            ChannelBuffer buffer = msg.toByteArray();
+            opCodeCorrect(buffer, msg);
             SHP_OpenHoleMsg.Initiator res = SHP_OpenHoleMsgFactory.Initiator.fromBuffer(buffer);
+            compareNatMsgsNoTimeout(msg, res);
         } catch (MessageDecodingException ex) {
             Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
             assert (false);
@@ -1019,7 +1015,7 @@ public class EncodingDecodingTest {
             opCodeCorrect(buffer, msg);
             ParentKeepAliveMsg.Ping res =
                     ParentKeepAliveMsgFactory.Request.fromBuffer(buffer);
-            assert (true);
+            compareNatMsgs(msg, res);
         } catch (MessageDecodingException ex) {
             Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
             assert (false);
@@ -1038,7 +1034,7 @@ public class EncodingDecodingTest {
             opCodeCorrect(buffer, msg);
             ParentKeepAliveMsg.Pong res =
                     ParentKeepAliveMsgFactory.Response.fromBuffer(buffer);
-            assert (true);
+            compareNatMsgs(msg, res);
         } catch (MessageDecodingException ex) {
             Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
             assert (false);
@@ -1058,7 +1054,7 @@ public class EncodingDecodingTest {
             opCodeCorrect(buffer, msg);
             HpKeepAliveMsg.Ping res =
                     HpKeepAliveMsgFactory.Request.fromBuffer(buffer);
-            assert (true);
+            compareNatMsgs(msg, res);
         } catch (MessageDecodingException ex) {
             Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
             assert (false);
@@ -1077,7 +1073,7 @@ public class EncodingDecodingTest {
             opCodeCorrect(buffer, msg);
             HpKeepAliveMsg.Pong res =
                     HpKeepAliveMsgFactory.Response.fromBuffer(buffer);
-            assert (true);
+            compareNatMsgs(msg, res);
         } catch (MessageDecodingException ex) {
             Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
             assert (false);
@@ -1088,9 +1084,6 @@ public class EncodingDecodingTest {
 
     }
 
-
-
-
     @Test
     public void echoMsgRequest() {
         EchoMsg.Request msg = new EchoMsg.Request(gSrc, gDest, EchoMsg.Test.UDP_BLOCKED, remoteClientId);
@@ -1100,7 +1093,7 @@ public class EncodingDecodingTest {
             opCodeCorrect(buffer, msg);
             EchoMsg.Request res =
                     EchoMsgFactory.Request.fromBuffer(buffer);
-            assert (true);
+            compareNatMsgs(msg, res);
         } catch (MessageDecodingException ex) {
             Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
             assert (false);
@@ -1121,7 +1114,7 @@ public class EncodingDecodingTest {
             opCodeCorrect(buffer, msg);
             EchoMsg.Request res =
                     EchoMsgFactory.Request.fromBuffer(buffer);
-            assert (true);
+            compareNatMsgs(msg, res);
         } catch (MessageDecodingException ex) {
             Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
             assert (false);
@@ -1141,7 +1134,7 @@ public class EncodingDecodingTest {
             opCodeCorrect(buffer, msg);
             EchoChangeIpAndPortMsg.Request res =
                     EchoChangeIpAndPortMsgFactory.Request.fromBuffer(buffer);
-            assert (true);
+            compareNatMsgs(msg, res);
         } catch (MessageDecodingException ex) {
             Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
             assert (false);
@@ -1160,7 +1153,7 @@ public class EncodingDecodingTest {
             opCodeCorrect(buffer, msg);
             EchoChangeIpAndPortMsg.Response res =
                     EchoChangeIpAndPortMsgFactory.Response.fromBuffer(buffer);
-            assert (true);
+            compareNatMsgs(msg, res);
         } catch (MessageDecodingException ex) {
             Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
             assert (false);
@@ -1180,7 +1173,7 @@ public class EncodingDecodingTest {
             opCodeCorrect(buffer, msg);
             EchoChangePortMsg.Request res =
                     EchoChangePortMsgFactory.Request.fromBuffer(buffer);
-            assert (true);
+            compareNatMsgs(msg, res);
         } catch (MessageDecodingException ex) {
             Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
             assert (false);
@@ -1199,7 +1192,7 @@ public class EncodingDecodingTest {
             opCodeCorrect(buffer, msg);
             EchoChangePortMsg.Response res =
                     EchoChangePortMsgFactory.Response.fromBuffer(buffer);
-            assert (true);
+            compareNatMsgs(msg, res);
         } catch (MessageDecodingException ex) {
             Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
             assert (false);
@@ -1219,7 +1212,7 @@ public class EncodingDecodingTest {
             opCodeCorrect(buffer, msg);
             ServerHostChangeMsg.Request res =
                     ServerHostChangeMsgFactory.Request.fromBuffer(buffer);
-            assert (true);
+            compareNatMsgs(msg, res);
         } catch (MessageDecodingException ex) {
             Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
             assert (false);
@@ -1238,7 +1231,7 @@ public class EncodingDecodingTest {
             opCodeCorrect(buffer, msg);
             ServerHostChangeMsg.Response res =
                     ServerHostChangeMsgFactory.Response.fromBuffer(buffer);
-            assert (true);
+            compareNatMsgs(msg, res);
         } catch (MessageDecodingException ex) {
             Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
             assert (false);
@@ -1258,7 +1251,7 @@ public class EncodingDecodingTest {
             opCodeCorrect(buffer, msg);
             PRP_PreallocatedPortsMsg.Request res =
                     PRP_PreallocatedPortsMsgFactory.Request.fromBuffer(buffer);
-            assert (true);
+            compareNatMsgs(msg, res);
         } catch (MessageDecodingException ex) {
             Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
             assert (false);
@@ -1274,7 +1267,7 @@ public class EncodingDecodingTest {
         prpPorts.add(11212);
         prpPorts.add(50505);
         PRP_PreallocatedPortsMsg.Response msg = new PRP_PreallocatedPortsMsg.Response(
-                gSrc, gDest, UUID.nextUUID(), 
+                gSrc, gDest, UUID.nextUUID(),
                 PRP_PreallocatedPortsMsg.ResponseType.NO_PORTS_AVAILABLE,
                 prpPorts, UUID.nextUUID());
         try {
@@ -1282,7 +1275,7 @@ public class EncodingDecodingTest {
             opCodeCorrect(buffer, msg);
             PRP_PreallocatedPortsMsg.Response res =
                     PRP_PreallocatedPortsMsgFactory.Response.fromBuffer(buffer);
-            assert (true);
+            compareNatMsgs(msg, res);
         } catch (MessageDecodingException ex) {
             Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
             assert (false);
@@ -1292,7 +1285,6 @@ public class EncodingDecodingTest {
         }
     }
 
-   
     @Test
     public void stunReportRequest() {
         String report = "bbbbbbbbbbbbbbbbbbb";
@@ -1303,6 +1295,7 @@ public class EncodingDecodingTest {
             ReportMsg.Request request =
                     ReportMsgFactory.Request.fromBuffer(buffer);
             assert (report.equals(request.getReport()));
+            compareNatMsgs(msg, request);
         } catch (MessageDecodingException ex) {
             Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
             assert (false);
@@ -1311,7 +1304,7 @@ public class EncodingDecodingTest {
             assert (false);
         }
     }
-    
+
     @Test
     public void stunReportResponse() {
         TimeoutId id = UUID.nextUUID();
@@ -1321,7 +1314,7 @@ public class EncodingDecodingTest {
             opCodeCorrect(buffer, msg);
             ReportMsg.Response response =
                     ReportMsgFactory.Response.fromBuffer(buffer);
-            assert (id.equals(response.getTimeoutId()));
+            compareNatMsgs(msg, response);
         } catch (MessageDecodingException ex) {
             Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
             assert (false);
@@ -1330,7 +1323,59 @@ public class EncodingDecodingTest {
             assert (false);
         }
     }
-    
-    
 
+    @Test
+    public void tConnectionMsgPing() {
+        TimeoutId id = UUID.nextUUID();
+        TConnectionMsg.Ping msg = new TConnectionMsg.Ping(gSrc, gDest, id);
+        try {
+            ChannelBuffer buffer = msg.toByteArray();
+            opCodeCorrect(buffer, msg);
+            TConnectionMsg.Ping ping =
+                    TConnectionMsgFactory.Ping.fromBuffer(buffer);
+            compareNatMsgs(msg, ping);
+        } catch (MessageDecodingException ex) {
+            Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
+            assert (false);
+        } catch (MessageEncodingException ex) {
+            Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
+            assert (false);
+        }
+    }
+
+    @Test
+    public void tConnectionMsgPong() {
+        TimeoutId id = UUID.nextUUID();
+        TConnectionMsg.Pong msg = new TConnectionMsg.Pong(gSrc, gDest, id);
+        try {
+            ChannelBuffer buffer = msg.toByteArray();
+            opCodeCorrect(buffer, msg);
+            TConnectionMsg.Pong pong =
+                    TConnectionMsgFactory.Pong.fromBuffer(buffer);
+            compareNatMsgs(msg, pong);
+        } catch (MessageDecodingException ex) {
+            Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
+            assert (false);
+        } catch (MessageEncodingException ex) {
+            Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
+            assert (false);
+        }
+    }
+
+    private void compareNatMsgs(NatMsg a, NatMsg b) {
+        assert (a.getTimeoutId().equals(b.getTimeoutId()));
+        compareNatMsgsNoTimeout(a, b);
+        // Note, we don't compare Address objects, as they have
+        // their ip and port set by the NettyHandler object.
+        // ip is null and port is 0 after the factory deserializes
+        // objects. It is up to NettyHandler to set ip and port.
+    }
+    private void compareNatMsgsNoTimeout(NatMsg a, NatMsg b) {
+        assert (a.getVodSource().equals(b.getVodSource()));
+        assert (a.getVodDestination().equals(b.getVodDestination()));
+        // Note, we don't compare Address objects, as they have
+        // their ip and port set by the NettyHandler object.
+        // ip is null and port is 0 after the factory deserializes
+        // objects. It is up to NettyHandler to set ip and port.
+    }
 }

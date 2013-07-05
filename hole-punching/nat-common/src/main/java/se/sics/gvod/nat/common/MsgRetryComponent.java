@@ -407,12 +407,12 @@ public abstract class MsgRetryComponent extends AutoSubscribeComponent
 
                     logger.info("Message Retry Comp (" + m.getSource().getId() + ")"
                             + " : Retrying Src: " + m.getVodSource().getId()
-                            + " dest: " + m.getVodDestination().getId()
+                            + " dest: " + m.getVodDestination().getId() + " "
                             + msg.getClass().toString() + " retries=" + retryData.getRetriesLeft());
                 } else {
                     logger.info("Message Retry Comp (" + msg.getSource().getId() + ")"
                             + " : Retrying Src: " + msg.getSource().getId()
-                            + " dest: " + msg.getDestination().getId()
+                            + " dest: " + msg.getDestination().getId() + " "
                             + msg.getClass().toString() + " retries=" + retryData.getRetriesLeft());
                 }
                 scheduleMessageRetry(retryData, retryData.getRetransmissionTimeout(),

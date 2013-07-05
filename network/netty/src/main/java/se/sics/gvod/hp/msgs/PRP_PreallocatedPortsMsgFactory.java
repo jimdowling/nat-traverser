@@ -16,7 +16,7 @@ public class PRP_PreallocatedPortsMsgFactory {
                 
                 throws MessageDecodingException {
             return (PRP_PreallocatedPortsMsg.Request)
-                    new PRP_PreallocatedPortsMsgFactory.Request().decode(buffer, false);
+                    new PRP_PreallocatedPortsMsgFactory.Request().decode(buffer, true);
         }
 
         @Override

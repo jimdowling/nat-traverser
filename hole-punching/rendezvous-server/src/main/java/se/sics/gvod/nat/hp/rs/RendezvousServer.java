@@ -624,9 +624,10 @@ public class RendezvousServer extends MsgRetryComponent {
                 // or its port dynamically, this can potentially happen. Or if the client
                 // changes from WiFi to 3G or something like that.
                 // Or if it changes its set of parents, its VodAddress will change.
-                logger.trace(compName + " Client has changed address: " + record.getClient().getPeerAddress());
+                logger.trace(compName + " Received Ping to from: " + record.getClient().getPeerAddress());
                 record.setClient(ping.getVodSource());
                 record.setLastHeardFrom(System.currentTimeMillis());
+                
                 // send back pong
                 ParentKeepAliveMsg.Pong pong = new ParentKeepAliveMsg.Pong(
                         self.getAddress(), ping.getVodSource(),
