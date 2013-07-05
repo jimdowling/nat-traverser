@@ -157,7 +157,7 @@ public final class NtTesterMain extends ComponentDefinition {
         subscribe(handlePing, natTraverser.getPositive(VodNetwork.class));
         subscribe(handlePong, natTraverser.getPositive(VodNetwork.class));
 //        subscribe(handleFault, natTraverser.getControl());    
-        subscribe(handleNettyFault, network.getControl());
+//        subscribe(handleNettyFault, network.getControl());
         subscribe(handleHolePunchTimeout, timer.getPositive(Timer.class));
         subscribe(handleCroupierSample, croupier.getPositive(PeerSamplePort.class));
 
