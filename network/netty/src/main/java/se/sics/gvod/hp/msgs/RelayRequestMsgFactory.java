@@ -24,6 +24,13 @@ public class RelayRequestMsgFactory {
         @Override
         protected RelayRequestMsg.ClientToServer process(ChannelBuffer buffer) throws MessageDecodingException {
 
+            /**
+             * We create a single decoder object per request, as i don't know if a 
+             * decoder object is thread-safe or not. The alternative is to have
+             * a static instance in the DirectMsgNettyFactory parent class, and
+             * have it shared amongst all deserializers. I don't think that will work
+             * as the decoder is stateful across calls.
+             */
             MsgFrameDecoder decoder= null;
             try {
                 decoder = DirectMsgNettyFactory.msgFrameDecoder.newInstance();

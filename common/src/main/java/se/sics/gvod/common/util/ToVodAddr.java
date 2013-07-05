@@ -29,10 +29,9 @@ public class ToVodAddr {
                 addr.getId()), VodConfig.SYSTEM_OVERLAY_ID);
     }
 
-    // If I want to reduce size of parents in VodAddress, use VodConfig.DEFAULT_PORT,
-    // for Address here.
+    // Change the port to the default port.
     public static VodAddress hpServer(Address addr) {
-        return new VodAddress(new Address(addr.getIp(), VodConfig.getPort(),
+        return new VodAddress(new Address(addr.getIp(), VodConfig.DEFAULT_PORT,
                 addr.getId()), VodConfig.SYSTEM_OVERLAY_ID);
     }
 

@@ -26,6 +26,7 @@ import org.slf4j.LoggerFactory;
 import se.sics.gvod.common.*;
 import se.sics.gvod.common.msgs.RelayMsgNetty;
 import se.sics.gvod.config.CroupierConfiguration;
+import se.sics.gvod.config.VodConfig;
 import se.sics.gvod.croupier.events.*;
 import se.sics.gvod.croupier.msgs.ShuffleMsg;
 import se.sics.gvod.croupier.snapshot.CroupierStats;
@@ -170,7 +171,7 @@ public class Croupier extends MsgRetryComponent {
         
         
         shuffleTimes.put(id.getId(), System.currentTimeMillis());
-        logger.debug(compName + "SHUFFLE SENT from {} to {} . Id=" + id, self.getId(), node.getId());
+        logger.debug(compName + "SHUFFLE SENT from {} to {} . Id=" + id, self.getId(), node);
     }
     Handler<CroupierShuffleCycle> handleCycle = new Handler<CroupierShuffleCycle>() {
         @Override

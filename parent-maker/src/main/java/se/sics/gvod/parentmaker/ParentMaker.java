@@ -460,6 +460,11 @@ public class ParentMaker extends MsgRetryComponent {
             logger.debug(compName + " trying to add myself as a parent.");
             return;
         }
+        if (hpServer.getPort() == VodConfig.DEFAULT_STUN_PORT || 
+                hpServer.getPort() == VodConfig.DEFAULT_STUN_PORT_2) {
+            logger.debug(compName + " tried to send a parent request to a Stun Server");
+            hpServer = ToVodAddr.hpServer(hpServer.getPeerAddress());
+        } 
 
         HpRegisterMsg.Request request = new HpRegisterMsg.Request(self.getAddress(),
                 hpServer, self.getAddress().getDelta(), rtt, prpPorts);

@@ -615,7 +615,7 @@ public class RendezvousServer extends MsgRetryComponent {
             // ignore the ping if its destination port is not 3478
 
             logger.trace(compName + " recvd connection keep alive ping message from ("
-                    + ping.getClientId() + ") ");
+                    + ping.getVodSource() + ") ");
 
             // update the client record time stamp
             RegisteredClientRecord record = registeredClients.get(ping.getClientId());
