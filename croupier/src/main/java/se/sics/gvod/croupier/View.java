@@ -63,7 +63,12 @@ public class View {
         } else if (policy == VodConfig.CroupierSelectionPolicy.RANDOM) {
             oldestEntry = entries.get(random.nextInt(entries.size()));
         }
-        removeEntry(oldestEntry);
+        // TODO - by not removing a reference to the node I am shuffling with, we
+        // break the 'batched random walk' (Cyclon) behaviour. But it's more important
+        // to keep the graph connected.
+        if (entries.size() >= size) {
+            removeEntry(oldestEntry);
+        }
         return oldestEntry.getDescriptor().getVodAddress();
     }
 
