@@ -75,7 +75,7 @@
                     
                     <archive>
                         <manifest>
-                            <mainClass>se.sics.gvod.nat.hp.clientmain.HpNatTraverserMain</mainClass>
+                            <mainClass>se.sics.gvod.nat.hp.NtTesterMain</mainClass>
                         </manifest>
                     </archive>
                 </configuration>

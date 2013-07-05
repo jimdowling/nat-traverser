@@ -1,4 +1,4 @@
-package se.sics.gvod.nat.hp.clientmain;
+package se.sics.gvod.nat.hp;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -66,9 +66,9 @@ import se.sics.kompics.Fault;
  * <code>Root</code> class
  *
  */
-public final class HpNatTraverserMain extends ComponentDefinition {
+public final class NtTesterMain extends ComponentDefinition {
 
-    private static final Logger logger = LoggerFactory.getLogger(HpNatTraverserMain.class);
+    private static final Logger logger = LoggerFactory.getLogger(NtTesterMain.class);
     private static final int OVERLAY_ID = 100;
     private static Address localAddress;
     private final Component timer;
@@ -106,7 +106,7 @@ public final class HpNatTraverserMain extends ComponentDefinition {
                     SERVER_ID);
             servers.add(s);
         } catch (UnknownHostException ex) {
-            java.util.logging.Logger.getLogger(HpNatTraverserMain.class.getName()).log(Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(NtTesterMain.class.getName()).log(Level.SEVERE, null, ex);
             return;
         }
         if (args.length > 4) {
@@ -117,10 +117,10 @@ public final class HpNatTraverserMain extends ComponentDefinition {
         try {
             VodConfig.init(args);
         } catch (IOException ex) {
-            java.util.logging.Logger.getLogger(HpNatTraverserMain.class.getName()).log(Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(NtTesterMain.class.getName()).log(Level.SEVERE, null, ex);
         }
 
-        Kompics.createAndStart(HpNatTraverserMain.class, 3);
+        Kompics.createAndStart(NtTesterMain.class, 3);
     }
 
     public static class HolePunchTimeout extends Timeout {
@@ -130,7 +130,7 @@ public final class HpNatTraverserMain extends ComponentDefinition {
         }
     }
 
-    public HpNatTraverserMain() throws IOException {
+    public NtTesterMain() throws IOException {
 
         ntConfig = NatTraverserConfiguration.build();
         rendezvousServerConfig =

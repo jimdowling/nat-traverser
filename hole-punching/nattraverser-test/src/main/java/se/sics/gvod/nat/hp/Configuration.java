@@ -18,7 +18,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
-package se.sics.gvod.nat.hp.clientmain;
+package se.sics.gvod.nat.hp;
 
 import se.sics.gvod.config.NatConfiguration;
 import se.sics.gvod.nat.emu.NatGatewayConfiguration;
