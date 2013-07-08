@@ -489,6 +489,10 @@ public final class NettyNetwork extends ComponentDefinition {
 	}
 
 	private void send(RewriteableMsg message) {
+		// TODO Should be albe to send all RewriteableMsgs
+		if (!(message instanceof Encodable)) {
+			throw new Error("Can only send instances of Encodable");
+		}
 		
 		InetSocketAddress upnpSocket = address2SocketAddress(message.getSource());
 		InetSocketAddress src = upnpLocalSocket.get(upnpSocket);
@@ -523,7 +527,6 @@ public final class NettyNetwork extends ComponentDefinition {
 		try {
 			logger.trace("Sending " + message.getClass().getCanonicalName() + " from {} to {} ",
 					message.getSource().getId(), message.getDestination().getId());
-			// TODO Solve the encodable problem
 			channel.write(new DatagramPacket(((Encodable) message).toByteArray(), dest));
 			totalWrittenBytes += message.getSize();
 		} catch (NullPointerException ex) {
