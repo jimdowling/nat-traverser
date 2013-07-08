@@ -28,7 +28,7 @@ public class Ping extends DirectMsgNetty {
 
     @Override
     public byte getOpcode() {
-        return BaseMsgFrameDecoder.ACK;
+        return BaseMsgFrameDecoder.PING;
     }
 
     @Override

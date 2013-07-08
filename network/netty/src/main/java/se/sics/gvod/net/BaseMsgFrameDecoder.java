@@ -128,7 +128,6 @@ public class BaseMsgFrameDecoder extends MsgFrameDecoder {
     public static final byte HP_KEEP_ALIVE_RESPONSE        = 0x52;
     public static final byte REPORT_REQUEST                = 0x53;
     public static final byte REPORT_RESPONSE               = 0x54;
-    public static final byte ACK                           = 0x55;
     // TEST MSGS
     public static final byte PING                          = 0x56;
     public static final byte PONG                          = 0x57;

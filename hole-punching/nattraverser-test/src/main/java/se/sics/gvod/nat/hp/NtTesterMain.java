@@ -143,7 +143,7 @@ public final class NtTesterMain extends ComponentDefinition {
         croupier = create(Croupier.class);
 
         connect(croupier.getNegative(Timer.class), timer.getPositive(Timer.class));
-        connect(croupier.getNegative(VodNetwork.class), network.getPositive(VodNetwork.class));
+        connect(croupier.getNegative(VodNetwork.class), natTraverser.getPositive(VodNetwork.class));
 
         connect(natTraverser.getNegative(Timer.class), timer.getPositive(Timer.class));
         connect(natTraverser.getNegative(VodNetwork.class), network.getPositive(VodNetwork.class));

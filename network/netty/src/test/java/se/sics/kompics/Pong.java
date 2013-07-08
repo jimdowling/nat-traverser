@@ -26,7 +26,7 @@ import se.sics.gvod.net.VodAddress;
 
         @Override
         public byte getOpcode() {
-            return BaseMsgFrameDecoder.ACK;
+            return BaseMsgFrameDecoder.PONG;
         }
 
         @Override

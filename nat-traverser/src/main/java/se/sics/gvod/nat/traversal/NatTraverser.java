@@ -607,6 +607,11 @@ public class NatTraverser extends MsgRetryComponent {
                     } else {
                         logger.warn(compName + msg.getClass() + " Couldn't find startTime for node {} with timer {} - " + self.getNat(),
                                 self.getId(), msg.getTimeoutId());
+                        StringBuilder sb = new StringBuilder();
+                        for (Integer t : outstandingTimestamps.keySet()) {
+                            sb.append(t).append(", ");
+                        }
+                        logger.warn(compName + " Existing Timestamps: " + sb.toString());
                     }
                 }
                 delegator.doTrigger(msg, upperNet);
@@ -1051,9 +1056,10 @@ public class NatTraverser extends MsgRetryComponent {
                 failedStunServers.add(failedStunServer);
             }
         } else {
-            Kompics.shutdown();
-            System.err.println("Could not run stun protocol. Exiting...");
-            System.exit(-1);
+//            Kompics.shutdown();
+            System.err.println("Could not run stun protocol. ");
+            logger.error(compName + " could not run stun protocol. ");
+//            System.exit(-1);
         }
     }
     Handler<StunRetryTimeout> handleStunRetryTimeout =
