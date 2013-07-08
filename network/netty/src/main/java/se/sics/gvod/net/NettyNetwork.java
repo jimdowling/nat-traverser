@@ -50,8 +50,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import se.sics.gvod.address.Address;
-import se.sics.gvod.common.msgs.DirectMsgNetty;
 import se.sics.gvod.common.msgs.DirectMsgNettyFactory;
+import se.sics.gvod.common.msgs.Encodable;
 import se.sics.gvod.common.msgs.MessageEncodingException;
 import se.sics.gvod.config.VodConfig;
 import se.sics.gvod.net.events.BandwidthStats;
@@ -299,8 +299,7 @@ public final class NettyNetwork extends ComponentDefinition {
 				return;
 			}
 
-			// TODO check if this is a good idea
-			send((DirectMsgNetty) message);
+			send(message);
 		}
 	};
 
@@ -393,6 +392,7 @@ public final class NettyNetwork extends ComponentDefinition {
 
 	// TODO Netty 4 unchecked code transformation
 	private boolean bindPort(InetAddress addr, int port, InetAddress upnpIp, int upnpPort) {
+
 		if (portsToSockets.containsKey(port)) {
 			return true;
 		}
@@ -403,7 +403,6 @@ public final class NettyNetwork extends ComponentDefinition {
 		EventLoopGroup group = new NioEventLoopGroup();
 		Bootstrap bootstrap = new Bootstrap();
 		bootstrap.group(group).channel(NioDatagramChannel.class)
-				.option(ChannelOption.SO_BROADCAST, true)
 				.handler(new NettyClientInitializer(handler, msgDecoderClass));
 
 		// Allow packets as large as up to 1600 bytes (default is 768).
@@ -443,7 +442,7 @@ public final class NettyNetwork extends ComponentDefinition {
 				c = (DatagramChannel) bootstrap.bind(new InetSocketAddress(addr, port)).sync()
 						.channel();
 			}
-			c.closeFuture().await();
+
 			addLocalSocket(c, new InetSocketAddress(addr, port));
 
 			upnpLocalSocket.put(new InetSocketAddress(upnpIp, upnpPort), new InetSocketAddress(
@@ -491,8 +490,8 @@ public final class NettyNetwork extends ComponentDefinition {
 	}
 
 	// TODO Netty 4 unchecked code transformation
-	private void send(DirectMsgNetty message) {
-
+	private void send(RewriteableMsg message) {
+		
 		InetSocketAddress upnpSocket = address2SocketAddress(message.getSource());
 		InetSocketAddress src = upnpLocalSocket.get(upnpSocket);
 		InetSocketAddress dest = address2SocketAddress(message.getDestination());
@@ -526,8 +525,8 @@ public final class NettyNetwork extends ComponentDefinition {
 		try {
 			logger.trace("Sending " + message.getClass().getCanonicalName() + " from {} to {} ",
 					message.getSource().getId(), message.getDestination().getId());
-			// TODO sync?
-			channel.write(new DatagramPacket(message.toByteArray(), dest));
+			// TODO Solve the encodable problem
+			channel.write(new DatagramPacket(((Encodable) message).toByteArray(), dest));
 			totalWrittenBytes += message.getSize();
 		} catch (NullPointerException ex) {
 			logger.warn("Problem trying to write message of type: "
