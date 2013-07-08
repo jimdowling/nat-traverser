@@ -24,7 +24,6 @@ public class NettyClientInitializer extends ChannelInitializer<DatagramChannel> 
 	 */
 	public NettyClientInitializer(NettyHandler handler,
 			Class<? extends MsgFrameDecoder> msgDecoderClass) {
-		// TODO Netty 4 unchecked code transformation
 		super();
 		this.handler = handler;
 		this.msgDecoderClass = msgDecoderClass;
@@ -35,7 +34,6 @@ public class NettyClientInitializer extends ChannelInitializer<DatagramChannel> 
 	 */
 	@Override
 	protected void initChannel(DatagramChannel ch) throws Exception {
-		// TODO Netty 4 unchecked code transformation
 		ChannelPipeline pipeline = ch.pipeline();
 
 		// SSLEngine engine = context.createSSLEngine();

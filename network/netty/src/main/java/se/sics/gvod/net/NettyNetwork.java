@@ -390,7 +390,6 @@ public final class NettyNetwork extends ComponentDefinition {
 		}
 	};
 
-	// TODO Netty 4 unchecked code transformation
 	private boolean bindPort(InetAddress addr, int port, InetAddress upnpIp, int upnpPort) {
 
 		if (portsToSockets.containsKey(port)) {
@@ -489,7 +488,6 @@ public final class NettyNetwork extends ComponentDefinition {
 		return res;
 	}
 
-	// TODO Netty 4 unchecked code transformation
 	private void send(RewriteableMsg message) {
 		
 		InetSocketAddress upnpSocket = address2SocketAddress(message.getSource());
