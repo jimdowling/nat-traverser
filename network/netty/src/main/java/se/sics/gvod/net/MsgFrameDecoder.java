@@ -66,6 +66,7 @@ public abstract class MsgFrameDecoder extends ReplayingDecoder<DecoderState> {
 			// checkpoint(DecoderState.READ_LENGTH);
 			checkpoint(DecoderState.READ_TYPE);
 			out.add(msg);
+			break;
 		default:
 			throw new Error("Problem in MsgFrameDecoder. Shouldn't reach here.");
 		}
