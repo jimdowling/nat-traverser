@@ -17,6 +17,8 @@ import java.net.SocketAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import se.sics.gvod.common.msgs.DirectMsgNetty;
+import se.sics.gvod.common.msgs.DirectMsgNettyFactory;
 import se.sics.gvod.net.events.NetworkException;
 import se.sics.gvod.net.msgs.RewriteableMsg;
 
@@ -27,6 +29,8 @@ import se.sics.gvod.net.msgs.RewriteableMsg;
 public class NettyHandler extends SimpleChannelInboundHandler<DatagramPacket> {
 
 	private static final Logger logger = LoggerFactory.getLogger(NettyHandler.class);
+	private static final BaseMsgFrameDecoder decoder = new BaseMsgFrameDecoder();
+	
 	private final NettyNetwork component;
 	private final InetAddress addr;
 	private final int port;
@@ -77,7 +81,7 @@ public class NettyHandler extends SimpleChannelInboundHandler<DatagramPacket> {
 	// TODO Netty 4 unchecked code transformations
 	@Override
 	protected void messageReceived(ChannelHandlerContext ctx, DatagramPacket msg) throws Exception {
-		RewriteableMsg rewrittenMsg = (RewriteableMsg) msg.content();
+		RewriteableMsg rewrittenMsg = (RewriteableMsg) decoder.parse(msg.content());
 
 		// session-less UDP means that remoteAddresses cannot be found in
 		// the channel object, but only in the MessageEvent object.
