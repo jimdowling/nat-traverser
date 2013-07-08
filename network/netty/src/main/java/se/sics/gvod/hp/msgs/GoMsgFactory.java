@@ -1,10 +1,10 @@
 package se.sics.gvod.hp.msgs;
 
-import se.sics.gvod.common.msgs.*;
-import org.jboss.netty.buffer.ChannelBuffer;
-import se.sics.gvod.net.VodAddress;
+import io.netty.buffer.ByteBuf;
 import se.sics.gvod.common.hp.HPMechanism;
 import se.sics.gvod.common.hp.HPRole;
+import se.sics.gvod.common.msgs.MessageDecodingException;
+import se.sics.gvod.net.VodAddress;
 import se.sics.gvod.net.util.UserTypesDecoderFactory;
 
 public class GoMsgFactory {
@@ -14,7 +14,7 @@ public class GoMsgFactory {
         private Request() {
         }
 
-        public static GoMsg.Request fromBuffer(ChannelBuffer buffer)
+        public static GoMsg.Request fromBuffer(ByteBuf buffer)
                 
                 throws MessageDecodingException {
             return (GoMsg.Request)
@@ -22,7 +22,7 @@ public class GoMsgFactory {
         }
 
         @Override
-        protected GoMsg.Request process(ChannelBuffer buffer) throws MessageDecodingException {
+        protected GoMsg.Request process(ByteBuf buffer) throws MessageDecodingException {
             VodAddress openedHole = UserTypesDecoderFactory.readVodAddress(buffer);
             int hpM = UserTypesDecoderFactory.readUnsignedIntAsOneByte(buffer);
             HPMechanism holePunchingMechanism = HPMechanism.values()[hpM];

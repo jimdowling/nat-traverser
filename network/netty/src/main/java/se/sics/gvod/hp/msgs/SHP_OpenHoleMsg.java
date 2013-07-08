@@ -1,6 +1,6 @@
 package se.sics.gvod.hp.msgs;
 
-import org.jboss.netty.buffer.ChannelBuffer;
+import io.netty.buffer.ByteBuf;
 import se.sics.gvod.common.msgs.MessageEncodingException;
 import se.sics.gvod.net.BaseMsgFrameDecoder;
 import se.sics.gvod.net.VodAddress;
@@ -56,8 +56,8 @@ public class SHP_OpenHoleMsg {
         }
 
         @Override
-        public ChannelBuffer toByteArray() throws MessageEncodingException {
-            ChannelBuffer buffer = createChannelBufferWithHeader();
+        public ByteBuf toByteArray() throws MessageEncodingException {
+        	ByteBuf buffer = createChannelBufferWithHeader();
             UserTypesEncoderFactory.writeVodAddress(buffer, dummyAddr);
             UserTypesEncoderFactory.writeUnsignedintAsOneByte(buffer, responseType.ordinal());
             return buffer;

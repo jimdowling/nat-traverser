@@ -5,11 +5,11 @@
 
 package se.sics.gvod.common.msgs;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-import org.jboss.netty.buffer.ChannelBuffers;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import se.sics.gvod.config.VodConfig;
-import se.sics.gvod.net.VodAddress;
 import se.sics.gvod.net.Transport;
+import se.sics.gvod.net.VodAddress;
 import se.sics.gvod.net.msgs.DirectMsg;
 import se.sics.gvod.net.util.UserTypesEncoderFactory;
 import se.sics.gvod.timer.TimeoutId;
@@ -37,10 +37,10 @@ public abstract class DirectMsgNetty extends DirectMsg implements Encodable
         super(source, destination,  protocol, timeoutId);
     }
     
-    protected ChannelBuffer createChannelBufferWithHeader()
+    protected ByteBuf createChannelBufferWithHeader()
             throws MessageEncodingException {
-        ChannelBuffer buffer =
-                ChannelBuffers.dynamicBuffer(
+        ByteBuf buffer =
+        		Unpooled.buffer(
                 getSize()
                 + 1 /*opcode*/);
         writeHeader(buffer);
@@ -58,7 +58,7 @@ public abstract class DirectMsgNetty extends DirectMsg implements Encodable
                 ;
     }        
 
-    protected void writeHeader(ChannelBuffer buffer) throws MessageEncodingException {
+    protected void writeHeader(ByteBuf buffer) throws MessageEncodingException {
         byte b = getOpcode();
         buffer.writeByte(b);
         if (hasTimeout()) {

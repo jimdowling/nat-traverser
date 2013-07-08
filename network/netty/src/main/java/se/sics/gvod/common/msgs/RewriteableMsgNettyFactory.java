@@ -1,6 +1,6 @@
 package se.sics.gvod.common.msgs;
 
-import org.jboss.netty.buffer.ChannelBuffer;
+import io.netty.buffer.ByteBuf;
 import se.sics.gvod.address.Address;
 import se.sics.gvod.net.msgs.RewriteableMsg;
 import se.sics.gvod.timer.NoTimeoutId;
@@ -13,7 +13,7 @@ public abstract class RewriteableMsgNettyFactory {
     protected Address src, dest;
 
 
-    protected RewriteableMsg decode(ChannelBuffer buffer, boolean timeout) throws MessageDecodingException {
+    protected RewriteableMsg decode(ByteBuf buffer, boolean timeout) throws MessageDecodingException {
         decodeHeader(buffer, timeout);
         RewriteableMsg msg = process(buffer);
         finish(msg);
@@ -24,7 +24,7 @@ public abstract class RewriteableMsgNettyFactory {
         msg.setTimeoutId(timeoutId);
     }
     
-    protected void decodeHeader(ChannelBuffer buffer, boolean timeout)
+    protected void decodeHeader(ByteBuf buffer, boolean timeout)
             throws MessageDecodingException {
         if (timeout) { 
             timeoutId = new UUID(buffer.readInt());
@@ -37,7 +37,7 @@ public abstract class RewriteableMsgNettyFactory {
         dest = new Address(destId);
     }
 
-    protected abstract RewriteableMsg process(ChannelBuffer buffer) throws MessageDecodingException;    
+    protected abstract RewriteableMsg process(ByteBuf buffer) throws MessageDecodingException;    
     
 
 };

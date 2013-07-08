@@ -1,9 +1,9 @@
 package se.sics.gvod.hp.msgs;
 
-import se.sics.gvod.common.msgs.*;
-import org.jboss.netty.buffer.ChannelBuffer;
+import io.netty.buffer.ByteBuf;
 import se.sics.gvod.common.hp.HPMechanism;
 import se.sics.gvod.common.hp.HPRole;
+import se.sics.gvod.common.msgs.MessageDecodingException;
 import se.sics.gvod.net.util.UserTypesDecoderFactory;
 
 public class SHP_InitiateSimpleHolePunchingMsgFactory {
@@ -13,7 +13,7 @@ public class SHP_InitiateSimpleHolePunchingMsgFactory {
         private Request() {
         }
 
-        public static SHP_InitiateSimpleHolePunchingMsg.Request fromBuffer(ChannelBuffer buffer)
+        public static SHP_InitiateSimpleHolePunchingMsg.Request fromBuffer(ByteBuf buffer)
                 
                 throws MessageDecodingException {
             return (SHP_InitiateSimpleHolePunchingMsg.Request)
@@ -21,7 +21,7 @@ public class SHP_InitiateSimpleHolePunchingMsgFactory {
         }
 
         @Override
-        protected SHP_InitiateSimpleHolePunchingMsg.Request process(ChannelBuffer buffer) throws MessageDecodingException {
+        protected SHP_InitiateSimpleHolePunchingMsg.Request process(ByteBuf buffer) throws MessageDecodingException {
 
             int hm = UserTypesDecoderFactory.readIntAsOneByte(buffer);
             HPMechanism holePunchingMechanism = HPMechanism.values()[hm];

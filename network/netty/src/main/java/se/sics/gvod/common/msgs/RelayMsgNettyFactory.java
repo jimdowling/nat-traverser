@@ -1,7 +1,9 @@
 package se.sics.gvod.common.msgs;
 
+import io.netty.buffer.ByteBuf;
+
 import java.util.Set;
-import org.jboss.netty.buffer.ChannelBuffer;
+
 import se.sics.gvod.address.Address;
 import se.sics.gvod.net.VodAddress;
 import se.sics.gvod.net.util.UserTypesDecoderFactory;
@@ -21,7 +23,7 @@ public abstract class RelayMsgNettyFactory {
         }
 
         @Override
-        protected void decodeHeader(ChannelBuffer buffer, boolean timeout)
+        protected void decodeHeader(ByteBuf buffer, boolean timeout)
                 throws MessageDecodingException {
             super.decodeHeader(buffer, timeout);
 
@@ -50,7 +52,7 @@ public abstract class RelayMsgNettyFactory {
         }
         
         @Override
-        protected void decodeHeader(ChannelBuffer buffer, boolean timeout)
+        protected void decodeHeader(ByteBuf buffer, boolean timeout)
                 throws MessageDecodingException {
             super.decodeHeader(buffer, timeout);
             int statusVal = UserTypesDecoderFactory.readUnsignedIntAsOneByte(buffer);

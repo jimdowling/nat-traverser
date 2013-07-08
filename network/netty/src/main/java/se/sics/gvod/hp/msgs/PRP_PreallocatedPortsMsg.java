@@ -1,7 +1,9 @@
 package se.sics.gvod.hp.msgs;
 
+import io.netty.buffer.ByteBuf;
+
 import java.util.Set;
-import org.jboss.netty.buffer.ChannelBuffer;
+
 import se.sics.gvod.common.msgs.MessageEncodingException;
 import se.sics.gvod.net.BaseMsgFrameDecoder;
 import se.sics.gvod.net.VodAddress;
@@ -42,8 +44,8 @@ public class PRP_PreallocatedPortsMsg
         }
 
         @Override
-        public ChannelBuffer toByteArray() throws MessageEncodingException {
-            ChannelBuffer buffer = createChannelBufferWithHeader();
+        public ByteBuf toByteArray() throws MessageEncodingException {
+        	ByteBuf buffer = createChannelBufferWithHeader();
             return buffer;
         }
 
@@ -100,8 +102,8 @@ public class PRP_PreallocatedPortsMsg
         }
 
         @Override
-        public ChannelBuffer toByteArray() throws MessageEncodingException {
-            ChannelBuffer buffer = createChannelBufferWithHeader();
+        public ByteBuf toByteArray() throws MessageEncodingException {
+        	ByteBuf buffer = createChannelBufferWithHeader();
             UserTypesEncoderFactory.writeUnsignedintAsOneByte(buffer,
                     responseType.ordinal());
             UserTypesEncoderFactory.writeSetUnsignedTwoByteInts(buffer, prpPorts);

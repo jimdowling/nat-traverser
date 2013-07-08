@@ -1,8 +1,11 @@
 package se.sics.gvod.hp.msgs;
 
+import io.netty.buffer.ByteBuf;
+
 import java.util.Set;
-import se.sics.gvod.common.msgs.*;
-import org.jboss.netty.buffer.ChannelBuffer;
+
+import se.sics.gvod.common.msgs.DirectMsgNettyFactory;
+import se.sics.gvod.common.msgs.MessageDecodingException;
 import se.sics.gvod.net.util.UserTypesDecoderFactory;
 
 public class HpRegisterMsgFactory {
@@ -12,7 +15,7 @@ public class HpRegisterMsgFactory {
         private Request() {
         }
 
-        public static HpRegisterMsg.Request fromBuffer(ChannelBuffer buffer)
+        public static HpRegisterMsg.Request fromBuffer(ByteBuf buffer)
                 
                 throws MessageDecodingException {
             return (HpRegisterMsg.Request)
@@ -20,7 +23,7 @@ public class HpRegisterMsgFactory {
         }
 
         @Override
-        protected HpRegisterMsg.Request process(ChannelBuffer buffer) throws MessageDecodingException {
+        protected HpRegisterMsg.Request process(ByteBuf buffer) throws MessageDecodingException {
             int delta = UserTypesDecoderFactory.readUnsignedIntAsOneByte(buffer);
             long rtt = (long) UserTypesDecoderFactory.readUnsignedIntAsTwoBytes(buffer);
             Set<Integer> prpPorts = UserTypesDecoderFactory.readSetUnsignedTwoByteInts(buffer);
@@ -33,7 +36,7 @@ public class HpRegisterMsgFactory {
         private Response() {
         }
 
-        public static HpRegisterMsg.Response fromBuffer(ChannelBuffer buffer)
+        public static HpRegisterMsg.Response fromBuffer(ByteBuf buffer)
                 
                 throws MessageDecodingException {
             return (HpRegisterMsg.Response)
@@ -41,7 +44,7 @@ public class HpRegisterMsgFactory {
         }
 
         @Override
-        protected HpRegisterMsg.Response process(ChannelBuffer buffer) throws MessageDecodingException {
+        protected HpRegisterMsg.Response process(ByteBuf buffer) throws MessageDecodingException {
 
             int rt = UserTypesDecoderFactory.readUnsignedIntAsOneByte(buffer);
             HpRegisterMsg.RegisterStatus responseType =

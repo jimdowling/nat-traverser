@@ -1,17 +1,19 @@
 package se.sics.gvod.hp.msgs;
 
+import io.netty.buffer.ByteBuf;
+
 import java.io.Serializable;
-import org.jboss.netty.buffer.ChannelBuffer;
+
+import se.sics.gvod.common.hp.HPMechanism;
 import se.sics.gvod.common.msgs.MessageEncodingException;
 import se.sics.gvod.hp.events.OpenConnectionResponseType;
-import se.sics.gvod.net.msgs.RewriteableRetryTimeout;
-import se.sics.gvod.net.msgs.ScheduleRetryTimeout;
+import se.sics.gvod.net.BaseMsgFrameDecoder;
 import se.sics.gvod.net.VodAddress;
 import se.sics.gvod.net.msgs.RewriteableMsg;
+import se.sics.gvod.net.msgs.RewriteableRetryTimeout;
+import se.sics.gvod.net.msgs.ScheduleRetryTimeout;
 import se.sics.gvod.net.util.UserTypesEncoderFactory;
 import se.sics.gvod.timer.TimeoutId;
-import se.sics.gvod.common.hp.HPMechanism;
-import se.sics.gvod.net.BaseMsgFrameDecoder;
 
 /**
  * 
@@ -64,8 +66,8 @@ public class HpConnectMsg implements Serializable {
         }
 
         @Override
-        public ChannelBuffer toByteArray() throws MessageEncodingException {
-            ChannelBuffer buffer = createChannelBufferWithHeader();
+        public ByteBuf toByteArray() throws MessageEncodingException {
+        	ByteBuf buffer = createChannelBufferWithHeader();
             UserTypesEncoderFactory.writeUnsignedintAsOneByte(buffer, delta);
             UserTypesEncoderFactory.writeUnsignedintAsTwoBytes(buffer, (int) rtt);
             return buffer;
@@ -127,8 +129,8 @@ public class HpConnectMsg implements Serializable {
         }
 
         @Override
-        public ChannelBuffer toByteArray() throws MessageEncodingException {
-            ChannelBuffer buffer = createChannelBufferWithHeader();
+        public ByteBuf toByteArray() throws MessageEncodingException {
+        	ByteBuf buffer = createChannelBufferWithHeader();
             UserTypesEncoderFactory.writeUnsignedintAsOneByte(buffer, responseType.ordinal());
             UserTypesEncoderFactory.writeUnsignedintAsOneByte(buffer, hpMechanism.ordinal());
             UserTypesEncoderFactory.writeBoolean(buffer, newSession);

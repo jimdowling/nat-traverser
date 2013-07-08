@@ -4,7 +4,7 @@
  */
 package se.sics.gvod.croupier.msgs;
 
-import org.jboss.netty.buffer.ChannelBuffer;
+import io.netty.buffer.ByteBuf;
 import se.sics.gvod.common.DescriptorBuffer;
 import se.sics.gvod.common.VodDescriptor;
 import se.sics.gvod.common.msgs.MessageEncodingException;
@@ -60,8 +60,8 @@ public class ShuffleMsg {
         }
 
         @Override
-        public ChannelBuffer toByteArray() throws MessageEncodingException {
-            ChannelBuffer buf = createChannelBufferWithHeader();
+        public ByteBuf toByteArray() throws MessageEncodingException {
+        	ByteBuf buf = createChannelBufferWithHeader();
             UserTypesEncoderFactory.writeDescriptorBuffer(buf, buffer);
             UserTypesEncoderFactory.writeVodNodeDescriptor(buf, desc);
             return buf;
@@ -118,8 +118,8 @@ public class ShuffleMsg {
         }
 
         @Override
-        public ChannelBuffer toByteArray() throws MessageEncodingException {
-            ChannelBuffer buf = createChannelBufferWithHeader();
+        public ByteBuf toByteArray() throws MessageEncodingException {
+        	ByteBuf buf = createChannelBufferWithHeader();
             UserTypesEncoderFactory.writeDescriptorBuffer(buf, buffer);
             UserTypesEncoderFactory.writeVodNodeDescriptor(buf, desc);
             return buf;

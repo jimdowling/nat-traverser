@@ -1,6 +1,6 @@
 package se.sics.gvod.hp.msgs;
 
-import org.jboss.netty.buffer.ChannelBuffer;
+import io.netty.buffer.ByteBuf;
 import se.sics.gvod.common.msgs.DirectMsgNetty;
 import se.sics.gvod.common.msgs.MessageEncodingException;
 import se.sics.gvod.net.VodAddress;
@@ -45,7 +45,7 @@ public abstract class HpMsg extends DirectMsgNetty {
     }
 
     @Override
-    protected void writeHeader(ChannelBuffer buffer) throws MessageEncodingException {
+    protected void writeHeader(ByteBuf buffer) throws MessageEncodingException {
         super.writeHeader(buffer);
         buffer.writeInt(remoteClientId);
         UserTypesEncoderFactory.writeTimeoutId(buffer, msgTimeoutId);

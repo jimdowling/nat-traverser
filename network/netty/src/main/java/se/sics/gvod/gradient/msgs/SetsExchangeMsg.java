@@ -20,8 +20,10 @@
  */
 package se.sics.gvod.gradient.msgs;
 
+import io.netty.buffer.ByteBuf;
+
 import java.util.List;
-import org.jboss.netty.buffer.ChannelBuffer;
+
 import se.sics.gvod.common.VodDescriptor;
 import se.sics.gvod.common.msgs.MessageEncodingException;
 import se.sics.gvod.common.msgs.RelayMsgNetty;
@@ -112,8 +114,8 @@ public class SetsExchangeMsg {
         }
 
         @Override
-        public ChannelBuffer toByteArray() throws MessageEncodingException {
-            ChannelBuffer buf = createChannelBufferWithHeader();
+        public ByteBuf toByteArray() throws MessageEncodingException {
+        	ByteBuf buf = createChannelBufferWithHeader();
             UserTypesEncoderFactory.writeListVodNodeDescriptors(buf, utilitySet);
             UserTypesEncoderFactory.writeListVodNodeDescriptors(buf, upperSet);
             return buf;

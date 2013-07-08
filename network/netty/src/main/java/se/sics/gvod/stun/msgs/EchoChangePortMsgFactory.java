@@ -1,6 +1,6 @@
 package se.sics.gvod.stun.msgs;
 
-import org.jboss.netty.buffer.ChannelBuffer;
+import io.netty.buffer.ByteBuf;
 import se.sics.gvod.common.msgs.MessageDecodingException;
 import se.sics.gvod.net.msgs.DirectMsg;
 
@@ -11,7 +11,7 @@ public class EchoChangePortMsgFactory  {
         private Request() {
         }
 
-        public static EchoChangePortMsg.Request fromBuffer(ChannelBuffer buffer)
+        public static EchoChangePortMsg.Request fromBuffer(ByteBuf buffer)
                 
                 throws MessageDecodingException {
             return (EchoChangePortMsg.Request)
@@ -19,7 +19,7 @@ public class EchoChangePortMsgFactory  {
         }
 
         @Override
-        protected DirectMsg process(ChannelBuffer buffer) throws MessageDecodingException {
+        protected DirectMsg process(ByteBuf buffer) throws MessageDecodingException {
             return new EchoChangePortMsg.Request(vodSrc, vodDest, transactionId);
         }
     }
@@ -29,7 +29,7 @@ public class EchoChangePortMsgFactory  {
         private Response() {
         }
 
-        public static EchoChangePortMsg.Response fromBuffer(ChannelBuffer buffer)
+        public static EchoChangePortMsg.Response fromBuffer(ByteBuf buffer)
                 
                 throws MessageDecodingException {
             return (EchoChangePortMsg.Response)
@@ -37,7 +37,7 @@ public class EchoChangePortMsgFactory  {
         }
 
         @Override
-        protected DirectMsg process(ChannelBuffer buffer) throws MessageDecodingException {
+        protected DirectMsg process(ByteBuf buffer) throws MessageDecodingException {
             EchoChangePortMsg.Response response = new EchoChangePortMsg.Response(
                     vodSrc, vodDest, transactionId, timeoutId);
             return response;
