@@ -19,7 +19,6 @@ public class MsgFrameEncoder extends MessageToMessageEncoder<Encodable> {
 	public MsgFrameEncoder() {
 	}
 
-	// TODO Netty 4 unchecked code transformation
 	@Override
 	protected void encode(ChannelHandlerContext ctx, Encodable msg, MessageList<Object> out)
 			throws Exception {

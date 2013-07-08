@@ -46,7 +46,6 @@ public class NettyHandler extends SimpleChannelInboundHandler<DatagramPacket> {
 		logger.trace("Channel connected");
 	}
 
-	// TODO Netty 4 unchecked code transformation
 	@Override
 	public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
 
@@ -72,13 +71,11 @@ public class NettyHandler extends SimpleChannelInboundHandler<DatagramPacket> {
 		logger.error(sb.toString());
 	}
 
-	// TODO Netty 4 unchecked code transformation
 	@Override
 	public void channelUnregistered(ChannelHandlerContext ctx) throws Exception {
 		component.channelUnregistered(ctx);
 	}
 
-	// TODO Netty 4 unchecked code transformations
 	@Override
 	protected void messageReceived(ChannelHandlerContext ctx, DatagramPacket msg) throws Exception {
 		RewriteableMsg rewrittenMsg = (RewriteableMsg) decoder.parse(msg.content());

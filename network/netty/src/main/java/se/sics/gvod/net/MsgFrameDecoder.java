@@ -32,7 +32,6 @@ public abstract class MsgFrameDecoder extends ReplayingDecoder<DecoderState> {
 		super(DecoderState.READ_TYPE);
 	}
 
-	// TODO Netty 4 unchecked code transformation
 	public Object parse(ByteBuf buffer) throws Exception {
 		MessageList<Object> out = MessageList.newInstance();
 		state(DecoderState.READ_TYPE);
@@ -45,7 +44,6 @@ public abstract class MsgFrameDecoder extends ReplayingDecoder<DecoderState> {
 	protected abstract RewriteableMsg decodeMsg(ChannelHandlerContext ctx, ByteBuf buffer)
 			throws MessageDecodingException;
 
-	// TODO Netty 4 unchecked code transformation
 	@Override
 	protected void decode(ChannelHandlerContext ctx, ByteBuf buffer, MessageList<Object> out)
 			throws Exception {

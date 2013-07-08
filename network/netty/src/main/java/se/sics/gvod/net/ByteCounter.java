@@ -31,7 +31,6 @@ public class ByteCounter extends ChannelDuplexHandler {
 
 	// ChannelInboundHandlerAdapter -------------------------------------------
 
-	// TODO Netty 4 unchecked code transformation
 	@Override
 	public void messageReceived(ChannelHandlerContext ctx, MessageList<Object> msgs)
 			throws Exception {
@@ -43,7 +42,6 @@ public class ByteCounter extends ChannelDuplexHandler {
 		super.messageReceived(ctx, msgs);
 	}
 
-	// TODO Netty 4 unchecked code transformation
 	@Override
 	public void write(ChannelHandlerContext ctx, MessageList<Object> msgs, ChannelPromise promise)
 			throws Exception {
@@ -65,7 +63,6 @@ public class ByteCounter extends ChannelDuplexHandler {
 		super.write(ctx, msgs, promise);
 	}
 
-	// TODO Netty 4 unchecked code transformation
 	@Override
 	public void channelUnregistered(ChannelHandlerContext ctx) throws Exception {
 		super.channelUnregistered(ctx);
