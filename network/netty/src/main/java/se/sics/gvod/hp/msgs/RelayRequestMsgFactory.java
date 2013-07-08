@@ -1,9 +1,12 @@
 package se.sics.gvod.hp.msgs;
 
+import io.netty.buffer.ByteBuf;
+
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import se.sics.gvod.common.msgs.*;
-import org.jboss.netty.buffer.ChannelBuffer;
+
+import se.sics.gvod.common.msgs.DirectMsgNettyFactory;
+import se.sics.gvod.common.msgs.MessageDecodingException;
 import se.sics.gvod.net.MsgFrameDecoder;
 import se.sics.gvod.net.msgs.DirectMsg;
 
@@ -14,7 +17,7 @@ public class RelayRequestMsgFactory {
         private Request() {
         }
 
-        public static RelayRequestMsg.ClientToServer fromBuffer(ChannelBuffer buffer)
+        public static RelayRequestMsg.ClientToServer fromBuffer(ByteBuf buffer)
                 
                 throws MessageDecodingException {
             return (RelayRequestMsg.ClientToServer)
@@ -22,7 +25,7 @@ public class RelayRequestMsgFactory {
         }
 
         @Override
-        protected RelayRequestMsg.ClientToServer process(ChannelBuffer buffer) throws MessageDecodingException {
+        protected RelayRequestMsg.ClientToServer process(ByteBuf buffer) throws MessageDecodingException {
 
             MsgFrameDecoder decoder= null;
             try {
@@ -49,7 +52,7 @@ public class RelayRequestMsgFactory {
         private Response() {
         }
 
-        public static RelayRequestMsg.ServerToClient fromBuffer(ChannelBuffer buffer)
+        public static RelayRequestMsg.ServerToClient fromBuffer(ByteBuf buffer)
                 
                 throws MessageDecodingException {
             return (RelayRequestMsg.ServerToClient)
@@ -57,7 +60,7 @@ public class RelayRequestMsgFactory {
         }
 
         @Override
-        protected RelayRequestMsg.ServerToClient process(ChannelBuffer buffer) throws MessageDecodingException {
+        protected RelayRequestMsg.ServerToClient process(ByteBuf buffer) throws MessageDecodingException {
 
             MsgFrameDecoder decoder;
             try {

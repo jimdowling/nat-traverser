@@ -4,6 +4,8 @@
  */
 package se.sics.gvod.net.util;
 
+import io.netty.buffer.ByteBuf;
+
 import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -15,15 +17,17 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.jboss.netty.buffer.ChannelBuffer;
+
+import se.sics.gvod.address.Address;
 import se.sics.gvod.common.DescriptorBuffer;
-import se.sics.gvod.net.VodAddress;
+import se.sics.gvod.common.Utility;
+import se.sics.gvod.common.UtilityLS;
+import se.sics.gvod.common.UtilityVod;
 import se.sics.gvod.common.VodDescriptor;
 import se.sics.gvod.common.msgs.MessageEncodingException;
-import se.sics.gvod.net.Nat;
-import se.sics.gvod.address.Address;
-import se.sics.gvod.common.*;
 import se.sics.gvod.config.VodConfig;
+import se.sics.gvod.net.Nat;
+import se.sics.gvod.net.VodAddress;
 import se.sics.gvod.timer.NoTimeoutId;
 import se.sics.gvod.timer.TimeoutId;
 
@@ -68,14 +72,14 @@ public class UserTypesEncoderFactory {
 
     ;
 
-    public static void writeUnsignedintAsOneByte(ChannelBuffer buffer, int value) throws MessageEncodingException {
+    public static void writeUnsignedintAsOneByte(ByteBuf buffer, int value) throws MessageEncodingException {
         if ((value >= Math.pow(2, 8)) || (value < 0)) {
             throw new MessageEncodingException("Integer value < 0 or " + value + " is larger than 2^15");
         }
         buffer.writeByte((byte) (value & 0xFF));
     }
 
-    public static void writeUnsignedintAsTwoBytes(ChannelBuffer buffer, int value) throws MessageEncodingException {
+    public static void writeUnsignedintAsTwoBytes(ByteBuf buffer, int value) throws MessageEncodingException {
         byte[] result = new byte[2];
         if ((value >= Math.pow(2, 16)) || (value < 0)) {
             throw new MessageEncodingException("Integer value < 0 or " + value + " is larger than 2^31");
@@ -86,7 +90,7 @@ public class UserTypesEncoderFactory {
     }
 
     
-    public static void writeTimeoutId(ChannelBuffer buffer, TimeoutId id)
+    public static void writeTimeoutId(ByteBuf buffer, TimeoutId id)
             throws MessageEncodingException {
         if (id instanceof NoTimeoutId) {
             buffer.writeInt(-1);
@@ -96,7 +100,7 @@ public class UserTypesEncoderFactory {
     }
     
     
-    public static void writeVodAddress(ChannelBuffer buffer, VodAddress addr)
+    public static void writeVodAddress(ByteBuf buffer, VodAddress addr)
             throws MessageEncodingException {
         writeAddress(buffer, addr.getPeerAddress());
         buffer.writeInt(addr.getOverlayId());
@@ -104,7 +108,7 @@ public class UserTypesEncoderFactory {
         writeListAddresses(buffer, addr.getParents());
     }
 
-    public static void writeListVodAddresses(ChannelBuffer buffer,
+    public static void writeListVodAddresses(ByteBuf buffer,
             List<VodAddress> addresses)
             throws MessageEncodingException {
         if (addresses == null) {
@@ -117,7 +121,7 @@ public class UserTypesEncoderFactory {
         }
     }
 
-    public static void writeListAddresses(ChannelBuffer buffer,
+    public static void writeListAddresses(ByteBuf buffer,
             Set<Address> addresses)
             throws MessageEncodingException {
         if (addresses == null || addresses.isEmpty()) {
@@ -130,7 +134,7 @@ public class UserTypesEncoderFactory {
         }
     }
 
-    public static void writeListRtts(ChannelBuffer buffer,
+    public static void writeListRtts(ByteBuf buffer,
             List<Integer> rtts)
             throws MessageEncodingException {
         if (rtts == null) {
@@ -143,7 +147,7 @@ public class UserTypesEncoderFactory {
         }
     }
 
-    public static void writeListVodNodeDescriptors(ChannelBuffer buffer,
+    public static void writeListVodNodeDescriptors(ByteBuf buffer,
             List<VodDescriptor> nodeDescriptors)
             throws MessageEncodingException {
         if (nodeDescriptors == null) {
@@ -156,7 +160,7 @@ public class UserTypesEncoderFactory {
         }
     }
 
-    public static void writeVodNodeDescriptor(ChannelBuffer buffer,
+    public static void writeVodNodeDescriptor(ByteBuf buffer,
             VodDescriptor nodeDescriptor)
             throws MessageEncodingException {
         UserTypesEncoderFactory.writeVodAddress(buffer, nodeDescriptor.getVodAddress());
@@ -165,7 +169,7 @@ public class UserTypesEncoderFactory {
         UserTypesEncoderFactory.writeUnsignedintAsTwoBytes(buffer, nodeDescriptor.getMtu());
     }
 
-    public static void writeCollectionInts(ChannelBuffer buffer,
+    public static void writeCollectionInts(ByteBuf buffer,
             Collection<Integer> collectionInts) throws MessageEncodingException {
         if (collectionInts == null) {
             UserTypesEncoderFactory.writeUnsignedintAsTwoBytes(buffer, 0);
@@ -180,7 +184,7 @@ public class UserTypesEncoderFactory {
         }
     }
 
-    public static void writeIntegerSet(ChannelBuffer buffer, Set<Integer> integers) throws MessageEncodingException {
+    public static void writeIntegerSet(ByteBuf buffer, Set<Integer> integers) throws MessageEncodingException {
         if (integers == null) {
             UserTypesEncoderFactory.writeUnsignedintAsTwoBytes(buffer, 0);
         } else {
@@ -191,7 +195,7 @@ public class UserTypesEncoderFactory {
         }
     }
 
-    public static void writeLongSet(ChannelBuffer buffer, Set<Long> longs) throws MessageEncodingException {
+    public static void writeLongSet(ByteBuf buffer, Set<Long> longs) throws MessageEncodingException {
         /*
          * The first entry of an encoded Collection is always the length stored
          * as two bytes
@@ -209,7 +213,7 @@ public class UserTypesEncoderFactory {
         }
     }
 
-    public static void writeMapIntInts(ChannelBuffer buffer, Map<Integer, Integer> overlayUtilities)
+    public static void writeMapIntInts(ByteBuf buffer, Map<Integer, Integer> overlayUtilities)
             throws MessageEncodingException {
         if (overlayUtilities == null) {
             UserTypesEncoderFactory.writeUnsignedintAsTwoBytes(buffer, 0);
@@ -232,7 +236,7 @@ public class UserTypesEncoderFactory {
         }
     }
 
-    public static void writeSetUnsignedTwoByteInts(ChannelBuffer buffer,
+    public static void writeSetUnsignedTwoByteInts(ByteBuf buffer,
             Set<Integer> ports)
             throws MessageEncodingException {
         if (ports == null) {
@@ -248,7 +252,7 @@ public class UserTypesEncoderFactory {
         }
     }
 
-    public static void writeAddress(ChannelBuffer buffer, Address addr)
+    public static void writeAddress(ByteBuf buffer, Address addr)
             throws MessageEncodingException {
         byte[] bytes;
         int port = 0;
@@ -275,7 +279,7 @@ public class UserTypesEncoderFactory {
         buffer.writeInt(id);
     }
 
-    public static void writeUtility(ChannelBuffer buffer, Utility utility)
+    public static void writeUtility(ByteBuf buffer, Utility utility)
             throws MessageEncodingException {
         // 2 bytes = chunk, offset;  8 bytes = piece
         // chunk can be -10, for a seed.
@@ -292,7 +296,7 @@ public class UserTypesEncoderFactory {
         }
     }
 
-    public static void writeArrayBytes(ChannelBuffer buffer, byte[] bytes)
+    public static void writeArrayBytes(ByteBuf buffer, byte[] bytes)
             throws MessageEncodingException {
         if (bytes == null) {
             UserTypesEncoderFactory.writeUnsignedintAsTwoBytes(buffer, 0);
@@ -309,7 +313,7 @@ public class UserTypesEncoderFactory {
      * constant.
      * @throws MessageEncodingException
      */
-    public static void writeArrayArrayBytes(ChannelBuffer buffer, byte[][] availablePieces)
+    public static void writeArrayArrayBytes(ByteBuf buffer, byte[][] availablePieces)
             throws MessageEncodingException {
         if (buffer == null) {
             throw new MessageEncodingException("buffer or bytes was null.");
@@ -325,7 +329,7 @@ public class UserTypesEncoderFactory {
         }
     }
 
-    public static void writeUUID(ChannelBuffer buffer, UUID uuid)
+    public static void writeUUID(ByteBuf buffer, UUID uuid)
             throws MessageEncodingException {
         long lsb = 0;
         long msb = 0;
@@ -337,7 +341,7 @@ public class UserTypesEncoderFactory {
         buffer.writeLong(msb);
     }
 
-    public static void writeDescriptorBuffer(ChannelBuffer buffer,
+    public static void writeDescriptorBuffer(ByteBuf buffer,
             DescriptorBuffer descBuf)
             throws MessageEncodingException {
         writeVodAddress(buffer, descBuf.getFrom());
@@ -345,7 +349,7 @@ public class UserTypesEncoderFactory {
         writeListVodNodeDescriptors(buffer, descBuf.getPrivateDescriptors());
     }
 
-    public static void writeNat(ChannelBuffer buffer,
+    public static void writeNat(ByteBuf buffer,
             Nat nat)
             throws MessageEncodingException {
         int type = nat.getType().ordinal();
@@ -363,7 +367,7 @@ public class UserTypesEncoderFactory {
         UserTypesEncoderFactory.writeAddress(buffer, nat.getPublicUPNPAddress());
     }
 
-    public static void writeStringLength256(ChannelBuffer buffer, String str)
+    public static void writeStringLength256(ByteBuf buffer, String str)
             throws MessageEncodingException {
         if (str == null) {
             writeUnsignedintAsOneByte(buffer, 0);
@@ -385,7 +389,7 @@ public class UserTypesEncoderFactory {
         }
     }
 
-    public static void writeStringLength65536(ChannelBuffer buffer, String str)
+    public static void writeStringLength65536(ByteBuf buffer, String str)
             throws MessageEncodingException {
         byte[] strBytes;
         if (str == null) {
@@ -408,7 +412,7 @@ public class UserTypesEncoderFactory {
         }
     }
 
-    public static void writeBytesLength65536(ChannelBuffer buffer, byte[] bytes)
+    public static void writeBytesLength65536(ByteBuf buffer, byte[] bytes)
             throws MessageEncodingException {
         if (bytes == null) {
             writeUnsignedintAsTwoBytes(buffer, 0);
@@ -423,7 +427,7 @@ public class UserTypesEncoderFactory {
         }
     }
 
-    public static void writeBoolean(ChannelBuffer buffer, boolean b)
+    public static void writeBoolean(ByteBuf buffer, boolean b)
             throws MessageEncodingException {
         UserTypesEncoderFactory.writeUnsignedintAsOneByte(buffer, b == true ? 1 : 0);
     }

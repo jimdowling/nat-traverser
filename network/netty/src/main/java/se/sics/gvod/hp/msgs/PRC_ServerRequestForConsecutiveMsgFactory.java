@@ -1,10 +1,10 @@
 package se.sics.gvod.hp.msgs;
 
-import se.sics.gvod.common.msgs.*;
-import org.jboss.netty.buffer.ChannelBuffer;
-import se.sics.gvod.net.VodAddress;
+import io.netty.buffer.ByteBuf;
 import se.sics.gvod.common.hp.HPMechanism;
 import se.sics.gvod.common.hp.HPRole;
+import se.sics.gvod.common.msgs.MessageDecodingException;
+import se.sics.gvod.net.VodAddress;
 import se.sics.gvod.net.util.UserTypesDecoderFactory;
 
 public class PRC_ServerRequestForConsecutiveMsgFactory {
@@ -14,7 +14,7 @@ public class PRC_ServerRequestForConsecutiveMsgFactory {
         private Request() {
         }
 
-        public static PRC_ServerRequestForConsecutiveMsg.Request fromBuffer(ChannelBuffer buffer)
+        public static PRC_ServerRequestForConsecutiveMsg.Request fromBuffer(ByteBuf buffer)
                 
                 throws MessageDecodingException {
             return (PRC_ServerRequestForConsecutiveMsg.Request)
@@ -22,7 +22,7 @@ public class PRC_ServerRequestForConsecutiveMsgFactory {
         }
 
         @Override
-        protected PRC_ServerRequestForConsecutiveMsg.Request process(ChannelBuffer buffer) throws MessageDecodingException {
+        protected PRC_ServerRequestForConsecutiveMsg.Request process(ByteBuf buffer) throws MessageDecodingException {
 
             int hm = UserTypesDecoderFactory.readIntAsOneByte(buffer);
             HPMechanism holePunchingMechanism = HPMechanism.values()[hm];

@@ -4,9 +4,9 @@
  */
 package se.sics.gvod.stun.msgs;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-import se.sics.gvod.common.msgs.MessageEncodingException;
+import io.netty.buffer.ByteBuf;
 import se.sics.gvod.address.Address;
+import se.sics.gvod.common.msgs.MessageEncodingException;
 import se.sics.gvod.net.BaseMsgFrameDecoder;
 import se.sics.gvod.net.VodAddress;
 import se.sics.gvod.net.msgs.RewriteableMsg;
@@ -69,8 +69,8 @@ public class ServerHostChangeMsg {
         }
 
         @Override
-        public ChannelBuffer toByteArray() throws MessageEncodingException {
-            ChannelBuffer buf = createChannelBufferWithHeader();
+        public ByteBuf toByteArray() throws MessageEncodingException {
+        	ByteBuf buf = createChannelBufferWithHeader();
             UserTypesEncoderFactory.writeAddress(buf, clientPublicAddr);
 //            UserTypesEncoderFactory.writeTimeoutId(buf, originalTimeoutId);
             buf.writeInt(originalTimeoutId.getId());
@@ -108,8 +108,8 @@ public class ServerHostChangeMsg {
         }
 
         @Override
-        public ChannelBuffer toByteArray() throws MessageEncodingException {
-            ChannelBuffer buf = createChannelBufferWithHeader();
+        public ByteBuf toByteArray() throws MessageEncodingException {
+        	ByteBuf buf = createChannelBufferWithHeader();
 
             return buf;
         }

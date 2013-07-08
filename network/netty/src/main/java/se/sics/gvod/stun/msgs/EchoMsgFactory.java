@@ -1,9 +1,11 @@
 package se.sics.gvod.stun.msgs;
 
+import io.netty.buffer.ByteBuf;
+
 import java.util.Set;
-import org.jboss.netty.buffer.ChannelBuffer;
-import se.sics.gvod.common.msgs.MessageDecodingException;
+
 import se.sics.gvod.address.Address;
+import se.sics.gvod.common.msgs.MessageDecodingException;
 import se.sics.gvod.net.msgs.DirectMsg;
 import se.sics.gvod.net.util.UserTypesDecoderFactory;
 
@@ -14,14 +16,14 @@ public class EchoMsgFactory  {
         private Request() {
         }
 
-        public static EchoMsg.Request fromBuffer(ChannelBuffer buffer)
+        public static EchoMsg.Request fromBuffer(ByteBuf buffer)
                 
                 throws MessageDecodingException {
             return (EchoMsg.Request) new EchoMsgFactory.Request().decode(buffer, true);
         }
 
         @Override
-        protected DirectMsg process(ChannelBuffer buffer) throws MessageDecodingException {
+        protected DirectMsg process(ByteBuf buffer) throws MessageDecodingException {
          
             int typeId = UserTypesDecoderFactory.readUnsignedIntAsOneByte(buffer);
             EchoMsg.Test testType = EchoMsg.Test.create(typeId);
@@ -36,7 +38,7 @@ public class EchoMsgFactory  {
         private Response() {
         }
 
-        public static EchoMsg.Response fromBuffer(ChannelBuffer buffer)
+        public static EchoMsg.Response fromBuffer(ByteBuf buffer)
                 
                 throws MessageDecodingException {
             return (EchoMsg.Response)
@@ -44,7 +46,7 @@ public class EchoMsgFactory  {
         }
 
         @Override
-        protected DirectMsg process(ChannelBuffer buffer) throws MessageDecodingException {
+        protected DirectMsg process(ByteBuf buffer) throws MessageDecodingException {
             int partnerPort  = UserTypesDecoderFactory.readUnsignedIntAsTwoBytes(buffer);
             int typeId = UserTypesDecoderFactory.readUnsignedIntAsOneByte(buffer);
             int tryId = UserTypesDecoderFactory.readUnsignedIntAsOneByte(buffer);

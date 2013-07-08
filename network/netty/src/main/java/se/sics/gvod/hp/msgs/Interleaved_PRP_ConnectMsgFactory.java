@@ -1,8 +1,10 @@
 package se.sics.gvod.hp.msgs;
 
+import io.netty.buffer.ByteBuf;
+
 import java.util.Set;
-import se.sics.gvod.common.msgs.*;
-import org.jboss.netty.buffer.ChannelBuffer;
+
+import se.sics.gvod.common.msgs.MessageDecodingException;
 import se.sics.gvod.net.util.UserTypesDecoderFactory;
 
 public class Interleaved_PRP_ConnectMsgFactory {
@@ -12,14 +14,14 @@ public class Interleaved_PRP_ConnectMsgFactory {
         private Request() {
         }
 
-        public static Interleaved_PRP_ConnectMsg.Request fromBuffer(ChannelBuffer buffer)
+        public static Interleaved_PRP_ConnectMsg.Request fromBuffer(ByteBuf buffer)
                 throws MessageDecodingException {
             return (Interleaved_PRP_ConnectMsg.Request)
                     new Interleaved_PRP_ConnectMsgFactory.Request().decode(buffer, true);
         }
 
         @Override
-        protected Interleaved_PRP_ConnectMsg.Request process(ChannelBuffer buffer) throws MessageDecodingException {
+        protected Interleaved_PRP_ConnectMsg.Request process(ByteBuf buffer) throws MessageDecodingException {
             Set<Integer> setOfAvailablePorts = UserTypesDecoderFactory.readSetUnsignedTwoByteInts(buffer);
             return new Interleaved_PRP_ConnectMsg.Request(vodSrc, vodDest, 
                     remoteClientId, setOfAvailablePorts, msgTimeoutId);
@@ -31,7 +33,7 @@ public class Interleaved_PRP_ConnectMsgFactory {
         private Response() {
         }
 
-        public static Interleaved_PRP_ConnectMsg.Response fromBuffer(ChannelBuffer buffer)
+        public static Interleaved_PRP_ConnectMsg.Response fromBuffer(ByteBuf buffer)
                 
                 throws MessageDecodingException {
             return (Interleaved_PRP_ConnectMsg.Response)
@@ -39,7 +41,7 @@ public class Interleaved_PRP_ConnectMsgFactory {
         }
 
         @Override
-        protected Interleaved_PRP_ConnectMsg.Response process(ChannelBuffer buffer) throws MessageDecodingException {
+        protected Interleaved_PRP_ConnectMsg.Response process(ByteBuf buffer) throws MessageDecodingException {
 
             int rt = UserTypesDecoderFactory.readUnsignedIntAsOneByte(buffer);
             Interleaved_PRP_ConnectMsg.ResponseType responseType =

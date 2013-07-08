@@ -1,6 +1,6 @@
 package se.sics.gvod.stun.msgs;
 
-import org.jboss.netty.buffer.ChannelBuffer;
+import io.netty.buffer.ByteBuf;
 import se.sics.gvod.common.msgs.DirectMsgNettyFactory;
 import se.sics.gvod.common.msgs.MessageDecodingException;
 
@@ -13,7 +13,7 @@ public abstract class StunRequestMsgFactory extends DirectMsgNettyFactory
     }
 
     @Override
-    protected void decodeHeader(ChannelBuffer buffer, boolean timeout) throws MessageDecodingException {
+    protected void decodeHeader(ByteBuf buffer, boolean timeout) throws MessageDecodingException {
         super.decodeHeader(buffer, timeout);
         transactionId = buffer.readLong();
     }

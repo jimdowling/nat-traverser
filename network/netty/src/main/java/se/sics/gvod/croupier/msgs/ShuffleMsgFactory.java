@@ -4,7 +4,7 @@
  */
 package se.sics.gvod.croupier.msgs;
 
-import org.jboss.netty.buffer.ChannelBuffer;
+import io.netty.buffer.ByteBuf;
 import se.sics.gvod.common.DescriptorBuffer;
 import se.sics.gvod.common.VodDescriptor;
 import se.sics.gvod.common.msgs.MessageDecodingException;
@@ -20,13 +20,13 @@ public class ShuffleMsgFactory {
     
     public static class Request extends RelayMsgNettyFactory.Request {
 
-        public static ShuffleMsg.Request fromBuffer(ChannelBuffer buffer)
+        public static ShuffleMsg.Request fromBuffer(ByteBuf buffer)
                 throws MessageDecodingException {
             return (ShuffleMsg.Request) new ShuffleMsgFactory.Request().decode(buffer, true);
         }
         
         @Override
-        protected RelayMsgNetty.Request process(ChannelBuffer buffer) throws MessageDecodingException {
+        protected RelayMsgNetty.Request process(ByteBuf buffer) throws MessageDecodingException {
             DescriptorBuffer descBuf = UserTypesDecoderFactory.readDescriptorBuffer(buffer);
             VodDescriptor nodeDescriptor = UserTypesDecoderFactory.readGVodNodeDescriptor(buffer);
             
@@ -38,13 +38,13 @@ public class ShuffleMsgFactory {
 
     public static class Response extends RelayMsgNettyFactory.Response {
 
-        public static ShuffleMsg.Response fromBuffer(ChannelBuffer buffer)
+        public static ShuffleMsg.Response fromBuffer(ByteBuf buffer)
                 throws MessageDecodingException {
             return (ShuffleMsg.Response) new ShuffleMsgFactory.Response().decode(buffer, true);
         }
         
         @Override
-        protected RelayMsgNetty.Response process(ChannelBuffer buffer) throws MessageDecodingException {
+        protected RelayMsgNetty.Response process(ByteBuf buffer) throws MessageDecodingException {
             DescriptorBuffer descBuf = UserTypesDecoderFactory.readDescriptorBuffer(buffer);
             VodDescriptor nodeDescriptor = UserTypesDecoderFactory.readGVodNodeDescriptor(buffer);
             return new ShuffleMsg.Response(gvodSrc, gvodDest, clientId, remoteId, nextDest, 

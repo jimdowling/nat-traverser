@@ -1,63 +1,74 @@
 package se.sics.gvod.net;
 
-import org.jboss.netty.channel.ChannelHandlerContext;
-import org.jboss.netty.channel.ChannelStateEvent;
-import org.jboss.netty.channel.MessageEvent;
-import org.jboss.netty.channel.SimpleChannelHandler;
+import io.netty.channel.ChannelDuplexHandler;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelPromise;
+import io.netty.channel.MessageList;
+import io.netty.util.concurrent.Future;
+import io.netty.util.concurrent.GenericFutureListener;
 
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * @author <a href="mailto:bruno@factor45.org">Bruno de Carvalho</a>
  */
-public class MessageCounter extends SimpleChannelHandler {
+public class MessageCounter extends ChannelDuplexHandler {
 
-    // internal vars ----------------------------------------------------------
+	// internal vars ----------------------------------------------------------
 
-    private final String id;
-    private final AtomicLong writtenMessages;
-    private final AtomicLong readMessages;
+	private final String id;
+	private final AtomicLong writtenMessages;
+	private final AtomicLong readMessages;
 
-    // constructors -----------------------------------------------------------
+	// constructors -----------------------------------------------------------
 
-    public MessageCounter(String id) {
-        this.id = id;
-        this.writtenMessages = new AtomicLong();
-        this.readMessages = new AtomicLong();
-    }
+	public MessageCounter(String id) {
+		this.id = id;
+		this.writtenMessages = new AtomicLong();
+		this.readMessages = new AtomicLong();
+	}
 
-    // SimpleChannelHandler ---------------------------------------------------
+	// SimpleChannelHandler ---------------------------------------------------
 
-    @Override
-    public void messageReceived(ChannelHandlerContext ctx, MessageEvent e)
-            throws Exception {
-        this.readMessages.incrementAndGet();
-        super.messageReceived(ctx, e);
-    }
+	// TODO Netty 4 unchecked code transformation
+	@Override
+	public void messageReceived(ChannelHandlerContext ctx, MessageList<Object> msgs)
+			throws Exception {
+		this.readMessages.addAndGet(msgs.size());
+		super.messageReceived(ctx, msgs);
+	}
 
-    @Override
-    public void writeRequested(ChannelHandlerContext ctx, MessageEvent e)
-            throws Exception {
-        this.writtenMessages.incrementAndGet();
-        super.writeRequested(ctx, e);
-    }
+	// TODO Netty 4 unchecked code transformation
+	@Override
+	public void write(ChannelHandlerContext ctx, MessageList<Object> msgs, ChannelPromise promise)
+			throws Exception {
+		final int size = msgs.size();
+		promise.addListener(new GenericFutureListener<Future<? super Void>>() {
 
-    @Override
-    public void channelClosed(ChannelHandlerContext ctx, ChannelStateEvent e)
-            throws Exception {
-        super.channelClosed(ctx, e);
-        System.out.println(this.id + ctx.getChannel() + " -> sent: " +
-                           this.getWrittenMessages() + ", recv: " +
-                           this.getReadMessages());
-    }
+			@Override
+			public void operationComplete(Future<? super Void> future) throws Exception {
+				MessageCounter.this.readMessages.addAndGet(size);
+			}
+		});
 
-    // getters & setters ------------------------------------------------------
+		super.write(ctx, msgs, promise);
+	}
 
-    public long getWrittenMessages() {
-        return writtenMessages.get();
-    }
+	// TODO Netty 4 unchecked code transformation
+	@Override
+	public void channelUnregistered(ChannelHandlerContext ctx) throws Exception {
+		System.out.println(this.id + ctx.channel() + " -> sent: " + this.getWrittenMessages()
+				+ ", recv: " + this.getReadMessages());
+		super.channelUnregistered(ctx);
+	}
 
-    public long getReadMessages() {
-        return readMessages.get();
-    }
+	// getters & setters ------------------------------------------------------
+
+	public long getWrittenMessages() {
+		return writtenMessages.get();
+	}
+
+	public long getReadMessages() {
+		return readMessages.get();
+	}
 }

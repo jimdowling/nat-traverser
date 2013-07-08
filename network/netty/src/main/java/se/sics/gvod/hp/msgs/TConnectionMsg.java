@@ -1,13 +1,13 @@
 package se.sics.gvod.hp.msgs;
 
-import org.jboss.netty.buffer.ChannelBuffer;
+import io.netty.buffer.ByteBuf;
 import se.sics.gvod.common.msgs.DirectMsgNetty;
 import se.sics.gvod.common.msgs.MessageEncodingException;
 import se.sics.gvod.net.BaseMsgFrameDecoder;
-import se.sics.gvod.net.msgs.RewriteableRetryTimeout;
-import se.sics.gvod.net.msgs.ScheduleRetryTimeout;
 import se.sics.gvod.net.VodAddress;
 import se.sics.gvod.net.msgs.RewriteableMsg;
+import se.sics.gvod.net.msgs.RewriteableRetryTimeout;
+import se.sics.gvod.net.msgs.ScheduleRetryTimeout;
 import se.sics.gvod.timer.TimeoutId;
 
 /**
@@ -52,7 +52,7 @@ public class TConnectionMsg
         }
 
         @Override
-        public ChannelBuffer toByteArray() throws MessageEncodingException {
+        public ByteBuf toByteArray() throws MessageEncodingException {
             return createChannelBufferWithHeader();
         }
 
@@ -97,7 +97,7 @@ public class TConnectionMsg
         }
 
         @Override
-        public ChannelBuffer toByteArray() throws MessageEncodingException {
+        public ByteBuf toByteArray() throws MessageEncodingException {
             return createChannelBufferWithHeader();
         }
 

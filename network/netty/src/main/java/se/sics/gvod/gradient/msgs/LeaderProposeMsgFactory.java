@@ -1,9 +1,11 @@
 package se.sics.gvod.gradient.msgs;
 
-import se.sics.gvod.common.VodDescriptor;
+import io.netty.buffer.ByteBuf;
+
 import java.util.List;
-import org.jboss.netty.buffer.ChannelBuffer;
+
 import se.sics.gvod.common.Utility;
+import se.sics.gvod.common.VodDescriptor;
 import se.sics.gvod.common.msgs.MessageDecodingException;
 import se.sics.gvod.common.msgs.RelayMsgNettyFactory;
 import se.sics.gvod.net.VodAddress;
@@ -17,14 +19,14 @@ public class LeaderProposeMsgFactory {
         Request() {
         }
 
-        public static GradientSearchMsg.Request fromBuffer(ChannelBuffer buffer)
+        public static GradientSearchMsg.Request fromBuffer(ByteBuf buffer)
                 throws MessageDecodingException {
             return (GradientSearchMsg.Request) 
                     new LeaderProposeMsgFactory.Request().decode(buffer, true);
         }
 
         @Override
-        protected RewriteableMsg process(ChannelBuffer buffer) throws MessageDecodingException {
+        protected RewriteableMsg process(ByteBuf buffer) throws MessageDecodingException {
             int ttl = UserTypesDecoderFactory.readUnsignedIntAsOneByte(buffer);
             Utility targetUtility = UserTypesDecoderFactory.readUtility(buffer);
             VodAddress origSrc = UserTypesDecoderFactory.readVodAddress(buffer);
@@ -38,14 +40,14 @@ public class LeaderProposeMsgFactory {
         private Response() {
         }
 
-        public static GradientSearchMsg.Response fromBuffer(ChannelBuffer buffer)
+        public static GradientSearchMsg.Response fromBuffer(ByteBuf buffer)
                 throws MessageDecodingException {
             return (GradientSearchMsg.Response)
                     new LeaderProposeMsgFactory.Response().decode(buffer, true);
         }
 
         @Override
-        protected RewriteableMsg process(ChannelBuffer buffer) throws MessageDecodingException {
+        protected RewriteableMsg process(ByteBuf buffer) throws MessageDecodingException {
             List<VodDescriptor> similarSet = UserTypesDecoderFactory.readListGVodNodeDescriptors(buffer);
             return new GradientSearchMsg.Response(gvodSrc, gvodDest, clientId, remoteId, nextDest, timeoutId, 
                     similarSet);

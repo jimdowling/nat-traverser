@@ -1,8 +1,8 @@
 package se.sics.gvod.stun.msgs;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-import se.sics.gvod.common.msgs.MessageDecodingException;
+import io.netty.buffer.ByteBuf;
 import se.sics.gvod.address.Address;
+import se.sics.gvod.common.msgs.MessageDecodingException;
 import se.sics.gvod.net.msgs.DirectMsg;
 import se.sics.gvod.net.util.UserTypesDecoderFactory;
 import se.sics.gvod.timer.UUID;
@@ -14,7 +14,7 @@ public abstract class ServerHostChangeMsgFactory {
         private Request() {
         }
 
-        public static ServerHostChangeMsg.Request fromBuffer(ChannelBuffer buffer)
+        public static ServerHostChangeMsg.Request fromBuffer(ByteBuf buffer)
                 
                 throws MessageDecodingException {
             return (ServerHostChangeMsg.Request)
@@ -22,7 +22,7 @@ public abstract class ServerHostChangeMsgFactory {
         }
 
         @Override
-        protected DirectMsg process(ChannelBuffer buffer) throws MessageDecodingException {
+        protected DirectMsg process(ByteBuf buffer) throws MessageDecodingException {
             Address clientPublicAddr = UserTypesDecoderFactory.readAddress(buffer);
 //            UUID origId = UserTypesDecoderFactory.readUUID(buffer);
             UUID origId = new UUID(buffer.readInt());
@@ -37,7 +37,7 @@ public abstract class ServerHostChangeMsgFactory {
         }
 
 
-        public static ServerHostChangeMsg.Response fromBuffer(ChannelBuffer buffer)
+        public static ServerHostChangeMsg.Response fromBuffer(ByteBuf buffer)
                 
                 throws MessageDecodingException {
             return (ServerHostChangeMsg.Response)
@@ -45,7 +45,7 @@ public abstract class ServerHostChangeMsgFactory {
         }
 
         @Override
-        protected DirectMsg process(ChannelBuffer buffer) throws MessageDecodingException {
+        protected DirectMsg process(ByteBuf buffer) throws MessageDecodingException {
             return new ServerHostChangeMsg.Response(vodSrc, vodDest, transactionId, timeoutId);
         }
     }

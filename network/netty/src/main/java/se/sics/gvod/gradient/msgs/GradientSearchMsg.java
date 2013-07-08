@@ -4,14 +4,16 @@
  */
 package se.sics.gvod.gradient.msgs;
 
+import io.netty.buffer.ByteBuf;
+
 import java.util.List;
-import org.jboss.netty.buffer.ChannelBuffer;
+
 import se.sics.gvod.common.Utility;
 import se.sics.gvod.common.VodDescriptor;
-import se.sics.gvod.config.VodConfig;
 import se.sics.gvod.common.msgs.MessageEncodingException;
 import se.sics.gvod.common.msgs.RelayMsgNetty;
 import se.sics.gvod.common.msgs.RelayMsgNetty.Status;
+import se.sics.gvod.config.VodConfig;
 import se.sics.gvod.net.BaseMsgFrameDecoder;
 import se.sics.gvod.net.VodAddress;
 import se.sics.gvod.net.msgs.RewriteableMsg;
@@ -55,8 +57,8 @@ public class GradientSearchMsg {
         }
 
         @Override
-        public ChannelBuffer toByteArray() throws MessageEncodingException {
-            ChannelBuffer buffer = createChannelBufferWithHeader();
+        public ByteBuf toByteArray() throws MessageEncodingException {
+        	ByteBuf buffer = createChannelBufferWithHeader();
             UserTypesEncoderFactory.writeUnsignedintAsOneByte(buffer, ttl);
             UserTypesEncoderFactory.writeUtility(buffer, targetUtility);
             UserTypesEncoderFactory.writeVodAddress(buffer, origSrc);
@@ -117,8 +119,8 @@ public class GradientSearchMsg {
         }
 
         @Override
-        public ChannelBuffer toByteArray() throws MessageEncodingException {
-            ChannelBuffer buffer = createChannelBufferWithHeader();
+        public ByteBuf toByteArray() throws MessageEncodingException {
+        	ByteBuf buffer = createChannelBufferWithHeader();
             UserTypesEncoderFactory.writeListVodNodeDescriptors(buffer, getSimilarPeers());
             return buffer;
         }

@@ -4,11 +4,12 @@
  */
 package se.sics.gvod.net;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-import org.jboss.netty.channel.Channel;
-import org.jboss.netty.channel.ChannelHandlerContext;
+import io.netty.buffer.ByteBuf;
+import io.netty.channel.ChannelHandlerContext;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import se.sics.gvod.common.msgs.ConnectMsgFactory;
 import se.sics.gvod.common.msgs.DisconnectMsgFactory;
 import se.sics.gvod.common.msgs.MessageDecodingException;
@@ -153,7 +154,7 @@ public class BaseMsgFrameDecoder extends MsgFrameDecoder {
      */
     @Override
     protected RewriteableMsg decodeMsg(ChannelHandlerContext ctx,
-            Channel channel, ChannelBuffer buffer) throws MessageDecodingException {
+            ByteBuf buffer) throws MessageDecodingException {
 
         // PEERSEARCH MSGS
         switch (opKod) {

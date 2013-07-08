@@ -1,7 +1,8 @@
 package se.sics.gvod.hp.msgs;
 
-import se.sics.gvod.common.msgs.*;
-import org.jboss.netty.buffer.ChannelBuffer;
+import io.netty.buffer.ByteBuf;
+import se.sics.gvod.common.msgs.DirectMsgNettyFactory;
+import se.sics.gvod.common.msgs.MessageDecodingException;
 import se.sics.gvod.net.util.UserTypesDecoderFactory;
 import se.sics.gvod.timer.TimeoutId;
 
@@ -14,12 +15,12 @@ public abstract class HpMsgFactory extends DirectMsgNettyFactory {
     }
 
     @Override
-    protected void decodeHeader(ChannelBuffer buffer, boolean timeout) throws MessageDecodingException {
+    protected void decodeHeader(ByteBuf buffer, boolean timeout) throws MessageDecodingException {
         super.decodeHeader(buffer, timeout);
         remoteClientId = buffer.readInt();
         msgTimeoutId = UserTypesDecoderFactory.readTimeoutId(buffer);
     }
 
     @Override
-    protected abstract HpMsg process(ChannelBuffer buffer) throws MessageDecodingException;
+    protected abstract HpMsg process(ByteBuf buffer) throws MessageDecodingException;
 };

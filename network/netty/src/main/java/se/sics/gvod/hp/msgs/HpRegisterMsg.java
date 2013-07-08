@@ -1,10 +1,12 @@
 package se.sics.gvod.hp.msgs;
 
+import io.netty.buffer.ByteBuf;
+
 import java.util.HashSet;
 import java.util.Set;
-import org.jboss.netty.buffer.ChannelBuffer;
-import se.sics.gvod.common.msgs.MessageEncodingException;
+
 import se.sics.gvod.common.msgs.DirectMsgNetty;
+import se.sics.gvod.common.msgs.MessageEncodingException;
 import se.sics.gvod.net.BaseMsgFrameDecoder;
 import se.sics.gvod.net.VodAddress;
 import se.sics.gvod.net.msgs.RewriteableMsg;
@@ -71,8 +73,8 @@ public class HpRegisterMsg {
         }
 
         @Override
-        public ChannelBuffer toByteArray() throws MessageEncodingException {
-            ChannelBuffer buffer = createChannelBufferWithHeader();
+        public ByteBuf toByteArray() throws MessageEncodingException {
+        	ByteBuf buffer = createChannelBufferWithHeader();
             UserTypesEncoderFactory.writeUnsignedintAsOneByte(buffer, delta);
             UserTypesEncoderFactory.writeUnsignedintAsTwoBytes(buffer, (int) rtt);
             UserTypesEncoderFactory.writeSetUnsignedTwoByteInts(buffer, prpPorts);
@@ -130,8 +132,8 @@ public class HpRegisterMsg {
         }
 
         @Override
-        public ChannelBuffer toByteArray() throws MessageEncodingException {
-            ChannelBuffer buffer = createChannelBufferWithHeader();
+        public ByteBuf toByteArray() throws MessageEncodingException {
+        	ByteBuf buffer = createChannelBufferWithHeader();
             UserTypesEncoderFactory.writeUnsignedintAsOneByte(buffer, responseType.ordinal());
             UserTypesEncoderFactory.writeSetUnsignedTwoByteInts(buffer, prpPorts);
             return buffer;

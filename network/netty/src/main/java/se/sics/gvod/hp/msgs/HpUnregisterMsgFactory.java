@@ -1,7 +1,8 @@
 package se.sics.gvod.hp.msgs;
 
-import se.sics.gvod.common.msgs.*;
-import org.jboss.netty.buffer.ChannelBuffer;
+import io.netty.buffer.ByteBuf;
+import se.sics.gvod.common.msgs.DirectMsgNettyFactory;
+import se.sics.gvod.common.msgs.MessageDecodingException;
 import se.sics.gvod.net.util.UserTypesDecoderFactory;
 
 public class HpUnregisterMsgFactory {
@@ -11,7 +12,7 @@ public class HpUnregisterMsgFactory {
         private Request() {
         }
 
-        public static HpUnregisterMsg.Request fromBuffer(ChannelBuffer buffer)
+        public static HpUnregisterMsg.Request fromBuffer(ByteBuf buffer)
                 
                 throws MessageDecodingException {
             return (HpUnregisterMsg.Request)
@@ -19,7 +20,7 @@ public class HpUnregisterMsgFactory {
         }
 
         @Override
-        protected HpUnregisterMsg.Request process(ChannelBuffer buffer) throws MessageDecodingException {
+        protected HpUnregisterMsg.Request process(ByteBuf buffer) throws MessageDecodingException {
             int delay = buffer.readInt();
             int s = UserTypesDecoderFactory.readUnsignedIntAsOneByte(buffer);
             HpRegisterMsg.RegisterStatus status = HpRegisterMsg.RegisterStatus.values()[s];
@@ -32,7 +33,7 @@ public class HpUnregisterMsgFactory {
         private Response() {
         }
 
-        public static HpUnregisterMsg.Response fromBuffer(ChannelBuffer buffer)
+        public static HpUnregisterMsg.Response fromBuffer(ByteBuf buffer)
                 
                 throws MessageDecodingException {
             return (HpUnregisterMsg.Response)
@@ -40,7 +41,7 @@ public class HpUnregisterMsgFactory {
         }
 
         @Override
-        protected HpUnregisterMsg.Response process(ChannelBuffer buffer) throws MessageDecodingException {
+        protected HpUnregisterMsg.Response process(ByteBuf buffer) throws MessageDecodingException {
 
             int status = UserTypesDecoderFactory.readUnsignedIntAsOneByte(buffer);
             HpUnregisterMsg.Response.Status statusType =

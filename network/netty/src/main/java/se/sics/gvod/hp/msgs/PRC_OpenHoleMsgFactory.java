@@ -1,7 +1,7 @@
 package se.sics.gvod.hp.msgs;
 
-import se.sics.gvod.common.msgs.*;
-import org.jboss.netty.buffer.ChannelBuffer;
+import io.netty.buffer.ByteBuf;
+import se.sics.gvod.common.msgs.MessageDecodingException;
 import se.sics.gvod.net.util.UserTypesDecoderFactory;
 
 public class PRC_OpenHoleMsgFactory {
@@ -11,7 +11,7 @@ public class PRC_OpenHoleMsgFactory {
         private Request() {
         }
 
-        public static PRC_OpenHoleMsg.Request fromBuffer(ChannelBuffer buffer)
+        public static PRC_OpenHoleMsg.Request fromBuffer(ByteBuf buffer)
                 
                 throws MessageDecodingException {
             return (PRC_OpenHoleMsg.Request)
@@ -19,7 +19,7 @@ public class PRC_OpenHoleMsgFactory {
         }
 
         @Override
-        protected PRC_OpenHoleMsg.Request process(ChannelBuffer buffer) throws MessageDecodingException {
+        protected PRC_OpenHoleMsg.Request process(ByteBuf buffer) throws MessageDecodingException {
             return new PRC_OpenHoleMsg.Request(vodSrc, vodDest, remoteClientId, msgTimeoutId);
         }
     }
@@ -29,7 +29,7 @@ public class PRC_OpenHoleMsgFactory {
         private Response() {
         }
 
-        public static PRC_OpenHoleMsg.Response fromBuffer(ChannelBuffer buffer)
+        public static PRC_OpenHoleMsg.Response fromBuffer(ByteBuf buffer)
                 
                 throws MessageDecodingException {
             return (PRC_OpenHoleMsg.Response)
@@ -37,7 +37,7 @@ public class PRC_OpenHoleMsgFactory {
         }
 
         @Override
-        protected PRC_OpenHoleMsg.Response process(ChannelBuffer buffer) throws MessageDecodingException {
+        protected PRC_OpenHoleMsg.Response process(ByteBuf buffer) throws MessageDecodingException {
 
             int rt = UserTypesDecoderFactory.readUnsignedIntAsOneByte(buffer);
             PRC_OpenHoleMsg.ResponseType responseType =

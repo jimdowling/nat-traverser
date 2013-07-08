@@ -1,7 +1,8 @@
 package se.sics.gvod.hp.msgs;
 
-import se.sics.gvod.common.msgs.*;
-import org.jboss.netty.buffer.ChannelBuffer;
+import io.netty.buffer.ByteBuf;
+import se.sics.gvod.common.msgs.DirectMsgNettyFactory;
+import se.sics.gvod.common.msgs.MessageDecodingException;
 
 public class TConnectionMsgFactory {
 
@@ -11,7 +12,7 @@ public class TConnectionMsgFactory {
         private Ping() {
         }
 
-        public static TConnectionMsg.Ping fromBuffer(ChannelBuffer buffer)
+        public static TConnectionMsg.Ping fromBuffer(ByteBuf buffer)
                 
                 throws MessageDecodingException {
             return (TConnectionMsg.Ping)
@@ -19,7 +20,7 @@ public class TConnectionMsgFactory {
         }
 
         @Override
-        protected TConnectionMsg.Ping process(ChannelBuffer buffer) throws MessageDecodingException {
+        protected TConnectionMsg.Ping process(ByteBuf buffer) throws MessageDecodingException {
 
             return new TConnectionMsg.Ping(vodSrc, vodDest, timeoutId);
         }
@@ -31,7 +32,7 @@ public class TConnectionMsgFactory {
         private Pong() {
         }
 
-        public static TConnectionMsg.Pong fromBuffer(ChannelBuffer buffer)
+        public static TConnectionMsg.Pong fromBuffer(ByteBuf buffer)
                 
                 throws MessageDecodingException {
             return (TConnectionMsg.Pong)
@@ -39,7 +40,7 @@ public class TConnectionMsgFactory {
         }
 
         @Override
-        protected TConnectionMsg.Pong process(ChannelBuffer buffer) throws MessageDecodingException {
+        protected TConnectionMsg.Pong process(ByteBuf buffer) throws MessageDecodingException {
 
             return new TConnectionMsg.Pong(vodSrc, vodDest, timeoutId);
         }

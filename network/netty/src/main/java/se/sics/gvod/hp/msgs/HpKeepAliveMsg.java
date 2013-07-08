@@ -1,8 +1,8 @@
 package se.sics.gvod.hp.msgs;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-import se.sics.gvod.common.msgs.MessageEncodingException;
+import io.netty.buffer.ByteBuf;
 import se.sics.gvod.common.msgs.DirectMsgNetty;
+import se.sics.gvod.common.msgs.MessageEncodingException;
 import se.sics.gvod.net.BaseMsgFrameDecoder;
 import se.sics.gvod.net.VodAddress;
 import se.sics.gvod.net.msgs.RewriteableMsg;
@@ -39,7 +39,7 @@ public class HpKeepAliveMsg {
         }
 
         @Override
-        public ChannelBuffer toByteArray() throws MessageEncodingException {
+        public ByteBuf toByteArray() throws MessageEncodingException {
             return createChannelBufferWithHeader();
         }
 
@@ -71,7 +71,7 @@ public class HpKeepAliveMsg {
         }
 
         @Override
-        public ChannelBuffer toByteArray() throws MessageEncodingException {
+        public ByteBuf toByteArray() throws MessageEncodingException {
             return createChannelBufferWithHeader();
         }
 

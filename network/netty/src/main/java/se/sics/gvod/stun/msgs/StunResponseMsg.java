@@ -1,9 +1,9 @@
 package se.sics.gvod.stun.msgs;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-import se.sics.gvod.common.msgs.MessageEncodingException;
+import io.netty.buffer.ByteBuf;
 import se.sics.gvod.address.Address;
 import se.sics.gvod.common.msgs.DirectMsgNetty;
+import se.sics.gvod.common.msgs.MessageEncodingException;
 import se.sics.gvod.net.VodAddress;
 import se.sics.gvod.net.util.UserTypesEncoderFactory;
 import se.sics.gvod.timer.TimeoutId;
@@ -37,7 +37,7 @@ public abstract class StunResponseMsg extends DirectMsgNetty {
                 ;
     }
     @Override
-    protected void writeHeader(ChannelBuffer buffer) throws MessageEncodingException {
+    protected void writeHeader(ByteBuf buffer) throws MessageEncodingException {
         super.writeHeader(buffer);
         buffer.writeLong(transactionId);
         UserTypesEncoderFactory.writeAddress(buffer, replyAddr);
