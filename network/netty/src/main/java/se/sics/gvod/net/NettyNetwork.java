@@ -489,7 +489,7 @@ public final class NettyNetwork extends ComponentDefinition {
 	}
 
 	private void send(RewriteableMsg message) {
-		// TODO Should be albe to send all RewriteableMsgs
+		// TODO Should be able to send all RewriteableMsgs
 		if (!(message instanceof Encodable)) {
 			throw new Error("Can only send instances of Encodable");
 		}
