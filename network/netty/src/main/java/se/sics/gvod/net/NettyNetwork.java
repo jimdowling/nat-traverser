@@ -397,7 +397,7 @@ public final class NettyNetwork extends ComponentDefinition {
 		}
 
 		// Configure the pipeline factory.
-		NettyHandler handler = new NettyHandler(component, addr, port);
+		NettyHandler handler = new NettyHandler(component, addr, port, msgDecoderClass);
 
 		EventLoopGroup group = new NioEventLoopGroup();
 		Bootstrap bootstrap = new Bootstrap();
