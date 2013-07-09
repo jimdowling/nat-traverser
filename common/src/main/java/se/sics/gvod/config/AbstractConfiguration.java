@@ -42,12 +42,17 @@ public class AbstractConfiguration<T extends AbstractConfiguration> {
         this.seed = seed;
     }
 
-    public File store(int seed) throws IOException, IllegalAccessException {
+    public File store(int seed) throws IOException {
         Properties p = new Properties();
         this.seed = seed;
         p.setProperty("seed", "" + seed);
         for (Field f : getClass().getDeclaredFields()) {
-            p.setProperty(f.getName(), "" + f.get(this));
+            try {
+                p.setProperty(f.getName(), "" + f.get(this));
+            } catch (IllegalAccessException ex) {
+                Logger.getLogger(AbstractConfiguration.class.getName()).log(Level.SEVERE, null, ex);
+                throw new IOException("IllegalAccessException - " + ex.getMessage());
+            }
         }
         File file = File.createTempFile(getClass().getCanonicalName(), "kompics");
         Writer writer = new FileWriter(file);

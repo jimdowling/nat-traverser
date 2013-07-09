@@ -15,7 +15,8 @@ public class NtCompositeConfiguration extends CompositeConfiguration {
         parentMakerConfig = ParentMakerConfiguration.build();
         hpClientConfig = HpClientConfiguration.build();
         rendezvousServerConfig = RendezvousServerConfiguration.build().setNumChildren(1000);
-        stunClientConfig = StunServerConfiguration.build();
+        stunClientConfig = 
+                StunServerConfiguration.build();
         natConfig = NatConfiguration.build();
     }
 
