@@ -17,8 +17,6 @@ import java.net.SocketAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import se.sics.gvod.common.msgs.DirectMsgNetty;
-import se.sics.gvod.common.msgs.DirectMsgNettyFactory;
 import se.sics.gvod.net.events.NetworkException;
 import se.sics.gvod.net.msgs.RewriteableMsg;
 
@@ -29,16 +27,22 @@ import se.sics.gvod.net.msgs.RewriteableMsg;
 public class NettyHandler extends SimpleChannelInboundHandler<DatagramPacket> {
 
 	private static final Logger logger = LoggerFactory.getLogger(NettyHandler.class);
-	private static final BaseMsgFrameDecoder decoder = new BaseMsgFrameDecoder();
-	
+
 	private final NettyNetwork component;
 	private final InetAddress addr;
 	private final int port;
+	private final MsgFrameDecoder decoder;
 
-	public NettyHandler(NettyNetwork component, InetAddress addr, int port) {
+	public NettyHandler(NettyNetwork component, InetAddress addr, int port,
+			Class<? extends MsgFrameDecoder> msgDecoderClass) {
 		this.component = component;
 		this.addr = addr;
 		this.port = port;
+		try {
+			this.decoder = msgDecoderClass.newInstance();
+		} catch (Exception e) {
+			throw new Error(e.getMessage());
+		}
 	}
 
 	@Override
@@ -62,10 +66,10 @@ public class NettyHandler extends SimpleChannelInboundHandler<DatagramPacket> {
 
 		StringBuilder sb = new StringBuilder();
 		// TODO Not sure for what this code was good for
-//		Object prob = ctx.getAttachment();
-//		if (prob != null) {
-//			sb.append(prob.getClass().getCanonicalName()).append(":");
-//		}
+		// Object prob = ctx.getAttachment();
+		// if (prob != null) {
+		// sb.append(prob.getClass().getCanonicalName()).append(":");
+		// }
 		sb.append(cause.getMessage());
 
 		logger.error(sb.toString());
@@ -78,6 +82,7 @@ public class NettyHandler extends SimpleChannelInboundHandler<DatagramPacket> {
 
 	@Override
 	protected void messageReceived(ChannelHandlerContext ctx, DatagramPacket msg) throws Exception {
+		// TODO Use the pipeline as before
 		RewriteableMsg rewrittenMsg = (RewriteableMsg) decoder.parse(msg.content());
 
 		// session-less UDP means that remoteAddresses cannot be found in
