@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package se.sics.gvod.net;
 
 import io.netty.channel.Channel;
@@ -20,24 +16,22 @@ import org.slf4j.LoggerFactory;
 import se.sics.gvod.net.events.NetworkException;
 import se.sics.gvod.net.msgs.RewriteableMsg;
 
-/**
- * 
- * @author jdowling
- */
-public class NettyHandler extends SimpleChannelInboundHandler<DatagramPacket> {
+public class NettyUdpHandler extends SimpleChannelInboundHandler<DatagramPacket> {
 
-	private static final Logger logger = LoggerFactory.getLogger(NettyHandler.class);
+	private static final Logger logger = LoggerFactory.getLogger(NettyUdpHandler.class);
 
 	private final NettyNetwork component;
 	private final InetAddress addr;
 	private final int port;
 	private final MsgFrameDecoder decoder;
 
-	public NettyHandler(NettyNetwork component, InetAddress addr, int port,
+	public NettyUdpHandler(NettyNetwork component, InetAddress addr, int port,
 			Class<? extends MsgFrameDecoder> msgDecoderClass) {
+
 		this.component = component;
 		this.addr = addr;
 		this.port = port;
+
 		try {
 			this.decoder = msgDecoderClass.newInstance();
 		} catch (Exception e) {
@@ -82,7 +76,6 @@ public class NettyHandler extends SimpleChannelInboundHandler<DatagramPacket> {
 
 	@Override
 	protected void messageReceived(ChannelHandlerContext ctx, DatagramPacket msg) throws Exception {
-		// TODO Use the pipeline as before
 		RewriteableMsg rewrittenMsg = (RewriteableMsg) decoder.parse(msg.content());
 
 		// session-less UDP means that remoteAddresses cannot be found in

@@ -4,12 +4,12 @@ import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.socket.DatagramChannel;
 
-public class NettyClientInitializer extends ChannelInitializer<DatagramChannel> {
+public class NettyTcpInitializer extends ChannelInitializer<DatagramChannel> {
 
 	// final private SSLContext context;
 	// SSLContext context = CryptoUtils.initTlsContext(KEYSTORE_PATH, KS_PASS,
 	// TRUSTSTORE_PATH, TS_PASS, TLS_SESSION_CACHE_SIZE);
-	private final NettyHandler handler;
+	private final NettyTcpHandler handler;
 
 	private Class<? extends MsgFrameDecoder> msgDecoderClass;
 
@@ -22,7 +22,7 @@ public class NettyClientInitializer extends ChannelInitializer<DatagramChannel> 
 	 * @param max
 	 *            max connection
 	 */
-	public NettyClientInitializer(NettyHandler handler,
+	public NettyTcpInitializer(NettyTcpHandler handler,
 			Class<? extends MsgFrameDecoder> msgDecoderClass) {
 		super();
 		this.handler = handler;
@@ -58,13 +58,12 @@ public class NettyClientInitializer extends ChannelInitializer<DatagramChannel> 
 		// ByteCounter byteCounter =
 		// new ByteCounter("--- CLIENT-COUNTER :: ", totalReadBytes,
 		// totalWrittenBytes);
-		MessageCounter messageCounter = new MessageCounter("--- CLIENT-MSGCOUNTER :: ");
+		// MessageCounter messageCounter = new MessageCounter("--- CLIENT-MSGCOUNTER :: ");
 
 		// pipeline.addFirst("byteCounter", byteCounter);
 		pipeline.addLast("decoder", msgDecoderClass.newInstance());
 		pipeline.addLast("encoder", new MsgFrameEncoder());
-		// pipeline.addLast("decoder", new
-		// ObjectDecoder(NettyNetwork.MAX_OBJECT_SIZE));
+		// pipeline.addLast("decoder", new ObjectDecoder(NettyNetwork.MAX_OBJECT_SIZE));
 		// pipeline.addLast("encoder", new ObjectEncoder(1650));
 		// pipeline.addLast("msgCounter", messageCounter);
 
