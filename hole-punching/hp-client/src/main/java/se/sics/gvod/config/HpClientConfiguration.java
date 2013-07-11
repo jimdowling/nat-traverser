@@ -22,7 +22,8 @@ public class HpClientConfiguration extends AbstractConfiguration<HpClientConfigu
                 true,
                 VodConfig.DEFAULT_RTO,
                 VodConfig.DEFAULT_RTO_RETRIES,
-                VodConfig.DEFAULT_RTO_SCALE);
+                VodConfig.DEFAULT_RTO_SCALE
+                );
     }
 
     /**
@@ -38,6 +39,8 @@ public class HpClientConfiguration extends AbstractConfiguration<HpClientConfigu
         this.sessionExpirationTime = sessionExpirationTime;
         this.scanningEnabled = scanningEnabled;
         this.rto = rto;
+        this.rtoRetries = rtoRetries;
+        this.rtoScale = rtoScale;
     }
 
     public static HpClientConfiguration build() {
