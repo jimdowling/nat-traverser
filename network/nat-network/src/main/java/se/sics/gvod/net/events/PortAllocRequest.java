@@ -1,40 +1,43 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package se.sics.gvod.net.events;
 
+import se.sics.gvod.net.Transport;
+
 /**
- *
+ * 
  * @author jdowling
  */
-public class PortAllocRequest extends DoubleDispatchRequestId<PortAllocResponse>
-{
+public class PortAllocRequest extends DoubleDispatchRequestId<PortAllocResponse> {
 
-    private final int numPorts;
-    private final int startPortRange;
-    private final int endPortRange;
+	private final int numPorts;
+	private final int startPortRange;
+	private final int endPortRange;
+	private final Transport protocol;
 
-    public PortAllocRequest(int id, int numPorts) {
-        this(id, numPorts, 1025, 65535);
-    }
-    public PortAllocRequest(int id, int numPorts, int startPortRange, int endPortRange) {
-        super(id);
-        this.startPortRange = startPortRange;
-        this.endPortRange = endPortRange;
-        this.numPorts = numPorts;
-    }
+	public PortAllocRequest(int id, int numPorts) {
+		this(id, numPorts, 1025, 65535, Transport.UDP);
+	}
 
-    public int getNumPorts() {
-        return numPorts; 
-    }
+	public PortAllocRequest(int id, int numPorts, int startPortRange, int endPortRange, Transport protocol) {
+		super(id);
+		this.startPortRange = startPortRange;
+		this.endPortRange = endPortRange;
+		this.numPorts = numPorts;
+		this.protocol = protocol;
+	}
 
-    public int getEndPortRange() {
-        return endPortRange;
-    }
+	public int getNumPorts() {
+		return numPorts;
+	}
 
-    public int getStartPortRange() {
-        return startPortRange;
-    }
-    
+	public int getEndPortRange() {
+		return endPortRange;
+	}
+
+	public int getStartPortRange() {
+		return startPortRange;
+	}
+
+	public Transport getProtocol() {
+		return protocol;
+	}
 }

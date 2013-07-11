@@ -53,9 +53,7 @@ public abstract class MsgFrameDecoder extends ReplayingDecoder<DecoderState> {
 			opKod = buffer.readByte();
 			checkpoint(DecoderState.READ_CONTENT);
 		case READ_CONTENT:
-
 			RewriteableMsg msg = decodeMsg(ctx, buffer);
-
 			if (msg == null) {
 				throw new MessageDecodingException("Could not decode msg with header: " + opKod);
 			}

@@ -2,7 +2,6 @@ package se.sics.gvod.net;
 
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.channel.socket.DatagramChannel;
 import io.netty.channel.socket.DatagramPacket;
 
@@ -13,24 +12,17 @@ import java.net.SocketAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import se.sics.gvod.net.events.NetworkException;
 import se.sics.gvod.net.msgs.RewriteableMsg;
 
-public class NettyUdpHandler extends SimpleChannelInboundHandler<DatagramPacket> {
+public class NettyUdpHandler extends NettyBaseHandler<DatagramPacket> {
 
 	private static final Logger logger = LoggerFactory.getLogger(NettyUdpHandler.class);
 
-	private final NettyNetwork component;
-	private final InetAddress addr;
-	private final int port;
 	private final MsgFrameDecoder decoder;
 
 	public NettyUdpHandler(NettyNetwork component, InetAddress addr, int port,
 			Class<? extends MsgFrameDecoder> msgDecoderClass) {
-
-		this.component = component;
-		this.addr = addr;
-		this.port = port;
+		super(component, addr, port);
 
 		try {
 			this.decoder = msgDecoderClass.newInstance();
@@ -40,38 +32,8 @@ public class NettyUdpHandler extends SimpleChannelInboundHandler<DatagramPacket>
 	}
 
 	@Override
-	public void channelActive(ChannelHandlerContext ctx) {
-		logger.trace("Channel connected");
-	}
-
-	@Override
-	public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-
-		// channel is connectionless
-		Channel channel = ctx.channel();
-		SocketAddress address = channel.remoteAddress();
-		InetSocketAddress inetAddress = null;
-		if (address != null && address instanceof InetSocketAddress) {
-			inetAddress = (InetSocketAddress) address;
-			component.networkException(new NetworkException(inetAddress, Transport.UDP));
-		}
-
-		component.exceptionCaught(ctx, cause);
-
-		StringBuilder sb = new StringBuilder();
-		// TODO Not sure for what this code was good for
-		// Object prob = ctx.getAttachment();
-		// if (prob != null) {
-		// sb.append(prob.getClass().getCanonicalName()).append(":");
-		// }
-		sb.append(cause.getMessage());
-
-		logger.error(sb.toString());
-	}
-
-	@Override
-	public void channelUnregistered(ChannelHandlerContext ctx) throws Exception {
-		component.channelUnregistered(ctx);
+	protected Transport getProtocol() {
+		return Transport.UDP;
 	}
 
 	@Override
@@ -88,8 +50,8 @@ public class NettyUdpHandler extends SimpleChannelInboundHandler<DatagramPacket>
 			rewrittenMsg.getSource().setIp(is.getAddress());
 			rewrittenMsg.getSource().setPort(is.getPort());
 
-			rewrittenMsg.getDestination().setIp(addr);
-			rewrittenMsg.getDestination().setPort(port);
+			rewrittenMsg.getDestination().setIp(getAddr());
+			rewrittenMsg.getDestination().setPort(getPort());
 
 			// TODO - this is terrible code. All we need to do is change
 			// the VodAddress in VodMsg, not Address in RewriteableMsg
@@ -118,8 +80,7 @@ public class NettyUdpHandler extends SimpleChannelInboundHandler<DatagramPacket>
 
 			Channel c = ctx.channel();
 			if (c instanceof DatagramChannel) {
-				DatagramChannel channel = (DatagramChannel) c;
-				component.deliverMessage(rewrittenMsg, channel);
+				getComponent().deliverMessage(rewrittenMsg);
 			} else {
 				logger.warn("Received a message over a non-DatagramChannel of type {}",
 						c.getClass());

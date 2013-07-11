@@ -30,7 +30,7 @@ public abstract class DirectMsgNetty extends DirectMsg implements Encodable
     protected DirectMsgNetty(VodAddress source, VodAddress destination,
             TimeoutId timeoutId) {
         this(source, destination, Transport.UDP, timeoutId);
-    }    
+    }
     
     protected DirectMsgNetty(VodAddress source, VodAddress destination,
             Transport protocol, TimeoutId timeoutId) {
