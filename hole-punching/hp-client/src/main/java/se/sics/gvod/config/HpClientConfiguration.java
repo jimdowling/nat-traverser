@@ -8,7 +8,9 @@ public class HpClientConfiguration extends AbstractConfiguration<HpClientConfigu
     int sessionExpirationTime;
     int scanRetries;
     boolean scanningEnabled;
-    long rto;
+    int rto;
+    int rtoRetries;
+    double rtoScale;
 
     /**
      * Default constructor comes first.
@@ -18,14 +20,19 @@ public class HpClientConfiguration extends AbstractConfiguration<HpClientConfigu
                 VodConfig.HP_SESSION_EXPIRATION,
                 VodConfig.HP_SCANNING_RETRIES,
                 true,
-                VodConfig.DEFAULT_RTO);
+                VodConfig.DEFAULT_RTO,
+                VodConfig.DEFAULT_RTO_RETRIES,
+                VodConfig.DEFAULT_RTO_SCALE);
     }
 
     /**
      * Full argument constructor comes second.
      */
     public HpClientConfiguration(int seed, int sessionExpirationTime,
-            int scanRetries, boolean scanningEnabled, long rto) {
+            int scanRetries, boolean scanningEnabled,
+            int rto,
+            int rtoRetries,
+            double rtoScale) {
         super(seed);
         this.scanRetries = scanRetries;
         this.sessionExpirationTime = sessionExpirationTime;
@@ -37,7 +44,15 @@ public class HpClientConfiguration extends AbstractConfiguration<HpClientConfigu
         return new HpClientConfiguration();
     }
 
-    public long getRto() {
+    public int getRtoRetries() {
+        return rtoRetries;
+    }
+
+    public double getRtoScale() {
+        return rtoScale;
+    }
+
+    public int getRto() {
         return rto;
     }
 
@@ -55,6 +70,16 @@ public class HpClientConfiguration extends AbstractConfiguration<HpClientConfigu
 
     public HpClientConfiguration setRto(int rto) {
         this.rto = rto;
+        return this;
+    }
+    
+    public HpClientConfiguration setRtoRetries(int rtoRetries) {
+        this.rtoRetries = rtoRetries;
+        return this;
+    }
+    
+    public HpClientConfiguration setRtoScale(double rtoScale) {
+        this.rtoScale = rtoScale;
         return this;
     }
 

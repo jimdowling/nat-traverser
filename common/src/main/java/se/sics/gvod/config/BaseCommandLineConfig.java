@@ -158,7 +158,7 @@ public abstract class BaseCommandLineConfig {
     protected static boolean SKIP_GRADIENT = true;
 
     // All protocol default params
-    public static final int DEFAULT_RTO = 2 * 1000;
+    public static final int DEFAULT_RTO = 1 * 1000;
     public static final int DEFAULT_RTO_RETRIES = 2;
     public static final double DEFAULT_RTO_SCALE = 1.5;
     

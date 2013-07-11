@@ -120,7 +120,9 @@ public class Configuration {
             sessionExpirationTime,
             5/* scanning retries.*/,
             true/*enable port scanning*/,
-            2 * sec);
+            1 * sec,
+            5,
+            1.0d);
     RendezvousServerConfiguration rendezvousServerConfig = 
             RendezvousServerConfiguration.build().
             setSessionExpirationTime(sessionExpirationTime).

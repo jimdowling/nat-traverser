@@ -6,5 +6,6 @@ ssh $USER@cloud7.sics.se "cd hpServer ; killall java ; ./run.sh false 1 0 cloud5
 #done
 
 echo ""
+echo "See log file: $USER@cloud5.sics.se ~/hpServer"
 echo "See log file: $USER@cloud7.sics.se ~/hpServer"
 echo ""

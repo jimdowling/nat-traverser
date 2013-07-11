@@ -162,7 +162,7 @@ public class VodConfig extends BaseCommandLineConfig {
     public final static int NT_STALE_RELAY_MSG_TIME = 60 * 1000;
     // HOLE-PUNCHING CLIENT DEFAULTS
     public static int       HP_DELTA = 1;
-    public final static int HP_SCANNING_RETRIES = 1;
+    public final static int HP_SCANNING_RETRIES = 5;
     // Timeout a hpSession if it hasn't been used for this period of time.
     public final static int HP_SESSION_EXPIRATION = 55*1000;
     // LEDBAT Defaults
