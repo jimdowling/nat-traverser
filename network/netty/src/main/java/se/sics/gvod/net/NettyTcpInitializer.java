@@ -2,9 +2,9 @@ package se.sics.gvod.net;
 
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
-import io.netty.channel.socket.DatagramChannel;
+import io.netty.channel.socket.SocketChannel;
 
-public class NettyTcpInitializer extends ChannelInitializer<DatagramChannel> {
+public class NettyTcpInitializer extends ChannelInitializer<SocketChannel> {
 
 	// final private SSLContext context;
 	// SSLContext context = CryptoUtils.initTlsContext(KEYSTORE_PATH, KS_PASS,
@@ -33,7 +33,7 @@ public class NettyTcpInitializer extends ChannelInitializer<DatagramChannel> {
 	 * Initiate the Pipeline for the newly active connection with ObjectXxcoder.
 	 */
 	@Override
-	protected void initChannel(DatagramChannel ch) throws Exception {
+	protected void initChannel(SocketChannel ch) throws Exception {
 		ChannelPipeline pipeline = ch.pipeline();
 
 		// SSLEngine engine = context.createSSLEngine();
@@ -58,12 +58,14 @@ public class NettyTcpInitializer extends ChannelInitializer<DatagramChannel> {
 		// ByteCounter byteCounter =
 		// new ByteCounter("--- CLIENT-COUNTER :: ", totalReadBytes,
 		// totalWrittenBytes);
-		// MessageCounter messageCounter = new MessageCounter("--- CLIENT-MSGCOUNTER :: ");
+		// MessageCounter messageCounter = new
+		// MessageCounter("--- CLIENT-MSGCOUNTER :: ");
 
 		// pipeline.addFirst("byteCounter", byteCounter);
 		pipeline.addLast("decoder", msgDecoderClass.newInstance());
 		pipeline.addLast("encoder", new MsgFrameEncoder());
-		// pipeline.addLast("decoder", new ObjectDecoder(NettyNetwork.MAX_OBJECT_SIZE));
+		// pipeline.addLast("decoder", new
+		// ObjectDecoder(NettyNetwork.MAX_OBJECT_SIZE));
 		// pipeline.addLast("encoder", new ObjectEncoder(1650));
 		// pipeline.addLast("msgCounter", messageCounter);
 
