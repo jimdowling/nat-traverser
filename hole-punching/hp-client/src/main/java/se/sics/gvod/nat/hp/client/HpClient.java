@@ -431,9 +431,6 @@ public class HpClient extends MsgRetryComponent {
                 throw new NullPointerException("ERROR: OpenedConnections Data Structure not initialized");
             }
             compName = "(" + self.getId() + ") ";
-//            scanRetries = init.getConfig().getScanRetries();
-//            scanningEnabled = init.getConfig().isScanningEnabled();
-//            sessionExpirationTime = init.getConfig().getSessionExpirationTime();
 
             // initialize the garbage collection
             // initialize grabage collection
