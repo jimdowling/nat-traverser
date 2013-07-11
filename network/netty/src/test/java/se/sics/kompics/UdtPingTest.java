@@ -38,7 +38,7 @@ import se.sics.gvod.timer.java.JavaTimer;
 /**
  * Unit test for simple App.
  */
-public class TcpPingTest extends TestCase {
+public class UdtPingTest extends TestCase {
 
 	private static final Logger logger = LoggerFactory.getLogger(SetsExchangeTest.class);
 	private boolean testStatus = true;
@@ -49,7 +49,7 @@ public class TcpPingTest extends TestCase {
 	 * @param testName
 	 *            name of the test case
 	 */
-	public TcpPingTest(String testName) {
+	public UdtPingTest(String testName) {
 		super(testName);
 		System.setProperty("java.net.preferIPv4Stack", "true");
 	}
@@ -58,10 +58,10 @@ public class TcpPingTest extends TestCase {
 	 * @return the suite of tests being tested
 	 */
 	public static Test suite() {
-		return new TestSuite(TcpPingTest.class);
+		return new TestSuite(UdtPingTest.class);
 	}
 
-	public static void setTestObj(TcpPingTest testObj) {
+	public static void setTestObj(UdtPingTest testObj) {
 		TestStClientComponent.testObj = testObj;
 	}
 
@@ -70,9 +70,9 @@ public class TcpPingTest extends TestCase {
 		private Component client;
 		private Component server;
 		private Component timer;
-		private static TcpPingTest testObj = null;
-		private VodAddress clientAddr;
-		private VodAddress serverAddr;
+		private static UdtPingTest testObj = null;
+		private VodAddress clientAddr, clientAddr0;
+		private VodAddress serverAddr, serverAddr0;
 		private Utility utility = new UtilityVod(10, 200, 15);
 		private VodDescriptor nodeDesc;
 		private List<VodDescriptor> nodes;
@@ -93,9 +93,15 @@ public class TcpPingTest extends TestCase {
 				logger.error("UnknownHostException");
 				fail();
 			}
+			Address cAddr0 = new Address(ip, clientPort + 10, 2);
+			Address sAddr0 = new Address(ip, serverPort + 10, 3);
+			// TODO I really don't know why I need those...
 			Address cAddr = new Address(ip, clientPort, 0);
 			Address sAddr = new Address(ip, serverPort, 1);
 
+			clientAddr0 = new VodAddress(cAddr0, VodConfig.SYSTEM_OVERLAY_ID);
+			serverAddr0 = new VodAddress(sAddr0, VodConfig.SYSTEM_OVERLAY_ID);
+			// TODO I really don't know why I need those...
 			clientAddr = new VodAddress(cAddr, VodConfig.SYSTEM_OVERLAY_ID);
 			serverAddr = new VodAddress(sAddr, VodConfig.SYSTEM_OVERLAY_ID);
 
@@ -122,10 +128,10 @@ public class TcpPingTest extends TestCase {
 				System.out.println("Starting");
 				ScheduleTimeout st = new ScheduleTimeout(10 * 1000);
 				SetsExchangeMsg.RequestTimeout mt = new SetsExchangeMsg.RequestTimeout(st,
-						serverAddr);
+						serverAddr0);
 				st.setTimeoutEvent(mt);
-				PortBindRequest request = new PortBindRequest(0, serverAddr.getPort(),
-						Transport.TCP);
+				PortBindRequest request = new PortBindRequest(0, serverAddr0.getPort(),
+						Transport.UDT);
 				request.setResponse(new PortBindResponse(request) {
 
 				});
@@ -145,7 +151,7 @@ public class TcpPingTest extends TestCase {
 					return;
 				}
 
-				trigger(new TConnectionMsg.Ping(clientAddr, serverAddr, Transport.TCP, null),
+				trigger(new TConnectionMsg.Ping(clientAddr0, serverAddr0, Transport.UDT, null),
 						client.getPositive(VodNetwork.class));
 			}
 		};
@@ -155,7 +161,7 @@ public class TcpPingTest extends TestCase {
 			@Override
 			public void handle(TConnectionMsg.Ping event) {
 				System.out.println("Ping");
-				trigger(new TConnectionMsg.Pong(serverAddr, clientAddr, Transport.TCP, null),
+				trigger(new TConnectionMsg.Pong(serverAddr0, clientAddr0, Transport.UDT, null),
 						server.getPositive(VodNetwork.class));
 			}
 		};
@@ -197,7 +203,7 @@ public class TcpPingTest extends TestCase {
 		System.setProperty("java.net.preferIPv4Stack", "true");
 		Kompics.createAndStart(TestStClientComponent.class, 1);
 		try {
-			TcpPingTest.semaphore.acquire(EVENT_COUNT);
+			UdtPingTest.semaphore.acquire(EVENT_COUNT);
 			System.out.println("Finished test.");
 		} catch (InterruptedException e) {
 			assert (false);
@@ -218,11 +224,11 @@ public class TcpPingTest extends TestCase {
 	}
 
 	public void pass() {
-		TcpPingTest.semaphore.release();
+		UdtPingTest.semaphore.release();
 	}
 
 	public void fail(boolean release) {
 		testStatus = false;
-		TcpPingTest.semaphore.release();
+		UdtPingTest.semaphore.release();
 	}
 }
