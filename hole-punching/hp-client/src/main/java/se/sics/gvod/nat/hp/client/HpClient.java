@@ -933,13 +933,14 @@ public class HpClient extends MsgRetryComponent {
         @Override
         public void handle(HolePunchingMsg.Response response) {
             printMsg(response);
-            String compName = HpClient.this.compName + " - " + response.getMsgTimeoutId() + " - ";
+            String compName = HpClient.this.compName + " - " + response.getMsgTimeoutId() + " - "
+                    + " from " + response.getSource() + " ";
 
             // don't check the getTimeoutId() - as this has the responseTimeoutId, not the requestTimeoutId
             if (delegator.doCancelRetry(response.getTimeoutId())) {
                 // if response is recvd --> hole punching was successful
-                logger.info(compName + "Hole punching response message is recvd. Client-id: ("
-                        + response.getSource().getId() + " - id: " + response.getMsgTimeoutId());
+                logger.info(compName + "Hole punching response message is recvd. From Client "
+                        + response.getSource() + " - id: " + response.getMsgTimeoutId());
 
                 int remoteId = response.getSource().getId();
                 HpSession session = hpSessions.get(remoteId);
@@ -956,6 +957,7 @@ public class HpClient extends MsgRetryComponent {
                         // has Nat.FilteringPolicy.PORT_DEPENDENT, it will reject the response.
                         // So, use the original openedHole to send the msg.
                         openedHole = session.getRemoteOpenedHole();
+                        logger.info(compName + " Using a new openedHole, not the source of the msg: " + openedHole);
                     }
 
                     if (!openedConnections.containsKey(remoteId)) {
@@ -984,10 +986,6 @@ public class HpClient extends MsgRetryComponent {
                     delegator.doTrigger(ack, network);
                     logger.info(compName + " sending HolePunchingMsg.ResponseAck to "
                             + response.getSource().getId());
-                    // send hpFinished msg to zServer
-//                    sendHpFinishedMsgTozServer(self, response.getRendezvousServerAddress(),
-//                            response.getClientId()/*other client id*/, true/*hp successful*/);
-//                        registerConnectionForKeepAliveMessages(newKey, openedConnection);
 
                     // send response to upper component
                     if (session.getOpenConnectionRequest() != null) {
