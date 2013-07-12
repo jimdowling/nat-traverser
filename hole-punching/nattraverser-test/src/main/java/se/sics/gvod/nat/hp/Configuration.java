@@ -121,7 +121,7 @@ public class Configuration {
             5/* scanning retries.*/,
             true/*enable port scanning*/,
             1 * sec,
-            5,
+            3,
             1.0d);
     RendezvousServerConfiguration rendezvousServerConfig = 
             RendezvousServerConfiguration.build().

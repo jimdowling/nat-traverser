@@ -1406,7 +1406,8 @@ public class HpClient extends MsgRetryComponent {
             } else {
                 prepareAndSendHPMessage(portToBeUsed, remoteId,
                         request.getVodSource().getId(),
-                        request.getRtoRetries(), request.getMsgTimeoutId());
+//                        request.getRtoRetries(), 
+                        request.getMsgTimeoutId());
             }
         }
     };
@@ -1424,7 +1425,8 @@ public class HpClient extends MsgRetryComponent {
             if (response.getStatus() == PortBindResponse.Status.SUCCESS) {
                 int port = response.getPort();
                 prepareAndSendHPMessage(port, (Integer) response.getKey(),
-                        response.getzServerId(), response.getRetries(),
+                        response.getzServerId(), 
+//                        response.getRetries(),
                         response.getMsgTimeoutId());
             } else if (response.getStatus() == PortBindResponse.Status.PORT_ALREADY_BOUND
                     && response.isFixedPort() == false) {
@@ -1447,7 +1449,8 @@ public class HpClient extends MsgRetryComponent {
     };
 
     private void prepareAndSendHPMessage(int srcPort, Integer sessionKey, int zServerId,
-            int rtoRetries, TimeoutId msgTimeoutId) {
+//            int rtoRetries, 
+            TimeoutId msgTimeoutId) {
         // sanity check
         assert (srcPort >= 1024 && srcPort <= 65535);
         HpSession session = hpSessions.get(sessionKey);
@@ -1467,6 +1470,7 @@ public class HpClient extends MsgRetryComponent {
         // The client with a(PC) has to send the hp msg multiple times so that scanning succeeds
         // only for prp-prc not for prc-prc
         // TODO - guestimate an RTO, if not available in the RTTs cache.
+        int rtoRetries = config.getRtoRetries();
         if (session.getHolePunchingMechanism() == HPMechanism.PRC_PRC) {
             rtoRetries = rtoRetries + config.getScanRetries() * (rtoRetries + 1) + 2 /*
                      * 2 is added to be on the safe side
