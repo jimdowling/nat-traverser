@@ -1364,6 +1364,7 @@ public class HpClient extends MsgRetryComponent {
                     return;
                 } else {
                     openedConnections.remove(oc.getHoleOpened().getId());
+                    logger.debug(compName + " remvoing openedConnection " + oc.getHoleOpened());
                 }
             }
 
@@ -1406,7 +1407,6 @@ public class HpClient extends MsgRetryComponent {
             } else {
                 prepareAndSendHPMessage(portToBeUsed, remoteId,
                         request.getVodSource().getId(),
-//                        request.getRtoRetries(), 
                         request.getMsgTimeoutId());
             }
         }
@@ -1426,7 +1426,6 @@ public class HpClient extends MsgRetryComponent {
                 int port = response.getPort();
                 prepareAndSendHPMessage(port, (Integer) response.getKey(),
                         response.getzServerId(), 
-//                        response.getRetries(),
                         response.getMsgTimeoutId());
             } else if (response.getStatus() == PortBindResponse.Status.PORT_ALREADY_BOUND
                     && response.isFixedPort() == false) {
@@ -1434,7 +1433,6 @@ public class HpClient extends MsgRetryComponent {
                     int port = PortSelector.selectRandomPortOver50000();
                     PortBindRequest bindReq = new PortBindRequest(self.getId(),
                             port);
-//                            HpSession session = hpSessions.get(response.getKey());
                     GoMsg_PortResponse bindResp = new GoMsg_PortResponse(bindReq,
                             response.getKey(), response.getzServerId(),
                             response.getRetries() - 1, false, response.getMsgTimeoutId());
@@ -1526,6 +1524,9 @@ public class HpClient extends MsgRetryComponent {
             }
             for (OpenedConnection oc : toDeleteOc) {
                 openedConnections.remove(oc.getHoleOpened().getId());
+                logger.info(compName + " Deleting opened connections "  +
+                        oc.getHoleOpened());
+                
             }
 
         }

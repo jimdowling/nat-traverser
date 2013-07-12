@@ -60,6 +60,7 @@ import se.sics.gvod.timer.Timeout;
 import se.sics.gvod.timer.UUID;
 import se.sics.gvod.timer.java.JavaTimer;
 import se.sics.kompics.Fault;
+import se.sics.kompics.nat.utils.getip.IpAddrStatus;
 
 /**
  * The
@@ -165,15 +166,29 @@ public final class NtTesterMain extends ComponentDefinition {
     private Handler<Start> handleStart = new Handler<Start>() {
         @Override
         public void handle(Start event) {
-            trigger(new GetIpRequest(false, EnumSet.of(
-                    GetIpRequest.NetworkInterfacesMask.IGNORE_LOOPBACK)),
-                    resolveIp.getPositive(ResolveIpPort.class));
+            if (pickIp != 0) {
+                trigger(new GetIpRequest(false, EnumSet.of(
+                        GetIpRequest.NetworkInterfacesMask.IGNORE_LOOPBACK)),
+                        resolveIp.getPositive(ResolveIpPort.class));
+            } else {
+                trigger(new GetIpRequest(false, EnumSet.of(
+                        GetIpRequest.NetworkInterfacesMask.IGNORE_LOOPBACK
+                        ,GetIpRequest.NetworkInterfacesMask.IGNORE_TEN_DOT_PRIVATE
+//                        ,GetIpRequest.NetworkInterfacesMask.IGNORE_PRIVATE
+                        )),
+                        resolveIp.getPositive(ResolveIpPort.class));
+
+            }
         }
     };
     public Handler<GetIpResponse> handleGetIpResponse = new Handler<GetIpResponse>() {
         @Override
         public void handle(GetIpResponse event) {
 
+            logger.info("Available IPs are:");
+            for (IpAddrStatus a : event.getAddrs()) {
+                logger.info(a.getAddr().toString());
+            }
 
             InetAddress localIp = null;
             if (pickIp > 0) {
@@ -196,13 +211,16 @@ public final class NtTesterMain extends ComponentDefinition {
                 self = new SelfImpl(null, localAddress.getIp(), localAddress.getPort(),
                         localAddress.getId(), OVERLAY_ID);
 
-                trigger(new NatTraverserInit(self.clone(VodConfig.SYSTEM_OVERLAY_ID), 
+                trigger(new NatTraverserInit(self.clone(VodConfig.SYSTEM_OVERLAY_ID),
                         servers, VodConfig.getSeed(),
                         NatTraverserConfiguration.build(),
                         HpClientConfiguration.build(),
                         RendezvousServerConfiguration.build(),
                         StunClientConfiguration.build().setUpnpEnable(upnpEnabled),
-                        StunServerConfiguration.build(),
+                        StunServerConfiguration.build()
+                        .setRto(500)
+                        .setRtoRetries(8)
+                        .setRtoScale(1.2),
                         ParentMakerConfiguration.build(),
                         openServer),
                         natTraverser.getControl());
