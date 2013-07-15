@@ -85,6 +85,8 @@ import se.sics.gvod.hp.msgs.SHP_InitiateSimpleHolePunchingMsg;
 import se.sics.gvod.hp.msgs.SHP_InitiateSimpleHolePunchingMsgFactory;
 import se.sics.gvod.hp.msgs.SHP_OpenHoleMsg;
 import se.sics.gvod.hp.msgs.SHP_OpenHoleMsgFactory;
+import se.sics.gvod.hp.msgs.TConnectionMsg;
+import se.sics.gvod.hp.msgs.TConnectionMsgFactory;
 import se.sics.gvod.net.BaseMsgFrameDecoder;
 import se.sics.gvod.net.msgs.NatMsg;
 import se.sics.gvod.net.Nat;
