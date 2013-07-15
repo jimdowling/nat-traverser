@@ -87,12 +87,11 @@ import se.sics.kompics.Stop;
  * @author Jim Dowling <jdowling@sics.se>
  */
 /*
- * Ports in 
+ * Ports in init
  * DirectMsgNettyFactory bug
  * upnp code
- * Connect API
- * Asynchronous API?
- * 
+ * Connect API / asynchronous?
+ * How to handle bind exceptions
  */
 public final class NettyNetwork extends ComponentDefinition {
 
@@ -283,7 +282,6 @@ public final class NettyNetwork extends ComponentDefinition {
 		return count;
 	}
 
-	// TODO do proper for all protocols
 	Handler<Stop> handleStop = new Handler<Stop>() {
 		@Override
 		public void handle(Stop event) {
@@ -496,9 +494,10 @@ public final class NettyNetwork extends ComponentDefinition {
 	private boolean bindUdpPort(final InetAddress addr, final int port, InetAddress upnpIp,
 			int upnpPort) {
 
-		// TODO check if already occupied by UDT
 		if (udpPortsToSockets.containsKey(port)) {
 			return true;
+		} else if (udtPortsToSockets.containsKey(port)) {
+			return false;
 		}
 
 		EventLoopGroup group = new NioEventLoopGroup();
@@ -548,6 +547,7 @@ public final class NettyNetwork extends ComponentDefinition {
 					addr, port));
 
 			logger.info("Successfully bound to ip:port {}:{}", addr, port);
+			// TODO how to handle bind expections
 		} catch (InterruptedException e) {
 			logger.warn("Problem when trying to bind to {}:{}", addr.getHostAddress(), port);
 			trigger(new Fault(e.getCause()), control);
@@ -597,9 +597,10 @@ public final class NettyNetwork extends ComponentDefinition {
 
 	private boolean bindUdtPort(InetAddress addr, int port) {
 
-		// TODO check if port is occupied by udp
-		if (tcpPortsToSockets.containsKey(port)) {
+		if (udtPortsToSockets.containsKey(port)) {
 			return true;
+		} else if (udpPortsToSockets.containsKey(port)) {
+			return false;
 		}
 
 		ThreadFactory bossFactory = new UtilThreadFactory("boss");
@@ -623,6 +624,7 @@ public final class NettyNetwork extends ComponentDefinition {
 			}
 
 			logger.info("Successfully bound to ip:port {}:{}", addr, port);
+			// TODO how to handle bind exceptions
 		} catch (InterruptedException e) {
 			logger.warn("Problem when trying to bind to {}:{}", addr.getHostAddress(), port);
 			trigger(new Fault(e.getCause()), control);
