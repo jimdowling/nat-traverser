@@ -6,7 +6,6 @@
 package se.sics.gvod.net.events;
 
 import se.sics.kompics.Response;
-import se.sics.kompics.Response;
 
 /**
  *
@@ -19,6 +18,7 @@ public abstract class DoubleDispatchResponseId<T extends DoubleDispatchRequestId
     protected DoubleDispatchResponseId(T request) {
         super(request);
         this.id = request.getId();
+        request.setResponse(this);
     }
 
     public int getId() {

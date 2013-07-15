@@ -9,7 +9,6 @@ import se.sics.gvod.net.MsgFrameDecoder;
 import se.sics.gvod.net.VodAddress;
 import se.sics.gvod.net.msgs.DirectMsg;
 import se.sics.gvod.net.util.UserTypesDecoderFactory;
-import se.sics.gvod.net.util.UserTypesEncoderFactory;
 import se.sics.gvod.timer.NoTimeoutId;
 import se.sics.gvod.timer.TimeoutId;
 import se.sics.gvod.timer.UUID;
@@ -65,7 +64,7 @@ public abstract class DirectMsgNettyFactory
         int srcOverlayId = buffer.readInt();
         int srcNatPolicy = UserTypesDecoderFactory.readUnsignedIntAsOneByte(buffer);
         Set<Address> parents = UserTypesDecoderFactory.readListAddresses(buffer);
-        int destOverlayId = 1;//TODO freezing here fix it! buffer.readInt();
+        int destOverlayId = buffer.readInt(); //1;//TODO freezing here fix it! 
         int destNatPolicy = UserTypesDecoderFactory.readUnsignedIntAsOneByte(buffer);
 
         vodSrc = new VodAddress(src, srcOverlayId, (short) srcNatPolicy, parents);
