@@ -87,6 +87,7 @@ import se.sics.kompics.Stop;
  * @author Jim Dowling <jdowling@sics.se>
  */
 /*
+ * Ports in 
  * DirectMsgNettyFactory bug
  * upnp code
  * Connect API
@@ -395,6 +396,7 @@ public final class NettyNetwork extends ComponentDefinition {
 				} else {
 					response.setStatus(PortBindResponse.Status.FAIL);
 				}
+				// TODO this is never thrown
 			} catch (ChannelException e) {
 				response.setStatus(PortBindResponse.Status.PORT_ALREADY_BOUND);
 			}
@@ -494,6 +496,7 @@ public final class NettyNetwork extends ComponentDefinition {
 	private boolean bindUdpPort(final InetAddress addr, final int port, InetAddress upnpIp,
 			int upnpPort) {
 
+		// TODO check if already occupied by UDT
 		if (udpPortsToSockets.containsKey(port)) {
 			return true;
 		}
