@@ -862,7 +862,9 @@ public class DistributedNatGatewayEmulator extends MsgRetryComponent {
         }
 
         logger.trace(compName + "Requested mapping from private port " + v.getPort() + " to public port: " + portToMap);
-        PortBindRequest req = new PortBindRequest(99 /* natId */, portToMap);
+
+        Address a = new Address(natPublicAddress, portToMap, 99/* natId */);
+        PortBindRequest req = new PortBindRequest(a, msg.getProtocol());
         BindingSession session = new BindingSession(v, destIp, dstPort, msg);
         NatPortBindResponse resp = new NatPortBindResponse(req, session, rtoRetries);
         req.setResponse(resp);

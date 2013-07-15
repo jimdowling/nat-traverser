@@ -95,16 +95,17 @@ public class BindUdtToUdpPortTest extends TestCase {
 			subscribe(handlePortBindResponse, server.getPositive(NatNetworkControl.class));
 
 			// TODO do I need those ports?
-			trigger(new NettyInit(serverAddr.getPeerAddress(), true, (int) 132,
-					BaseMsgFrameDecoder.class), server.getControl());
+			trigger(new NettyInit(111, true, BaseMsgFrameDecoder.class), 
+                                server.getControl());
 		}
 
 		public Handler<Start> handleStart = new Handler<Start>() {
 
 			public void handle(Start event) {
 				System.out.println("Starting");
-				PortBindRequest request = new PortBindRequest(0, serverAddr0.getPort(),
-						Transport.UDP);
+				PortBindRequest request = 
+                                        new PortBindRequest(serverAddr0.getPeerAddress(), 
+                                        Transport.UDP);
 				request.setResponse(new PortBindResponse(request) {
 				});
 				trigger(request, server.getPositive(NatNetworkControl.class));
@@ -120,7 +121,8 @@ public class BindUdtToUdpPortTest extends TestCase {
 
 				if (event.getStatus() == expected && expected == Status.SUCCESS) {
 					expected = Status.FAIL;
-					PortBindRequest request = new PortBindRequest(0, serverAddr0.getPort(),
+					PortBindRequest request = 
+                                                new PortBindRequest(serverAddr0.getPeerAddress(),
 							Transport.UDT);
 					request.setResponse(new PortBindResponse(request) {
 					});

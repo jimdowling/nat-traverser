@@ -116,10 +116,10 @@ public class UdtPingTest extends TestCase {
 			subscribe(handlePong, client.getPositive(VodNetwork.class));
 
 			// TODO do I need those ports?
-			trigger(new NettyInit(clientAddr.getPeerAddress(), true, (int) 132,
-					BaseMsgFrameDecoder.class), client.getControl());
-			trigger(new NettyInit(serverAddr.getPeerAddress(), true, (int) 132,
-					BaseMsgFrameDecoder.class), server.getControl());
+			trigger(new NettyInit(132, true,  BaseMsgFrameDecoder.class), 
+                                client.getControl());
+			trigger(new NettyInit(132, true, BaseMsgFrameDecoder.class), 
+                                server.getControl());
 		}
 
 		public Handler<Start> handleStart = new Handler<Start>() {
@@ -130,10 +130,10 @@ public class UdtPingTest extends TestCase {
 				SetsExchangeMsg.RequestTimeout mt = new SetsExchangeMsg.RequestTimeout(st,
 						serverAddr0);
 				st.setTimeoutEvent(mt);
-				PortBindRequest request = new PortBindRequest(0, serverAddr0.getPort(),
-						Transport.UDT);
+				PortBindRequest request = 
+                                        new PortBindRequest(serverAddr0.getPeerAddress(), 
+                                        Transport.UDT);
 				request.setResponse(new PortBindResponse(request) {
-
 				});
 				trigger(request, server.getPositive(NatNetworkControl.class));
 				trigger(st, timer.getPositive(Timer.class));

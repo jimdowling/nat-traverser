@@ -55,6 +55,9 @@ import se.sics.gvod.croupier.events.CroupierInit;
 import se.sics.gvod.croupier.events.CroupierJoin;
 import se.sics.gvod.croupier.events.CroupierSample;
 import se.sics.gvod.net.BaseMsgFrameDecoder;
+import se.sics.gvod.net.Transport;
+import se.sics.gvod.net.events.PortBindRequest;
+import se.sics.gvod.net.events.PortBindResponse;
 import se.sics.gvod.timer.ScheduleTimeout;
 import se.sics.gvod.timer.Timeout;
 import se.sics.gvod.timer.UUID;
@@ -131,6 +134,13 @@ public final class NtTesterMain extends ComponentDefinition {
         }
     }
 
+    public static class NtPortBindResponse extends PortBindResponse {
+
+        public NtPortBindResponse(PortBindRequest request) {
+            super(request);
+        }
+    }
+
     public NtTesterMain() throws IOException {
 
         ntConfig = NatTraverserConfiguration.build();
@@ -157,6 +167,7 @@ public final class NtTesterMain extends ComponentDefinition {
         subscribe(handleGetIpResponse, resolveIp.getPositive(ResolveIpPort.class));
         subscribe(handlePing, natTraverser.getPositive(VodNetwork.class));
         subscribe(handlePong, natTraverser.getPositive(VodNetwork.class));
+        subscribe(handleNtPortBindResponse, natTraverser.getPositive(NatNetworkControl.class));
 //        subscribe(handleFault, natTraverser.getControl());    
 //        subscribe(handleNettyFault, network.getControl());
         subscribe(handleHolePunchTimeout, timer.getPositive(Timer.class));
@@ -205,12 +216,28 @@ public final class NtTesterMain extends ComponentDefinition {
                 logger.info("Found net i/f with ip address: " + localIp);
 
                 localAddress = new Address(localIp, VodConfig.getPort(), myId);
-                trigger(new NettyInit(localAddress, true,
-                        VodConfig.getSeed(), BaseMsgFrameDecoder.class), network.getControl());
+                trigger(new NettyInit(VodConfig.getSeed(), true,
+                        BaseMsgFrameDecoder.class), network.getControl());
+
+                PortBindRequest pb1 = new PortBindRequest(localAddress, Transport.UDP);
+                PortBindResponse pbr1 = new NtPortBindResponse(pb1);
+                trigger(pb1, network.getPositive(NatNetworkControl.class));
 
                 self = new SelfImpl(null, localAddress.getIp(), localAddress.getPort(),
                         localAddress.getId(), OVERLAY_ID);
 
+            } else {
+                logger.error("Couldnt find a network interface that is up");
+                System.exit(-1);
+            }
+        }
+    };
+
+    private Handler<NtPortBindResponse> handleNtPortBindResponse =
+            new Handler<NtPortBindResponse>() {
+        @Override
+        public void handle(NtPortBindResponse event) {
+            
                 trigger(new NatTraverserInit(self.clone(VodConfig.SYSTEM_OVERLAY_ID),
                         servers, VodConfig.getSeed(),
                         NatTraverserConfiguration.build(),
@@ -227,13 +254,8 @@ public final class NtTesterMain extends ComponentDefinition {
                 trigger(new CroupierInit(self,
                         CroupierConfiguration.build()),
                         croupier.getControl());
-
-            } else {
-                logger.error("Couldnt find a network interface that is up");
-                System.exit(-1);
-            }
         }
-    };
+            };
     private Handler<GetNatTypeResponse> handleGetNatTypeResponse =
             new Handler<GetNatTypeResponse>() {
         @Override

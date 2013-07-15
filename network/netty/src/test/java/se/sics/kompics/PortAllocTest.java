@@ -14,6 +14,7 @@ import se.sics.gvod.address.Address;
 import se.sics.gvod.net.BaseMsgFrameDecoder;
 import se.sics.gvod.net.NettyInit;
 import se.sics.gvod.net.NettyNetwork;
+import se.sics.gvod.net.Transport;
 import se.sics.gvod.timer.ScheduleTimeout;
 import se.sics.gvod.timer.Timer;
 import se.sics.gvod.timer.java.JavaTimer;
@@ -78,7 +79,7 @@ public class PortAllocTest
             self = new Address(addr, port, 1);
 
 
-            trigger(new NettyInit(self, false, (int) 132, BaseMsgFrameDecoder.class), netty.getControl());
+            trigger(new NettyInit(132, true, BaseMsgFrameDecoder.class), netty.getControl());
 
         }
         public Handler<Start> handleStart = new Handler<Start>() {
@@ -87,7 +88,8 @@ public class PortAllocTest
                 ScheduleTimeout st = new ScheduleTimeout(2000);
                 MsgTimeout mt = new MsgTimeout(st);
                 st.setTimeoutEvent(mt);
-                PortAllocRequest req  = new PortAllocRequest(self.getId(), 2);
+                PortAllocRequest req  = new PortAllocRequest(self.getIp(), 
+                        self.getId(), 2, Transport.UDP);
                 MyPortAllocResponse resp = new MyPortAllocResponse(req, new Integer(1));
                 req.setResponse(resp);
                 trigger(req, netty.getPositive(NatNetworkControl.class));

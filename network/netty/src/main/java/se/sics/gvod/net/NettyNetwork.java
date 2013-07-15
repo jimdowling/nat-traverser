@@ -152,6 +152,8 @@ public final class NettyNetwork extends ComponentDefinition {
     private static LinkedList<Integer> lastHourRead = new LinkedList<Integer>();
     private int bwSampleCounter = 0;
 
+    private boolean bindAllNetworkIfs;
+    
     private class ByteCounterTimeout extends Timeout {
 
         public ByteCounterTimeout(SchedulePeriodicTimeout spt) {
@@ -185,6 +187,8 @@ public final class NettyNetwork extends ComponentDefinition {
         public void handle(NettyInit init) {
             rand = new Random(init.getSeed());
             maxPacketSize = init.getMTU();
+            bindAllNetworkIfs = init.isBindAllNetworkIfs();
+            
             if (maxPacketSize <= 0) {
                 throw new IllegalArgumentException(
                         "Netty problem: max Packet Size must be set to greater than zero.");
@@ -324,7 +328,8 @@ public final class NettyNetwork extends ComponentDefinition {
             }
 
             if (!(msg instanceof Encodable)) {
-                throw new Error("Can only send instances of Encodable");
+                throw new Error("Netty can only serialize instances of Encodable. You need to"
+                        + "make this class implement Encodable: " + msg.getClass());
             }
 
             Transport protocol = msg.getProtocol();
@@ -347,8 +352,7 @@ public final class NettyNetwork extends ComponentDefinition {
             PortBindResponse response = msg.getResponse();
 
             try {
-                if (bindPort(msg.getIp(), msg.getPort(), msg.isBindAllNetworkIfs(), 
-                        msg.getTransport())) {
+                if (bindPort(msg.getIp(), msg.getPort(), msg.getTransport())) {
                     response.setStatus(PortBindResponse.Status.SUCCESS);
                 } else {
                     response.setStatus(PortBindResponse.Status.FAIL);
@@ -372,7 +376,7 @@ public final class NettyNetwork extends ComponentDefinition {
         public void handle(PortAllocRequest msg) {
             int numPorts = msg.getNumPorts();
 
-            logger.debug("Request to allocate " + numPorts + " ports.");
+            logger.debug("Request to allocate " + numPorts + " ports for hole-punching.");
 
             Set<Integer> setPorts = udpPortsToSockets.keySet();
             Set<Integer> addedPorts = new HashSet<Integer>();
@@ -383,17 +387,15 @@ public final class NettyNetwork extends ComponentDefinition {
                     // Allocate a port in the 50,000+ range.
                     randPort = 50000 + rand.nextInt(65535 - 50000);
                 } while (setPorts.contains(randPort));
-                // TODO - no upnp support here
-                if (bindPort(msg.getIp(), randPort, msg.isBindAllNetworkIfs(), 
-                        msg.getTransport()) == true) {
+                if (bindPort(msg.getIp(), randPort, msg.getTransport()) == true) {
                     addedPorts.add(randPort);
                 }
             }
 
             PortAllocResponse response = msg.getResponse();
             if (response == null) {
-                throw new IllegalStateException(
-                        "PortAllocResponse event was not set before sending PortAllocRequest to Netty.");
+                throw new IllegalStateException("PortAllocResponse event was not set before "
+                        + "sending PortAllocRequest to Netty.");
             }
             response.setAllocatedPorts(addedPorts);
             trigger(response, netControl);
@@ -405,7 +407,7 @@ public final class NettyNetwork extends ComponentDefinition {
         public void handle(PortDeleteRequest msg) {
             Map<Integer, InetSocketAddress> portsToSockets;
 
-            Transport protocol = msg.getProtocol();
+            Transport protocol = msg.getTransport();
             if (protocol == Transport.UDP) {
                 portsToSockets = tcpPortsToSockets;
             } else if (protocol == Transport.TCP) {
@@ -429,7 +431,7 @@ public final class NettyNetwork extends ComponentDefinition {
             }
 
             for (InetSocketAddress toRemove : socketsToRemove) {
-                removeLocalSocket(toRemove, msg.getProtocol());
+                removeLocalSocket(toRemove, msg.getTransport());
             }
 
             if (msg.getResponse() != null) {
@@ -441,8 +443,7 @@ public final class NettyNetwork extends ComponentDefinition {
         }
     };
 
-    private boolean bindPort(InetAddress addr, int port, boolean bindAllNetworkIfs,
-            Transport protocol) {
+    private boolean bindPort(InetAddress addr, int port, Transport protocol) {
         switch (protocol) {
             case TCP:
                 return bindTcpPort(addr, port, bindAllNetworkIfs);

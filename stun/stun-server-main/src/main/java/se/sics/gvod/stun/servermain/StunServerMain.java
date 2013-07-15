@@ -61,7 +61,6 @@ public final class StunServerMain extends ComponentDefinition {
     private static Integer pickIp;
 
     public static class PortStunBindResponse extends PortBindResponse {
-
         public PortStunBindResponse(PortBindRequest request) {
             super(request);
         }

@@ -11,12 +11,12 @@ import se.sics.gvod.net.Transport;
 public class PortDeleteRequest extends DoubleDispatchRequestId<PortDeleteResponse> {
 
 	private final Set<Integer> portsToDelete;
-	private final Transport protocol;
+	private final Transport transport;
 
-	public PortDeleteRequest(int id, Set<Integer> portsToDelete, Transport protocol) {
+	public PortDeleteRequest(int id, Set<Integer> portsToDelete, Transport transport) {
 		super(id);
 		this.portsToDelete = portsToDelete;
-		this.protocol = protocol;
+		this.transport = transport;
 	}
 	
 	public PortDeleteRequest(int id, Set<Integer> portsToDelete) {
@@ -27,7 +27,7 @@ public class PortDeleteRequest extends DoubleDispatchRequestId<PortDeleteRespons
 		return portsToDelete;
 	}
 
-	public Transport getProtocol() {
-		return protocol;
+	public Transport getTransport() {
+		return transport;
 	}
 }
