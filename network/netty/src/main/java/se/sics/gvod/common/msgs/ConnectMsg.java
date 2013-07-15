@@ -8,8 +8,6 @@ import java.io.Serializable;
 import org.jboss.netty.buffer.ChannelBuffer;
 import se.sics.gvod.net.VodAddress;
 import se.sics.gvod.common.UtilityVod;
-import se.sics.gvod.common.msgs.MessageEncodingException;
-import se.sics.gvod.common.msgs.DirectMsgNetty;
 import se.sics.gvod.net.BaseMsgFrameDecoder;
 import se.sics.gvod.net.msgs.RewriteableMsg;
 import se.sics.gvod.net.msgs.RewriteableRetryTimeout;

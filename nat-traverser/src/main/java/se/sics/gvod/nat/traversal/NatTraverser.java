@@ -78,7 +78,6 @@ import se.sics.gvod.timer.CancelTimeout;
 import se.sics.gvod.timer.SchedulePeriodicTimeout;
 import se.sics.gvod.timer.ScheduleTimeout;
 import se.sics.gvod.timer.Timeout;
-import se.sics.kompics.Kompics;
 import se.sics.gvod.common.hp.HPSessionKey;
 import se.sics.gvod.config.BaseCommandLineConfig;
 import se.sics.gvod.config.StunServerConfiguration;
@@ -318,7 +317,7 @@ public class NatTraverser extends MsgRetryComponent {
             }
 
             if (init.isOpenServer()) {
-                startServerComponents();
+                retryStartServerComponents();
             } else {
                 stunClient = create(StunClient.class);
 
@@ -474,7 +473,7 @@ public class NatTraverser extends MsgRetryComponent {
         }
     };
 
-    private void startServerComponents() {
+    private void retryStartServerComponents() {
         ScheduleTimeout st = new ScheduleTimeout(VodConfig.NT_SERVER_INIT_RETRY_PERIOD);
         ServersInitTimeout t = new ServersInitTimeout(st);
         st.setTimeoutEvent(t);
@@ -492,7 +491,6 @@ public class NatTraverser extends MsgRetryComponent {
             // and wait until i get one and call this code again.
             // I can get a public node sample using either RTTStore or
             // Croupier
-//            if (!rtts.isEmpty() || !croupierSamples.isEmpty()) {
             List<VodAddress> nodes = new ArrayList<VodAddress>();
             for (RTT rtt : rtts) {
                 nodes.add(rtt.getAddress());
@@ -504,10 +502,8 @@ public class NatTraverser extends MsgRetryComponent {
                     }
                 }
             }
-            initialized = initializeServerComponents(nodes);
-//            }
-            if (!initialized) {
-                startServerComponents();
+            if (!initializeServerComponents(nodes)) {
+                retryStartServerComponents();
             }
         }
     };
@@ -611,7 +607,7 @@ public class NatTraverser extends MsgRetryComponent {
                         for (Integer t : outstandingTimestamps.keySet()) {
                             sb.append(t).append(", ");
                         }
-                        logger.warn(compName + " Existing Timestamps: " + sb.toString());
+                        logger.debug(compName + " Existing Timestamps: " + sb.toString());
                     }
                 }
                 delegator.doTrigger(msg, upperNet);
@@ -810,9 +806,9 @@ public class NatTraverser extends MsgRetryComponent {
     }
 
     private boolean initializeServerComponents(List<VodAddress> nodes) {
-//        if (nodes.isEmpty() || initializedServerComponents == true) {
-//            return false;
-//        }
+        if (nodes.isEmpty() || initializedServerComponents == true) {
+            return false;
+        }
         stunServer = create(StunServer.class);
         zServer = create(RendezvousServer.class);
 
@@ -938,10 +934,12 @@ public class NatTraverser extends MsgRetryComponent {
 
         if (remaniningRetries > 0) {
             logger.trace(compName + "retrying HP for (" + destId + "). Failure reason: " + flag + " hp mechanism: " + hpMechanism);
-            startHolePunchingProcess(destAddress, false, remaniningRetries, msgTimeoutId);
+            startHolePunchingProcess(destAddress, true, remaniningRetries, msgTimeoutId);
         } else {
             // hp failed. discard all messages
             pendingMsgs.remove(destId);
+            // TODO - can i use reflection to create a response msg, if we follow the 
+            // request/response idiom?
             trigger(new HpFailed(msgTimeoutId, flag), natTraverserPort);
         }
     }
@@ -983,14 +981,31 @@ public class NatTraverser extends MsgRetryComponent {
                 }
             }
 
+            // Clean up old references to relay msgs, that are stored for duplicate checking
             long t = System.currentTimeMillis();
+            HashSet<Long> keysToBeRemoved = new HashSet<Long>();
             for (Long l : receivedRelaysIndex.keySet()) {
                 if (t - l > VodConfig.NT_STALE_RELAY_MSG_TIME) {
-                    HPSessionKey sk = receivedRelaysIndex.remove(l);
-                    receivedRelays.remove(sk);
+                    keysToBeRemoved.add(l);
                 }
             }
-
+            for (Long l : keysToBeRemoved) {
+                    HPSessionKey sk = receivedRelaysIndex.remove(l);
+                    receivedRelays.remove(sk);
+            }
+            
+            
+            // Clean up any old timestamps for relay msgs where the response wasn't received
+            HashSet<Integer> tsToBeRemoved = new HashSet<Integer>();
+            for (Integer i : outstandingTimestamps.keySet()) {
+                Long l = outstandingTimestamps.get(i);
+                if (t - l > VodConfig.NT_STALE_RELAY_MSG_TIME) {
+                    tsToBeRemoved.add(i);
+                }
+            }            
+            for (Integer i : tsToBeRemoved) {
+                outstandingTimestamps.remove(i);
+            }            
         }
     };
 
@@ -1015,7 +1030,7 @@ public class NatTraverser extends MsgRetryComponent {
                 // Only start RendezvousServer if we can run it on the default port
                 if (event.getNat().isOpen()) {
                     // start the server components, when we have some partner for the stun server
-                    startServerComponents();
+                    retryStartServerComponents();
                 } else if (event.getNat().isUpnp()) {
                     logger.info("UPnP is supported.");
                     if (parentMaker != null) {

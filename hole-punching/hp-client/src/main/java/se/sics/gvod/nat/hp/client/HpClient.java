@@ -681,7 +681,22 @@ public class HpClient extends MsgRetryComponent {
 //            dontKeepConnectionOpen(connectionKey);
 
             // step 2
-            openedConnections.remove(request.getRemoteClientId());
+
+            // should only be able to delete the id of the node that sent the message
+            OpenedConnection oc = openedConnections.get(request.getRemoteClientId());
+            if (oc != null) {
+                if (oc.getHoleOpened().equals(request.getSource())) {
+                    // The node sending the request is the same as the connection
+                    // it is asking me to remove.
+                    openedConnections.remove(request.getRemoteClientId());
+                } else {
+                    logger.warn(compName + " Node {} tried to delete the connection of a different node: "
+                            + request.getRemoteClientId(), request.getSource());
+                }
+            } else {
+                logger.debug(compName + " Couldn't find openConnection to delete for {},"
+                        + request.getRemoteClientId());
+            }
 
         }
     };
@@ -1364,7 +1379,7 @@ public class HpClient extends MsgRetryComponent {
                     return;
                 } else {
                     openedConnections.remove(oc.getHoleOpened().getId());
-                    logger.debug(compName + " remvoing openedConnection " + oc.getHoleOpened());
+                    logger.debug(compName + " removing openedConnection " + oc.getHoleOpened());
                 }
             }
 
