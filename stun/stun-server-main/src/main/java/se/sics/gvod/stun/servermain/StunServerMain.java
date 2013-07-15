@@ -24,6 +24,7 @@ import se.sics.gvod.common.util.ToVodAddr;
 import se.sics.gvod.config.BaseCommandLineConfig;
 import se.sics.gvod.config.StunServerConfiguration;
 import se.sics.gvod.net.BaseMsgFrameDecoder;
+import se.sics.gvod.net.NatNetworkControl;
 import se.sics.gvod.stun.server.StunServer;
 import se.sics.gvod.stun.server.events.StunServerInit;
 import se.sics.kompics.nat.utils.getip.events.GetIpRequest;
@@ -32,6 +33,9 @@ import se.sics.kompics.nat.utils.getip.ResolveIp;
 import se.sics.kompics.nat.utils.getip.ResolveIpPort;
 import se.sics.gvod.net.NettyInit;
 import se.sics.gvod.net.NettyNetwork;
+import se.sics.gvod.net.Transport;
+import se.sics.gvod.net.events.PortBindRequest;
+import se.sics.gvod.net.events.PortBindResponse;
 import se.sics.gvod.stun.msgs.ReportMsg;
 import se.sics.gvod.timer.Timer;
 import se.sics.gvod.timer.java.JavaTimer;
@@ -56,7 +60,14 @@ public final class StunServerMain extends ComponentDefinition {
     private Address serverAddr;
     private static Integer pickIp;
 
+    public static class PortStunBindResponse extends PortBindResponse {
+
+        public PortStunBindResponse(PortBindRequest request) {
+            super(request);
+        }
+    }
 //------------------------------------------------------------------------    
+
     public static void main(String[] args) {
         if (args.length < 2) {
             System.out.println("Usage: <prog> partner1 [0|1|2|..] (0=public, 1=private1, 2=private2)");
@@ -88,6 +99,7 @@ public final class StunServerMain extends ComponentDefinition {
         subscribe(handleStart, control);
         subscribe(handleGetIpResponse, resolveIp.getPositive(ResolveIpPort.class));
         subscribe(handleReportMsgRequest, net.getPositive(VodNetwork.class));
+        subscribe(handlePortStunBindResponse, net.getPositive(NatNetworkControl.class));
 
         serverPort = BaseCommandLineConfig.DEFAULT_STUN_PORT;
         altServerPort = BaseCommandLineConfig.DEFAULT_STUN_PORT_2;
@@ -97,16 +109,16 @@ public final class StunServerMain extends ComponentDefinition {
         @Override
         public void handle(Start event) {
             if (pickIp == 0) {
-            trigger(new GetIpRequest(false, EnumSet.of(
-                    GetIpRequest.NetworkInterfacesMask.IGNORE_LOOPBACK,
-                    GetIpRequest.NetworkInterfacesMask.IGNORE_TEN_DOT_PRIVATE,
-                    GetIpRequest.NetworkInterfacesMask.IGNORE_PRIVATE)),
-                    resolveIp.getPositive(ResolveIpPort.class));                
+                trigger(new GetIpRequest(false, EnumSet.of(
+                        GetIpRequest.NetworkInterfacesMask.IGNORE_LOOPBACK,
+                        GetIpRequest.NetworkInterfacesMask.IGNORE_TEN_DOT_PRIVATE,
+                        GetIpRequest.NetworkInterfacesMask.IGNORE_PRIVATE)),
+                        resolveIp.getPositive(ResolveIpPort.class));
             } else {
-            trigger(new GetIpRequest(false, EnumSet.of(
-                    GetIpRequest.NetworkInterfacesMask.IGNORE_LOOPBACK,
-                    GetIpRequest.NetworkInterfacesMask.IGNORE_PRIVATE)),
-                    resolveIp.getPositive(ResolveIpPort.class));
+                trigger(new GetIpRequest(false, EnumSet.of(
+                        GetIpRequest.NetworkInterfacesMask.IGNORE_LOOPBACK,
+                        GetIpRequest.NetworkInterfacesMask.IGNORE_PRIVATE)),
+                        resolveIp.getPositive(ResolveIpPort.class));
             }
         }
     };
@@ -159,11 +171,30 @@ public final class StunServerMain extends ComponentDefinition {
             VodAddress gSa = ToVodAddr.stunServer(serverAddr);
             trigger(new StunServerInit(new SelfNoParents(gSa), partnerAddrs, ssc),
                     stunServer.getControl());
-            trigger(new NettyInit(serverAddr, serverAltAddr, true, SEED, mtu
-                    , BaseMsgFrameDecoder.class), net.getControl());
-
+            trigger(new NettyInit(SEED, mtu, BaseMsgFrameDecoder.class), net.getControl());
+            
+            PortBindRequest pb1 = new PortBindRequest(serverAddr, true, Transport.UDP);
+            PortBindResponse pbr1 = new PortStunBindResponse(pb1);
+            trigger(pb1, net.getPositive(NatNetworkControl.class));
+            
+            PortBindRequest pb2 = new PortBindRequest(new Address(serverAddr.getIp(), serverAddr.getId(), altServerPort), 
+                    true, Transport.UDP);
+            PortBindResponse pbr2 = new PortStunBindResponse(pb2);
+            trigger(pb2, net.getPositive(NatNetworkControl.class));
         }
     };
+    Handler<PortStunBindResponse> handlePortStunBindResponse = new Handler<PortStunBindResponse>() {
+        @Override
+        public void handle(PortStunBindResponse evt) {
+            if (evt.getStatus() != PortBindResponse.Status.SUCCESS)
+            {
+                System.err.println("Couldn't bind the port: " + evt.getPort());
+                System.exit(-1);
+            }
+        }
+    };
+    
+    
     Handler<ReportMsg.Request> handleReportMsgRequest = new Handler<ReportMsg.Request>() {
         @Override
         public void handle(ReportMsg.Request msg) {
