@@ -141,7 +141,7 @@ public class TcpPingTest extends TestCase {
 				System.out.println("Port bind response");
 
 				if (event.getStatus() == Status.FAIL) {
-					fail();
+					testObj.failAndRelease();
 					return;
 				}
 
@@ -178,7 +178,7 @@ public class TcpPingTest extends TestCase {
 				trigger(new Stop(), server.getControl());
 				System.out.println("Msg timeout");
 				testObj.testStatus = false;
-				testObj.fail(true);
+				testObj.failAndRelease();
 			}
 		};
 	}
@@ -196,6 +196,7 @@ public class TcpPingTest extends TestCase {
 	private void runInstance() {
 		System.setProperty("java.net.preferIPv4Stack", "true");
 		Kompics.createAndStart(TestStClientComponent.class, 1);
+		
 		try {
 			TcpPingTest.semaphore.acquire(EVENT_COUNT);
 			System.out.println("Finished test.");
@@ -204,6 +205,7 @@ public class TcpPingTest extends TestCase {
 		} finally {
 			Kompics.shutdown();
 		}
+		
 		if (testStatus == false) {
 			assertTrue(false);
 		}
@@ -213,7 +215,6 @@ public class TcpPingTest extends TestCase {
 	@org.junit.Ignore
 	public void testApp() {
 		setTestObj(this);
-
 		allTests();
 	}
 
@@ -221,7 +222,7 @@ public class TcpPingTest extends TestCase {
 		TcpPingTest.semaphore.release();
 	}
 
-	public void fail(boolean release) {
+	public void failAndRelease() {
 		testStatus = false;
 		TcpPingTest.semaphore.release();
 	}

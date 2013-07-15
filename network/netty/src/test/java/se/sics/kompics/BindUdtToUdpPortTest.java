@@ -79,7 +79,7 @@ public class BindUdtToUdpPortTest extends TestCase {
 
 			} catch (UnknownHostException ex) {
 				logger.error("UnknownHostException");
-				testObj.failAndRelease();
+				fail();
 			}
 			Address sAddr0 = new Address(ip, serverPort + 10, 2);
 			Address sAddr = new Address(ip, serverPort, 0);
