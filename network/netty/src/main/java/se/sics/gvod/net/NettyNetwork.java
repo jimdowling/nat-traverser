@@ -48,8 +48,6 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -188,7 +186,6 @@ public final class NettyNetwork extends ComponentDefinition {
             rand = new Random(init.getSeed());
             maxPacketSize = init.getMTU();
             bindAllNetworkIfs = init.isBindAllNetworkIfs();
-            
             if (maxPacketSize <= 0) {
                 throw new IllegalArgumentException(
                         "Netty problem: max Packet Size must be set to greater than zero.");
@@ -660,9 +657,9 @@ public final class NettyNetwork extends ComponentDefinition {
         }
 
         udtSocketsToBootstraps.put(iAddr, bootstrap);
-
         return true;
     }
+
 
     private void addLocalUdpSocket(DatagramChannel channel, InetSocketAddress addr) {
         udpPortsToSockets.put(addr.getPort(), addr);

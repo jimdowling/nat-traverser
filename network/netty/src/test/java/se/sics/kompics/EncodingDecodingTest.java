@@ -1337,7 +1337,8 @@ public class EncodingDecodingTest {
             assert (false);
         }
     }
-
+    
+    
     @Test
     public void tConnectionMsgPing() {
         TimeoutId id = UUID.nextUUID();
@@ -1356,7 +1357,8 @@ public class EncodingDecodingTest {
             assert (false);
         }
     }
-
+    
+    
     @Test
     public void tConnectionMsgPong() {
         TimeoutId id = UUID.nextUUID();
@@ -1365,7 +1367,7 @@ public class EncodingDecodingTest {
             ByteBuf buffer = msg.toByteArray();
             opCodeCorrect(buffer, msg);
             TConnectionMsg.Pong pong =
-                    TConnectionMsgFactory.Pong.fromBuffer(buffer);
+	            TConnectionMsgFactory.Pong.fromBuffer(buffer);
             compareNatMsgs(msg, pong);
         } catch (MessageDecodingException ex) {
             Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
@@ -1379,17 +1381,18 @@ public class EncodingDecodingTest {
     private void compareNatMsgs(NatMsg a, NatMsg b) {
         assert (a.getTimeoutId().equals(b.getTimeoutId()));
         compareNatMsgsNoTimeout(a, b);
-        // Note, we don't compare Address objects, as they have
-        // their ip and port set by the NettyHandler object.
-        // ip is null and port is 0 after the factory deserializes
-        // objects. It is up to NettyHandler to set ip and port.
+        // Note, we don't compare Address objects, as they have                                                                                                          
+        // their ip and port set by the NettyHandler object.                                                                                                             
+        // ip is null and port is 0 after the factory deserializes                                                                                                       
+        // objects. It is up to NettyHandler to set ip and port.                                                                                                         
     }
     private void compareNatMsgsNoTimeout(NatMsg a, NatMsg b) {
         assert (a.getVodSource().equals(b.getVodSource()));
         assert (a.getVodDestination().equals(b.getVodDestination()));
-        // Note, we don't compare Address objects, as they have
-        // their ip and port set by the NettyHandler object.
-        // ip is null and port is 0 after the factory deserializes
-        // objects. It is up to NettyHandler to set ip and port.
+        // Note, we don't compare Address objects, as they have                                                                                                          
+        // their ip and port set by the NettyHandler object.                                                                                                             
+        // ip is null and port is 0 after the factory deserializes                                                                                                       
+        // objects. It is up to NettyHandler to set ip and port.                                                                                                         
     }
+    
 }
