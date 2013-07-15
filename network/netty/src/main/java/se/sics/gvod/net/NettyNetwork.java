@@ -86,6 +86,13 @@ import se.sics.kompics.Stop;
  * 
  * @author Jim Dowling <jdowling@sics.se>
  */
+/*
+ * DirectMsgNettyFactory bug
+ * upnp code
+ * Connect API
+ * Asynchronous API?
+ * 
+ */
 public final class NettyNetwork extends ComponentDefinition {
 
 	// 1868836467 is the data packet size
@@ -284,21 +291,50 @@ public final class NettyNetwork extends ComponentDefinition {
 					b.group().shutdownGracefully();
 				}
 			}
+			
+			udpPortsToSockets.clear();
+			udpSocketsToBootstraps.clear();
+			udpSocketsToChannels.clear();
 
 			for (ServerBootstrap b : tcpSocketsToServerBootstraps.values()) {
 				if (b != null && b.group() != null) {
 					b.group().shutdownGracefully();
 				}
+				
 				if (b != null && b.childGroup() != null) {
 					b.childGroup().shutdownGracefully();
 				}
 			}
-
 			for (Bootstrap b : tcpSocketsToBootstraps.values()) {
 				if (b != null & b.group() != null) {
 					b.group().shutdownGracefully();
 				}
 			}
+			
+			tcpPortsToSockets.clear();
+			tcpSocketsToBootstraps.clear();
+			tcpSocketsToChannels.clear();
+			tcpSocketsToServerBootstraps.clear();
+			
+			for (ServerBootstrap b : udtSocketsToServerBootstraps.values()) {
+				if (b != null && b.group() != null) {
+					b.group().shutdownGracefully();
+				}
+				
+				if (b != null && b.childGroup() != null) {
+					b.childGroup().shutdownGracefully();
+				}
+			}
+			for (Bootstrap b : udtSocketsToBootstraps.values()) {
+				if (b != null & b.group() != null) {
+					b.group().shutdownGracefully();
+				}
+			}
+			
+			udtPortsToSockets.clear();
+			udtSocketsToBootstraps.clear();
+			udtSocketsToChannels.clear();
+			udtSocketsToServerBootstraps.clear();
 		}
 	};
 
@@ -319,6 +355,17 @@ public final class NettyNetwork extends ComponentDefinition {
 			if (!(message instanceof Encodable)) {
 				throw new Error("Can only send instances of Encodable");
 			}
+
+			// switch(message.getProtocol()) {
+			// case TCP:
+			// break;
+			// case UDP:
+			// break;
+			// case UDT:
+			// break;
+			// default:
+			// break;
+			// }
 
 			Transport protocol = message.getProtocol();
 			if (protocol == Transport.UDP) {
@@ -547,6 +594,7 @@ public final class NettyNetwork extends ComponentDefinition {
 
 	private boolean bindUdtPort(InetAddress addr, int port) {
 
+		// TODO check if port is occupied by udp
 		if (tcpPortsToSockets.containsKey(port)) {
 			return true;
 		}
@@ -671,9 +719,14 @@ public final class NettyNetwork extends ComponentDefinition {
 			break;
 		case UDP:
 			// TODO Does that work?
-			if (udpPortsToSockets.remove(addr.getPort()) != null) {
-				udpSocketsToChannels.remove(addr);
-				udpSocketsToBootstraps.remove(addr).group().shutdownGracefully();
+			udpPortsToSockets.remove(addr.getPort());
+			udpSocketsToChannels.remove(addr);
+			Bootstrap b = udpSocketsToBootstraps.remove(addr);
+			if (b != null) {
+				EventLoopGroup group = b.group();
+				if (group != null) {
+					group.shutdownGracefully();
+				}
 			}
 			break;
 		case UDT:
@@ -827,22 +880,18 @@ public final class NettyNetwork extends ComponentDefinition {
 		SocketAddress addr;
 
 		switch (protocol) {
-		case TCP:
-			addr = c.remoteAddress();
-			break;
 		case UDP:
 			addr = c.localAddress();
 			break;
 		case UDT:
-			addr = null;
+		case TCP:
+			addr = c.remoteAddress();
 			break;
 		default:
-			addr = null;
-			break;
+			throw new Error("Unknown Transport type");
 		}
 
 		InetSocketAddress clientSocketAddress = null;
-
 		if (addr instanceof InetSocketAddress) {
 			clientSocketAddress = (InetSocketAddress) addr;
 			removeLocalSocket(clientSocketAddress, protocol);
