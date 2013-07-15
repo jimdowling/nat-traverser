@@ -104,7 +104,7 @@ public class BindUdtToUdpPortTest extends TestCase {
 			public void handle(Start event) {
 				System.out.println("Starting");
 				PortBindRequest request = new PortBindRequest(0, serverAddr0.getPort(),
-						Transport.UDT);
+						Transport.UDP);
 				request.setResponse(new PortBindResponse(request) {
 				});
 				trigger(request, server.getPositive(NatNetworkControl.class));
@@ -118,17 +118,18 @@ public class BindUdtToUdpPortTest extends TestCase {
 			public void handle(PortBindResponse event) {
 				System.out.println("Port bind response");
 
-				if (event.getStatus() != expected) {
+				if (event.getStatus() == expected && expected == Status.SUCCESS) {
+					expected = Status.FAIL;
+					PortBindRequest request = new PortBindRequest(0, serverAddr0.getPort(),
+							Transport.UDT);
+					request.setResponse(new PortBindResponse(request) {
+					});
+					trigger(request, server.getPositive(NatNetworkControl.class));
+				} else if (event.getStatus() == expected && expected == Status.FAIL) { 
+					testObj.pass();
+				} else {
 					testObj.failAndRelease();
-					return;
 				}
-
-				expected = Status.FAIL;
-				PortBindRequest request = new PortBindRequest(0, serverAddr0.getPort(),
-						Transport.UDP);
-				request.setResponse(new PortBindResponse(request) {
-				});
-				trigger(request, server.getPositive(NatNetworkControl.class));
 			}
 		};
 	}
