@@ -9,14 +9,12 @@ public class NtCompositeConfiguration extends CompositeConfiguration {
     StunServerConfiguration stunClientConfig;
     NatConfiguration natConfig;
     
-    public NtCompositeConfiguration(int seed) {
-        super(seed);
+    public NtCompositeConfiguration() {
         natTraverserConfig = NatTraverserConfiguration.build();
         parentMakerConfig = ParentMakerConfiguration.build();
         hpClientConfig = HpClientConfiguration.build();
         rendezvousServerConfig = RendezvousServerConfiguration.build().setNumChildren(1000);
-        stunClientConfig = 
-                StunServerConfiguration.build();
+        stunClientConfig = StunServerConfiguration.build();
         natConfig = NatConfiguration.build();
     }
 

@@ -44,8 +44,8 @@ public class Main {
         Scenario.SECOND_PUBLIC = numPub;
         Scenario.COLLECT_RESULTS = expLength;
 
-        CroupierCompositeConfiguration configuration = new CroupierCompositeConfiguration(VodConfig.getSeed(), 
-                PARENT_SIZE,  PARENT_UPDATE_ROUND_TIME,
+        CroupierCompositeConfiguration configuration = 
+                new CroupierCompositeConfiguration(PARENT_SIZE,  PARENT_UPDATE_ROUND_TIME,
                 localHistorySize, neighbourHistorySize, nodeSelection);
         configuration.store();
 

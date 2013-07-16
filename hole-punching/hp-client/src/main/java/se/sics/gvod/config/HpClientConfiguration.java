@@ -16,7 +16,7 @@ public class HpClientConfiguration extends AbstractConfiguration<HpClientConfigu
      * Default constructor comes first.
      */
     public HpClientConfiguration() {
-        this(VodConfig.getSeed(),
+        this(
                 VodConfig.HP_SESSION_EXPIRATION,
                 VodConfig.HP_SCANNING_RETRIES,
                 true,
@@ -29,12 +29,11 @@ public class HpClientConfiguration extends AbstractConfiguration<HpClientConfigu
     /**
      * Full argument constructor comes second.
      */
-    public HpClientConfiguration(int seed, int sessionExpirationTime,
+    public HpClientConfiguration(int sessionExpirationTime,
             int scanRetries, boolean scanningEnabled,
             int rto,
             int rtoRetries,
             double rtoScale) {
-        super(seed);
         this.scanRetries = scanRetries;
         this.sessionExpirationTime = sessionExpirationTime;
         this.scanningEnabled = scanningEnabled;

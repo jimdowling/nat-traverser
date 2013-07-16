@@ -52,7 +52,7 @@ public class CroupierConfiguration
      * Default constructor comes first.
      */
     public CroupierConfiguration() {
-        this(VodConfig.getSeed(),
+        this(
                 VodConfig.CROUPIER_VIEW_SIZE,
                 VodConfig.CROUPIER_SHUFFLE_LENGTH,
                 VodConfig.CROUPIER_SHUFFLE_PERIOD,
@@ -66,7 +66,6 @@ public class CroupierConfiguration
      * Full argument constructor comes second.
      */
     public CroupierConfiguration(
-            int seed,
             int viewSize,
             int shuffleLength,
             long shufflePeriod,
@@ -74,7 +73,6 @@ public class CroupierConfiguration
             long rto,
             int rtoRetries,
             double rtoScale) {
-        super(seed);
         this.viewSize = viewSize;
         this.shuffleLength = shuffleLength;
         this.shufflePeriod = shufflePeriod;

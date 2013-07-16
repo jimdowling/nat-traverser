@@ -17,7 +17,6 @@ public class Concrete extends AbstractConfiguration<Concrete> {
     }
 
     public Concrete(int seed, int val) {
-        super(seed);
         this.val = val;
     }
     

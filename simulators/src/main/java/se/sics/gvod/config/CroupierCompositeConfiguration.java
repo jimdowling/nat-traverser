@@ -9,10 +9,10 @@ public class CroupierCompositeConfiguration extends CompositeConfiguration {
     GradientConfiguration gradientConfig;
 
 //-------------------------------------------------------------------
-    public CroupierCompositeConfiguration(int seed, int parentSize, int parentUpdatePeriod,
+    public CroupierCompositeConfiguration(int parentSize, int parentUpdatePeriod,
             int localHistorySize, int neighbourHistorySize,
             String croupierNodeSelectionPolicy) {
-        super(seed);
+        super();
         parentMakerConfig = ParentMakerConfiguration.build()
                 .setParentSize(parentSize)
                 .setChildSize(250)

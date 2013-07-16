@@ -38,7 +38,7 @@ public final class ParentMakerConfiguration
      * Default constructor comes first.
      */
     public ParentMakerConfiguration() {
-        this(   VodConfig.getSeed(),
+        this(   
                 VodConfig.PM_PARENT_SIZE, 
                 VodConfig.PM_CHILDREN_SIZE, 
                 VodConfig.PM_PARENT_UPDATE_PERIOD, 
@@ -55,13 +55,12 @@ public final class ParentMakerConfiguration
     /** 
      * Full argument constructor comes second. Contains seed from base class.
      */
-    public ParentMakerConfiguration(int seed, int parentSize, int childSize, 
+    public ParentMakerConfiguration(int parentSize, int childSize, 
             int parentUpdatePeriod, 
             int removeChildTimeout, int keepParentRttRange, 
             int rtoRetries, int rto, double rtoScale,
             int numPingRetries, int pingRto, double pingRtoScale
             ) {
-        super(seed);
         this.parentSize = parentSize;
         this.childSize = childSize;
         this.parentUpdatePeriod = parentUpdatePeriod;

@@ -20,7 +20,7 @@ public class Main {
 
         VodConfig.init(new String[]{"-seed", args[0]});
 
-        NtCompositeConfiguration configuration = new NtCompositeConfiguration(SEED);
+        NtCompositeConfiguration configuration = new NtCompositeConfiguration();
         configuration.store();
 
         Scenario scenario = new ScenarioConnectPeers();

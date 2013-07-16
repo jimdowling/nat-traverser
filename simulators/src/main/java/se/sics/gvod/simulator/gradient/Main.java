@@ -40,7 +40,7 @@ public class Main {
 
 
 
-        CroupierCompositeConfiguration configuration = new CroupierCompositeConfiguration(VodConfig.getSeed(),
+        CroupierCompositeConfiguration configuration = new CroupierCompositeConfiguration(
                 PARENT_SIZE, 
                 PARENT_UPDATE_ROUND_TIME,
                 localHistorySize, neighbourHistorySize, nodeSelection);

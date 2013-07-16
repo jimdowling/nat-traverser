@@ -15,7 +15,7 @@ extends AbstractConfiguration<NatTraverserConfiguration>{
      * Default constructor comes first.
      */
     public NatTraverserConfiguration() {
-        this(VodConfig.getSeed(),
+        this(
                 VodConfig.NT_STUN_RETRIES, 
                 VodConfig.DEFAULT_RTO, 
                 VodConfig.DEFAULT_NT_CONNECTION_ESTABLISHMENT_TIMEOUT, 
@@ -26,12 +26,10 @@ extends AbstractConfiguration<NatTraverserConfiguration>{
      * Full argument constructor comes second.
      */
     public NatTraverserConfiguration(
-            int seed,
             int stunRetries,
             int connectionEstablishmentWaitTime,
             int responsiblePeerUpdateTime,
             int maxOpenedConnections) {
-        super(seed);
         this.stunRetries = stunRetries;
         this.connectionEstablishmentWaitTime = connectionEstablishmentWaitTime;
         this.responsiblePeerUpdateTime = responsiblePeerUpdateTime;

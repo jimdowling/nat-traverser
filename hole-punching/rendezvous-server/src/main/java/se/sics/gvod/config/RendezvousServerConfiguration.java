@@ -15,7 +15,6 @@ public final class RendezvousServerConfiguration
      * Default constructor comes first.
      */
     public RendezvousServerConfiguration() {
-        super(VodConfig.getSeed());
         this.sessionExpirationTime = Nat.UPPER_RULE_EXPIRATION_TIME;
         this.numChildren = VodConfig.PM_CHILDREN_SIZE;
     }
@@ -23,9 +22,8 @@ public final class RendezvousServerConfiguration
     /**
      * Full argument constructor comes second.
      */
-    public RendezvousServerConfiguration(int seed, int sessionExpirationTime,
+    public RendezvousServerConfiguration(int sessionExpirationTime,
             int numChildren) {
-        super(seed);
         this.sessionExpirationTime = sessionExpirationTime;
         this.numChildren = numChildren;
     }

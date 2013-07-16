@@ -58,7 +58,7 @@ public class GradientConfiguration
      * Default constructor comes first.
      */
     public GradientConfiguration() {
-        this(VodConfig.getSeed(),
+        this(
                 VodConfig.GRADIENT_VIEW_SIZE,
                 VodConfig.GRADIENT_SHUFFLE_LENGTH,
                 VodConfig.GRADIENT_SHUFFLE_PERIOD,
@@ -76,7 +76,6 @@ public class GradientConfiguration
      * Full argument constructor comes second.
      */
     public GradientConfiguration(
-            int seed, 
             int viewSize, 
             int shuffleLength,
             int shufflePeriod,
@@ -88,7 +87,6 @@ public class GradientConfiguration
             int searchTtl,
             int rto
             ) {
-        super(seed);
         this.viewSize = viewSize;
         this.shuffleLength = shuffleLength;
         this.shufflePeriod = shufflePeriod;

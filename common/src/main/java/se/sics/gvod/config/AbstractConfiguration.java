@@ -38,13 +38,12 @@ public class AbstractConfiguration<T extends AbstractConfiguration> {
     private static AbstractConfiguration instance = null;
     protected int seed;
 
-    protected AbstractConfiguration(int seed) {
-        this.seed = seed;
+    protected AbstractConfiguration() {
+        this.seed = BaseCommandLineConfig.getSeed();
     }
 
-    public File store(int seed) throws IOException {
+    public File store() throws IOException {
         Properties p = new Properties();
-        this.seed = seed;
         p.setProperty("seed", "" + seed);
         for (Field f : getClass().getDeclaredFields()) {
             try {
@@ -61,7 +60,7 @@ public class AbstractConfiguration<T extends AbstractConfiguration> {
         return file;
     }
 
-    protected T loadP(Class<? extends AbstractConfiguration> t, String file)
+    public T loadP(Class<? extends AbstractConfiguration> t, String file)
             throws IOException {
         Properties p = new Properties();
         Reader reader = new FileReader(file);
@@ -71,8 +70,8 @@ public class AbstractConfiguration<T extends AbstractConfiguration> {
 
         Object[] initargs = new Object[paramTypes.length];
         String seedStr = p.getProperty("seed");
-        initargs[0] = Integer.parseInt(seedStr);
-        int i = 1;
+        int loadedSeed = Integer.parseInt(seedStr);
+        int i = 0;
         for (Field f : getClass().getDeclaredFields()) {
             String val = p.getProperty(f.getName());
             if (val == null) {
@@ -96,7 +95,9 @@ public class AbstractConfiguration<T extends AbstractConfiguration> {
             i++;
         }
         try {
-            return c.newInstance(initargs);
+            T obj = c.newInstance(initargs);
+            obj.setSeed(loadedSeed);
+            return obj;
         } catch (InstantiationException ex) {
             Logger.getLogger(AbstractConfiguration.class.getName()).log(Level.SEVERE, null, ex);
             throw new IOException(t.getCanonicalName() + " - " + ex.getMessage());

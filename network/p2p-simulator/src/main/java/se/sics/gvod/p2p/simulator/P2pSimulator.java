@@ -46,8 +46,6 @@ import se.sics.kompics.p2p.experiment.dsl.events.StochasticProcessStartEvent;
 import se.sics.kompics.p2p.experiment.dsl.events.StochasticProcessTerminatedEvent;
 import se.sics.kompics.p2p.experiment.dsl.events.TakeSnapshotEvent;
 import se.sics.kompics.p2p.experiment.dsl.events.TerminateExperiment;
-import se.sics.kompics.simulation.Simulator;
-import se.sics.kompics.simulation.SimulatorScheduler;
 import se.sics.kompics.simulation.SimulatorSystem;
 import se.sics.gvod.timer.CancelPeriodicTimeout;
 import se.sics.gvod.timer.CancelTimeout;
@@ -55,6 +53,8 @@ import se.sics.gvod.timer.SchedulePeriodicTimeout;
 import se.sics.gvod.timer.ScheduleTimeout;
 import se.sics.gvod.timer.Timeout;
 import se.sics.gvod.timer.Timer;
+import se.sics.kompics.simulation.Simulator;
+import se.sics.kompics.simulation.SimulatorScheduler;
 
 /**
  * The <code>P2pSimulator</code> class.

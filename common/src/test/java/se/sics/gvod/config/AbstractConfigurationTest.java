@@ -43,7 +43,7 @@ public class AbstractConfigurationTest {
     @Test
     public void testStore() throws Exception {
         Concrete instance = new Concrete(10, 3);
-        File f = instance.store(1);
+        File f = instance.store();
         Concrete loaded = (Concrete) Concrete.load(Concrete.class);
         assert(instance.equals(loaded));
     }

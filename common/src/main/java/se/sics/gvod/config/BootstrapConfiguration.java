@@ -52,7 +52,6 @@ public final class BootstrapConfiguration
      */
     BootstrapConfiguration() {
         this(
-                BaseCommandLineConfig.getSeed(),
                 BaseCommandLineConfig.getBootstrapServer().getIp().getHostAddress(),
                 BaseCommandLineConfig.getBootstrapServer().getPort(),
                 BaseCommandLineConfig.getBootstrapServer().getId(),
@@ -65,10 +64,9 @@ public final class BootstrapConfiguration
     /**
      * Full argument constructor comes second.
      */
-    public BootstrapConfiguration(int seed, String ip, int port, int id,
+    public BootstrapConfiguration(String ip, int port, int id,
             long clientRetryPeriod, int clientRetryCount,
             long clientKeepAlivePeriod, int clientWebPort) {
-        super(seed);
         this.ip = ip;
         this.port = port;
         this.id = id;

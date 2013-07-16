@@ -27,7 +27,6 @@ public final class NatConfiguration
      */
     public NatConfiguration() {
         // only called from AbstractConfiguration
-        super(VodConfig.getSeed());
         this.delta = 1;
         this.UPnPPercentage = 0.0d;
         StringBuilder sb = new StringBuilder();
@@ -41,12 +40,11 @@ public final class NatConfiguration
     /**
      * Full argument constructor comes second.
      */
-    public NatConfiguration(int seed, 
+    public NatConfiguration( 
             String nats,
             double UPnPPercentage,
             int ruleExpirationTime,
             int delta) {
-        super(seed);
         this.ruleExpirationTime = ruleExpirationTime;
         this.delta = delta;
         this.nats = nats;

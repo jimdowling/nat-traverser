@@ -215,7 +215,7 @@ public class VodConfig extends BaseCommandLineConfig {
         super(args);
     }
 
-    public static final synchronized VodConfig init(String[] args) throws IOException {
+    public static synchronized VodConfig init(String[] args) throws IOException {
 
         if (singleton != null) {
             return (VodConfig) singleton;

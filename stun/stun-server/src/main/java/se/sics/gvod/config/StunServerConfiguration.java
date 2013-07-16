@@ -17,7 +17,7 @@ public final class StunServerConfiguration extends AbstractConfiguration<StunSer
      */
     public StunServerConfiguration()
     {
-        this(VodConfig.getSeed(), 
+        this(
                 VodConfig.STUN_MAX_NUM_PARTNERS, 
                 VodConfig.STUN_PARTNER_HEARTBEAT_PERIOD, 
                 VodConfig.STUN_MIN_RTT, 
@@ -31,7 +31,6 @@ public final class StunServerConfiguration extends AbstractConfiguration<StunSer
      * Full argument constructor comes second.
      */
     public StunServerConfiguration(
-            int seed,
             int maxNumPartners,
             int partnerHeartbeatPeriod,
             int minimumRtt,
@@ -40,7 +39,6 @@ public final class StunServerConfiguration extends AbstractConfiguration<StunSer
             double rtoScale
             )
     {
-        super(seed);
         this.maxNumPartners = maxNumPartners;
         this.partnerHeartbeatPeriod = partnerHeartbeatPeriod;
         this.rto = rto;

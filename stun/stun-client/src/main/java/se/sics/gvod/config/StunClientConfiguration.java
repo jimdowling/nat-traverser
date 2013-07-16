@@ -38,7 +38,7 @@ public final class StunClientConfiguration extends AbstractConfiguration<StunCli
      * Default constructor comes first.
      */
     public StunClientConfiguration() {
-        this(VodConfig.getSeed(),
+        this(
                 2, // Rand tolerance  
                 Nat.DEFAULT_RULE_EXPIRATION_TIME,
                 Nat.DEFAULT_RULE_EXPIRATION_TIME,
@@ -56,7 +56,6 @@ public final class StunClientConfiguration extends AbstractConfiguration<StunCli
      * Full argument constructor comes second.
      */
     public StunClientConfiguration(
-            int seed,
             int randTolerance,
             int ruleExpirationMinWait,
             int ruleExpirationIncrement,
@@ -68,7 +67,6 @@ public final class StunClientConfiguration extends AbstractConfiguration<StunCli
             int rto,
             int rtoRetries,
             double rtoScale) {
-        super(seed);
         this.randTolerance = randTolerance;
         this.ruleExpirationMinWait = ruleExpirationMinWait;
         this.ruleExpirationIncrement = ruleExpirationIncrement;
