@@ -35,11 +35,6 @@ public class NettyTcpHandler extends NettyBaseHandler<RewriteableMsg> {
 			msg.getDestination().setIp(getAddr());
 			msg.getDestination().setPort(getPort());
 
-			// TODO - this is terrible code. All we need to do is change
-			// the VodAddress in VodMsg, not Address in RewriteableMsg
-			msg.rewriteDestination(msg.getDestination());
-			msg.rewritePublicSource(msg.getSource());
-
 			Channel c = ctx.channel();
 			if (c instanceof SocketChannel) {
 				getComponent().deliverMessage(msg);

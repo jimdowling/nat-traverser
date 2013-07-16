@@ -1,8 +1,8 @@
 package se.sics.kompics;
 
 import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.concurrent.Semaphore;
 
@@ -33,7 +33,12 @@ import se.sics.gvod.net.events.PortBindResponse;
 import se.sics.gvod.net.events.PortBindResponse.Status;
 import se.sics.gvod.timer.ScheduleTimeout;
 import se.sics.gvod.timer.Timer;
+import se.sics.gvod.timer.UUID;
 import se.sics.gvod.timer.java.JavaTimer;
+import se.sics.kompics.nat.utils.getip.ResolveIp;
+import se.sics.kompics.nat.utils.getip.ResolveIpPort;
+import se.sics.kompics.nat.utils.getip.events.GetIpRequest;
+import se.sics.kompics.nat.utils.getip.events.GetIpResponse;
 
 /**
  * Unit test for simple App.
@@ -65,6 +70,7 @@ public class TcpPingTest extends TestCase {
     }
 
     public static class TestPortBindResponse extends PortBindResponse {
+
         public TestPortBindResponse(PortBindRequest request) {
             super(request);
         }
@@ -75,6 +81,7 @@ public class TcpPingTest extends TestCase {
         private Component client;
         private Component server;
         private Component timer;
+        private Component resolveIp;
         private static TcpPingTest testObj = null;
         private VodAddress clientAddr;
         private VodAddress serverAddr;
@@ -86,27 +93,8 @@ public class TcpPingTest extends TestCase {
             timer = create(JavaTimer.class);
             client = create(NettyNetwork.class);
             server = create(NettyNetwork.class);
+            resolveIp = create(ResolveIp.class);
 
-            InetAddress ip = null;
-            int clientPort = 54644;
-            int serverPort = 54645;
-
-            try {
-                ip = InetAddress.getByName("127.0.0.1");
-
-            } catch (UnknownHostException ex) {
-                logger.error("UnknownHostException");
-                fail();
-            }
-            Address cAddr = new Address(ip, clientPort, 0);
-            Address sAddr = new Address(ip, serverPort, 1);
-
-            clientAddr = new VodAddress(cAddr, VodConfig.SYSTEM_OVERLAY_ID);
-            serverAddr = new VodAddress(sAddr, VodConfig.SYSTEM_OVERLAY_ID);
-
-            nodeDesc = new VodDescriptor(clientAddr, utility, 0, BaseCommandLineConfig.DEFAULT_MTU);
-            nodes = new ArrayList<VodDescriptor>();
-            nodes.add(nodeDesc);
 
             subscribe(handleStart, control);
             subscribe(handleMsgTimeout, timer.getPositive(Timer.class));
@@ -114,6 +102,7 @@ public class TcpPingTest extends TestCase {
             subscribe(handlePortBindResponse, client.getPositive(NatNetworkControl.class));
             subscribe(handlePortBindResponse, server.getPositive(NatNetworkControl.class));
             subscribe(handlePing, server.getPositive(VodNetwork.class));
+            subscribe(handleGetIpResponse, resolveIp.getPositive(ResolveIpPort.class));
 
             trigger(new NettyInit(132, true,
                     BaseMsgFrameDecoder.class), client.getControl());
@@ -122,24 +111,56 @@ public class TcpPingTest extends TestCase {
 
 
         }
+        public Handler<GetIpResponse> handleGetIpResponse = new Handler<GetIpResponse>() {
+            @Override
+            public void handle(GetIpResponse event) {
+                InetAddress ip = null;
+                int clientPort = 54644;
+                int serverPort = 54645;
+
+//                try {
+//                    ip = InetAddress.getLocalHost();
+                    ip = event.getBoundIp();
+//                } catch (UnknownHostException ex) {
+//                    logger.error("UnknownHostException");
+//                    fail();
+//                }
+                Address cAddr = new Address(ip, clientPort, 0);
+                Address sAddr = new Address(ip, serverPort, 1);
+
+
+                logger.info("Server: " + cAddr);
+                logger.info("Client: " + cAddr);
+
+
+                clientAddr = new VodAddress(cAddr, VodConfig.SYSTEM_OVERLAY_ID);
+                serverAddr = new VodAddress(sAddr, VodConfig.SYSTEM_OVERLAY_ID);
+
+                nodeDesc = new VodDescriptor(clientAddr, utility, 0, BaseCommandLineConfig.DEFAULT_MTU);
+                nodes = new ArrayList<VodDescriptor>();
+                nodes.add(nodeDesc);
+
+                PortBindRequest requestServer = new PortBindRequest(serverAddr.getPeerAddress(),
+                        Transport.TCP);
+                requestServer.setResponse(new PortBindResponse(requestServer) {
+                });
+                trigger(requestServer, server.getPositive(NatNetworkControl.class));
+            }
+        };
+        
         public Handler<Start> handleStart = new Handler<Start>() {
             public void handle(Start event) {
+                trigger(new GetIpRequest(false, EnumSet.of(
+                        GetIpRequest.NetworkInterfacesMask.IGNORE_LOOPBACK, 
+                        GetIpRequest.NetworkInterfacesMask.IGNORE_TEN_DOT_PRIVATE)),
+                        resolveIp.getPositive(ResolveIpPort.class));
+                
                 System.out.println("Starting");
                 ScheduleTimeout st = new ScheduleTimeout(1000 * 1000);
                 SetsExchangeMsg.RequestTimeout mt = new SetsExchangeMsg.RequestTimeout(st,
                         serverAddr);
                 st.setTimeoutEvent(mt);
-
-                PortBindRequest requestClient = new PortBindRequest(clientAddr.getPeerAddress(), 
-                        Transport.TCP);
-                requestClient.setResponse(new PortBindResponse(requestClient) {});
-//                trigger(requestClient, client.getPositive(NatNetworkControl.class));                
-                
-                PortBindRequest requestServer = new PortBindRequest(serverAddr.getPeerAddress(), 
-                        Transport.TCP);
-                requestServer.setResponse(new PortBindResponse(requestServer) {});
-                trigger(requestServer, server.getPositive(NatNetworkControl.class));
-                trigger(st, timer.getPositive(Timer.class));
+                trigger(st, timer.getPositive(Timer.class));                
             }
         };
         public Handler<PortBindResponse> handlePortBindResponse = new Handler<PortBindResponse>() {
@@ -153,8 +174,8 @@ public class TcpPingTest extends TestCase {
                 }
 
                 if (event.getPort() == serverAddr.getPort()) {
-                    trigger(new TConnectionMsg.Ping(clientAddr, serverAddr, Transport.TCP, null),
-                            client.getPositive(VodNetwork.class));
+                    trigger(new TConnectionMsg.Ping(clientAddr, serverAddr, Transport.TCP, 
+                            UUID.nextUUID()), client.getPositive(VodNetwork.class));
                 }
             }
         };
@@ -162,7 +183,7 @@ public class TcpPingTest extends TestCase {
             @Override
             public void handle(TConnectionMsg.Ping event) {
                 System.out.println("Ping");
-                trigger(new TConnectionMsg.Pong(serverAddr, clientAddr, Transport.TCP, null),
+                trigger(new TConnectionMsg.Pong(serverAddr, clientAddr, Transport.TCP, event.getTimeoutId()),
                         server.getPositive(VodNetwork.class));
             }
         };

@@ -23,15 +23,33 @@ public abstract class DirectMsgNetty extends DirectMsg implements Encodable
 
     private static final long serialVersionUID = 75484442850L;
 
+    /**
+     * This constructor should only be used by msgs that do not set a TimeoutId.
+     * @param source
+     * @param destination 
+     */
     protected DirectMsgNetty(VodAddress source, VodAddress destination) {
         this(source, destination, null);
     }
 
-    protected DirectMsgNetty(VodAddress source, VodAddress destination,
-            TimeoutId timeoutId) {
+    /**
+     * This constructor should be used by msgs that do set a TimeoutId.
+     * If you pass in a null as timeoutId, then Netty will expect that no
+     * TimeoutId has been set.
+     * @param source
+     * @param destination 
+     * @param timeoutId - should not be null.
+     */    protected DirectMsgNetty(VodAddress source, VodAddress destination, TimeoutId timeoutId) {
         this(source, destination, Transport.UDP, timeoutId);
     }
     
+     /**
+      * 
+      * @param source
+      * @param destination
+      * @param protocol
+      * @param timeoutId 
+      */
     protected DirectMsgNetty(VodAddress source, VodAddress destination,
             Transport protocol, TimeoutId timeoutId) {
         super(source, destination,  protocol, timeoutId);

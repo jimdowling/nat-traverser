@@ -64,7 +64,7 @@ public abstract class DirectMsgNettyFactory
         int srcOverlayId = buffer.readInt();
         int srcNatPolicy = UserTypesDecoderFactory.readUnsignedIntAsOneByte(buffer);
         Set<Address> parents = UserTypesDecoderFactory.readListAddresses(buffer);
-        int destOverlayId = buffer.readInt(); //1;//TODO freezing here fix it! 
+        int destOverlayId = buffer.readInt(); 
         int destNatPolicy = UserTypesDecoderFactory.readUnsignedIntAsOneByte(buffer);
 
         vodSrc = new VodAddress(src, srcOverlayId, (short) srcNatPolicy, parents);

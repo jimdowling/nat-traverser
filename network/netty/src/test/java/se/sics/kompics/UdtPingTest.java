@@ -33,6 +33,7 @@ import se.sics.gvod.net.events.PortBindResponse;
 import se.sics.gvod.net.events.PortBindResponse.Status;
 import se.sics.gvod.timer.ScheduleTimeout;
 import se.sics.gvod.timer.Timer;
+import se.sics.gvod.timer.UUID;
 import se.sics.gvod.timer.java.JavaTimer;
 
 /**
@@ -136,15 +137,6 @@ public class UdtPingTest extends TestCase {
 				request.setResponse(new PortBindResponse(request) {
 				});
 				trigger(request, server.getPositive(NatNetworkControl.class));
-
-				PortBindRequest clientRequest = 
-                                        new PortBindRequest(clientAddr0.getPeerAddress(), 
-                                        Transport.UDT);
-				clientRequest.setResponse(new PortBindResponse(clientRequest) {
-				});
-				trigger(clientRequest, server.getPositive(NatNetworkControl.class));
-                                
-                                
                                 trigger(st, timer.getPositive(Timer.class));
 			}
 		};
@@ -160,10 +152,9 @@ public class UdtPingTest extends TestCase {
 					return;
 				}
 
-                                if (event.getPort() == clientAddr0.getPort()) {
-                                    trigger(new TConnectionMsg.Ping(clientAddr0, serverAddr0, Transport.UDT, null),
+                                    trigger(new TConnectionMsg.Ping(clientAddr0, serverAddr0, Transport.UDT, 
+                                            UUID.nextUUID()),
                                                     client.getPositive(VodNetwork.class));
-                                }
 			}
 		};
 
@@ -172,7 +163,8 @@ public class UdtPingTest extends TestCase {
 			@Override
 			public void handle(TConnectionMsg.Ping event) {
 				System.out.println("Ping");
-				trigger(new TConnectionMsg.Pong(serverAddr0, clientAddr0, Transport.UDT, null),
+				trigger(new TConnectionMsg.Pong(serverAddr0, clientAddr0, Transport.UDT, 
+                                        event.getTimeoutId()),
 						server.getPositive(VodNetwork.class));
 			}
 		};

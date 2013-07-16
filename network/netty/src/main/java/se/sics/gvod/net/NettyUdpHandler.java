@@ -53,30 +53,11 @@ public class NettyUdpHandler extends NettyBaseHandler<DatagramPacket> {
 			rewrittenMsg.getDestination().setIp(getAddr());
 			rewrittenMsg.getDestination().setPort(getPort());
 
-			// TODO - this is terrible code. All we need to do is change
-			// the VodAddress in VodMsg, not Address in RewriteableMsg
-			rewrittenMsg.rewriteDestination(rewrittenMsg.getDestination());
-			rewrittenMsg.rewritePublicSource(rewrittenMsg.getSource());
-
 			// TODO - for UPNP, the port on which the data is sent from the NAT
 			// may not be the same as the mapped port - see
 			// https://tools.ietf.org/html/rfc4380.
 			// In this case, we should check if it is Upnp, and if so, then
 			// don't re-write the source address.
-
-			// UPNP Port-mapped + Symmetric NAT (different port out than in),
-			// but same IP
-			// if (is.getAddress().equals(rewrittenMsg.getSource().getIp()) ==
-			// false) {
-			// rewrittenMsg.rewritePublicSource(newSrc);
-			// } else {
-			// logger.info("UPnP + Symmetric packet recvd from " +
-			// rewrittenMsg.getSource().getId());
-			// }
-			// } else {
-			// // logger.trace("No nat: public {} private {}", newSrc.getId(),
-			// src.getId());
-			// }
 
 			Channel c = ctx.channel();
 			if (c instanceof DatagramChannel) {

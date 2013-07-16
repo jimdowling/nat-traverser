@@ -29,7 +29,7 @@ public abstract class NettyBaseHandler<I> extends SimpleChannelInboundHandler<I>
 
 	@Override
 	public void channelActive(ChannelHandlerContext ctx) {
-		logger.trace("Channel connected");
+		logger.trace("Channel connected.");
 	}
 
 	@Override

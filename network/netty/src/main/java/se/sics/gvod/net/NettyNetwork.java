@@ -733,7 +733,7 @@ public final class NettyNetwork extends ComponentDefinition {
             logger.warn("Problem trying to write msg of type: "
                     + msg.getClass().getCanonicalName() + " with src address: "
                     + src.toString());
-            trigger(new Fault(ex), control);
+            throw new RuntimeException(ex.getMessage());
         }
     }
 

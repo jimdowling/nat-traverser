@@ -36,44 +36,8 @@ public class NettyUdtInitializer extends ChannelInitializer<UdtChannel> {
 	protected void initChannel(UdtChannel ch) throws Exception {
 		ChannelPipeline pipeline = ch.pipeline();
 
-		// SSLEngine engine = context.createSSLEngine();
-		// engine.setUseClientMode(false);
-		// engine.setWantClientAuth(false);
-		// engine.setEnableSessionCreation(true);
-
-		// pipeline.addLast("TLS", new SslHandler(engine));
-		// pipeline.addLast("Timeout", new Disconnector(new
-		// HashedWheelTimer(WORKER_THREAD_POOL.getThreadFactory()),
-		// SESSION_TIMEOUT,SESSION_TIMEOUT,SESSION_TIMEOUT,
-		// TimeUnit.MILLISECONDS));
-
-		// ZlibWrapper.GZIP
-		// 6 is the default compression level, 9 is max compression
-		// pipeline.addLast("deflater", new ZlibEncoder(ZlibWrapper.GZIP, 9));
-		// pipeline.addLast("inflater", new ZlibDecoder(ZlibWrapper.ZLIB));
-
-		// pipeline.addLast("Logging", new ChannelLogger()); //logs using our
-		// own API
-
-		// ByteCounter byteCounter =
-		// new ByteCounter("--- CLIENT-COUNTER :: ", totalReadBytes,
-		// totalWrittenBytes);
-		// MessageCounter messageCounter = new
-		// MessageCounter("--- CLIENT-MSGCOUNTER :: ");
-
-		// pipeline.addFirst("byteCounter", byteCounter);
 		pipeline.addLast("decoder", msgDecoderClass.newInstance());
 		pipeline.addLast("encoder", new MsgFrameEncoder());
-		// pipeline.addLast("decoder", new
-		// ObjectDecoder(NettyNetwork.MAX_OBJECT_SIZE));
-		// pipeline.addLast("encoder", new ObjectEncoder(1650));
-		// pipeline.addLast("msgCounter", messageCounter);
-
-		// no pipelineExecutor is needed, as the NettyNetwork component
-		// should not have to wait for I/O processing. It simply dispatches
-		// the thread
-		// pipeline.addLast("pipelineExecutor", new ExecutionHandler(
-		// pipelineExecutor));
 
 		pipeline.addLast("handler", handler);
 	}

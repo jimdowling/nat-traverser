@@ -25,7 +25,6 @@ public class NettyUdtHandler extends NettyBaseHandler<RewriteableMsg> {
 	protected void messageReceived(ChannelHandlerContext ctx, RewriteableMsg msg) throws Exception {
 		SocketAddress srcAddr = ctx.channel().remoteAddress();
 
-		// TODO Check if this really need to be done
 		if (srcAddr instanceof InetSocketAddress) {
 			InetSocketAddress is = (InetSocketAddress) srcAddr;
 
@@ -34,11 +33,6 @@ public class NettyUdtHandler extends NettyBaseHandler<RewriteableMsg> {
 
 			msg.getDestination().setIp(getAddr());
 			msg.getDestination().setPort(getPort());
-
-			// TODO - this is terrible code. All we need to do is change
-			// the VodAddress in VodMsg, not Address in RewriteableMsg
-			msg.rewriteDestination(msg.getDestination());
-			msg.rewritePublicSource(msg.getSource());
 
 			Channel c = ctx.channel();
 			if (c instanceof UdtChannel) {

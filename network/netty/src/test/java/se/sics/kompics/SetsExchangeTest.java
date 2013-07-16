@@ -144,6 +144,8 @@ public class SetsExchangeTest extends TestCase {
         public Handler<SetsExchangeMsg.Request> handleSetsExchangeRequest = new Handler<SetsExchangeMsg.Request>() {
             @Override
             public void handle(SetsExchangeMsg.Request event) {
+                trigger(new SetsExchangeMsg.Response(serverAddr.getNodeAddress(), event, nodes, nodes),
+                        server.getPositive(VodNetwork.class));
             }
         };
         

@@ -143,22 +143,22 @@
        id="rect2985-4-6"
        width="181.82745"
        height="50.507626"
-       x="267.83511"
+       x="425.83511"
        y="355.35693" />
     <text
        xml:space="preserve"
        style="font-size:20px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans;-inkscape-font-specification:Sans"
-       x="283.08478"
+       x="441.08478"
        y="388.69196"
        id="text2987-21-5"
        sodipodi:linespacing="125%"><tspan
          sodipodi:role="line"
          id="tspan2989-36-9"
-         x="283.08478"
+         x="441.08478"
          y="388.69196">RelayMsg.Base</tspan></text>
     <g
        id="g3064"
-       transform="translate(-145.46197,78.791892)">
+       transform="translate(12.53803,78.791892)">
       <rect
          y="361.41785"
          x="413.29709"
@@ -179,7 +179,7 @@
            sodipodi:role="line">RelayMsgNetty.B</tspan></text>
     </g>
     <g
-       transform="translate(-131.46197,76.401038)"
+       transform="translate(26.53803,76.401038)"
        id="g3069">
       <rect
          y="471.03204"
@@ -205,7 +205,7 @@
            id="tspan3029">Request</tspan></text>
     </g>
     <g
-       transform="translate(-272.44165,99.647212)"
+       transform="translate(-114.44165,99.647212)"
        id="g3172">
       <rect
          y="448.29095"
@@ -231,7 +231,7 @@
            sodipodi:role="line">Response</tspan></text>
     </g>
     <g
-       transform="translate(-165.46197,81.687827)"
+       transform="translate(-7.46197,81.687827)"
        id="g3075">
       <rect
          y="466.25034"
@@ -286,7 +286,7 @@
        inkscape:connector-curvature="0"
        inkscape:connector-type="polyline"
        id="path3081"
-       d="m 234.98828,547.43308 85.63144,-56.71572"
+       d="m 392.98828,547.43308 85.63144,-56.71572"
        style="fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" />
     <path
        inkscape:connection-end-point="d4"
@@ -296,7 +296,7 @@
        inkscape:connector-curvature="0"
        inkscape:connector-type="polyline"
        id="path3083"
-       d="M 386.70805,547.93817 367.30998,490.71736"
+       d="M 544.70805,547.93817 525.30998,490.71736"
        style="fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" />
     <path
        inkscape:connection-end-point="d4"
@@ -306,18 +306,18 @@
        inkscape:connector-curvature="0"
        inkscape:connector-type="polyline"
        id="path3085"
-       d="M 539.19043,547.93816 414.00025,490.71736"
+       d="M 697.19043,547.93816 572.00025,490.71736"
        style="fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" />
     <path
-       inkscape:connection-end-point="d4"
-       inkscape:connection-end="#rect2985-4-8"
-       inkscape:connection-start-point="d4"
-       inkscape:connection-start="#g3059"
        inkscape:connector-curvature="0"
        inkscape:connector-type="polyline"
        id="path3087"
        d="m 132.32998,439.19958 1e-5,-31.31473"
-       style="fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" />
+       style="fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;display:inline"
+       inkscape:connection-end="#rect2985-4-8"
+       inkscape:connection-end-point="d4"
+       inkscape:connection-start="#g3059"
+       inkscape:connection-start-point="d4" />
     <path
        inkscape:connection-end-point="d4"
        inkscape:connection-end="#rect2985-4-6"
@@ -326,7 +326,7 @@
        inkscape:connector-curvature="0"
        inkscape:connector-type="polyline"
        id="path3089"
-       d="m 358.74884,440.20974 0,-34.34518"
+       d="m 516.74884,440.20974 0,-34.34518"
        style="fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" />
     <path
        inkscape:connection-end-point="d4"
@@ -346,7 +346,7 @@
        inkscape:connector-curvature="0"
        inkscape:connector-type="polyline"
        id="path3093"
-       d="M 315.58517,355.35693 244.79671,313.94067"
+       d="M 429.86802,355.35693 272.74118,309.68457"
        style="fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" />
     <path
        inkscape:connection-end-point="d4"
@@ -415,6 +415,58 @@
          sodipodi:role="line"
          style="font-size:14px;font-style:italic;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;font-family:Sans;-inkscape-font-specification:Sans Italic"
          id="tspan3989-7">&lt;&lt;No VodAddress&gt;&gt;</tspan></text>
+    <g
+       transform="translate(-382.22124,160.61424)"
+       id="g3059-9">
+      <rect
+         y="360.40768"
+         x="172.73608"
+         height="69.793343"
+         width="201.82745"
+         id="rect2985-4-8-7-3"
+         style="fill:none;stroke:#000000;stroke-width:1;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0" />
+      <text
+         sodipodi:linespacing="125%"
+         id="text2987-21-9-0-0"
+         y="393.74274"
+         x="182.93912"
+         style="font-size:20px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans;-inkscape-font-specification:Sans"
+         xml:space="preserve"><tspan
+           y="393.74274"
+           x="182.93912"
+           sodipodi:role="line"
+           id="tspan3025-7">DirectMsgNetty.</tspan><tspan
+           y="418.74274"
+           x="182.93912"
+           sodipodi:role="line"
+           id="tspan3195">Request/Response</tspan></text>
+    </g>
+    <g
+       transform="translate(-124.3641,160.61424)"
+       id="g3059-8">
+      <rect
+         y="360.40768"
+         x="172.73608"
+         height="50.507626"
+         width="181.82745"
+         id="rect2985-4-8-7-8"
+         style="fill:none;stroke:#000000;stroke-width:1;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0" />
+      <text
+         sodipodi:linespacing="125%"
+         id="text2987-21-9-0-6"
+         y="393.74274"
+         x="260.60513"
+         style="font-size:20px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:center;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans;-inkscape-font-specification:Sans"
+         xml:space="preserve"><tspan
+           y="393.74274"
+           x="182.93912"
+           sodipodi:role="line"
+           id="tspan3025-1">DirectMsgNetty.</tspan><tspan
+           y="418.74274"
+           x="182.93912"
+           sodipodi:role="line"
+           id="tspan3193">Oneway</tspan></text>
+    </g>
   </g>
   <g
      inkscape:groupmode="layer"
