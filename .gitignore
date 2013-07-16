@@ -35,7 +35,7 @@ local.properties
 .buildpath
 
 # resources
-resources
+#resources
 
 # java doc
 /common/doc

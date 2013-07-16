@@ -111,9 +111,9 @@ public class TcpPingTest extends TestCase {
             subscribe(handleStart, control);
             subscribe(handleMsgTimeout, timer.getPositive(Timer.class));
             subscribe(handlePong, client.getPositive(VodNetwork.class));
-//            subscribe(handleTestPortBindResponse, client.getPositive(NatNetworkControl.class));
-            subscribe(handleTestPortBindResponse, server.getPositive(NatNetworkControl.class));
-//            subscribe(handlePing, server.getPositive(VodNetwork.class));
+            subscribe(handlePortBindResponse, client.getPositive(NatNetworkControl.class));
+            subscribe(handlePortBindResponse, server.getPositive(NatNetworkControl.class));
+            subscribe(handlePing, server.getPositive(VodNetwork.class));
 
             trigger(new NettyInit(132, true,
                     BaseMsgFrameDecoder.class), client.getControl());
@@ -129,44 +129,35 @@ public class TcpPingTest extends TestCase {
                 SetsExchangeMsg.RequestTimeout mt = new SetsExchangeMsg.RequestTimeout(st,
                         serverAddr);
                 st.setTimeoutEvent(mt);
-//                PortBindRequest request = new PortBindRequest(0, serverAddr.getPort(),
-//                        Transport.TCP);
-//                request.setResponse(new PortBindResponse(request) {
-//                });
-//                trigger(request, server.getPositive(NatNetworkControl.class));
-                trigger(st, timer.getPositive(Timer.class));
+
+                PortBindRequest requestClient = new PortBindRequest(clientAddr.getPeerAddress(), 
+                        Transport.TCP);
+                requestClient.setResponse(new PortBindResponse(requestClient) {});
+//                trigger(requestClient, client.getPositive(NatNetworkControl.class));                
                 
-            PortBindRequest pb2 = new PortBindRequest(serverAddr.getPeerAddress(), 
-                    Transport.TCP);
-            PortBindResponse pbr2 = new TestPortBindResponse(pb2);
-            trigger(pb2, server.getPositive(NatNetworkControl.class));
+                PortBindRequest requestServer = new PortBindRequest(serverAddr.getPeerAddress(), 
+                        Transport.TCP);
+                requestServer.setResponse(new PortBindResponse(requestServer) {});
+                trigger(requestServer, server.getPositive(NatNetworkControl.class));
+                trigger(st, timer.getPositive(Timer.class));
             }
         };
-        public Handler<TestPortBindResponse> handleTestPortBindResponse 
-                = new Handler<TestPortBindResponse>() {
+        public Handler<PortBindResponse> handlePortBindResponse = new Handler<PortBindResponse>() {
             @Override
-            public void handle(TestPortBindResponse event) {
-                if (event.getStatus() != TestPortBindResponse.Status.SUCCESS) {
+            public void handle(PortBindResponse event) {
+                System.out.println("Port bind response");
+
+                if (event.getStatus() == Status.FAIL) {
                     testObj.failAndRelease();
+                    return;
                 }
-                trigger(new TConnectionMsg.Ping(clientAddr, serverAddr, Transport.TCP, null),
-                        client.getPositive(VodNetwork.class));
+
+                if (event.getPort() == serverAddr.getPort()) {
+                    trigger(new TConnectionMsg.Ping(clientAddr, serverAddr, Transport.TCP, null),
+                            client.getPositive(VodNetwork.class));
+                }
             }
         };
-//        public Handler<PortBindResponse> handlePortBindResponse = new Handler<PortBindResponse>() {
-//            @Override
-//            public void handle(PortBindResponse event) {
-//                System.out.println("Port bind response");
-//
-//                if (event.getStatus() == Status.FAIL) {
-//                    testObj.failAndRelease();
-//                    return;
-//                }
-//
-//                trigger(new TConnectionMsg.Ping(clientAddr, serverAddr, Transport.TCP, null),
-//                        client.getPositive(VodNetwork.class));
-//            }
-//        };
         public Handler<TConnectionMsg.Ping> handlePing = new Handler<TConnectionMsg.Ping>() {
             @Override
             public void handle(TConnectionMsg.Ping event) {

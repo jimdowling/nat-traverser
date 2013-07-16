@@ -136,7 +136,16 @@ public class UdtPingTest extends TestCase {
 				request.setResponse(new PortBindResponse(request) {
 				});
 				trigger(request, server.getPositive(NatNetworkControl.class));
-				trigger(st, timer.getPositive(Timer.class));
+
+				PortBindRequest clientRequest = 
+                                        new PortBindRequest(clientAddr0.getPeerAddress(), 
+                                        Transport.UDT);
+				clientRequest.setResponse(new PortBindResponse(clientRequest) {
+				});
+				trigger(clientRequest, server.getPositive(NatNetworkControl.class));
+                                
+                                
+                                trigger(st, timer.getPositive(Timer.class));
 			}
 		};
 
@@ -151,8 +160,10 @@ public class UdtPingTest extends TestCase {
 					return;
 				}
 
-				trigger(new TConnectionMsg.Ping(clientAddr0, serverAddr0, Transport.UDT, null),
-						client.getPositive(VodNetwork.class));
+                                if (event.getPort() == clientAddr0.getPort()) {
+                                    trigger(new TConnectionMsg.Ping(clientAddr0, serverAddr0, Transport.UDT, null),
+                                                    client.getPositive(VodNetwork.class));
+                                }
 			}
 		};
 
@@ -183,7 +194,6 @@ public class UdtPingTest extends TestCase {
 				trigger(new Stop(), client.getControl());
 				trigger(new Stop(), server.getControl());
 				System.out.println("Msg timeout");
-				testObj.testStatus = false;
 				testObj.failAndRelease();
 			}
 		};
