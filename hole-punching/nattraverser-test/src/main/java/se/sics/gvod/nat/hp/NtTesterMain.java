@@ -135,7 +135,6 @@ public final class NtTesterMain extends ComponentDefinition {
     }
 
     public static class NtPortBindResponse extends PortBindResponse {
-
         public NtPortBindResponse(PortBindRequest request) {
             super(request);
         }
@@ -167,7 +166,7 @@ public final class NtTesterMain extends ComponentDefinition {
         subscribe(handleGetIpResponse, resolveIp.getPositive(ResolveIpPort.class));
         subscribe(handlePing, natTraverser.getPositive(VodNetwork.class));
         subscribe(handlePong, natTraverser.getPositive(VodNetwork.class));
-        subscribe(handleNtPortBindResponse, natTraverser.getPositive(NatNetworkControl.class));
+        subscribe(handleNtPortBindResponse, network.getPositive(NatNetworkControl.class));
 //        subscribe(handleFault, natTraverser.getControl());    
 //        subscribe(handleNettyFault, network.getControl());
         subscribe(handleHolePunchTimeout, timer.getPositive(Timer.class));

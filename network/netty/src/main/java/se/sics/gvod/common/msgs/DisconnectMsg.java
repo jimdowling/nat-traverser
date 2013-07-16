@@ -37,7 +37,7 @@ public class DisconnectMsg {
 
         @Override
         public ByteBuf toByteArray() throws MessageEncodingException {
-        	ByteBuf buf = createChannelBufferWithHeader();
+            ByteBuf buf = createChannelBufferWithHeader();
             return buf;
         }
 
@@ -75,7 +75,7 @@ public class DisconnectMsg {
 
         @Override
         public ByteBuf toByteArray() throws MessageEncodingException {
-        	ByteBuf buffer = createChannelBufferWithHeader();
+            ByteBuf buffer = createChannelBufferWithHeader();
             UserTypesEncoderFactory.writeUnsignedintAsTwoBytes(buffer, ref);
             return buffer;
         }
