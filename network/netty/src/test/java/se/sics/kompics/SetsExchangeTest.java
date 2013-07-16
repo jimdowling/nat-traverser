@@ -20,8 +20,12 @@ import se.sics.gvod.address.Address;
 import se.sics.gvod.common.UtilityVod;
 import se.sics.gvod.config.VodConfig;
 import se.sics.gvod.net.BaseMsgFrameDecoder;
+import se.sics.gvod.net.NatNetworkControl;
 import se.sics.gvod.net.NettyInit;
 import se.sics.gvod.net.NettyNetwork;
+import se.sics.gvod.net.Transport;
+import se.sics.gvod.net.events.PortBindRequest;
+import se.sics.gvod.net.events.PortBindResponse;
 import se.sics.gvod.timer.ScheduleTimeout;
 import se.sics.gvod.timer.Timer;
 import se.sics.gvod.timer.java.JavaTimer;
@@ -29,8 +33,7 @@ import se.sics.gvod.timer.java.JavaTimer;
 /**
  * Unit test for simple App.
  */
-public class SetsExchangeTest
-        extends TestCase {
+public class SetsExchangeTest extends TestCase {
 
     private static final Logger logger = LoggerFactory.getLogger(SetsExchangeTest.class);
     private boolean testStatus = true;
@@ -54,6 +57,13 @@ public class SetsExchangeTest
 
     public static void setTestObj(SetsExchangeTest testObj) {
         TestStClientComponent.testObj = testObj;
+    }
+
+    public static class TestPortBindResponse extends PortBindResponse {
+
+        public TestPortBindResponse(PortBindRequest request) {
+            super(request);
+        }
     }
 
     public static class TestStClientComponent extends ComponentDefinition {
@@ -82,7 +92,7 @@ public class SetsExchangeTest
 
             } catch (UnknownHostException ex) {
                 logger.error("UnknownHostException");
-                testObj.fail();
+                testObj.fail(true);
             }
             Address cAddr = new Address(ip, clientPort, 0);
             Address sAddr = new Address(ip, serverPort, 1);
@@ -90,8 +100,7 @@ public class SetsExchangeTest
             clientAddr = new VodAddress(cAddr, VodConfig.SYSTEM_OVERLAY_ID);
             serverAddr = new VodAddress(sAddr, VodConfig.SYSTEM_OVERLAY_ID);
 
-            nodeDesc = new VodDescriptor(clientAddr, utility, 0,
-                    BaseCommandLineConfig.DEFAULT_MTU);
+            nodeDesc = new VodDescriptor(clientAddr, utility, 0, BaseCommandLineConfig.DEFAULT_MTU);
             nodes = new ArrayList<VodDescriptor>();
             nodes.add(nodeDesc);
 
@@ -100,67 +109,78 @@ public class SetsExchangeTest
             subscribe(handleSetsExchangeRequest, server.getPositive(VodNetwork.class));
             subscribe(handleSetsExchangeResponse, client.getPositive(VodNetwork.class));
             subscribe(handleSetsExchangeResponse, server.getPositive(VodNetwork.class));
+            subscribe(handleTestPortBindResponse, client.getPositive(NatNetworkControl.class));
+            subscribe(handleTestPortBindResponse, server.getPositive(NatNetworkControl.class));
 
-            trigger(new NettyInit(clientAddr.getPeerAddress(), true, (int) 132, BaseMsgFrameDecoder.class),
-                    client.getControl());
-            trigger(new NettyInit(serverAddr.getPeerAddress(), true, (int) 132, BaseMsgFrameDecoder.class),
-                    server.getControl());
+            trigger(new NettyInit(132, true,
+                    BaseMsgFrameDecoder.class), client.getControl());
+            trigger(new NettyInit(132, true,
+                    BaseMsgFrameDecoder.class), server.getControl());
+
+            PortBindRequest pb1 = new PortBindRequest(clientAddr.getPeerAddress(),
+                    Transport.UDP);
+            PortBindResponse pbr1 = new TestPortBindResponse(pb1);
+            trigger(pb1, client.getPositive(NatNetworkControl.class));
+
+            PortBindRequest pb2 = new PortBindRequest(serverAddr.getPeerAddress(), Transport.UDP);
+            PortBindResponse pbr2 = new TestPortBindResponse(pb2);
+            trigger(pb2, server.getPositive(NatNetworkControl.class));
+
 
         }
         public Handler<Start> handleStart = new Handler<Start>() {
-
             public void handle(Start event) {
                 System.out.println("Starting");
                 ScheduleTimeout st = new ScheduleTimeout(10 * 1000);
-                SetsExchangeMsg.RequestTimeout mt =
-                        new SetsExchangeMsg.RequestTimeout(st, serverAddr);
+                SetsExchangeMsg.RequestTimeout mt = new SetsExchangeMsg.RequestTimeout(st,
+                        serverAddr);
                 st.setTimeoutEvent(mt);
-                trigger(new SetsExchangeMsg.Request(clientAddr, serverAddr,
-                        clientAddr.getId(), serverAddr.getId(),
-                        mt.getTimeoutId()), client.getPositive(VodNetwork.class));
+                trigger(new SetsExchangeMsg.Request(clientAddr, serverAddr, clientAddr.getId(),
+                        serverAddr.getId(), mt.getTimeoutId()),
+                        client.getPositive(VodNetwork.class));
                 trigger(st, timer.getPositive(Timer.class));
             }
         };
         public Handler<SetsExchangeMsg.Request> handleSetsExchangeRequest = new Handler<SetsExchangeMsg.Request>() {
-
             @Override
             public void handle(SetsExchangeMsg.Request event) {
-                System.out.println("Data Request");
-                trigger(new SetsExchangeMsg.Response(event.getVodDestination(),
-                        event, nodes, nodes),
+                trigger(new SetsExchangeMsg.Response(serverAddr.getNodeAddress(), event, nodes, nodes),
                         server.getPositive(VodNetwork.class));
             }
         };
+        
+        public Handler<TestPortBindResponse> handleTestPortBindResponse 
+                = new Handler<TestPortBindResponse>() {
+            @Override
+            public void handle(TestPortBindResponse event) {
+                if (event.getStatus() != TestPortBindResponse.Status.SUCCESS) {
+                    testObj.fail(true);
+                }
+            }
+        };
         public Handler<SetsExchangeMsg.Response> handleSetsExchangeResponse = new Handler<SetsExchangeMsg.Response>() {
-
             @Override
             public void handle(SetsExchangeMsg.Response event) {
-
-
                 trigger(new Stop(), client.getControl());
                 trigger(new Stop(), server.getControl());
                 System.out.println("Data Response");
                 testObj.pass();
             }
         };
-        public Handler<SetsExchangeMsg.RequestTimeout> handleMsgTimeout =
-                new Handler<SetsExchangeMsg.RequestTimeout>() {
-
-                    public void handle(SetsExchangeMsg.RequestTimeout event) {
-                        trigger(new Stop(), client.getControl());
-                        trigger(new Stop(), server.getControl());
-                        System.out.println("Msg timeout");
-                        testObj.testStatus = false;
-                        testObj.fail(true);
-                    }
-                };
+        public Handler<SetsExchangeMsg.RequestTimeout> handleMsgTimeout = new Handler<SetsExchangeMsg.RequestTimeout>() {
+            public void handle(SetsExchangeMsg.RequestTimeout event) {
+                trigger(new Stop(), client.getControl());
+                trigger(new Stop(), server.getControl());
+                System.out.println("Msg timeout");
+                testObj.testStatus = false;
+                testObj.fail(true);
+            }
+        };
     }
     private static final int EVENT_COUNT = 1;
     private static Semaphore semaphore = new Semaphore(0);
 
     private void allTests() {
-        int i = 0;
-
         runInstance();
         if (testStatus == true) {
             assertTrue(true);
@@ -170,6 +190,7 @@ public class SetsExchangeTest
     private void runInstance() {
         System.setProperty("java.net.preferIPv4Stack", "true");
         Kompics.createAndStart(TestStClientComponent.class, 1);
+
         try {
             SetsExchangeTest.semaphore.acquire(EVENT_COUNT);
             System.out.println("Finished test.");
@@ -178,10 +199,10 @@ public class SetsExchangeTest
         } finally {
             Kompics.shutdown();
         }
+
         if (testStatus == false) {
             assertTrue(false);
         }
-
     }
 
     @org.junit.Ignore

@@ -1,7 +1,9 @@
 package se.sics.gvod.hp.msgs;
 
+import io.netty.buffer.ByteBuf;
+
 import java.util.Set;
-import org.jboss.netty.buffer.ChannelBuffer;
+
 import se.sics.gvod.common.msgs.MessageDecodingException;
 import se.sics.gvod.net.util.UserTypesDecoderFactory;
 
@@ -12,7 +14,7 @@ public class PRP_PreallocatedPortsMsgFactory {
         private Request() {
         }
 
-        public static PRP_PreallocatedPortsMsg.Request fromBuffer(ChannelBuffer buffer)
+        public static PRP_PreallocatedPortsMsg.Request fromBuffer(ByteBuf buffer)
                 
                 throws MessageDecodingException {
             return (PRP_PreallocatedPortsMsg.Request)
@@ -20,7 +22,7 @@ public class PRP_PreallocatedPortsMsgFactory {
         }
 
         @Override
-        protected PRP_PreallocatedPortsMsg.Request process(ChannelBuffer buffer) throws MessageDecodingException {
+        protected PRP_PreallocatedPortsMsg.Request process(ByteBuf buffer) throws MessageDecodingException {
 
             return new PRP_PreallocatedPortsMsg.Request(vodSrc, vodDest, msgTimeoutId);
         }
@@ -31,7 +33,7 @@ public class PRP_PreallocatedPortsMsgFactory {
         private Response() {
         }
 
-        public static PRP_PreallocatedPortsMsg.Response fromBuffer(ChannelBuffer buffer)
+        public static PRP_PreallocatedPortsMsg.Response fromBuffer(ByteBuf buffer)
                 
                 throws MessageDecodingException {
             return (PRP_PreallocatedPortsMsg.Response)
@@ -39,7 +41,7 @@ public class PRP_PreallocatedPortsMsgFactory {
         }
 
         @Override
-        protected PRP_PreallocatedPortsMsg.Response process(ChannelBuffer buffer) 
+        protected PRP_PreallocatedPortsMsg.Response process(ByteBuf buffer) 
                 throws MessageDecodingException 
         {
             int rt = UserTypesDecoderFactory.readUnsignedIntAsOneByte(buffer);

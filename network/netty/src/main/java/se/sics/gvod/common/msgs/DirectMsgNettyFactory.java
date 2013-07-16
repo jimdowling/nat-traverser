@@ -1,10 +1,12 @@
 package se.sics.gvod.common.msgs;
 
+import io.netty.buffer.ByteBuf;
+
 import java.util.Set;
-import org.jboss.netty.buffer.ChannelBuffer;
-import se.sics.gvod.net.VodAddress;
+
 import se.sics.gvod.address.Address;
 import se.sics.gvod.net.MsgFrameDecoder;
+import se.sics.gvod.net.VodAddress;
 import se.sics.gvod.net.msgs.DirectMsg;
 import se.sics.gvod.net.util.UserTypesDecoderFactory;
 import se.sics.gvod.timer.NoTimeoutId;
@@ -32,7 +34,7 @@ public abstract class DirectMsgNettyFactory
      * @return
      * @throws MessageDecodingException
      */
-    protected DirectMsg decode(ChannelBuffer buffer, boolean timeout) throws MessageDecodingException {
+    protected DirectMsg decode(ByteBuf buffer, boolean timeout) throws MessageDecodingException {
         if (DirectMsgNettyFactory.msgFrameDecoder == null) {
             throw new NullPointerException("VodMsgNettyFactory.setMsgFrameDecoder() must be called before decoding any messages");
         }
@@ -47,7 +49,7 @@ public abstract class DirectMsgNettyFactory
         msg.setTimeoutId(timeoutId);
     }
 
-    protected void decodeHeader(ChannelBuffer buffer, boolean timeout)
+    protected void decodeHeader(ByteBuf buffer, boolean timeout)
             throws MessageDecodingException {
         if (timeout) {
             timeoutId = new UUID(buffer.readInt());
@@ -58,16 +60,16 @@ public abstract class DirectMsgNettyFactory
         int destId = buffer.readInt();
         src = new Address(srcId);
         dest = new Address(destId);
-
+        
         int srcOverlayId = buffer.readInt();
         int srcNatPolicy = UserTypesDecoderFactory.readUnsignedIntAsOneByte(buffer);
         Set<Address> parents = UserTypesDecoderFactory.readListAddresses(buffer);
-        int destOverlayId = buffer.readInt();
+        int destOverlayId = buffer.readInt(); 
         int destNatPolicy = UserTypesDecoderFactory.readUnsignedIntAsOneByte(buffer);
 
         vodSrc = new VodAddress(src, srcOverlayId, (short) srcNatPolicy, parents);
         vodDest = new VodAddress(dest, destOverlayId, (short) destNatPolicy, null);
     }
 
-    protected abstract DirectMsg process(ChannelBuffer buffer) throws MessageDecodingException;
+    protected abstract DirectMsg process(ByteBuf buffer) throws MessageDecodingException;
 };

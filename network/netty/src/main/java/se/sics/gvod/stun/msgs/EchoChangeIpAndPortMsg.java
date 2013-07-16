@@ -4,14 +4,14 @@
  */
 package se.sics.gvod.stun.msgs;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-import se.sics.gvod.common.msgs.MessageEncodingException;
-import se.sics.gvod.net.msgs.RewriteableRetryTimeout;
-import se.sics.gvod.net.msgs.ScheduleRetryTimeout;
+import io.netty.buffer.ByteBuf;
 import se.sics.gvod.address.Address;
+import se.sics.gvod.common.msgs.MessageEncodingException;
 import se.sics.gvod.net.BaseMsgFrameDecoder;
 import se.sics.gvod.net.VodAddress;
 import se.sics.gvod.net.msgs.RewriteableMsg;
+import se.sics.gvod.net.msgs.RewriteableRetryTimeout;
+import se.sics.gvod.net.msgs.ScheduleRetryTimeout;
 import se.sics.gvod.net.util.UserTypesEncoderFactory;
 import se.sics.gvod.timer.TimeoutId;
 
@@ -36,8 +36,8 @@ public class EchoChangeIpAndPortMsg {
         }
 
         @Override
-        public ChannelBuffer toByteArray() throws MessageEncodingException {
-            ChannelBuffer buffer = createChannelBufferWithHeader();
+        public ByteBuf toByteArray() throws MessageEncodingException {
+        	ByteBuf buffer = createChannelBufferWithHeader();
             return buffer;
         }
 
@@ -96,8 +96,8 @@ public class EchoChangeIpAndPortMsg {
                     ;
         }
         @Override
-        public ChannelBuffer toByteArray() throws MessageEncodingException {
-            ChannelBuffer buffer = createChannelBufferWithHeader();
+        public ByteBuf toByteArray() throws MessageEncodingException {
+        	ByteBuf buffer = createChannelBufferWithHeader();
             UserTypesEncoderFactory.writeUnsignedintAsOneByte(buffer, status.ordinal());
             return buffer;
         }

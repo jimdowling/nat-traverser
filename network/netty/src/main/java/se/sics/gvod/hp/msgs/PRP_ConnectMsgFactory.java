@@ -1,8 +1,10 @@
 package se.sics.gvod.hp.msgs;
 
+import io.netty.buffer.ByteBuf;
+
 import java.util.Set;
-import se.sics.gvod.common.msgs.*;
-import org.jboss.netty.buffer.ChannelBuffer;
+
+import se.sics.gvod.common.msgs.MessageDecodingException;
 import se.sics.gvod.net.VodAddress;
 import se.sics.gvod.net.util.UserTypesDecoderFactory;
 
@@ -13,7 +15,7 @@ public class PRP_ConnectMsgFactory {
         private Request() {
         }
 
-        public static PRP_ConnectMsg.Request fromBuffer(ChannelBuffer buffer)
+        public static PRP_ConnectMsg.Request fromBuffer(ByteBuf buffer)
                 
                 throws MessageDecodingException {
             return (PRP_ConnectMsg.Request)
@@ -21,7 +23,7 @@ public class PRP_ConnectMsgFactory {
         }
 
         @Override
-        protected PRP_ConnectMsg.Request process(ChannelBuffer buffer) throws MessageDecodingException {
+        protected PRP_ConnectMsg.Request process(ByteBuf buffer) throws MessageDecodingException {
             Set<Integer> setOfAvailablePorts = UserTypesDecoderFactory.readSetUnsignedTwoByteInts(buffer);
             return new PRP_ConnectMsg.Request(vodSrc, vodDest,
                     remoteClientId, setOfAvailablePorts, msgTimeoutId);
@@ -33,7 +35,7 @@ public class PRP_ConnectMsgFactory {
         private Response() {
         }
 
-        public static PRP_ConnectMsg.Response fromBuffer(ChannelBuffer buffer)
+        public static PRP_ConnectMsg.Response fromBuffer(ByteBuf buffer)
                 
                 throws MessageDecodingException {
             return (PRP_ConnectMsg.Response)
@@ -41,7 +43,7 @@ public class PRP_ConnectMsgFactory {
         }
 
         @Override
-        protected PRP_ConnectMsg.Response process(ChannelBuffer buffer) throws MessageDecodingException {
+        protected PRP_ConnectMsg.Response process(ByteBuf buffer) throws MessageDecodingException {
 
             int rt = UserTypesDecoderFactory.readUnsignedIntAsOneByte(buffer);
             PRP_ConnectMsg.ResponseType responseType =

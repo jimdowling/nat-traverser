@@ -1,7 +1,8 @@
 package se.sics.gvod.hp.msgs;
 
-import se.sics.gvod.common.msgs.*;
-import org.jboss.netty.buffer.ChannelBuffer;
+import io.netty.buffer.ByteBuf;
+import se.sics.gvod.common.msgs.DirectMsgNettyFactory;
+import se.sics.gvod.common.msgs.MessageDecodingException;
 
 public class ParentKeepAliveMsgFactory {
 
@@ -10,14 +11,14 @@ public class ParentKeepAliveMsgFactory {
         private Request() {
         }
 
-        public static ParentKeepAliveMsg.Ping fromBuffer(ChannelBuffer buffer)
+        public static ParentKeepAliveMsg.Ping fromBuffer(ByteBuf buffer)
                 throws MessageDecodingException {
             return (ParentKeepAliveMsg.Ping)
                     new ParentKeepAliveMsgFactory.Request().decode(buffer, true);
         }
 
         @Override
-        protected ParentKeepAliveMsg.Ping process(ChannelBuffer buffer) throws MessageDecodingException {
+        protected ParentKeepAliveMsg.Ping process(ByteBuf buffer) throws MessageDecodingException {
             return new ParentKeepAliveMsg.Ping(vodSrc, vodDest);
         }
     }
@@ -27,14 +28,14 @@ public class ParentKeepAliveMsgFactory {
         private Response() {
         }
 
-        public static ParentKeepAliveMsg.Pong fromBuffer(ChannelBuffer buffer)
+        public static ParentKeepAliveMsg.Pong fromBuffer(ByteBuf buffer)
                 throws MessageDecodingException {
             return (ParentKeepAliveMsg.Pong)
                     new ParentKeepAliveMsgFactory.Response().decode(buffer, true);
         }
 
         @Override
-        protected ParentKeepAliveMsg.Pong process(ChannelBuffer buffer) throws MessageDecodingException {
+        protected ParentKeepAliveMsg.Pong process(ByteBuf buffer) throws MessageDecodingException {
 
             return new ParentKeepAliveMsg.Pong(vodSrc, vodSrc, timeoutId);
         }

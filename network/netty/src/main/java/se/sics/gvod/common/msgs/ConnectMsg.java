@@ -4,11 +4,13 @@
  */
 package se.sics.gvod.common.msgs;
 
+import io.netty.buffer.ByteBuf;
+
 import java.io.Serializable;
-import org.jboss.netty.buffer.ChannelBuffer;
-import se.sics.gvod.net.VodAddress;
+
 import se.sics.gvod.common.UtilityVod;
 import se.sics.gvod.net.BaseMsgFrameDecoder;
+import se.sics.gvod.net.VodAddress;
 import se.sics.gvod.net.msgs.RewriteableMsg;
 import se.sics.gvod.net.msgs.RewriteableRetryTimeout;
 import se.sics.gvod.net.msgs.ScheduleRetryTimeout;
@@ -67,8 +69,8 @@ public class ConnectMsg {
         }
 
         @Override
-        public ChannelBuffer toByteArray() throws MessageEncodingException {
-            ChannelBuffer buffer = createChannelBufferWithHeader();
+        public ByteBuf toByteArray() throws MessageEncodingException {
+        	ByteBuf buffer = createChannelBufferWithHeader();
             UserTypesEncoderFactory.writeUtility(buffer, utility);
             UserTypesEncoderFactory.writeBoolean(buffer, toUtilitySet);
             UserTypesEncoderFactory.writeUnsignedintAsTwoBytes(buffer, mtu);
@@ -171,8 +173,8 @@ public class ConnectMsg {
         }
 
         @Override
-        public ChannelBuffer toByteArray() throws MessageEncodingException {
-            ChannelBuffer buffer = createChannelBufferWithHeader();
+        public ByteBuf toByteArray() throws MessageEncodingException {
+        	ByteBuf buffer = createChannelBufferWithHeader();
 
             int responseTypeVal = response.ordinal();
             UserTypesEncoderFactory.writeUnsignedintAsOneByte(buffer, responseTypeVal);

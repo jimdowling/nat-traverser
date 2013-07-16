@@ -4,13 +4,13 @@
  */
 package se.sics.gvod.hp.msgs;
 
-import org.jboss.netty.buffer.ChannelBuffer;
+import io.netty.buffer.ByteBuf;
 import se.sics.gvod.common.msgs.Encodable;
 import se.sics.gvod.common.msgs.MessageEncodingException;
 import se.sics.gvod.net.BaseMsgFrameDecoder;
 import se.sics.gvod.net.VodAddress;
-import se.sics.gvod.net.msgs.RewriteableMsg;
 import se.sics.gvod.net.msgs.DirectMsg;
+import se.sics.gvod.net.msgs.RewriteableMsg;
 
 /**
  *
@@ -60,9 +60,9 @@ public class RelayRequestMsg
         }
 
         @Override
-        public ChannelBuffer toByteArray() throws MessageEncodingException {
-            ChannelBuffer buffer = createChannelBufferWithHeader();
-            ChannelBuffer msgBuffer = message.toByteArray();
+        public ByteBuf toByteArray() throws MessageEncodingException {
+        	ByteBuf buffer = createChannelBufferWithHeader();
+        	ByteBuf msgBuffer = message.toByteArray();
             byte[] bytes = msgBuffer.array();
             buffer.writeBytes(bytes);
             return buffer;
@@ -109,9 +109,9 @@ public class RelayRequestMsg
         }
 
         @Override
-        public ChannelBuffer toByteArray() throws MessageEncodingException {
-            ChannelBuffer buffer = createChannelBufferWithHeader();
-            ChannelBuffer msgBuffer = message.toByteArray();
+        public ByteBuf toByteArray() throws MessageEncodingException {
+        	ByteBuf buffer = createChannelBufferWithHeader();
+        	ByteBuf msgBuffer = message.toByteArray();
             // Could use ByteBuffer instead of byte[], but it's not
             // guaranteed to be same buffer as used in ChannelBuffer
             byte[] bytes = msgBuffer.array();

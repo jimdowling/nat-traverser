@@ -1,40 +1,34 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package se.sics.gvod.net.events;
+
+import java.net.InetAddress;
+import se.sics.gvod.net.Transport;
 
 /**
  *
  * @author jdowling
  */
-public class PortAllocRequest extends DoubleDispatchRequestId<PortAllocResponse>
-{
+public class PortAllocRequest extends DoubleDispatchRequestId<PortAllocResponse> {
 
+    private final InetAddress ip;
     private final int numPorts;
-    private final int startPortRange;
-    private final int endPortRange;
+    private final Transport transport;
 
-    public PortAllocRequest(int id, int numPorts) {
-        this(id, numPorts, 1025, 65535);
-    }
-    public PortAllocRequest(int id, int numPorts, int startPortRange, int endPortRange) {
+    public PortAllocRequest(InetAddress ip, int id, int numPorts, Transport protocol) {
         super(id);
-        this.startPortRange = startPortRange;
-        this.endPortRange = endPortRange;
+        this.ip = ip;
         this.numPorts = numPorts;
+        this.transport = protocol;
+    }
+
+    public InetAddress getIp() {
+        return ip;
     }
 
     public int getNumPorts() {
-        return numPorts; 
+        return numPorts;
     }
 
-    public int getEndPortRange() {
-        return endPortRange;
+    public Transport getTransport() {
+        return transport;
     }
-
-    public int getStartPortRange() {
-        return startPortRange;
-    }
-    
 }

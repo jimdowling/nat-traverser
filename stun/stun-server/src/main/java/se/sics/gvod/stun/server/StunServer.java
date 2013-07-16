@@ -33,6 +33,7 @@ import se.sics.gvod.config.StunServerConfiguration;
 import se.sics.gvod.nat.common.MsgRetryComponent;
 import se.sics.gvod.net.Nat;
 import se.sics.gvod.net.NatNetworkControl;
+import se.sics.gvod.net.Transport;
 import se.sics.gvod.net.events.PortBindRequest;
 import se.sics.gvod.net.events.PortBindResponse;
 import se.sics.gvod.net.msgs.ScheduleRetryTimeout;
@@ -119,7 +120,8 @@ public final class StunServer extends MsgRetryComponent {
     };
 
     private void bindPort(int port) {
-        PortBindRequest allocReq1 = new PortBindRequest(self.getId(), port);
+        Address a = new Address(self.getIp(), port, self.getId());
+        PortBindRequest allocReq1 = new PortBindRequest(a, Transport.UDP);
         StunPortBindResponse allocResp1 = new StunPortBindResponse(allocReq1);
         allocReq1.setResponse(allocResp1);
         delegator.doTrigger(allocReq1, netControl);
@@ -128,10 +130,9 @@ public final class StunServer extends MsgRetryComponent {
             new Handler<StunPortBindResponse>() {
         @Override
         public void handle(StunPortBindResponse response) {
-            if (response.getStatus() == StunPortBindResponse.Status.FAIL) {
-                trigger(new Fault(
-                        new IllegalStateException("Couldn't allocate stun server ports.")),
-                        control);
+            if (response.getStatus() != StunPortBindResponse.Status.SUCCESS) {
+                throw new IllegalStateException(compName + " couldn't allocate stun server port: " +
+                        response.getPort() + " . Response status = " + response.getStatus());
             }
         }
     };

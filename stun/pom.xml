@@ -24,8 +24,6 @@
     <modules>
         <module>stun-server</module>
         <module>stun-client</module>
-        <module>stun-client-main</module>
-        <module>stun-server-main</module>
         <module>upnp</module>
     </modules>
 

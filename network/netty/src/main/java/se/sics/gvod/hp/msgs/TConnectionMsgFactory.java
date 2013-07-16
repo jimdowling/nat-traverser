@@ -1,48 +1,42 @@
 package se.sics.gvod.hp.msgs;
 
-import se.sics.gvod.common.msgs.*;
-import org.jboss.netty.buffer.ChannelBuffer;
+import io.netty.buffer.ByteBuf;
+import se.sics.gvod.common.msgs.DirectMsgNettyFactory;
+import se.sics.gvod.common.msgs.MessageDecodingException;
 
 public class TConnectionMsgFactory {
 
+	public static class Ping extends DirectMsgNettyFactory {
 
-    public static class Ping extends DirectMsgNettyFactory {
+		private Ping() {
+		}
 
-        private Ping() {
-        }
+		public static TConnectionMsg.Ping fromBuffer(ByteBuf buffer)
+				throws MessageDecodingException {
+			return (TConnectionMsg.Ping) new TConnectionMsgFactory.Ping().decode(buffer, true);
+		}
 
-        public static TConnectionMsg.Ping fromBuffer(ChannelBuffer buffer)
-                
-                throws MessageDecodingException {
-            return (TConnectionMsg.Ping)
-                    new TConnectionMsgFactory.Ping().decode(buffer, true);
-        }
+		@Override
+		protected TConnectionMsg.Ping process(ByteBuf buffer) throws MessageDecodingException {
 
-        @Override
-        protected TConnectionMsg.Ping process(ChannelBuffer buffer) throws MessageDecodingException {
+			return new TConnectionMsg.Ping(vodSrc, vodDest, timeoutId);
+		}
+	}
 
-            return new TConnectionMsg.Ping(vodSrc, vodDest, timeoutId);
-        }
+	public static class Pong extends DirectMsgNettyFactory {
 
-    }
-    
-    public static class Pong extends DirectMsgNettyFactory {
+		private Pong() {
+		}
 
-        private Pong() {
-        }
+		public static TConnectionMsg.Pong fromBuffer(ByteBuf buffer)
+				throws MessageDecodingException {
+			return (TConnectionMsg.Pong) new TConnectionMsgFactory.Pong().decode(buffer, true);
+		}
 
-        public static TConnectionMsg.Pong fromBuffer(ChannelBuffer buffer)
-                
-                throws MessageDecodingException {
-            return (TConnectionMsg.Pong)
-                    new TConnectionMsgFactory.Pong().decode(buffer, true);
-        }
+		@Override
+		protected TConnectionMsg.Pong process(ByteBuf buffer) throws MessageDecodingException {
 
-        @Override
-        protected TConnectionMsg.Pong process(ChannelBuffer buffer) throws MessageDecodingException {
-
-            return new TConnectionMsg.Pong(vodSrc, vodDest, timeoutId);
-        }
-
-    }
+			return new TConnectionMsg.Pong(vodSrc, vodDest, timeoutId);
+		}
+	}
 }

@@ -1,12 +1,12 @@
 package se.sics.gvod.hp.msgs;
 
-import org.jboss.netty.buffer.ChannelBuffer;
+import io.netty.buffer.ByteBuf;
 import se.sics.gvod.common.msgs.MessageEncodingException;
 import se.sics.gvod.net.BaseMsgFrameDecoder;
-import se.sics.gvod.net.msgs.RewriteableRetryTimeout;
-import se.sics.gvod.net.msgs.ScheduleRetryTimeout;
 import se.sics.gvod.net.VodAddress;
 import se.sics.gvod.net.msgs.RewriteableMsg;
+import se.sics.gvod.net.msgs.RewriteableRetryTimeout;
+import se.sics.gvod.net.msgs.ScheduleRetryTimeout;
 import se.sics.gvod.timer.TimeoutId;
 
 /**
@@ -50,8 +50,8 @@ public class HolePunchingMsg {
         }
 
         @Override
-        public ChannelBuffer toByteArray() throws MessageEncodingException {
-            ChannelBuffer buffer = createChannelBufferWithHeader();
+        public ByteBuf toByteArray() throws MessageEncodingException {
+        	ByteBuf buffer = createChannelBufferWithHeader();
             buffer.writeInt(zServerId);
             return buffer;
         }
@@ -87,8 +87,8 @@ public class HolePunchingMsg {
         }
 
         @Override
-        public ChannelBuffer toByteArray() throws MessageEncodingException {
-            ChannelBuffer buffer = createChannelBufferWithHeader();
+        public ByteBuf toByteArray() throws MessageEncodingException {
+        	ByteBuf buffer = createChannelBufferWithHeader();
             return buffer;
         }
 
@@ -122,8 +122,8 @@ public class HolePunchingMsg {
         }
 
         @Override
-        public ChannelBuffer toByteArray() throws MessageEncodingException {
-            ChannelBuffer buffer = createChannelBufferWithHeader();
+        public ByteBuf toByteArray() throws MessageEncodingException {
+        	ByteBuf buffer = createChannelBufferWithHeader();
             return buffer;
         }
 

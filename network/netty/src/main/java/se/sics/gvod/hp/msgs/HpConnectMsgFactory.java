@@ -1,11 +1,10 @@
 package se.sics.gvod.hp.msgs;
 
-import se.sics.gvod.common.msgs.*;
-import org.jboss.netty.buffer.ChannelBuffer;
-import se.sics.gvod.hp.events.OpenConnectionResponseType;
-import se.sics.gvod.net.msgs.DirectMsg;
-import se.sics.gvod.net.util.UserTypesDecoderFactory;
+import io.netty.buffer.ByteBuf;
 import se.sics.gvod.common.hp.HPMechanism;
+import se.sics.gvod.common.msgs.MessageDecodingException;
+import se.sics.gvod.hp.events.OpenConnectionResponseType;
+import se.sics.gvod.net.util.UserTypesDecoderFactory;
 
 public class HpConnectMsgFactory {
 
@@ -14,7 +13,7 @@ public class HpConnectMsgFactory {
         private Request() {
         }
 
-        public static HpConnectMsg.Request fromBuffer(ChannelBuffer buffer)
+        public static HpConnectMsg.Request fromBuffer(ByteBuf buffer)
                 
                 throws MessageDecodingException {
             return (HpConnectMsg.Request)
@@ -22,7 +21,7 @@ public class HpConnectMsgFactory {
         }
 
         @Override
-        protected HpConnectMsg.Request process(ChannelBuffer buffer) throws MessageDecodingException {
+        protected HpConnectMsg.Request process(ByteBuf buffer) throws MessageDecodingException {
             int delta = UserTypesDecoderFactory.readIntAsOneByte(buffer);
             long rtt = (long) UserTypesDecoderFactory.readUnsignedIntAsTwoBytes(buffer);
             return new HpConnectMsg.Request(vodSrc, vodDest, remoteClientId, delta, rtt,
@@ -35,7 +34,7 @@ public class HpConnectMsgFactory {
         private Response() {
         }
 
-        public static HpConnectMsg.Response fromBuffer(ChannelBuffer buffer)
+        public static HpConnectMsg.Response fromBuffer(ByteBuf buffer)
                 
                 throws MessageDecodingException {
             return (HpConnectMsg.Response)
@@ -43,7 +42,7 @@ public class HpConnectMsgFactory {
         }
 
         @Override
-        protected HpConnectMsg.Response process(ChannelBuffer buffer) throws MessageDecodingException {
+        protected HpConnectMsg.Response process(ByteBuf buffer) throws MessageDecodingException {
             int rt = UserTypesDecoderFactory.readUnsignedIntAsOneByte(buffer);
             OpenConnectionResponseType responseType =
                     OpenConnectionResponseType.values()[rt];

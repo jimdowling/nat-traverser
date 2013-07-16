@@ -4,7 +4,7 @@
  */
 package se.sics.kompics;
 
-import org.jboss.netty.buffer.ChannelBuffer;
+import io.netty.buffer.ByteBuf;
 import se.sics.gvod.common.msgs.DirectMsgNetty;
 import se.sics.gvod.common.msgs.MessageEncodingException;
 import se.sics.gvod.net.BaseMsgFrameDecoder;
@@ -32,7 +32,7 @@ public class Ping extends DirectMsgNetty {
     }
 
     @Override
-    public ChannelBuffer toByteArray() throws MessageEncodingException {
+    public ByteBuf toByteArray() throws MessageEncodingException {
         return createChannelBufferWithHeader();
     }
 

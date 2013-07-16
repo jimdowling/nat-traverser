@@ -43,6 +43,7 @@ import se.sics.gvod.common.Self;
 import se.sics.gvod.config.VodConfig;
 import se.sics.gvod.common.util.ToVodAddr;
 import se.sics.gvod.config.StunClientConfiguration;
+import se.sics.gvod.net.Transport;
 import se.sics.gvod.net.VodAddress;
 import se.sics.gvod.stun.client.events.GetNatTypeResponse;
 import se.sics.gvod.stun.client.events.GetNatTypeResponseRuleExpirationTime;
@@ -591,7 +592,8 @@ public class StunClient extends MsgRetryComponent {
 
     private void determineMappingAndAllocationPolicies(long transactionId) {
         logger.debug(compName + "Sending PortAllocRequest for two new ports on client...");
-        PortAllocRequest allocReq = new PortAllocRequest(self.getId(), 2);
+        PortAllocRequest allocReq = new PortAllocRequest(self.getIp(), 
+                self.getId(), 2, Transport.UDP);
         StunPortAllocResponse allocResp = new StunPortAllocResponse(allocReq, transactionId);
         allocReq.setResponse(allocResp);
         delegator.doTrigger(allocReq, natNetworkControl);

@@ -62,6 +62,7 @@ import se.sics.gvod.common.hp.HolePunching;
 import se.sics.gvod.common.hp.HpFeasability;
 import se.sics.gvod.config.HpClientConfiguration;
 import se.sics.gvod.nat.hp.client.events.PRP_DummyMsgPortResponse;
+import se.sics.gvod.net.Transport;
 import se.sics.gvod.timer.SchedulePeriodicTimeout;
 import se.sics.gvod.timer.ScheduleTimeout;
 import se.sics.gvod.timer.Timeout;
@@ -1412,7 +1413,9 @@ public class HpClient extends MsgRetryComponent {
             if (bindFirst) {
                 logger.debug(compName + " Need to bind to port before GoMsg : " + portToBeUsed
                         + " - " + request.getMsgTimeoutId());
-                PortBindRequest bindReq = new PortBindRequest(self.getId(), portToBeUsed);
+                
+                Address a = new Address(self.getIp(), portToBeUsed, self.getId());
+                PortBindRequest bindReq = new PortBindRequest(a, Transport.UDP);
                 GoMsg_PortResponse bindResp = new GoMsg_PortResponse(bindReq, remoteId,
                         request.getSource().getId(), request.getRtoRetries(),
                         request.isBindPort(),
@@ -1446,8 +1449,8 @@ public class HpClient extends MsgRetryComponent {
                     && response.isFixedPort() == false) {
                 if (response.getRetries() > 0) {
                     int port = PortSelector.selectRandomPortOver50000();
-                    PortBindRequest bindReq = new PortBindRequest(self.getId(),
-                            port);
+                    Address a = new Address(self.getIp(), port, self.getId());
+                    PortBindRequest bindReq = new PortBindRequest(a, Transport.UDP);
                     GoMsg_PortResponse bindResp = new GoMsg_PortResponse(bindReq,
                             response.getKey(), response.getzServerId(),
                             response.getRetries() - 1, false, response.getMsgTimeoutId());
@@ -1614,7 +1617,8 @@ public class HpClient extends MsgRetryComponent {
                 + session.getRemoteClientId() + ")"
                 + " session key " + remoteId);
 
-        PortAllocRequest allocReq = new PortAllocRequest(self.getId(), 1);
+        PortAllocRequest allocReq = new PortAllocRequest(self.getIp(), 
+                self.getId(), 1, Transport.UDP);
         PRC_PortResponse allocResp = new PRC_PortResponse(allocReq, remoteId, zServer, msgTimeoutId);
         allocReq.setResponse(allocResp);
         delegator.doTrigger(allocReq, natNetworkControl);
@@ -1774,7 +1778,8 @@ public class HpClient extends MsgRetryComponent {
                 session.setHolePunchingRole(request.getHolePunchingRole());
                 session.setRemoteOpenedHole(request.getHole());
 
-                PortAllocRequest allocReq = new PortAllocRequest(self.getId(), 2);
+                PortAllocRequest allocReq = new PortAllocRequest(self.getIp(), self.getId(), 
+                        2, Transport.UDP);
                 InterleavedPRC_PortResponse allocResp =
                         new InterleavedPRC_PortResponse(allocReq, remoteId, request.getVodSource());
                 allocReq.setResponse(allocResp);
@@ -1943,7 +1948,8 @@ public class HpClient extends MsgRetryComponent {
 
         HpSession session = hpSessions.get(remoteId);
 
-        PortAllocRequest allocReq = new PortAllocRequest(self.getId(), 5);
+        PortAllocRequest allocReq = new PortAllocRequest(self.getIp(), self.getId(), 
+                2, Transport.UDP);
         PRP_PortResponse allocResp = new PRP_PortResponse(allocReq, remoteId);
         allocReq.setResponse(allocResp);
         delegator.doTrigger(allocReq, natNetworkControl);
@@ -2077,7 +2083,8 @@ public class HpClient extends MsgRetryComponent {
                             delegator.doTrigger(dummyHolePunchingMsg, network);
                         }
                     } else {
-                        PortBindRequest bindReq = new PortBindRequest(self.getId(), response.getPortToUse());
+                        Address a = new Address(self.getIp(), response.getPortToUse(), self.getId());
+                        PortBindRequest bindReq = new PortBindRequest(a, Transport.UDP);
                         PRP_DummyMsgPortResponse bindResp =
                                 new PRP_DummyMsgPortResponse(bindReq,
                                 session.getHolePunchingMechanism() == HPMechanism.PRP_PRC,
@@ -2119,7 +2126,8 @@ public class HpClient extends MsgRetryComponent {
         HpSession session = hpSessions.get(remoteId);
         session.addRendezvousServer(parent);
 
-        PortAllocRequest allocReq = new PortAllocRequest(self.getId(), 1); //freePortCount
+        PortAllocRequest allocReq = new PortAllocRequest(self.getIp(), self.getId(), 1,
+                Transport.UDP); //freePortCount
         InterleavedPRP_PortResponse allocResp =
                 new InterleavedPRP_PortResponse(allocReq, parent, remoteId);
         allocReq.setResponse(allocResp);

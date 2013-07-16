@@ -4,6 +4,8 @@
  */
 package se.sics.gvod.net.util;
 
+import io.netty.buffer.ByteBuf;
+
 import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -15,16 +17,16 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.jboss.netty.buffer.ChannelBuffer;
+
+import se.sics.gvod.address.Address;
 import se.sics.gvod.common.BitField;
 import se.sics.gvod.common.DescriptorBuffer;
-import se.sics.gvod.net.VodAddress;
-import se.sics.gvod.common.VodDescriptor;
 import se.sics.gvod.common.Utility;
+import se.sics.gvod.common.UtilityVod;
+import se.sics.gvod.common.VodDescriptor;
 import se.sics.gvod.common.msgs.MessageDecodingException;
 import se.sics.gvod.net.Nat;
-import se.sics.gvod.address.Address;
-import se.sics.gvod.common.*;
+import se.sics.gvod.net.VodAddress;
 import se.sics.gvod.timer.NoTimeoutId;
 import se.sics.gvod.timer.TimeoutId;
 import se.sics.gvod.timer.UUID;
@@ -35,12 +37,12 @@ import se.sics.gvod.timer.UUID;
  */
 public class UserTypesDecoderFactory {
 
-    public static int readUnsignedIntAsOneByte(ChannelBuffer buffer) {
+    public static int readUnsignedIntAsOneByte(ByteBuf buffer) {
         byte value = buffer.readByte();
         return value & 0xFF;
     }
 
-    public static int readUnsignedIntAsTwoBytes(ChannelBuffer buffer) //            throws MessageDecodingException
+    public static int readUnsignedIntAsTwoBytes(ByteBuf buffer) //            throws MessageDecodingException
     {
         byte[] bytes = new byte[2];
         buffer.readBytes(bytes);
@@ -49,7 +51,7 @@ public class UserTypesDecoderFactory {
         return ((temp0 << 8) + temp1);
     }
 
-    public static boolean readBoolean(ChannelBuffer buffer)
+    public static boolean readBoolean(ByteBuf buffer)
             throws MessageDecodingException {
         int i = readUnsignedIntAsOneByte(buffer);
         if (i == 0) {
@@ -61,7 +63,7 @@ public class UserTypesDecoderFactory {
         throw new MessageDecodingException("the in parameter not equal nor to 1, nor 0");
     }
 
-    public static Address readAddress(ChannelBuffer buffer) throws MessageDecodingException {
+    public static Address readAddress(ByteBuf buffer) throws MessageDecodingException {
         InetAddress ip;
         ip = readInetAddress(buffer);
         int port = buffer.readUnsignedShort();
@@ -78,7 +80,7 @@ public class UserTypesDecoderFactory {
         return addr;
     }
 
-    public static java.util.UUID readUUID(ChannelBuffer buffer)
+    public static java.util.UUID readUUID(ByteBuf buffer)
             throws MessageDecodingException {
         long lsb = buffer.readLong();
         long msb = buffer.readLong();
@@ -88,7 +90,7 @@ public class UserTypesDecoderFactory {
         return new java.util.UUID(msb, lsb);
     }
 
-    public static TimeoutId readTimeoutId(ChannelBuffer buffer)
+    public static TimeoutId readTimeoutId(ByteBuf buffer)
             throws MessageDecodingException {
         int id = buffer.readInt();
         if (id == -1) {
@@ -97,7 +99,7 @@ public class UserTypesDecoderFactory {
         return new UUID(id);
     }
 
-    public static String readStringLength256(ChannelBuffer buffer)
+    public static String readStringLength256(ByteBuf buffer)
             throws MessageDecodingException {
         int len = readIntAsOneByte(buffer);
         if (len == 0) {
@@ -107,7 +109,7 @@ public class UserTypesDecoderFactory {
         }
     }
 
-    private static String readString(ChannelBuffer buffer, int len)
+    private static String readString(ByteBuf buffer, int len)
             throws MessageDecodingException {
         byte[] bytes = new byte[len];
         buffer.readBytes(bytes);
@@ -121,7 +123,7 @@ public class UserTypesDecoderFactory {
 
     
    
-    public static String readStringLength65536(ChannelBuffer buffer)
+    public static String readStringLength65536(ByteBuf buffer)
             throws MessageDecodingException {
         int len = readUnsignedIntAsTwoBytes(buffer);
         if (len == 0) {
@@ -131,7 +133,7 @@ public class UserTypesDecoderFactory {
         }
     }
 
-    public static byte[] readBytesLength65536(ChannelBuffer buffer)
+    public static byte[] readBytesLength65536(ByteBuf buffer)
             throws MessageDecodingException {
         int len = readUnsignedIntAsTwoBytes(buffer);
         if (len == 0) {
@@ -144,12 +146,12 @@ public class UserTypesDecoderFactory {
         }
     }
 
-    public static int readIntAsOneByte(ChannelBuffer buffer)
+    public static int readIntAsOneByte(ByteBuf buffer)
             throws MessageDecodingException {
         return readUnsignedIntAsOneByte(buffer);
     }
 
-    public static InetAddress readInetAddress(ChannelBuffer buffer)
+    public static InetAddress readInetAddress(ByteBuf buffer)
             throws MessageDecodingException {
         byte[] ipBytes = new byte[4];
         buffer.readBytes(ipBytes);
@@ -161,7 +163,7 @@ public class UserTypesDecoderFactory {
         }
     }
 
-    public static Utility readUtility(ChannelBuffer buffer) {
+    public static Utility readUtility(ByteBuf buffer) {
         int type = readUnsignedIntAsOneByte(buffer);
         if (type == Utility.Impl.VodUtility.ordinal()) {
             int availableBandwidth = readUnsignedIntAsOneByte(buffer);
@@ -178,7 +180,7 @@ public class UserTypesDecoderFactory {
     }
 
 
-    public static VodAddress readVodAddress(ChannelBuffer buffer)
+    public static VodAddress readVodAddress(ByteBuf buffer)
             throws MessageDecodingException {
         Address addr = readAddress(buffer);
         int overlayId = buffer.readInt();
@@ -187,7 +189,7 @@ public class UserTypesDecoderFactory {
         return new VodAddress(addr, overlayId, (short) natPolicy, parents);
     }
 
-    public static List<VodAddress> readListVodAddresses(ChannelBuffer buffer)
+    public static List<VodAddress> readListVodAddresses(ByteBuf buffer)
             throws MessageDecodingException {
         int len = UserTypesDecoderFactory.readUnsignedIntAsTwoBytes(buffer);
         List<VodAddress> addrs = new ArrayList<VodAddress>();
@@ -197,7 +199,7 @@ public class UserTypesDecoderFactory {
         return addrs;
     }
 
-    public static Set<Address> readListAddresses(ChannelBuffer buffer)
+    public static Set<Address> readListAddresses(ByteBuf buffer)
             throws MessageDecodingException {
         int len = UserTypesDecoderFactory.readUnsignedIntAsTwoBytes(buffer);
         Set<Address> addrs = new HashSet<Address>();
@@ -207,7 +209,7 @@ public class UserTypesDecoderFactory {
         return addrs;
     }
 
-    public static List<Integer> readListRtts(ChannelBuffer buffer)
+    public static List<Integer> readListRtts(ByteBuf buffer)
             throws MessageDecodingException {
         int len = UserTypesDecoderFactory.readUnsignedIntAsTwoBytes(buffer);
         List<Integer> rtts = new ArrayList<Integer>();
@@ -217,7 +219,7 @@ public class UserTypesDecoderFactory {
         return rtts;
     }
 
-    public static List<Integer> readListInts(ChannelBuffer buffer)
+    public static List<Integer> readListInts(ByteBuf buffer)
             throws MessageDecodingException {
         int len = UserTypesDecoderFactory.readUnsignedIntAsTwoBytes(buffer);
         List<Integer> addrs = new ArrayList<Integer>();
@@ -227,7 +229,7 @@ public class UserTypesDecoderFactory {
         return addrs;
     }
     
-    public static Set<Integer> readSetInts(ChannelBuffer buffer)
+    public static Set<Integer> readSetInts(ByteBuf buffer)
             throws MessageDecodingException {
         int len = UserTypesDecoderFactory.readUnsignedIntAsTwoBytes(buffer);
         Set<Integer> addrs = new HashSet<Integer>();
@@ -237,7 +239,7 @@ public class UserTypesDecoderFactory {
         return addrs;
     }
     
-    public static Map<Integer,Integer> readMapIntInts(ChannelBuffer buffer)
+    public static Map<Integer,Integer> readMapIntInts(ByteBuf buffer)
             throws MessageDecodingException {
         int len = UserTypesDecoderFactory.readUnsignedIntAsTwoBytes(buffer);
         Map<Integer,Integer> mapIntInts = new HashMap<Integer,Integer>();
@@ -251,7 +253,7 @@ public class UserTypesDecoderFactory {
         return mapIntInts;
     }    
     
-    public static byte[] readArrayBytes(ChannelBuffer buffer)
+    public static byte[] readArrayBytes(ByteBuf buffer)
             throws MessageDecodingException {
         if (buffer == null) {
             throw new MessageDecodingException("buffer was null.");
@@ -267,7 +269,7 @@ public class UserTypesDecoderFactory {
         }
     }
 
-    public static byte[][] readArrayArrayBytes(ChannelBuffer buffer)
+    public static byte[][] readArrayArrayBytes(ByteBuf buffer)
             throws MessageDecodingException {
         if (buffer == null) {
             throw new MessageDecodingException("buffer was null.");
@@ -284,7 +286,7 @@ public class UserTypesDecoderFactory {
         return bytes;
     }
 
-    public static VodDescriptor readGVodNodeDescriptor(ChannelBuffer buffer)
+    public static VodDescriptor readGVodNodeDescriptor(ByteBuf buffer)
             throws MessageDecodingException {
         VodAddress addr = UserTypesDecoderFactory.readVodAddress(buffer);
         int age = UserTypesDecoderFactory.readUnsignedIntAsTwoBytes(buffer);
@@ -293,7 +295,7 @@ public class UserTypesDecoderFactory {
         return new VodDescriptor(addr, utility, age, mtu);
     }
 
-    public static List<VodDescriptor> readListGVodNodeDescriptors(ChannelBuffer buffer)
+    public static List<VodDescriptor> readListGVodNodeDescriptors(ByteBuf buffer)
             throws MessageDecodingException {
         int len = UserTypesDecoderFactory.readUnsignedIntAsTwoBytes(buffer);
         List<VodDescriptor> addrs = new ArrayList<VodDescriptor>();
@@ -303,7 +305,7 @@ public class UserTypesDecoderFactory {
         return addrs;
     }
 
-    public static Set<Integer> readSetUnsignedTwoByteInts(ChannelBuffer buffer)
+    public static Set<Integer> readSetUnsignedTwoByteInts(ByteBuf buffer)
             throws MessageDecodingException {
         int numEntries = UserTypesDecoderFactory.readUnsignedIntAsTwoBytes(buffer);
         Set<Integer> entries = new HashSet<Integer>();
@@ -315,14 +317,14 @@ public class UserTypesDecoderFactory {
     }
 
 
-    public static DescriptorBuffer readDescriptorBuffer(ChannelBuffer buffer)
+    public static DescriptorBuffer readDescriptorBuffer(ByteBuf buffer)
             throws MessageDecodingException {
         VodAddress src = readVodAddress(buffer);
         List<VodDescriptor> publicDescs = readListGVodNodeDescriptors(buffer);
         List<VodDescriptor> privateDescs = readListGVodNodeDescriptors(buffer);
         return new DescriptorBuffer(src, publicDescs, privateDescs);
     }
-    public static Nat readNat(ChannelBuffer buffer)
+    public static Nat readNat(ByteBuf buffer)
             throws MessageDecodingException {
 //    private final Type type;
 //    private final MappingPolicy mappingPolicy;
@@ -356,7 +358,7 @@ public class UserTypesDecoderFactory {
 
     }
     
-    public static Set<Integer> readIntegerSet(ChannelBuffer buffer) {
+    public static Set<Integer> readIntegerSet(ByteBuf buffer) {
         int size = UserTypesDecoderFactory.readUnsignedIntAsTwoBytes(buffer);
         Set<Integer> integers = new HashSet<Integer>(size);
         for(int i = 0; i < size; i++) {
@@ -366,7 +368,7 @@ public class UserTypesDecoderFactory {
         return integers;
     }
     
-    public static Set<Long> readLongSet(ChannelBuffer buffer) {
+    public static Set<Long> readLongSet(ByteBuf buffer) {
         int size = UserTypesDecoderFactory.readUnsignedIntAsTwoBytes(buffer);
         Set<Long> longs = new HashSet<Long>(size);
         for(int i = 0; i < size; i++) {

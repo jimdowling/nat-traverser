@@ -52,6 +52,7 @@ import se.sics.gvod.hp.msgs.PRP_PreallocatedPortsMsg;
 import se.sics.gvod.hp.msgs.PRP_ConnectMsg;
 import se.sics.gvod.nat.common.MsgRetryComponent;
 import se.sics.gvod.net.NatNetworkControl;
+import se.sics.gvod.net.Transport;
 import se.sics.gvod.net.VodAddress;
 import se.sics.gvod.net.events.PortAllocRequest;
 import se.sics.gvod.net.events.PortDeleteRequest;
@@ -267,7 +268,8 @@ public class ParentMaker extends MsgRetryComponent {
                 }
                 if (!currentRtts.contains(min)) {
                     if (self.getAddress().getNat().preallocatePorts()) {
-                        PortAllocRequest allocReq = new PortAllocRequest(self.getId(), 1);
+                        PortAllocRequest allocReq = new PortAllocRequest(self.getIp(), self.getId(),
+                                2, Transport.UDP);
                         PrpPortsResponse allocResp = new PrpPortsResponse(allocReq,
                                 ToVodAddr.hpServer(min.getAddress().getPeerAddress()),
                                 min.getRTO());
@@ -661,7 +663,8 @@ public class ParentMaker extends MsgRetryComponent {
 
     private void allocPorts(VodAddress server, Long rto, TimeoutId timeoutId,
             TimeoutId msgTimeoutId) {
-        PortAllocRequest allocReq = new PortAllocRequest(self.getId(), 10);
+        PortAllocRequest allocReq = new PortAllocRequest(self.getIp(), self.getId(), 3,
+                Transport.UDP);
         PrpMorePortsResponse allocResp = new PrpMorePortsResponse(allocReq, server,
                 timeoutId, rto, msgTimeoutId);
         allocReq.setResponse(allocResp);

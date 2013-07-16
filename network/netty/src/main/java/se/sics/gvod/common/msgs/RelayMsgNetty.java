@@ -4,9 +4,11 @@
  */
 package se.sics.gvod.common.msgs;
 
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
+
 import java.io.Serializable;
-import org.jboss.netty.buffer.ChannelBuffer;
-import org.jboss.netty.buffer.ChannelBuffers;
+
 import se.sics.gvod.config.VodConfig;
 import se.sics.gvod.net.BaseMsgFrameDecoder;
 import se.sics.gvod.net.VodAddress;
@@ -60,10 +62,10 @@ public class RelayMsgNetty {
                     ;
         }
 
-        protected ChannelBuffer createChannelBufferWithHeader()
+        protected ByteBuf createChannelBufferWithHeader()
                 throws MessageEncodingException {
-            ChannelBuffer buffer =
-                    ChannelBuffers.dynamicBuffer(
+        	ByteBuf buffer =
+        			Unpooled.buffer(
                     getSize()
                     + 1 /*opcode*/);
             writeHeader(buffer);
@@ -71,12 +73,12 @@ public class RelayMsgNetty {
         }
 
         @Override
-        public ChannelBuffer toByteArray() throws MessageEncodingException {
-            ChannelBuffer buffer = createChannelBufferWithHeader();
+        public ByteBuf toByteArray() throws MessageEncodingException {
+        	ByteBuf buffer = createChannelBufferWithHeader();
             return buffer;
         }
 
-        protected void writeHeader(ChannelBuffer buffer) throws MessageEncodingException {
+        protected void writeHeader(ByteBuf buffer) throws MessageEncodingException {
             byte b = getOpcode();
             buffer.writeByte(b);
             if (hasTimeout()) {
@@ -186,7 +188,7 @@ public class RelayMsgNetty {
         }
 
         @Override
-        protected void writeHeader(ChannelBuffer buffer) throws MessageEncodingException {
+        protected void writeHeader(ByteBuf buffer) throws MessageEncodingException {
             super.writeHeader(buffer);
             int responseTypeVal = status.ordinal();
             UserTypesEncoderFactory.writeUnsignedintAsOneByte(buffer, responseTypeVal);

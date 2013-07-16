@@ -1,11 +1,12 @@
 package se.sics.gvod.net.msgs;
 
 import java.io.Serializable;
-import se.sics.kompics.Event;
+
 import se.sics.gvod.address.Address;
 import se.sics.gvod.net.Transport;
 import se.sics.gvod.timer.NoTimeoutId;
 import se.sics.gvod.timer.TimeoutId;
+import se.sics.kompics.Event;
 
 public abstract class RewriteableMsg extends Event implements Serializable, 
         RewriteableMessageInterface

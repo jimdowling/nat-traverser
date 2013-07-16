@@ -5,7 +5,7 @@
 
 package se.sics.gvod.common.msgs;
 
-import org.jboss.netty.buffer.ChannelBuffer;
+import io.netty.buffer.ByteBuf;
 
 /**
  *
@@ -14,7 +14,7 @@ import org.jboss.netty.buffer.ChannelBuffer;
 public interface Encodable {
  
 
-    public ChannelBuffer toByteArray() throws MessageEncodingException;
+    public ByteBuf toByteArray() throws MessageEncodingException;
 
     public byte getOpcode();
 }
