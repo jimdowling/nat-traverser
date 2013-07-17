@@ -109,7 +109,6 @@ public class UdtPingTest extends TestCase {
             subscribe(handlePing, server.getPositive(VodNetwork.class));
             subscribe(handlePong, client.getPositive(VodNetwork.class));
 
-            // TODO do I need those ports?
             trigger(new NettyInit(132, true, BaseMsgFrameDecoder.class),
                     client.getControl());
             trigger(new NettyInit(132, true, BaseMsgFrameDecoder.class),
