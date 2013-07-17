@@ -7,8 +7,8 @@ import java.net.InetAddress;
 
 public class NettyTcpServerHandler extends NettyTcpHandler {
 
-	public NettyTcpServerHandler(NettyNetwork component, InetAddress addr, int port) {
-		super(component, addr, port);
+	public NettyTcpServerHandler(NettyNetwork component) {
+		super(component);
 	}
 
 	@Override

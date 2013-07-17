@@ -426,8 +426,7 @@ public final class NettyNetwork extends ComponentDefinition {
                 .handler(new ChannelInitializer<Channel>() {
             @Override
             protected void initChannel(Channel ch) throws Exception {
-                ch.pipeline().addLast(
-                        new NettyUdpHandler(component, addr, port, msgDecoderClass));
+                ch.pipeline().addLast(new NettyUdpHandler(component, msgDecoderClass));
             }
         });
 
@@ -481,7 +480,7 @@ public final class NettyNetwork extends ComponentDefinition {
 
         EventLoopGroup bossGroup = new NioEventLoopGroup();
         EventLoopGroup workerGroup = new NioEventLoopGroup();
-        NettyTcpServerHandler handler = new NettyTcpServerHandler(component, addr, port);
+        NettyTcpServerHandler handler = new NettyTcpServerHandler(component);
         ServerBootstrap bootstrap = new ServerBootstrap();
         bootstrap.group(bossGroup, workerGroup).channel(NioServerSocketChannel.class)
                 .childHandler((new NettyTcpInitializer(handler, msgDecoderClass)))
@@ -523,7 +522,7 @@ public final class NettyNetwork extends ComponentDefinition {
                 NioUdtProvider.BYTE_PROVIDER);
         NioEventLoopGroup workerGroup = new NioEventLoopGroup(1, workerFactory,
                 NioUdtProvider.BYTE_PROVIDER);
-        NettyUdtServerHandler handler = new NettyUdtServerHandler(component, addr, port);
+        NettyUdtServerHandler handler = new NettyUdtServerHandler(component);
         ServerBootstrap bootstrap = new ServerBootstrap();
         bootstrap.group(bossGroup, workerGroup).channelFactory(NioUdtProvider.BYTE_ACCEPTOR)
                 .childHandler(new NettyUdtInitializer(handler, msgDecoderClass))
@@ -560,7 +559,7 @@ public final class NettyNetwork extends ComponentDefinition {
         }
 
         EventLoopGroup group = new NioEventLoopGroup();
-        NettyTcpHandler handler = new NettyTcpHandler(component, remote.getAddress(), remote.getPort());
+        NettyTcpHandler handler = new NettyTcpHandler(component);
         Bootstrap bootstrap = new Bootstrap();
         bootstrap.group(group).channel(NioSocketChannel.class)
                 .handler(new NettyTcpInitializer(handler, msgDecoderClass))
@@ -593,7 +592,7 @@ public final class NettyNetwork extends ComponentDefinition {
         ThreadFactory workerFactory = new UtilThreadFactory("clientWorker");
         NioEventLoopGroup workerGroup = new NioEventLoopGroup(1, workerFactory,
                 NioUdtProvider.BYTE_PROVIDER);
-        NettyUdtHandler handler = new NettyUdtHandler(component, remote.getAddress(), remote.getPort());
+        NettyUdtHandler handler = new NettyUdtHandler(component);
         Bootstrap bootstrap = new Bootstrap();
         bootstrap.group(workerGroup).channelFactory(NioUdtProvider.BYTE_CONNECTOR)
                 .handler(new NettyUdtInitializer(handler, msgDecoderClass))

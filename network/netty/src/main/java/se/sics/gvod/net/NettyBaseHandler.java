@@ -12,19 +12,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import se.sics.gvod.net.events.NetworkException;
+import se.sics.gvod.net.msgs.RewriteableMsg;
 
 public abstract class NettyBaseHandler<I> extends SimpleChannelInboundHandler<I> {
 
 	private static final Logger logger = LoggerFactory.getLogger(NettyTcpHandler.class);
-
 	private final NettyNetwork component;
-	private final InetAddress addr;
-	private final int port;
 
-	public NettyBaseHandler(NettyNetwork component, InetAddress addr, int port) {
+	public NettyBaseHandler(NettyNetwork component) {
 		this.component = component;
-		this.addr = addr;
-		this.port = port;
 	}
 
 	@Override
@@ -55,12 +51,29 @@ public abstract class NettyBaseHandler<I> extends SimpleChannelInboundHandler<I>
 	
 	protected abstract Transport getProtocol();
 
-	protected InetAddress getAddr() {
-		return addr;
+    protected RewriteableMsg updateAddress(RewriteableMsg msg, ChannelHandlerContext ctx, InetSocketAddress remoteAddress) {
+        msg.getSource().setIp(remoteAddress.getAddress());
+        msg.getSource().setPort(remoteAddress.getPort());
+
+        msg.getDestination().setIp(getAddress(ctx));
+        msg.getDestination().setPort(getPort(ctx));
+
+        // TODO - for UPNP, the port on which the data is sent from the NAT
+        // may not be the same as the mapped port - see
+        // https://tools.ietf.org/html/rfc4380.
+        // In this case, we should check if it is Upnp, and if so, then
+        // don't re-write the source address.
+
+        msg.setProtocol(getProtocol());
+        return msg;
+    }
+
+	protected InetAddress getAddress(ChannelHandlerContext ctx) {
+		return ((InetSocketAddress)ctx.channel().localAddress()).getAddress();
 	}
 
-	protected int getPort() {
-		return port;
+	protected int getPort(ChannelHandlerContext ctx) {
+		return ((InetSocketAddress)ctx.channel().localAddress()).getPort();
 	}
 
 	protected NettyNetwork getComponent() {
