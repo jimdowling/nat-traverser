@@ -359,12 +359,10 @@ public final class NettyNetwork extends ComponentDefinition {
             trigger(response, netControl);
         }
     };
-    // TODO check and do proper for all protocols
     Handler<PortDeleteRequest> handlePortDeleteRequest = new Handler<PortDeleteRequest>() {
         @Override
         public void handle(PortDeleteRequest msg) {
             Map<Integer, InetSocketAddress> portsToSockets;
-
             Transport protocol = msg.getTransport();
             if (protocol == Transport.UDP) {
                 portsToSockets = tcpPortsToSockets;
@@ -462,7 +460,6 @@ public final class NettyNetwork extends ComponentDefinition {
             }
 
             addLocalUdpSocket(c, new InetSocketAddress(addr, port));
-
             logger.info("Successfully bound to ip:port {}:{}", addr, port);
             // TODO how to handle bind expections
         } catch (InterruptedException e) {
@@ -554,15 +551,16 @@ public final class NettyNetwork extends ComponentDefinition {
         return true;
     }
 
-    private boolean connectTcp(InetAddress addr, int port) {
-        InetSocketAddress iAddr = new InetSocketAddress(addr, port);
+    private boolean connectTcp(Address remoteAddress, Address localAddress) {
+        InetSocketAddress remote = address2SocketAddress(remoteAddress);
+        InetSocketAddress local = address2SocketAddress(localAddress);
 
-        if (tcpSocketsToBootstraps.containsKey(iAddr)) {
+        if (tcpSocketsToBootstraps.containsKey(remote)) {
             return true;
         }
 
         EventLoopGroup group = new NioEventLoopGroup();
-        NettyTcpHandler handler = new NettyTcpHandler(component, addr, port);
+        NettyTcpHandler handler = new NettyTcpHandler(component, remote.getAddress(), remote.getPort());
         Bootstrap bootstrap = new Bootstrap();
         bootstrap.group(group).channel(NioSocketChannel.class)
                 .handler(new NettyTcpInitializer(handler, msgDecoderClass))
@@ -570,33 +568,32 @@ public final class NettyNetwork extends ComponentDefinition {
                 .option(ChannelOption.SO_REUSEADDR, true);
 
         try {
-            SocketChannel c = (SocketChannel) bootstrap.connect(iAddr).sync().channel();
-            addLocalTcpSocket(c, iAddr);
-
-            logger.info("Successfully connected to ip:port {}:{}", addr, port);
+            SocketChannel c = (SocketChannel) bootstrap.connect(remote, local).sync().channel();
+            addLocalTcpSocket(c, remote);
+            logger.info("Successfully connected to ip:port {}", remote.toString());
         } catch (InterruptedException e) {
             // TODO how to handle bind exceptions
-            logger.warn("Problem when trying to connect to {}:{}", addr.getHostAddress(), port);
+            logger.warn("Problem when trying to connect to {}", remote);
             trigger(new Fault(e.getCause()), control);
             return false;
         }
 
-        tcpSocketsToBootstraps.put(iAddr, bootstrap);
-
+        tcpSocketsToBootstraps.put(remote, bootstrap);
         return true;
     }
 
-    private boolean connectUdt(InetAddress addr, int port) {
-        InetSocketAddress iAddr = new InetSocketAddress(addr, port);
+    private boolean connectUdt(Address remoteAddress, Address localAddress) {
+        InetSocketAddress remote = address2SocketAddress(remoteAddress);
+        InetSocketAddress local = address2SocketAddress(localAddress);
 
-        if (udtSocketsToBootstraps.containsKey(iAddr)) {
+        if (udtSocketsToBootstraps.containsKey(remote)) {
             return true;
         }
 
         ThreadFactory workerFactory = new UtilThreadFactory("clientWorker");
         NioEventLoopGroup workerGroup = new NioEventLoopGroup(1, workerFactory,
                 NioUdtProvider.BYTE_PROVIDER);
-        NettyUdtHandler handler = new NettyUdtHandler(component, addr, port);
+        NettyUdtHandler handler = new NettyUdtHandler(component, remote.getAddress(), remote.getPort());
         Bootstrap bootstrap = new Bootstrap();
         bootstrap.group(workerGroup).channelFactory(NioUdtProvider.BYTE_CONNECTOR)
                 .handler(new NettyUdtInitializer(handler, msgDecoderClass))
@@ -604,17 +601,16 @@ public final class NettyNetwork extends ComponentDefinition {
                 .option(ChannelOption.SO_REUSEADDR, true);
 
         try {
-            UdtChannel c = (UdtChannel) bootstrap.connect(iAddr).sync().channel();
-            addLocalUdtSocket(c, iAddr);
-
-            logger.info("Successfully connected to ip:port {}:{}", addr, port);
+            UdtChannel c = (UdtChannel) bootstrap.connect(remote, local).sync().channel();
+            addLocalUdtSocket(c, remote);
+            logger.info("Successfully connected to ip:port {}", remote.toString());
         } catch (InterruptedException e) {
-            logger.warn("Problem when trying to connect to {}:{}", addr.getHostAddress(), port);
+            logger.warn("Problem when trying to connect to {}", remote.toString());
             trigger(new Fault(e.getCause()), control);
             return false;
         }
 
-        udtSocketsToBootstraps.put(iAddr, bootstrap);
+        udtSocketsToBootstraps.put(remote, bootstrap);
         return true;
     }
 
@@ -705,7 +701,7 @@ public final class NettyNetwork extends ComponentDefinition {
         SocketChannel channel = tcpSocketsToChannels.get(dst);
 
         if (channel == null) {
-            if (connectTcp(msg.getDestination().getIp(), msg.getDestination().getPort()) == false) {
+            if (connectTcp(msg.getDestination(), msg.getSource()) == false) {
                 logger.warn("Channel was null when trying to write msg of type: "
                         + msg.getClass().getCanonicalName() + " with dst address: "
                         + dst.toString());
@@ -720,9 +716,6 @@ public final class NettyNetwork extends ComponentDefinition {
         try {
             logger.trace("Sending " + msg.getClass().getCanonicalName() + " from {} to {} ",
                     msg.getSource().getId(), msg.getDestination().getId());
-            // TODO should not overwrite the given address and port!
-            msg.getSource().setIp(channel.localAddress().getAddress());
-            msg.getSource().setPort(channel.localAddress().getPort());
             channel.write(msg);
             totalWrittenBytes += msg.getSize();
         } catch (Exception ex) {
@@ -738,7 +731,7 @@ public final class NettyNetwork extends ComponentDefinition {
         UdtChannel channel = udtSocketsToChannels.get(dst);
 
         if (channel == null) {
-            if (connectUdt(msg.getDestination().getIp(), msg.getDestination().getPort()) == false) {
+            if (connectUdt(msg.getDestination(), msg.getSource()) == false) {
                 logger.warn("Channel was null when trying to write msg of type: "
                         + msg.getClass().getCanonicalName() + " with dst address: "
                         + dst.toString());
@@ -753,9 +746,6 @@ public final class NettyNetwork extends ComponentDefinition {
         try {
             logger.trace("Sending " + msg.getClass().getCanonicalName() + " from {} to {} ",
                     msg.getSource().getId(), msg.getDestination().getId());
-            // TODO should not overwrite the given address and port!
-            msg.getSource().setIp(channel.localAddress().getAddress());
-            msg.getSource().setPort(channel.localAddress().getPort());
             channel.write(msg);
             totalWrittenBytes += msg.getSize();
         } catch (Exception ex) {
