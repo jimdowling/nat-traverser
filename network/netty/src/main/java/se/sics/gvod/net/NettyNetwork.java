@@ -23,12 +23,7 @@ package se.sics.gvod.net;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
-import io.netty.channel.ChannelException;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelInitializer;
-import io.netty.channel.ChannelOption;
-import io.netty.channel.EventLoopGroup;
-import io.netty.channel.FixedRecvByteBufAllocator;
+import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.DatagramChannel;
 import io.netty.channel.socket.DatagramPacket;
@@ -38,46 +33,26 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.channel.udt.UdtChannel;
 import io.netty.channel.udt.nio.NioUdtProvider;
-
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.SocketAddress;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.Map;
-import java.util.Random;
-import java.util.Set;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.atomic.AtomicLong;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import se.sics.gvod.address.Address;
 import se.sics.gvod.common.msgs.DirectMsgNettyFactory;
 import se.sics.gvod.common.msgs.Encodable;
 import se.sics.gvod.config.VodConfig;
-import se.sics.gvod.net.events.BandwidthStats;
-import se.sics.gvod.net.events.NetworkException;
-import se.sics.gvod.net.events.NetworkSessionClosed;
-import se.sics.gvod.net.events.PortAllocRequest;
-import se.sics.gvod.net.events.PortAllocResponse;
-import se.sics.gvod.net.events.PortBindRequest;
-import se.sics.gvod.net.events.PortBindResponse;
-import se.sics.gvod.net.events.PortDeleteRequest;
-import se.sics.gvod.net.events.PortDeleteResponse;
+import se.sics.gvod.net.events.*;
 import se.sics.gvod.net.msgs.RewriteableMsg;
 import se.sics.gvod.timer.SchedulePeriodicTimeout;
 import se.sics.gvod.timer.Timeout;
 import se.sics.gvod.timer.Timer;
 import se.sics.gvod.util.UtilThreadFactory;
-import se.sics.kompics.ComponentDefinition;
-import se.sics.kompics.Fault;
-import se.sics.kompics.Handler;
-import se.sics.kompics.Negative;
-import se.sics.kompics.Positive;
-import se.sics.kompics.Stop;
+import se.sics.kompics.*;
+
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.SocketAddress;
+import java.util.*;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * The
@@ -253,7 +228,6 @@ public final class NettyNetwork extends ComponentDefinition {
                     b.group().shutdownGracefully();
                 }
             }
-
             udpPortsToSockets.clear();
             udpSocketsToBootstraps.clear();
             udpSocketsToChannels.clear();
@@ -272,7 +246,6 @@ public final class NettyNetwork extends ComponentDefinition {
                     b.group().shutdownGracefully();
                 }
             }
-
             tcpPortsToSockets.clear();
             tcpSocketsToBootstraps.clear();
             tcpSocketsToChannels.clear();
@@ -292,7 +265,6 @@ public final class NettyNetwork extends ComponentDefinition {
                     b.group().shutdownGracefully();
                 }
             }
-
             udtPortsToSockets.clear();
             udtSocketsToBootstraps.clear();
             udtSocketsToChannels.clear();
@@ -627,9 +599,9 @@ public final class NettyNetwork extends ComponentDefinition {
         NettyUdtHandler handler = new NettyUdtHandler(component, addr, port);
         Bootstrap bootstrap = new Bootstrap();
         bootstrap.group(workerGroup).channelFactory(NioUdtProvider.BYTE_CONNECTOR)
-                .handler(new NettyUdtInitializer(handler, msgDecoderClass));
-        // .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, CONNECT_TIMEOUT_MS)
-        // .option(ChannelOption.SO_REUSEADDR, true);
+                .handler(new NettyUdtInitializer(handler, msgDecoderClass))
+                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, CONNECT_TIMEOUT_MS)
+                .option(ChannelOption.SO_REUSEADDR, true);
 
         try {
             UdtChannel c = (UdtChannel) bootstrap.connect(iAddr).sync().channel();
@@ -661,27 +633,32 @@ public final class NettyNetwork extends ComponentDefinition {
     }
 
     private void removeLocalSocket(InetSocketAddress addr, Transport protocol) {
+        Bootstrap bootstrap;
         switch (protocol) {
             case TCP:
-                // TODO do something smart
+                tcpPortsToSockets.remove(addr.getPort());
+                tcpSocketsToChannels.remove(addr);
+                bootstrap = tcpSocketsToBootstraps.remove(addr);
                 break;
             case UDP:
-                // TODO Does that work?
                 udpPortsToSockets.remove(addr.getPort());
-                udpSocketsToChannels.remove(addr);
-                Bootstrap b = udpSocketsToBootstraps.remove(addr);
-                if (b != null) {
-                    EventLoopGroup group = b.group();
-                    if (group != null) {
-                        group.shutdownGracefully();
-                    }
-                }
+                udpPortsToSockets.remove(addr);
+                bootstrap = udpSocketsToBootstraps.remove(addr);
                 break;
             case UDT:
-                // TODO do something smart
+                udtPortsToSockets.remove(addr.getPort());
+                udtSocketsToChannels.remove(addr);
+                bootstrap = udtSocketsToBootstraps.remove(addr);
                 break;
             default:
                 throw new Error("Unknown Transport type");
+        }
+
+        if (bootstrap != null) {
+            EventLoopGroup group = bootstrap.group();
+            if (group != null) {
+                group.shutdownGracefully();
+            }
         }
     }
 
