@@ -46,3 +46,6 @@ pocs
 #ignore IntelliJ IDEA files
 .idea
 *.iml
+
+# ignore libs
+lib
