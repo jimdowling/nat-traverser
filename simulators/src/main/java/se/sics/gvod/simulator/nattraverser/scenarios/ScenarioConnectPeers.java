@@ -23,7 +23,7 @@ public class ScenarioConnectPeers extends Scenario {
                 
 		StochasticProcess connectNodes = new StochasticProcess() {{
 			eventInterArrivalTime(constant(1000));
-			raise(1500, Operations.connectPeers(), 
+			raise(50, Operations.connectPeers(), 
                                 uniform(0, 10000), uniform(0, 10000));
 		}};
 
@@ -39,9 +39,9 @@ public class ScenarioConnectPeers extends Scenario {
 		
 		startPublicNodes.start();
 		startNodes.startAfterTerminationOf(50*1000, startPublicNodes);
-		connectNodes.startAfterTerminationOf(1000*1000, startNodes);
+		connectNodes.startAfterTerminationOf(100*1000, startNodes);
 		startCollectData.startAfterTerminationOf(100*1000, connectNodes);
-		stopCollectData.startAfterTerminationOf(10*1000, startCollectData);
+		stopCollectData.startAfterTerminationOf(1000*1000, startCollectData);
 	}};
 	
 //-------------------------------------------------------------------

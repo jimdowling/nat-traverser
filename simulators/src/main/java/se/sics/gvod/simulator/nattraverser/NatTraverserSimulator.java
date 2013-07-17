@@ -59,7 +59,6 @@ public final class NatTraverserSimulator extends ComponentDefinition {
 
     private static final int NT_PEER_OVERLAY_ID=5;
     private static final Logger logger = LoggerFactory.getLogger(NatTraverserSimulator.class);
-    private final static int EXPERIMENT_TIME = 1 * 5000 * 1000;
     Positive<NatTraverserSimulatorPort> simulator = positive(NatTraverserSimulatorPort.class);
     Positive<VodNetwork> network = positive(VodNetwork.class);
     Positive<Timer> timer = positive(Timer.class);
@@ -75,16 +74,12 @@ public final class NatTraverserSimulator extends ComponentDefinition {
     private ParentMakerConfiguration parentMakerConfig;
     private HpClientConfiguration hpClientConfig;
     private RendezvousServerConfiguration rendezvousServerConfig;
-//    private BootstrapServerConfiguration bootstrapServerConfig;
     private int peerIdSequence;
     private ConsistentHashtable<Integer> view;
-    private Random rnd;
     private AsIpGenerator ipGenerator;
     private Map<String, Integer> successCount = new HashMap<String,Integer>();
     private Map<String, Integer> failCount  = new HashMap<String,Integer>();
     private VodAddress server1, server2;
-    private int port = 4444;
-//    private PrefixMatcher pm = PrefixMatcher.getInstance();
 //-------------------------------------------------------------------	
 
     public NatTraverserSimulator() {
@@ -109,7 +104,6 @@ public final class NatTraverserSimulator extends ComponentDefinition {
     Handler<NatTraverserSimulatorInit> handleInit = new Handler<NatTraverserSimulatorInit>() {
         @Override
         public void handle(NatTraverserSimulatorInit init) {
-            rnd = new Random(init.getNatTraverserConfig().getSeed());
             publicPeers.clear();
             privatePeers.clear();
             peerIdSequence = 100;
@@ -153,6 +147,8 @@ public final class NatTraverserSimulator extends ComponentDefinition {
                     dest = view.getNode(dest);
                 }
                 connect(src, dest);
+            } else {
+                System.err.println("SRC IS NULL");
             }
 
         }
@@ -276,8 +272,7 @@ public final class NatTraverserSimulator extends ComponentDefinition {
             bootstrappers.add(new VodDescriptor(ToVodAddr.systemAddr(server2.getPeerAddress()),
                         new UtilityVod(-1), 0, VodConfig.DEFAULT_MTU));
         }
-        trigger(new CroupierJoin(bootstrappers),
-                croupier.getPositive(CroupierPort.class));
+        trigger(new CroupierJoin(bootstrappers), croupier.getPositive(CroupierPort.class));
     }
 
 //-------------------------------------------------------------------	

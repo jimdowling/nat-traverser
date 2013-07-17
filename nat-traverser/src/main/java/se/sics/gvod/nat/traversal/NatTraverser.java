@@ -601,7 +601,7 @@ public class NatTraverser extends MsgRetryComponent {
                         RTTStore.addSample(msg.getDestination().getId(), msg.getVodSource(), rtt);
                         outstandingTimestamps.remove(msg.getTimeoutId().getId());
                     } else {
-                        logger.warn(compName + msg.getClass() + " Couldn't find startTime for node {} with timer {} - " + self.getNat(),
+                        logger.debug(compName + msg.getClass() + " Couldn't find startTime for node {} with timer {} - " + self.getNat(),
                                 self.getId(), msg.getTimeoutId());
                         StringBuilder sb = new StringBuilder();
                         for (Integer t : outstandingTimestamps.keySet()) {
