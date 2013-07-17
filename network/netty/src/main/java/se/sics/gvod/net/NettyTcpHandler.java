@@ -25,7 +25,6 @@ public class NettyTcpHandler extends NettyBaseHandler<RewriteableMsg> {
 	protected void messageReceived(ChannelHandlerContext ctx, RewriteableMsg msg) throws Exception {
 		SocketAddress srcAddr = ctx.channel().remoteAddress();
 
-		// TODO Check if this really need to be done
 		if (srcAddr instanceof InetSocketAddress) {
 			InetSocketAddress is = (InetSocketAddress) srcAddr;
 
