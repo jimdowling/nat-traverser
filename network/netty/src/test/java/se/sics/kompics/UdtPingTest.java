@@ -188,9 +188,7 @@ public class UdtPingTest extends TestCase {
 
     private void allTests() {
         runInstance();
-        if (testStatus == true) {
-            assertTrue(true);
-        }
+        assertTrue(testStatus);
     }
 
     private void runInstance() {
@@ -205,11 +203,6 @@ public class UdtPingTest extends TestCase {
         } finally {
             Kompics.shutdown();
         }
-
-        if (testStatus == false) {
-            assertTrue(false);
-        }
-
     }
 
     @org.junit.Ignore

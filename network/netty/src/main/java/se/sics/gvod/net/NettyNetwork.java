@@ -423,12 +423,7 @@ public final class NettyNetwork extends ComponentDefinition {
         EventLoopGroup group = new NioEventLoopGroup();
         Bootstrap bootstrap = new Bootstrap();
         bootstrap.group(group).channel(NioDatagramChannel.class)
-                .handler(new ChannelInitializer<Channel>() {
-            @Override
-            protected void initChannel(Channel ch) throws Exception {
-                ch.pipeline().addLast(new NettyUdpHandler(component, msgDecoderClass));
-            }
-        });
+                .handler(new NettyMessageHandler(component, Transport.UDP, msgDecoderClass));
 
         // Allow packets as large as up to 1600 bytes (default is 768).
         // You could increase or decrease this value to avoid truncated packets
@@ -458,7 +453,7 @@ public final class NettyNetwork extends ComponentDefinition {
                         .channel();
             }
 
-            addLocalUdpSocket(c, new InetSocketAddress(addr, port));
+            addLocalSocket(new InetSocketAddress(addr, port), c);
             logger.info("Successfully bound to ip:port {}:{}", addr, port);
             // TODO how to handle bind expections
         } catch (InterruptedException e) {
@@ -483,7 +478,7 @@ public final class NettyNetwork extends ComponentDefinition {
         NettyTcpServerHandler handler = new NettyTcpServerHandler(component);
         ServerBootstrap bootstrap = new ServerBootstrap();
         bootstrap.group(bossGroup, workerGroup).channel(NioServerSocketChannel.class)
-                .childHandler((new NettyTcpInitializer(handler, msgDecoderClass)))
+                .childHandler((new NettyInitializer<SocketChannel>(handler, msgDecoderClass)))
                 .option(ChannelOption.SO_REUSEADDR, true);
 
         try {
@@ -525,7 +520,7 @@ public final class NettyNetwork extends ComponentDefinition {
         NettyUdtServerHandler handler = new NettyUdtServerHandler(component);
         ServerBootstrap bootstrap = new ServerBootstrap();
         bootstrap.group(bossGroup, workerGroup).channelFactory(NioUdtProvider.BYTE_ACCEPTOR)
-                .childHandler(new NettyUdtInitializer(handler, msgDecoderClass))
+                .childHandler(new NettyInitializer<UdtChannel>(handler, msgDecoderClass))
                 .option(ChannelOption.SO_REUSEADDR, true);
 
         try {
@@ -559,16 +554,16 @@ public final class NettyNetwork extends ComponentDefinition {
         }
 
         EventLoopGroup group = new NioEventLoopGroup();
-        NettyTcpHandler handler = new NettyTcpHandler(component);
+        NettyStreamHandler handler = new NettyStreamHandler(component, Transport.TCP);
         Bootstrap bootstrap = new Bootstrap();
         bootstrap.group(group).channel(NioSocketChannel.class)
-                .handler(new NettyTcpInitializer(handler, msgDecoderClass))
+                .handler(new NettyInitializer<SocketChannel>(handler, msgDecoderClass))
                 .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, CONNECT_TIMEOUT_MS)
                 .option(ChannelOption.SO_REUSEADDR, true);
 
         try {
             SocketChannel c = (SocketChannel) bootstrap.connect(remote, local).sync().channel();
-            addLocalTcpSocket(c, remote);
+            addLocalSocket(remote, c);
             logger.info("Successfully connected to ip:port {}", remote.toString());
         } catch (InterruptedException e) {
             // TODO how to handle bind exceptions
@@ -592,16 +587,16 @@ public final class NettyNetwork extends ComponentDefinition {
         ThreadFactory workerFactory = new UtilThreadFactory("clientWorker");
         NioEventLoopGroup workerGroup = new NioEventLoopGroup(1, workerFactory,
                 NioUdtProvider.BYTE_PROVIDER);
-        NettyUdtHandler handler = new NettyUdtHandler(component);
+        NettyStreamHandler handler = new NettyStreamHandler(component, Transport.UDT);
         Bootstrap bootstrap = new Bootstrap();
         bootstrap.group(workerGroup).channelFactory(NioUdtProvider.BYTE_CONNECTOR)
-                .handler(new NettyUdtInitializer(handler, msgDecoderClass))
+                .handler(new NettyInitializer<UdtChannel>(handler, msgDecoderClass))
                 .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, CONNECT_TIMEOUT_MS)
                 .option(ChannelOption.SO_REUSEADDR, true);
 
         try {
             UdtChannel c = (UdtChannel) bootstrap.connect(remote, local).sync().channel();
-            addLocalUdtSocket(c, remote);
+            addLocalSocket(remote, c);
             logger.info("Successfully connected to ip:port {}", remote.toString());
         } catch (InterruptedException e) {
             logger.warn("Problem when trying to connect to {}", remote.toString());
@@ -614,16 +609,16 @@ public final class NettyNetwork extends ComponentDefinition {
     }
 
 
-    private void addLocalUdpSocket(DatagramChannel channel, InetSocketAddress addr) {
+    private void addLocalSocket(InetSocketAddress addr, DatagramChannel channel) {
         udpPortsToSockets.put(addr.getPort(), addr);
         udpSocketsToChannels.put(addr, channel);
     }
 
-    void addLocalTcpSocket(SocketChannel channel, InetSocketAddress addr) {
+    void addLocalSocket(InetSocketAddress addr, SocketChannel channel) {
         tcpSocketsToChannels.put(addr, channel);
     }
 
-    void addLocalUdtSocket(UdtChannel channel, InetSocketAddress addr) {
+    void addLocalSocket(InetSocketAddress addr, UdtChannel channel) {
         udtSocketsToChannels.put(addr, channel);
     }
 
@@ -685,7 +680,7 @@ public final class NettyNetwork extends ComponentDefinition {
         try {
             logger.trace("Sending " + msg.getClass().getCanonicalName() + " from {} to {} ",
                     msg.getSource().getId(), msg.getDestination().getId());
-            channel.write(new DatagramPacket(((Encodable) msg).toByteArray(), dest));
+            channel.writeAndFlush(new DatagramPacket(((Encodable) msg).toByteArray(), dest));
             totalWrittenBytes += msg.getSize();
         } catch (Exception ex) {
             logger.warn("Problem trying to write msg of type: "
@@ -715,7 +710,7 @@ public final class NettyNetwork extends ComponentDefinition {
         try {
             logger.trace("Sending " + msg.getClass().getCanonicalName() + " from {} to {} ",
                     msg.getSource().getId(), msg.getDestination().getId());
-            channel.write(msg);
+            channel.writeAndFlush(msg);
             totalWrittenBytes += msg.getSize();
         } catch (Exception ex) {
             logger.warn("Problem trying to write msg of type: "
@@ -745,7 +740,7 @@ public final class NettyNetwork extends ComponentDefinition {
         try {
             logger.trace("Sending " + msg.getClass().getCanonicalName() + " from {} to {} ",
                     msg.getSource().getId(), msg.getDestination().getId());
-            channel.write(msg);
+            channel.writeAndFlush(msg);
             totalWrittenBytes += msg.getSize();
         } catch (Exception ex) {
             logger.warn("Problem trying to write msg of type: "

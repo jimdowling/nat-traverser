@@ -146,7 +146,6 @@ public class BaseMsgFrameDecoder extends MsgFrameDecoder {
      * returned, then return, else test msgs in this class.
      *
      * @param ctx
-     * @param channel
      * @param buffer
      * @return
      * @throws MessageDecodingException

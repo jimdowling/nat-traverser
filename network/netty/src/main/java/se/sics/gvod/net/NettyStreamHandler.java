@@ -8,26 +8,21 @@ import se.sics.gvod.net.msgs.RewriteableMsg;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 
-public class NettyTcpHandler extends NettyBaseHandler<RewriteableMsg> {
+public class NettyStreamHandler extends NettyBaseHandler<RewriteableMsg> {
 
-	private static final Logger logger = LoggerFactory.getLogger(NettyTcpHandler.class);
+	private static final Logger logger = LoggerFactory.getLogger(NettyStreamHandler.class);
 
-	public NettyTcpHandler(NettyNetwork component) {
-		super(component);
+	public NettyStreamHandler(NettyNetwork component, Transport protocol) {
+		super(component, protocol);
 	}
 
 	@Override
-	protected void messageReceived(ChannelHandlerContext ctx, RewriteableMsg msg) throws Exception {
+	protected void channelRead0(ChannelHandlerContext ctx, RewriteableMsg msg) throws Exception {
         SocketAddress remoteAddress = ctx.channel().remoteAddress();
 
         if (remoteAddress instanceof InetSocketAddress) {
             updateAddress(msg, ctx, (InetSocketAddress) remoteAddress);
             getComponent().deliverMessage(msg);
         }
-	}
-
-	@Override
-	protected Transport getProtocol() {
-		return Transport.TCP;
 	}
 }
