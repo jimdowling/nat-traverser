@@ -1,18 +1,10 @@
 package se.sics.kompics;
 
-import java.net.InetAddress;
-import java.util.ArrayList;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.concurrent.Semaphore;
-
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import se.sics.gvod.address.Address;
 import se.sics.gvod.common.Utility;
 import se.sics.gvod.common.UtilityVod;
@@ -21,13 +13,7 @@ import se.sics.gvod.config.BaseCommandLineConfig;
 import se.sics.gvod.config.VodConfig;
 import se.sics.gvod.gradient.msgs.SetsExchangeMsg;
 import se.sics.gvod.hp.msgs.TConnectionMsg;
-import se.sics.gvod.net.BaseMsgFrameDecoder;
-import se.sics.gvod.net.NatNetworkControl;
-import se.sics.gvod.net.NettyInit;
-import se.sics.gvod.net.NettyNetwork;
-import se.sics.gvod.net.Transport;
-import se.sics.gvod.net.VodAddress;
-import se.sics.gvod.net.VodNetwork;
+import se.sics.gvod.net.*;
 import se.sics.gvod.net.events.PortBindRequest;
 import se.sics.gvod.net.events.PortBindResponse;
 import se.sics.gvod.net.events.PortBindResponse.Status;
@@ -39,6 +25,13 @@ import se.sics.kompics.nat.utils.getip.ResolveIp;
 import se.sics.kompics.nat.utils.getip.ResolveIpPort;
 import se.sics.kompics.nat.utils.getip.events.GetIpRequest;
 import se.sics.kompics.nat.utils.getip.events.GetIpResponse;
+
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.concurrent.Semaphore;
 
 /**
  * Unit test for simple App.
@@ -95,7 +88,6 @@ public class TcpPingTest extends TestCase {
             server = create(NettyNetwork.class);
             resolveIp = create(ResolveIp.class);
 
-
             subscribe(handleStart, control);
             subscribe(handleMsgTimeout, timer.getPositive(Timer.class));
             subscribe(handlePong, client.getPositive(VodNetwork.class));
@@ -108,9 +100,8 @@ public class TcpPingTest extends TestCase {
                     BaseMsgFrameDecoder.class), client.getControl());
             trigger(new NettyInit(132, true,
                     BaseMsgFrameDecoder.class), server.getControl());
-
-
         }
+
         public Handler<GetIpResponse> handleGetIpResponse = new Handler<GetIpResponse>() {
             @Override
             public void handle(GetIpResponse event) {
@@ -118,13 +109,12 @@ public class TcpPingTest extends TestCase {
                 int clientPort = 54644;
                 int serverPort = 54645;
 
-//                try {
-//                    ip = InetAddress.getLocalHost();
-                    ip = event.getBoundIp();
-//                } catch (UnknownHostException ex) {
-//                    logger.error("UnknownHostException");
-//                    fail();
-//                }
+                try {
+                    ip = InetAddress.getLocalHost();
+                } catch (UnknownHostException ex) {
+                    logger.error("UnknownHostException");
+                    fail();
+                }
                 Address cAddr = new Address(ip, clientPort, 0);
                 Address sAddr = new Address(ip, serverPort, 1);
 
@@ -147,20 +137,20 @@ public class TcpPingTest extends TestCase {
                 trigger(requestServer, server.getPositive(NatNetworkControl.class));
             }
         };
-        
+
         public Handler<Start> handleStart = new Handler<Start>() {
             public void handle(Start event) {
                 trigger(new GetIpRequest(false, EnumSet.of(
-                        GetIpRequest.NetworkInterfacesMask.IGNORE_LOOPBACK, 
+                        GetIpRequest.NetworkInterfacesMask.IGNORE_LOOPBACK,
                         GetIpRequest.NetworkInterfacesMask.IGNORE_TEN_DOT_PRIVATE)),
                         resolveIp.getPositive(ResolveIpPort.class));
-                
+
                 System.out.println("Starting");
                 ScheduleTimeout st = new ScheduleTimeout(1000 * 1000);
                 SetsExchangeMsg.RequestTimeout mt = new SetsExchangeMsg.RequestTimeout(st,
                         serverAddr);
                 st.setTimeoutEvent(mt);
-                trigger(st, timer.getPositive(Timer.class));                
+                trigger(st, timer.getPositive(Timer.class));
             }
         };
         public Handler<PortBindResponse> handlePortBindResponse = new Handler<PortBindResponse>() {
@@ -174,7 +164,7 @@ public class TcpPingTest extends TestCase {
                 }
 
                 if (event.getPort() == serverAddr.getPort()) {
-                    trigger(new TConnectionMsg.Ping(clientAddr, serverAddr, Transport.TCP, 
+                    trigger(new TConnectionMsg.Ping(clientAddr, serverAddr, Transport.TCP,
                             UUID.nextUUID()), client.getPositive(VodNetwork.class));
                 }
             }
@@ -206,6 +196,7 @@ public class TcpPingTest extends TestCase {
             }
         };
     }
+
     private static final int EVENT_COUNT = 1;
     private static Semaphore semaphore = new Semaphore(0);
 

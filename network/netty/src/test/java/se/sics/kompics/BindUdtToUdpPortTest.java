@@ -94,7 +94,6 @@ public class BindUdtToUdpPortTest extends TestCase {
 			subscribe(handleStart, control);
 			subscribe(handlePortBindResponse, server.getPositive(NatNetworkControl.class));
 
-			// TODO do I need those ports?
 			trigger(new NettyInit(111, true, BaseMsgFrameDecoder.class), 
                                 server.getControl());
 		}
