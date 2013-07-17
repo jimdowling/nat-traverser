@@ -3,10 +3,10 @@ package se.sics.gvod.net;
 import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPromise;
-import io.netty.channel.MessageList;
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.GenericFutureListener;
 
+import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -14,58 +14,54 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public class MessageCounter extends ChannelDuplexHandler {
 
-	// internal vars ----------------------------------------------------------
+    // internal vars ----------------------------------------------------------
 
-	private final String id;
-	private final AtomicLong writtenMessages;
-	private final AtomicLong readMessages;
+    private final String id;
+    private final AtomicLong writtenMessages;
+    private final AtomicLong readMessages;
 
-	// constructors -----------------------------------------------------------
+    // constructors -----------------------------------------------------------
 
-	public MessageCounter(String id) {
-		this.id = id;
-		this.writtenMessages = new AtomicLong();
-		this.readMessages = new AtomicLong();
-	}
+    public MessageCounter(String id) {
+        this.id = id;
+        this.writtenMessages = new AtomicLong();
+        this.readMessages = new AtomicLong();
+    }
 
-	// SimpleChannelHandler ---------------------------------------------------
+    // SimpleChannelHandler ---------------------------------------------------
 
-	@Override
-	public void messageReceived(ChannelHandlerContext ctx, MessageList<Object> msgs)
-			throws Exception {
-		this.readMessages.addAndGet(msgs.size());
-		super.messageReceived(ctx, msgs);
-	}
+    @Override
+    public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+        this.readMessages.incrementAndGet();
+        super.channelRead(ctx, msg);
+    }
 
-	@Override
-	public void write(ChannelHandlerContext ctx, MessageList<Object> msgs, ChannelPromise promise)
-			throws Exception {
-		final int size = msgs.size();
-		promise.addListener(new GenericFutureListener<Future<? super Void>>() {
+    @Override
+    public void write(ChannelHandlerContext ctx, Object msgs, ChannelPromise promise) throws Exception {
+        promise.addListener(new GenericFutureListener<Future<? super Void>>() {
 
-			@Override
-			public void operationComplete(Future<? super Void> future) throws Exception {
-				MessageCounter.this.readMessages.addAndGet(size);
-			}
-		});
+            @Override
+            public void operationComplete(Future<? super Void> future) throws Exception {
+                MessageCounter.this.readMessages.getAndIncrement();
+            }
+        });
+        super.write(ctx, msgs, promise);
+    }
 
-		super.write(ctx, msgs, promise);
-	}
+    @Override
+    public void channelUnregistered(ChannelHandlerContext ctx) throws Exception {
+        System.out.println(this.id + ctx.channel() + " -> sent: " + this.getWrittenMessages()
+                + ", recv: " + this.getReadMessages());
+        super.channelUnregistered(ctx);
+    }
 
-	@Override
-	public void channelUnregistered(ChannelHandlerContext ctx) throws Exception {
-		System.out.println(this.id + ctx.channel() + " -> sent: " + this.getWrittenMessages()
-				+ ", recv: " + this.getReadMessages());
-		super.channelUnregistered(ctx);
-	}
+    // getters & setters ------------------------------------------------------
 
-	// getters & setters ------------------------------------------------------
+    public long getWrittenMessages() {
+        return writtenMessages.get();
+    }
 
-	public long getWrittenMessages() {
-		return writtenMessages.get();
-	}
-
-	public long getReadMessages() {
-		return readMessages.get();
-	}
+    public long getReadMessages() {
+        return readMessages.get();
+    }
 }

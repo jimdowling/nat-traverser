@@ -16,11 +16,13 @@ import se.sics.gvod.net.msgs.RewriteableMsg;
 
 public abstract class NettyBaseHandler<I> extends SimpleChannelInboundHandler<I> {
 
-	private static final Logger logger = LoggerFactory.getLogger(NettyTcpHandler.class);
+	private static final Logger logger = LoggerFactory.getLogger(NettyStreamHandler.class);
 	private final NettyNetwork component;
+    private final Transport protocol;
 
-	public NettyBaseHandler(NettyNetwork component) {
+	public NettyBaseHandler(NettyNetwork component, Transport protocol) {
 		this.component = component;
+        this.protocol = protocol;
 	}
 
 	@Override
@@ -28,7 +30,13 @@ public abstract class NettyBaseHandler<I> extends SimpleChannelInboundHandler<I>
 		logger.trace("Channel connected.");
 	}
 
-	@Override
+    @Override
+    public boolean acceptInboundMessage(Object msg) throws Exception {
+        System.out.println("here");
+        return super.acceptInboundMessage(msg);
+    }
+
+    @Override
 	public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
 		Channel channel = ctx.channel();
 		SocketAddress address = channel.remoteAddress();
@@ -49,7 +57,9 @@ public abstract class NettyBaseHandler<I> extends SimpleChannelInboundHandler<I>
 		super.channelInactive(ctx);
 	}
 	
-	protected abstract Transport getProtocol();
+	protected Transport getProtocol() {
+        return protocol;
+    }
 
     protected RewriteableMsg updateAddress(RewriteableMsg msg, ChannelHandlerContext ctx, InetSocketAddress remoteAddress) {
         msg.getSource().setIp(remoteAddress.getAddress());

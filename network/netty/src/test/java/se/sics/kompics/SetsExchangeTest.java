@@ -182,9 +182,7 @@ public class SetsExchangeTest extends TestCase {
 
     private void allTests() {
         runInstance();
-        if (testStatus == true) {
-            assertTrue(true);
-        }
+        assertTrue(testStatus);
     }
 
     private void runInstance() {
@@ -198,10 +196,6 @@ public class SetsExchangeTest extends TestCase {
             assert (false);
         } finally {
             Kompics.shutdown();
-        }
-
-        if (testStatus == false) {
-            assertTrue(false);
         }
     }
 

@@ -146,7 +146,7 @@ public class TcpPingTest extends TestCase {
                         resolveIp.getPositive(ResolveIpPort.class));
 
                 System.out.println("Starting");
-                ScheduleTimeout st = new ScheduleTimeout(1000 * 1000);
+                ScheduleTimeout st = new ScheduleTimeout(10 * 1000);
                 SetsExchangeMsg.RequestTimeout mt = new SetsExchangeMsg.RequestTimeout(st,
                         serverAddr);
                 st.setTimeoutEvent(mt);
@@ -202,9 +202,7 @@ public class TcpPingTest extends TestCase {
 
     private void allTests() {
         runInstance();
-        if (testStatus == true) {
-            assertTrue(true);
-        }
+        assertTrue(testStatus);
     }
 
     private void runInstance() {
@@ -219,11 +217,6 @@ public class TcpPingTest extends TestCase {
         } finally {
             Kompics.shutdown();
         }
-
-        if (testStatus == false) {
-            assertTrue(false);
-        }
-
     }
 
     @org.junit.Ignore

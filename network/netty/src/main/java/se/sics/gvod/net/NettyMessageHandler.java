@@ -9,14 +9,14 @@ import se.sics.gvod.net.msgs.RewriteableMsg;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 
-public class NettyUdpHandler extends NettyBaseHandler<DatagramPacket> {
+public class NettyMessageHandler extends NettyBaseHandler<DatagramPacket> {
 
-    private static final Logger logger = LoggerFactory.getLogger(NettyUdpHandler.class);
+    private static final Logger logger = LoggerFactory.getLogger(NettyMessageHandler.class);
 
     private final MsgFrameDecoder decoder;
 
-    public NettyUdpHandler(NettyNetwork component, Class<? extends MsgFrameDecoder> msgDecoderClass) {
-        super(component);
+    public NettyMessageHandler(NettyNetwork component, Transport protocol, Class<? extends MsgFrameDecoder> msgDecoderClass) {
+        super(component, protocol);
 
         try {
             this.decoder = msgDecoderClass.newInstance();
@@ -26,12 +26,7 @@ public class NettyUdpHandler extends NettyBaseHandler<DatagramPacket> {
     }
 
     @Override
-    protected Transport getProtocol() {
-        return Transport.UDP;
-    }
-
-    @Override
-    protected void messageReceived(ChannelHandlerContext ctx, DatagramPacket msg) throws Exception {
+    protected void channelRead0(ChannelHandlerContext ctx, DatagramPacket msg) throws Exception {
         RewriteableMsg rewrittenMsg = (RewriteableMsg) decoder.parse(msg.content());
 
         // session-less UDP means that remoteAddresses cannot be found in
