@@ -33,7 +33,7 @@ import se.sics.kompics.Event;
  */
 public final class CancelPeriodicTimeout extends Event {
 
-	private TimeoutId timeoutId;
+	private final TimeoutId timeoutId;
 
 	/**
 	 * Instantiates a new cancel periodic timeout.
@@ -42,6 +42,9 @@ public final class CancelPeriodicTimeout extends Event {
 	 *            the timeout id
 	 */
 	public CancelPeriodicTimeout(TimeoutId timeoutId) {
+            if (timeoutId == null) {
+                throw new NullPointerException("TimeoutId cannot be null");
+            }
 		this.timeoutId = timeoutId;
 	}
 
