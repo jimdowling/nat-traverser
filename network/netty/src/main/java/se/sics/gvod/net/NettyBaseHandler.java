@@ -31,12 +31,6 @@ public abstract class NettyBaseHandler<I> extends SimpleChannelInboundHandler<I>
 	}
 
     @Override
-    public boolean acceptInboundMessage(Object msg) throws Exception {
-        System.out.println("here");
-        return super.acceptInboundMessage(msg);
-    }
-
-    @Override
 	public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
 		Channel channel = ctx.channel();
 		SocketAddress address = channel.remoteAddress();
