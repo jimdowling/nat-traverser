@@ -154,7 +154,7 @@ public class UdtPingTest extends TestCase {
 
             @Override
             public void handle(TConnectionMsg.Ping event) {
-                System.out.println("Ping");
+                System.out.println("Received ping");
                 trigger(new TConnectionMsg.Pong(serverAddr, clientAddr, Transport.UDT,
                         event.getTimeoutId()),
                         server.getPositive(VodNetwork.class));
@@ -167,7 +167,7 @@ public class UdtPingTest extends TestCase {
             public void handle(TConnectionMsg.Pong event) {
                 trigger(new Stop(), client.getControl());
                 trigger(new Stop(), server.getControl());
-                System.out.println("Pong");
+                System.out.println("Received pong");
                 testObj.pass();
             }
         };
