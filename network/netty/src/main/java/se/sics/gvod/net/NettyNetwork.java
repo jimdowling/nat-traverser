@@ -481,7 +481,6 @@ public final class NettyNetwork extends ComponentDefinition {
         bootstrap.option(ChannelOption.SO_REUSEADDR, true);
 
         try {
-            // TODO - bind on all network interfaces ??
             DatagramChannel c;
             if (bindAllNetworkIfs) {
                 c = (DatagramChannel) bootstrap.bind(new InetSocketAddress(port)).sync().channel();
@@ -599,7 +598,6 @@ public final class NettyNetwork extends ComponentDefinition {
                 .option(ChannelOption.SO_REUSEADDR, true);
 
         try {
-            // TODO asynchronous?
             SocketChannel c = (SocketChannel) bootstrap.connect(iAddr).sync().channel();
             addLocalTcpSocket(c, iAddr);
 
@@ -634,7 +632,6 @@ public final class NettyNetwork extends ComponentDefinition {
         // .option(ChannelOption.SO_REUSEADDR, true);
 
         try {
-            // TODO asynchronous?
             UdtChannel c = (UdtChannel) bootstrap.connect(iAddr).sync().channel();
             addLocalUdtSocket(c, iAddr);
 
@@ -749,7 +746,7 @@ public final class NettyNetwork extends ComponentDefinition {
             // TODO should not overwrite the given address and port!
             msg.getSource().setIp(channel.localAddress().getAddress());
             msg.getSource().setPort(channel.localAddress().getPort());
-            channel.write(msg).sync();
+            channel.write(msg);
             totalWrittenBytes += msg.getSize();
         } catch (Exception ex) {
             logger.warn("Problem trying to write msg of type: "
@@ -782,7 +779,7 @@ public final class NettyNetwork extends ComponentDefinition {
             // TODO should not overwrite the given address and port!
             msg.getSource().setIp(channel.localAddress().getAddress());
             msg.getSource().setPort(channel.localAddress().getPort());
-            channel.write(msg).sync();
+            channel.write(msg);
             totalWrittenBytes += msg.getSize();
         } catch (Exception ex) {
             logger.warn("Problem trying to write msg of type: "
