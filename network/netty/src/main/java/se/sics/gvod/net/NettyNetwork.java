@@ -88,15 +88,6 @@ import se.sics.kompics.Stop;
  *
  * @author Jim Dowling <jdowling@sics.se>
  */
-/*
- * 
- * 
- * Ports in init
- * DirectMsgNettyFactory bug
- * upnp code
- * Connect API / asynchronous?
- * How to handle bind exceptions
- */
 public final class NettyNetwork extends ComponentDefinition {
 
     // 1868836467 is the data packet size
@@ -196,7 +187,6 @@ public final class NettyNetwork extends ComponentDefinition {
 
             enableBandwidthStats = init.isEnableBandwidthStats();
 
-
             if (enableBandwidthStats) {
                 SchedulePeriodicTimeout spt = new SchedulePeriodicTimeout(0, 1000);
                 ByteCounterTimeout bct = new ByteCounterTimeout(spt);
@@ -207,7 +197,6 @@ public final class NettyNetwork extends ComponentDefinition {
     Handler<ByteCounterTimeout> handleByteCounterTimeout = new Handler<ByteCounterTimeout>() {
         @Override
         public void handle(ByteCounterTimeout event) {
-
             lastSecWrote.set(totalWrittenBytes - prevTotalWrote);
             lastSecRead.set(totalReadBytes - prevTotalRead);
             prevTotalWrote = totalWrittenBytes;
@@ -531,7 +520,6 @@ public final class NettyNetwork extends ComponentDefinition {
                 .option(ChannelOption.SO_REUSEADDR, true);
 
         try {
-            // TODO - bind on all network interfaces ??
             if (bindAllNetworkIfs) {
                 bootstrap.bind(new InetSocketAddress(port)).sync();
             } else {
@@ -539,6 +527,7 @@ public final class NettyNetwork extends ComponentDefinition {
             }
 
             logger.info("Successfully bound to ip:port {}:{}", addr, port);
+            // TODO how to handle bind exceptions
         } catch (InterruptedException e) {
             logger.warn("Problem when trying to bind to {}:{}", addr.getHostAddress(), port);
             trigger(new Fault(e.getCause()), control);
@@ -573,7 +562,6 @@ public final class NettyNetwork extends ComponentDefinition {
                 .option(ChannelOption.SO_REUSEADDR, true);
 
         try {
-            // TODO - bind on all network interfaces ??
             if (bindAllNetworkIfs) {
                 bootstrap.bind(new InetSocketAddress(port)).sync();
             } else {
@@ -617,6 +605,7 @@ public final class NettyNetwork extends ComponentDefinition {
 
             logger.info("Successfully connected to ip:port {}:{}", addr, port);
         } catch (InterruptedException e) {
+            // TODO how to handle bind exceptions
             logger.warn("Problem when trying to connect to {}:{}", addr.getHostAddress(), port);
             trigger(new Fault(e.getCause()), control);
             return false;
