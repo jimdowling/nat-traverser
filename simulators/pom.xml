@@ -17,17 +17,17 @@
         <dependency>
             <groupId>se.sics</groupId>
             <artifactId>gradient</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>se.sics.nat-traverser</groupId>
             <artifactId>nat-traverser</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>se.sics.nat.emu</groupId>
             <artifactId>nat-emulator</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>se.sics.p2p.experiments</groupId>
