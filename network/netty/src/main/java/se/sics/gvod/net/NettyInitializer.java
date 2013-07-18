@@ -5,6 +5,8 @@ import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
 
 /**
+ * Initializes the pipeline with message encoder/decoder and a handler.
+ *
  * @author Steffen Grohsschmiedt
  */
 public class NettyInitializer<C extends Channel> extends ChannelInitializer<C> {

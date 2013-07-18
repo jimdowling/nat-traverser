@@ -4,6 +4,8 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.udt.UdtChannel;
 
 /**
+ * Handler for a UDT server. Add new connections to the set of local connections.
+ *
  * @author Steffen Grohsschmiedt
  */
 public class NettyUdtServerHandler extends NettyStreamHandler {

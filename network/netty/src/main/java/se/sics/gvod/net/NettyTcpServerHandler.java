@@ -4,6 +4,8 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.socket.SocketChannel;
 
 /**
+ * Handler for a TCP server. Add new connections to the set of local connections.
+ *
  * @author Steffen Grohsschmiedt
  */
 public class NettyTcpServerHandler extends NettyStreamHandler {

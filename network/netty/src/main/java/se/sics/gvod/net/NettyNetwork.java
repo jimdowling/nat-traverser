@@ -222,6 +222,10 @@ public final class NettyNetwork extends ComponentDefinition {
         }
         return count;
     }
+
+    /**
+     * Close all connections.
+     */
     Handler<Stop> handleStop = new Handler<Stop>() {
         @Override
         public void handle(Stop event) {
@@ -274,7 +278,7 @@ public final class NettyNetwork extends ComponentDefinition {
         }
     };
     /**
-     * The handle msg.
+     * Send the received message over the network using the specified protocol.
      */
     Handler<RewriteableMsg> handleRewriteableMessage = new Handler<RewriteableMsg>() {
         @Override
@@ -304,6 +308,9 @@ public final class NettyNetwork extends ComponentDefinition {
             }
         }
     };
+    /**
+     * Start listening as a server on the given port.
+     */
     Handler<PortBindRequest> handlePortBindRequest = new Handler<PortBindRequest>() {
         @Override
         public void handle(PortBindRequest msg) {
@@ -360,6 +367,9 @@ public final class NettyNetwork extends ComponentDefinition {
             trigger(response, netControl);
         }
     };
+    /**
+     * Stop listening as server on the given ports.
+     */
     Handler<PortDeleteRequest> handlePortDeleteRequest = new Handler<PortDeleteRequest>() {
         @Override
         public void handle(PortDeleteRequest msg) {
@@ -399,6 +409,9 @@ public final class NettyNetwork extends ComponentDefinition {
             }
         }
     };
+    /**
+     * Close the client socket connected to the given remote address.
+     */
     Handler<CloseConnectionRequest> handleCloseConnectionRequest = new Handler<CloseConnectionRequest>() {
         @Override
         public void handle(CloseConnectionRequest msg) {
@@ -413,11 +426,13 @@ public final class NettyNetwork extends ComponentDefinition {
     };
 
     /**
+     * Start listening as a server at the given address with the given protocol.
      *
-     * @param addr
-     * @param port
-     * @param protocol
-     * @return
+     * @param addr the address to listen at
+     * @param port the port number to listen at
+     * @param protocol the protocol to use
+     * @return true if listening was started
+     * @throws ChannelException in case binding failed
      */
     private boolean bindPort(InetAddress addr, int port, Transport protocol) {
         switch (protocol) {
@@ -433,11 +448,13 @@ public final class NettyNetwork extends ComponentDefinition {
     }
 
     /**
+     * Start listening as a server at the given address..
      *
-     * @param addr
-     * @param port
-     * @param bindAllNetworkIfs
-     * @return
+     * @param addr the address to listen at
+     * @param port the port number to listen at
+     * @param bindAllNetworkIfs whether to bind on all network interfaces
+     * @return true if listening was started
+     * @throws ChannelException in case binding failed
      */
     private boolean bindUdpPort(final InetAddress addr, final int port, final boolean bindAllNetworkIfs) {
 
@@ -494,11 +511,13 @@ public final class NettyNetwork extends ComponentDefinition {
     }
 
     /**
+     * Start listening as a server at the given address..
      *
-     * @param addr
-     * @param port
-     * @param bindAllNetworkIfs
-     * @return
+     * @param addr the address to listen at
+     * @param port the port number to listen at
+     * @param bindAllNetworkIfs whether to bind on all network interfaces
+     * @return true if listening was started
+     * @throws ChannelException in case binding failed
      */
     private boolean bindTcpPort(InetAddress addr, int port, boolean bindAllNetworkIfs) {
 
@@ -536,11 +555,13 @@ public final class NettyNetwork extends ComponentDefinition {
     }
 
     /**
+     * Start listening as a server at the given address..
      *
-     * @param addr
-     * @param port
-     * @param bindAllNetworkIfs
-     * @return
+     * @param addr the address to listen at
+     * @param port the port number to listen at
+     * @param bindAllNetworkIfs whether to bind on all network interfaces
+     * @return true if listening was started
+     * @throws ChannelException in case binding failed
      */
     private boolean bindUdtPort(InetAddress addr, int port, boolean bindAllNetworkIfs) {
 
@@ -586,9 +607,10 @@ public final class NettyNetwork extends ComponentDefinition {
     /**
      * Connect to a TCP server.
      *
-     * @param remoteAddress
-     * @param localAddress
-     * @return
+     * @param remoteAddress the remote address
+     * @param localAddress the local address to bind to
+     * @return true if connection succeeded
+     * @throws ChannelException if connecting failed
      */
     private boolean connectTcp(Address remoteAddress, Address localAddress) {
         InetSocketAddress remote = address2SocketAddress(remoteAddress);
@@ -623,9 +645,10 @@ public final class NettyNetwork extends ComponentDefinition {
     /**
      * Connect to a UDT server.
      *
-     * @param remoteAddress
-     * @param localAddress
-     * @return
+     * @param remoteAddress the remote address
+     * @param localAddress the local address to bind to
+     * @return true if connection succeeded
+     * @throws ChannelException if connecting failed
      */
     private boolean connectUdt(Address remoteAddress, Address localAddress) {
         InetSocketAddress remote = address2SocketAddress(remoteAddress);
@@ -660,9 +683,10 @@ public final class NettyNetwork extends ComponentDefinition {
     }
 
     /**
+     * Add a {@link DatagramChannel} to the local connections.
      *
-     * @param localAddress
-     * @param channel
+     * @param localAddress the local address
+     * @param channel the channel to be added
      */
     private void addLocalSocket(InetSocketAddress localAddress, DatagramChannel channel) {
         udpPortsToSockets.put(localAddress.getPort(), localAddress);
@@ -670,9 +694,10 @@ public final class NettyNetwork extends ComponentDefinition {
     }
 
     /**
+     * Add a {@link SocketChannel} to the local connections.
      *
-     * @param remoteAddress
-     * @param channel
+     * @param remoteAddress the remote address
+     * @param channel the channel to be added
      */
     void addLocalSocket(InetSocketAddress remoteAddress, SocketChannel channel) {
         tcpSocketsToChannels.put(remoteAddress, channel);
@@ -680,9 +705,10 @@ public final class NettyNetwork extends ComponentDefinition {
     }
 
     /**
+     * Add a {@link UdtChannel} to the local connections.
      *
-     * @param remoteAddress
-     * @param channel
+     * @param remoteAddress the remote address
+     * @param channel the channel to be added
      */
     void addLocalSocket(InetSocketAddress remoteAddress, UdtChannel channel) {
         udtSocketsToChannels.put(remoteAddress, channel);
@@ -690,9 +716,10 @@ public final class NettyNetwork extends ComponentDefinition {
     }
 
     /**
+     * Remove a channel from the local connections.
      *
-     * @param addr
-     * @param protocol
+     * @param addr the address of the channel to be removed
+     * @param protocol the protocol of the channel to be removed
      */
     private void removeLocalSocket(InetSocketAddress addr, Transport protocol) {
         Bootstrap bootstrap;
@@ -724,11 +751,6 @@ public final class NettyNetwork extends ComponentDefinition {
         trigger(new NetworkSessionClosed(addr, protocol), netControl);
     }
 
-    /**
-     *
-     * @param address
-     * @return
-     */
     private InetSocketAddress address2SocketAddress(Address address) {
         return new InetSocketAddress(address.getIp(), address.getPort());
     }
@@ -736,7 +758,8 @@ public final class NettyNetwork extends ComponentDefinition {
     /**
      * Send a message using UDP.
      *
-     * @param msg
+     * @param msg the message to be sent
+     * @throws ChannelException in case of connection problems
      */
     private void sendUdp(RewriteableMsg msg) {
         InetSocketAddress src = address2SocketAddress(msg.getSource());
@@ -775,7 +798,8 @@ public final class NettyNetwork extends ComponentDefinition {
     /**
      * Send a message to using TCP. Connects to a server on  demand.
      *
-     * @param msg
+     * @param msg the message to be sent
+     * @throws ChannelException in case of connection problems
      */
     private void sendTcp(RewriteableMsg msg) {
         InetSocketAddress dst = address2SocketAddress(msg.getDestination());
@@ -810,7 +834,8 @@ public final class NettyNetwork extends ComponentDefinition {
     /**
      * Send a message to using UDT. Connects to a server on  demand.
      *
-     * @param msg
+     * @param msg the message to be sent
+     * @throws ChannelException in case of connection problems
      */
     private void sendUdt(RewriteableMsg msg) {
         InetSocketAddress dst = address2SocketAddress(msg.getDestination());
@@ -843,8 +868,9 @@ public final class NettyNetwork extends ComponentDefinition {
     }
 
     /**
+     * Deliver a message to the upper components.
      *
-     * @param msg
+     * @param msg the message to be delivered
      */
     final void deliverMessage(RewriteableMsg msg) {
         logger.trace("Receiving " + msg.getClass().getCanonicalName() + " source {} dest {} ",
@@ -854,9 +880,10 @@ public final class NettyNetwork extends ComponentDefinition {
     }
 
     /**
+     * Forward an exception to the upper components.
      *
-     * @param ctx
-     * @param e
+     * @param ctx the channel handler context
+     * @param e the caught exception
      */
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable e) {
         logger.warn("Fault for " + e.getCause().getMessage());
@@ -874,9 +901,10 @@ public final class NettyNetwork extends ComponentDefinition {
     }
 
     /**
+     * Remove a connection after it was lost or closed remotely and inform the upper components.
      *
-     * @param ctx
-     * @param protocol
+     * @param ctx the channel handler context
+     * @param protocol the protocol
      */
     final void channelInactive(ChannelHandlerContext ctx, Transport protocol) {
         Channel c = ctx.channel();
