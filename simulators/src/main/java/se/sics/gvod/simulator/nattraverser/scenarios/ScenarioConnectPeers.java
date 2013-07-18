@@ -17,13 +17,13 @@ public class ScenarioConnectPeers extends Scenario {
                 
 		StochasticProcess startNodes = new StochasticProcess() {{
 			eventInterArrivalTime(exponential(1000));
-			raise(300, Operations.peerJoin(VodAddress.NatType.NAT), 
+			raise(500, Operations.peerJoin(VodAddress.NatType.NAT), 
                                 uniform(0, 10000));
 		}};
                 
 		StochasticProcess connectNodes = new StochasticProcess() {{
 			eventInterArrivalTime(constant(1000));
-			raise(50, Operations.connectPeers(), 
+			raise(1500, Operations.connectPeers(), 
                                 uniform(0, 10000), uniform(0, 10000));
 		}};
 

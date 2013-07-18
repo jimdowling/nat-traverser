@@ -127,7 +127,6 @@ public class GoMsg
                     holePunchingMechanism, holePunchingRole, rtoRetries, 
                     PRP_PRP_interleavedPort, bindPort,
                     msgTimeoutId);
-            copy.setTimeoutId(timeoutId);
             return copy;            
         }
 
