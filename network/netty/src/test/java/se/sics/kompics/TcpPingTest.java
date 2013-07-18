@@ -149,8 +149,7 @@ public class TcpPingTest extends TestCase {
 
                 System.out.println("Starting");
                 ScheduleTimeout st = new ScheduleTimeout(10 * 1000);
-                SetsExchangeMsg.RequestTimeout mt = new SetsExchangeMsg.RequestTimeout(st,
-                        serverAddr);
+                MsgTimeout mt = new MsgTimeout(st);
                 st.setTimeoutEvent(mt);
                 trigger(st, timer.getPositive(Timer.class));
             }

@@ -30,11 +30,11 @@ import se.sics.gvod.net.events.PortBindResponse;
 import se.sics.gvod.net.events.PortBindResponse.Status;
 
 /**
- * Unit test for simple App.
+ * Try to bind to a port already used by UDP.
  *
  * @author Steffen Grohsschmiedt
  */
-public class BindUdtToUdpPortTest extends TestCase {
+public class DuplicatedPortUdtAndUdpTest extends TestCase {
 
 	private static final Logger logger = LoggerFactory.getLogger(SetsExchangeTest.class);
 	private boolean testStatus = true;
@@ -45,7 +45,7 @@ public class BindUdtToUdpPortTest extends TestCase {
 	 * @param testName
 	 *            name of the test case
 	 */
-	public BindUdtToUdpPortTest(String testName) {
+	public DuplicatedPortUdtAndUdpTest(String testName) {
 		super(testName);
 		System.setProperty("java.net.preferIPv4Stack", "true");
 	}
@@ -54,17 +54,17 @@ public class BindUdtToUdpPortTest extends TestCase {
 	 * @return the suite of tests being tested
 	 */
 	public static Test suite() {
-		return new TestSuite(BindUdtToUdpPortTest.class);
+		return new TestSuite(DuplicatedPortUdtAndUdpTest.class);
 	}
 
-	public static void setTestObj(BindUdtToUdpPortTest testObj) {
+	public static void setTestObj(DuplicatedPortUdtAndUdpTest testObj) {
 		TestStClientComponent.testObj = testObj;
 	}
 
 	public static class TestStClientComponent extends ComponentDefinition {
 
 		private Component server;
-		private static BindUdtToUdpPortTest testObj = null;
+		private static DuplicatedPortUdtAndUdpTest testObj = null;
 		private VodAddress serverAddr, serverAddr0;
 		private Utility utility = new UtilityVod(10, 200, 15);
 		private VodDescriptor nodeDesc;
@@ -150,7 +150,7 @@ public class BindUdtToUdpPortTest extends TestCase {
 		Kompics.createAndStart(TestStClientComponent.class, 1);
 
 		try {
-			BindUdtToUdpPortTest.semaphore.acquire(EVENT_COUNT);
+			DuplicatedPortUdtAndUdpTest.semaphore.acquire(EVENT_COUNT);
 			System.out.println("Finished test.");
 		} catch (InterruptedException e) {
 			assert (false);
@@ -166,11 +166,11 @@ public class BindUdtToUdpPortTest extends TestCase {
 	}
 
 	public void pass() {
-		BindUdtToUdpPortTest.semaphore.release();
+		DuplicatedPortUdtAndUdpTest.semaphore.release();
 	}
 
 	public void failAndRelease() {
 		testStatus = false;
-		BindUdtToUdpPortTest.semaphore.release();
+		DuplicatedPortUdtAndUdpTest.semaphore.release();
 	}
 }

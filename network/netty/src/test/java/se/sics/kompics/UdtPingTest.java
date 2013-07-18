@@ -1,18 +1,10 @@
 package se.sics.kompics;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.Semaphore;
-
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import se.sics.gvod.address.Address;
 import se.sics.gvod.common.Utility;
 import se.sics.gvod.common.UtilityVod;
@@ -21,13 +13,7 @@ import se.sics.gvod.config.BaseCommandLineConfig;
 import se.sics.gvod.config.VodConfig;
 import se.sics.gvod.gradient.msgs.SetsExchangeMsg;
 import se.sics.gvod.hp.msgs.TConnectionMsg;
-import se.sics.gvod.net.BaseMsgFrameDecoder;
-import se.sics.gvod.net.NatNetworkControl;
-import se.sics.gvod.net.NettyInit;
-import se.sics.gvod.net.NettyNetwork;
-import se.sics.gvod.net.Transport;
-import se.sics.gvod.net.VodAddress;
-import se.sics.gvod.net.VodNetwork;
+import se.sics.gvod.net.*;
 import se.sics.gvod.net.events.PortBindRequest;
 import se.sics.gvod.net.events.PortBindResponse;
 import se.sics.gvod.net.events.PortBindResponse.Status;
@@ -35,6 +21,12 @@ import se.sics.gvod.timer.ScheduleTimeout;
 import se.sics.gvod.timer.Timer;
 import se.sics.gvod.timer.UUID;
 import se.sics.gvod.timer.java.JavaTimer;
+
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.Semaphore;
 
 /**
  * Unit test for simple App.
@@ -122,8 +114,7 @@ public class UdtPingTest extends TestCase {
             public void handle(Start event) {
                 System.out.println("Starting");
                 ScheduleTimeout st = new ScheduleTimeout(10 * 1000);
-                SetsExchangeMsg.RequestTimeout mt = new SetsExchangeMsg.RequestTimeout(st,
-                        serverAddr);
+                MsgTimeout mt = new MsgTimeout(st);
                 st.setTimeoutEvent(mt);
                 PortBindRequest request =
                         new PortBindRequest(serverAddr.getPeerAddress(),
