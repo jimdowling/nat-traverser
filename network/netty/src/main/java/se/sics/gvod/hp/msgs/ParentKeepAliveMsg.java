@@ -16,7 +16,7 @@ import se.sics.gvod.timer.TimeoutId;
  */
 public class ParentKeepAliveMsg {
 
-    public static final class Ping extends DirectMsgNetty {
+    public static final class Ping extends DirectMsgNetty.SystemRequest {
 
         static final long serialVersionUID = 12342356463L;
         
@@ -52,7 +52,7 @@ public class ParentKeepAliveMsg {
         
     }
 
-    public final static class Pong extends DirectMsgNetty {
+    public final static class Pong extends DirectMsgNetty.SystemResponse {
 
         static final long serialVersionUID = 6624678722345L;
         

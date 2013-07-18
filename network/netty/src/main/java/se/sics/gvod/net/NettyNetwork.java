@@ -192,7 +192,7 @@ public final class NettyNetwork extends ComponentDefinition {
             }
 
             msgDecoderClass = init.getMsgDecoderClass();
-            DirectMsgNettyFactory.setMsgFrameDecoder(msgDecoderClass);
+            DirectMsgNettyFactory.Base.setMsgFrameDecoder(msgDecoderClass);
 
             enableBandwidthStats = init.isEnableBandwidthStats();
 

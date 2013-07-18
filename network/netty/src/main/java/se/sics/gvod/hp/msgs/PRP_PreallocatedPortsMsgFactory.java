@@ -9,7 +9,7 @@ import se.sics.gvod.net.util.UserTypesDecoderFactory;
 
 public class PRP_PreallocatedPortsMsgFactory {
 
-    public static class Request extends HpMsgFactory {
+    public static class Request extends HpMsgFactory.Request {
 
         private Request() {
         }
@@ -18,7 +18,7 @@ public class PRP_PreallocatedPortsMsgFactory {
                 
                 throws MessageDecodingException {
             return (PRP_PreallocatedPortsMsg.Request)
-                    new PRP_PreallocatedPortsMsgFactory.Request().decode(buffer, true);
+                    new PRP_PreallocatedPortsMsgFactory.Request().decode(buffer);
         }
 
         @Override
@@ -28,7 +28,7 @@ public class PRP_PreallocatedPortsMsgFactory {
         }
     }
 
-    public static class Response extends HpMsgFactory {
+    public static class Response extends HpMsgFactory.Response {
 
         private Response() {
         }
@@ -37,7 +37,7 @@ public class PRP_PreallocatedPortsMsgFactory {
                 
                 throws MessageDecodingException {
             return (PRP_PreallocatedPortsMsg.Response)
-                    new PRP_PreallocatedPortsMsgFactory.Response().decode(buffer, true);
+                    new PRP_PreallocatedPortsMsgFactory.Response().decode(buffer);
         }
 
         @Override

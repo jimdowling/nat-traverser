@@ -8,7 +8,7 @@ import se.sics.gvod.net.util.UserTypesDecoderFactory;
 
 public class SHP_InitiateSimpleHolePunchingMsgFactory {
 
-    public static class Request extends HpMsgFactory {
+    public static class Request extends HpMsgFactory.Oneway {
 
         private Request() {
         }
@@ -17,7 +17,7 @@ public class SHP_InitiateSimpleHolePunchingMsgFactory {
                 
                 throws MessageDecodingException {
             return (SHP_InitiateSimpleHolePunchingMsg.Request)
-                    new SHP_InitiateSimpleHolePunchingMsgFactory.Request().decode(buffer, false);
+                    new SHP_InitiateSimpleHolePunchingMsgFactory.Request().decode(buffer);
         }
 
         @Override

@@ -20,7 +20,7 @@ import se.sics.gvod.timer.TimeoutId;
 public class PRP_ConnectMsg
 {
 
-    public static final class Request extends HpMsg
+    public static final class Request extends HpMsg.Request
     {
         static final long serialVersionUID = 1L;
 
@@ -78,7 +78,7 @@ public class PRP_ConnectMsg
         OK, FAILED, RESPONDER_ID_REMOTE_ID_DO_NOT_MATCH, CLIENT_RECORD_NOT_FOUND
     };
 
-    public final static class Response extends HpMsg
+    public final static class Response extends HpMsg.Response
     {
         static final long serialVersionUID = 1L;
         private final ResponseType responseType;

@@ -32,7 +32,7 @@ import se.sics.gvod.timer.TimeoutId;
  */
 public class HpConnectMsg implements Serializable {
 
-    public static final class Request extends HpMsg {
+    public static final class Request extends HpMsg.Request {
 
         static final long serialVersionUID = 187778888654L;
         private final int delta;
@@ -82,7 +82,7 @@ public class HpConnectMsg implements Serializable {
         }
     }
 
-    public final static class Response extends HpMsg {
+    public final static class Response extends HpMsg.Response {
 
         static final long serialVersionUID = 1213423434L;
 //        public static enum ResponseType {

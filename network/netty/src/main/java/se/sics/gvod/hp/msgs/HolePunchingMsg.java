@@ -15,7 +15,7 @@ import se.sics.gvod.timer.TimeoutId;
  */
 public class HolePunchingMsg {
 
-    public static final class Request extends HpMsg {
+    public static final class Request extends HpMsg.Request {
 
         static final long serialVersionUID = 654322451L;
 
@@ -65,7 +65,7 @@ public class HolePunchingMsg {
         }
     }
 
-    public final static class Response extends HpMsg {
+    public final static class Response extends HpMsg.Response {
 
         static final long serialVersionUID = 1L;
 
@@ -101,7 +101,7 @@ public class HolePunchingMsg {
         }
     }
 
-    public static final class ResponseAck extends HpMsg {
+    public static final class ResponseAck extends HpMsg.Response {
 
         static final long serialVersionUID = 445522451L;
 

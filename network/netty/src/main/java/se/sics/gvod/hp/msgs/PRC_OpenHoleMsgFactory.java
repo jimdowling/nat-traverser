@@ -6,7 +6,7 @@ import se.sics.gvod.net.util.UserTypesDecoderFactory;
 
 public class PRC_OpenHoleMsgFactory {
 
-    public static class Request extends HpMsgFactory {
+    public static class Request extends HpMsgFactory.Request {
 
         private Request() {
         }
@@ -15,7 +15,7 @@ public class PRC_OpenHoleMsgFactory {
                 
                 throws MessageDecodingException {
             return (PRC_OpenHoleMsg.Request)
-                    new PRC_OpenHoleMsgFactory.Request().decode(buffer, true);
+                    new PRC_OpenHoleMsgFactory.Request().decode(buffer);
         }
 
         @Override
@@ -24,7 +24,7 @@ public class PRC_OpenHoleMsgFactory {
         }
     }
 
-    public static class Response extends HpMsgFactory {
+    public static class Response extends HpMsgFactory.Response {
 
         private Response() {
         }

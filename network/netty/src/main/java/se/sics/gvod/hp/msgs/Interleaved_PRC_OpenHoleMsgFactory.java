@@ -6,7 +6,7 @@ import se.sics.gvod.net.util.UserTypesDecoderFactory;
 
 public class Interleaved_PRC_OpenHoleMsgFactory {
 
-    public static class Request extends HpMsgFactory {
+    public static class Request extends HpMsgFactory.Request {
 
         private Request() {
         }
@@ -26,7 +26,7 @@ public class Interleaved_PRC_OpenHoleMsgFactory {
         }
     }
 
-    public static class Response extends HpMsgFactory {
+    public static class Response extends HpMsgFactory.Response {
 
         private Response() {
         }

@@ -13,46 +13,41 @@ import se.sics.gvod.timer.TimeoutId;
 
 /**
  * This class uses the ObjectDecoder/Encoder and is only used for testing.
+ *
  * @author salman
  */
-public class TConnectionMsg
-{
+public class TConnectionMsg {
 
-    public static final class Ping extends DirectMsgNetty
-    {
+    public static final class Ping extends DirectMsgNetty.Request {
+
         static final long serialVersionUID = 1L;
 
         @Override
-	public int getSize()
-	{
-		return getHeaderSize();
-	}
-        
+        public int getSize() {
+            return getHeaderSize();
+        }
+
         public Ping(VodAddress src, VodAddress dest,
-        		Transport protocol, TimeoutId timeoutId)
-        {
+                Transport protocol, TimeoutId timeoutId) {
             super(src, dest, protocol, timeoutId);
         }
 
-        public Ping(VodAddress src, VodAddress dest, 
-                TimeoutId timeoutId)
-        {
+        public Ping(VodAddress src, VodAddress dest,
+                TimeoutId timeoutId) {
             super(src, dest, timeoutId);
         }
 
-        private Ping(Ping msg, VodAddress src)
-        {
+        private Ping(Ping msg, VodAddress src) {
             super(src, msg.getVodDestination());
         }
 
-        private Ping(VodAddress dest, Ping msg)
-        {
+        private Ping(VodAddress dest, Ping msg) {
             super(msg.getVodSource(), dest);
         }
 
         @Override
         public RewriteableMsg copy() {
-            TConnectionMsg.Ping copy = new TConnectionMsg.Ping(vodSrc, vodDest, 
+            TConnectionMsg.Ping copy = new TConnectionMsg.Ping(vodSrc, vodDest,
                     timeoutId);
             copy.setTimeoutId(timeoutId);
             return copy;
@@ -69,44 +64,38 @@ public class TConnectionMsg
         }
     }
 
-    public final static class Pong extends DirectMsgNetty
-    {
+    public final static class Pong extends DirectMsgNetty.Response {
+
         static final long serialVersionUID = 1L;
 
-
         @Override
-	public int getSize()
-	{
-		return getHeaderSize();
-	}
-        
+        public int getSize() {
+            return getHeaderSize();
+        }
+
         public Pong(VodAddress src, VodAddress dest,
-        		Transport protocol, TimeoutId timeoutId)
-        {
+                Transport protocol, TimeoutId timeoutId) {
             super(src, dest, protocol, timeoutId);
         }
 
-        public Pong(VodAddress src, VodAddress dest, TimeoutId timeoutId)
-        {
+        public Pong(VodAddress src, VodAddress dest, TimeoutId timeoutId) {
             super(src, dest);
             setTimeoutId(timeoutId);
         }
 
-        private Pong(Pong msg, VodAddress src)
-        {
+        private Pong(Pong msg, VodAddress src) {
             super(src, msg.getVodDestination());
             setTimeoutId(msg.getTimeoutId());
         }
 
-        private Pong(VodAddress dest, Pong msg)
-        {
+        private Pong(VodAddress dest, Pong msg) {
             super(msg.getVodSource(), dest);
             setTimeoutId(msg.getTimeoutId());
         }
 
         @Override
         public RewriteableMsg copy() {
-           return new TConnectionMsg.Pong(vodSrc, vodDest, timeoutId);
+            return new TConnectionMsg.Pong(vodSrc, vodDest, timeoutId);
         }
 
         @Override
@@ -118,25 +107,19 @@ public class TConnectionMsg
         public byte getOpcode() {
             return BaseMsgFrameDecoder.PONG;
         }
-
     }
 
-    public static final class RequestRetryTimeout extends RewriteableRetryTimeout
-    {
+    public static final class RequestRetryTimeout extends RewriteableRetryTimeout {
 
         private final Ping requestMsg;
 
-        public RequestRetryTimeout(ScheduleRetryTimeout st, Ping requestMsg)
-        {
+        public RequestRetryTimeout(ScheduleRetryTimeout st, Ping requestMsg) {
             super(st, requestMsg);
             this.requestMsg = requestMsg;
         }
 
-        public Ping getRequestMsg()
-        {
+        public Ping getRequestMsg() {
             return requestMsg;
         }
-
     }
-
 }

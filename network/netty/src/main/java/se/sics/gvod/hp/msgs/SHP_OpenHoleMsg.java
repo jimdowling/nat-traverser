@@ -15,11 +15,10 @@ import se.sics.gvod.timer.TimeoutId;
 public class SHP_OpenHoleMsg {
 
     public enum ResponseType {
-
         OK, FAILED
     };
 
-    public final static class Initiator extends HpMsg {
+    public final static class Initiator extends HpMsg.Oneway {
 
         static final long serialVersionUID = 1L;
         private final VodAddress dummyAddr;

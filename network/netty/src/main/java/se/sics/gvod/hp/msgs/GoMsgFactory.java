@@ -9,7 +9,7 @@ import se.sics.gvod.net.util.UserTypesDecoderFactory;
 
 public class GoMsgFactory {
 
-    public static class Request extends HpMsgFactory {
+    public static class Request extends HpMsgFactory.Oneway {
 
         private Request() {
         }
@@ -18,7 +18,7 @@ public class GoMsgFactory {
                 
                 throws MessageDecodingException {
             return (GoMsg.Request)
-                    new GoMsgFactory.Request().decode(buffer, false);
+                    new GoMsgFactory.Request().decode(buffer);
         }
 
         @Override

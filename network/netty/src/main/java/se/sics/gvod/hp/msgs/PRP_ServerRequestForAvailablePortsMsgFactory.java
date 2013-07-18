@@ -8,7 +8,7 @@ import se.sics.gvod.net.util.UserTypesDecoderFactory;
 
 public class PRP_ServerRequestForAvailablePortsMsgFactory {
 
-    public static class Request extends HpMsgFactory {
+    public static class Request extends HpMsgFactory.Oneway {
 
         private Request() {
         }
@@ -17,7 +17,7 @@ public class PRP_ServerRequestForAvailablePortsMsgFactory {
                 
                 throws MessageDecodingException {
             return (PRP_ServerRequestForAvailablePortsMsg.Request)
-                    new PRP_ServerRequestForAvailablePortsMsgFactory.Request().decode(buffer, false);
+                    new PRP_ServerRequestForAvailablePortsMsgFactory.Request().decode(buffer);
         }
 
         @Override

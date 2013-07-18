@@ -13,10 +13,10 @@ public class Concrete extends AbstractConfiguration<Concrete> {
     int val;
 
     public Concrete() {
-        this(2, 100);
+        this(100);
     }
 
-    public Concrete(int seed, int val) {
+    public Concrete(int val) {
         this.val = val;
     }
     

@@ -301,8 +301,8 @@ public class DistributedNatGatewayEmulator extends MsgRetryComponent {
         public void handle(RewriteableMsg inMsg) {
             RewriteableMsg msg = inMsg.copy();
 
-            if (msg instanceof HpMsg) {
-                HpMsg hm = (HpMsg) msg;
+            if (msg instanceof HpMsg.Hp) {
+                HpMsg.Hp hm = (HpMsg.Hp) msg;
                 logger.debug(compName + inMsg.getSource() + " -- "
                         + inMsg.getDestination() + " of type "
                         + inMsg.getClass().getCanonicalName() + " - "
@@ -508,8 +508,8 @@ public class DistributedNatGatewayEmulator extends MsgRetryComponent {
     Handler<RewriteableMsg> handleLowerMessage = new Handler<RewriteableMsg>() {
         @Override
         public void handle(RewriteableMsg msg) {
-            if (msg instanceof HpMsg) {
-                HpMsg hm = (HpMsg) msg;
+            if (msg instanceof HpMsg.Hp) {
+                HpMsg.Hp hm = (HpMsg.Hp) msg;
                 logger.debug(compName + msg.getSource() + " -- "
                         + msg.getDestination() + " of type "
                         + msg.getClass().getCanonicalName() + " - "
@@ -606,8 +606,8 @@ public class DistributedNatGatewayEmulator extends MsgRetryComponent {
                                         logger.warn(compName + "Drop PD-1 " + msg.getClass().getCanonicalName());
                                         logger.warn(compName + "Existing mappings: "
                                                 + portMap);
-                                        if (msg instanceof HpMsg) {
-                                            HpMsg hm = (HpMsg) msg;
+                                        if (msg instanceof HpMsg.Hp) {
+                                            HpMsg.Hp hm = (HpMsg.Hp) msg;
                                             logger.debug(compName + "Drop PD-1 " + msg.getSource() + " -- "
                                                     + msg.getDestination() + " of type "
                                                     + msg.getClass().getCanonicalName() + " - "
@@ -637,8 +637,8 @@ public class DistributedNatGatewayEmulator extends MsgRetryComponent {
                                     }
                                     sb.append(getExistingMappingsAsString(map));
                                     logger.warn(compName + sb.toString());
-                                    if (msg instanceof HpMsg) {
-                                        HpMsg hm = (HpMsg) msg;
+                                    if (msg instanceof HpMsg.Hp) {
+                                        HpMsg.Hp hm = (HpMsg.Hp) msg;
                                         logger.debug(compName + "Drop PD-2 " + msg.getSource() + " -- "
                                                 + msg.getDestination() + " of type "
                                                 + msg.getClass().getCanonicalName() + " - "
@@ -677,8 +677,8 @@ public class DistributedNatGatewayEmulator extends MsgRetryComponent {
                             + msg.getDestination() + " message class: "
                             + shortClassName(msg.getClass().toString())
                             + getExistingMappingsAsString(privateEndPointToDestinationTable.get(v)));
-            if (msg instanceof HpMsg) {
-                HpMsg hm = (HpMsg) msg;
+            if (msg instanceof HpMsg.Hp) {
+                HpMsg.Hp hm = (HpMsg.Hp) msg;
                 logger.debug(compName + msg.getSource() + " -- "
                         + msg.getDestination() + " FILTERING "
                         + msg.getClass().getCanonicalName() + " - "

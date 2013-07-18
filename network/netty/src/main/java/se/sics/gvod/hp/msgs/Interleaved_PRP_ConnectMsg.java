@@ -20,7 +20,7 @@ import se.sics.gvod.timer.TimeoutId;
 public class Interleaved_PRP_ConnectMsg
 {
 
-    public static final class Request extends HpMsg
+    public static final class Request extends HpMsg.Request
     {
         static final long serialVersionUID = 18766722L;
 
@@ -82,7 +82,7 @@ public class Interleaved_PRP_ConnectMsg
         OK, FAILED, REMOTE_ID_NOT_REGISTERED, NO_SESSION, SEND_MORE_PORTS
     };
 
-    public final static class Response extends HpMsg
+    public final static class Response extends HpMsg.Response
     {
         static final long serialVersionUID = 1L;
         private final ResponseType responseType;

@@ -12,7 +12,7 @@ import se.sics.gvod.net.msgs.DirectMsg;
 
 public class RelayRequestMsgFactory {
 
-    public static class Request extends HpMsgFactory {
+    public static class Request extends HpMsgFactory.Request {
 
         private Request() {
         }
@@ -21,7 +21,7 @@ public class RelayRequestMsgFactory {
                 
                 throws MessageDecodingException {
             return (RelayRequestMsg.ClientToServer)
-                    new RelayRequestMsgFactory.Request().decode(buffer, true);
+                    new RelayRequestMsgFactory.Request().decode(buffer);
         }
 
         @Override
@@ -36,7 +36,7 @@ public class RelayRequestMsgFactory {
              */
             MsgFrameDecoder decoder= null;
             try {
-                decoder = DirectMsgNettyFactory.msgFrameDecoder.newInstance();
+                decoder = DirectMsgNettyFactory.Base.msgFrameDecoder.newInstance();
             } catch (InstantiationException ex) {
                 Logger.getLogger(RelayRequestMsgFactory.class.getName()).log(Level.SEVERE, null, ex);
             } catch (IllegalAccessException ex) {
@@ -54,7 +54,7 @@ public class RelayRequestMsgFactory {
         }
     }
 
-    public static class Response extends HpMsgFactory {
+    public static class Response extends HpMsgFactory.Response {
 
         private Response() {
         }
@@ -63,7 +63,7 @@ public class RelayRequestMsgFactory {
                 
                 throws MessageDecodingException {
             return (RelayRequestMsg.ServerToClient)
-                    new RelayRequestMsgFactory.Response().decode(buffer, true);
+                    new RelayRequestMsgFactory.Response().decode(buffer);
         }
 
         @Override
@@ -71,7 +71,7 @@ public class RelayRequestMsgFactory {
 
             MsgFrameDecoder decoder;
             try {
-                decoder = DirectMsgNettyFactory.msgFrameDecoder.newInstance();
+                decoder = DirectMsgNettyFactory.Base.msgFrameDecoder.newInstance();
             } catch (InstantiationException ex) {
                 Logger.getLogger(RelayRequestMsgFactory.class.getName()).log(Level.SEVERE, null, ex);
                 throw new MessageDecodingException(ex.getMessage());

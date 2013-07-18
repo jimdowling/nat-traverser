@@ -8,7 +8,7 @@ import se.sics.gvod.net.util.UserTypesDecoderFactory;
 
 public class ReportMsgFactory  {
 
-    public static class Request extends DirectMsgNettyFactory {
+    public static class Request extends DirectMsgNettyFactory.SystemRequest {
 
         private Request() {
         }
@@ -28,7 +28,7 @@ public class ReportMsgFactory  {
         }
     }
 
-    public static class Response extends DirectMsgNettyFactory {
+    public static class Response extends DirectMsgNettyFactory.SystemResponse {
 
         private Response() {
         }

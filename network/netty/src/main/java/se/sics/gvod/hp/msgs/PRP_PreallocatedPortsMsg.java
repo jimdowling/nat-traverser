@@ -23,7 +23,7 @@ import se.sics.gvod.timer.TimeoutId;
  */
 public class PRP_PreallocatedPortsMsg
 {
-    public final static class Request extends HpMsg
+    public final static class Request extends HpMsg.Request
     {
         static final long serialVersionUID = 1L;
 
@@ -64,7 +64,7 @@ public class PRP_PreallocatedPortsMsg
         OK, FAILED, NO_PORTS_AVAILABLE, INVALID_NOT_A_PARENT
     };
 
-    public final static class Response extends HpMsg
+    public final static class Response extends HpMsg.Response
     {
         static final long serialVersionUID = 1L;
         private final ResponseType responseType;

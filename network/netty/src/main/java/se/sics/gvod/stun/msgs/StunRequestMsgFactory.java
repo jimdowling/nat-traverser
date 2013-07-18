@@ -4,7 +4,7 @@ import io.netty.buffer.ByteBuf;
 import se.sics.gvod.common.msgs.DirectMsgNettyFactory;
 import se.sics.gvod.common.msgs.MessageDecodingException;
 
-public abstract class StunRequestMsgFactory extends DirectMsgNettyFactory
+public abstract class StunRequestMsgFactory extends DirectMsgNettyFactory.SystemRequest
 {
 
     protected long transactionId;

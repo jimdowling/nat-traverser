@@ -6,7 +6,7 @@ import se.sics.gvod.common.msgs.MessageEncodingException;
 import se.sics.gvod.net.VodAddress;
 import se.sics.gvod.timer.TimeoutId;
 
-public abstract class StunRequestMsg extends DirectMsgNetty {
+public abstract class StunRequestMsg extends DirectMsgNetty.SystemRequest {
 
     protected final long transactionId;
 

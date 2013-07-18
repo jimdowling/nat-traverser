@@ -21,7 +21,7 @@ import se.sics.gvod.timer.TimeoutId;
  */
 public class ReportMsg {
 
-    public final static class Request extends DirectMsgNetty {
+    public final static class Request extends DirectMsgNetty.Request {
 
         private final String report;
 
@@ -61,7 +61,7 @@ public class ReportMsg {
         }
     }
 
-    public final static class Response extends DirectMsgNetty {
+    public final static class Response extends DirectMsgNetty.Response {
 
         public Response(VodAddress src, VodAddress dest, TimeoutId timeoutId) {
             super(src, dest, timeoutId);

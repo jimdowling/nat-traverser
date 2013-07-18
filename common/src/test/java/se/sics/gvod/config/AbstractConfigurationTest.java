@@ -5,6 +5,9 @@
 package se.sics.gvod.config;
 
 import java.io.File;
+import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -31,6 +34,11 @@ public class AbstractConfigurationTest {
     
     @Before
     public void setUp() {
+        try {
+            VodConfig.init(new String[0]);
+        } catch (IOException ex) {
+            Logger.getLogger(AbstractConfigurationTest.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
     
     @After
@@ -42,7 +50,7 @@ public class AbstractConfigurationTest {
      */
     @Test
     public void testStore() throws Exception {
-        Concrete instance = new Concrete(10, 3);
+        Concrete instance = new Concrete(10);
         File f = instance.store();
         Concrete loaded = (Concrete) Concrete.load(Concrete.class);
         assert(instance.equals(loaded));

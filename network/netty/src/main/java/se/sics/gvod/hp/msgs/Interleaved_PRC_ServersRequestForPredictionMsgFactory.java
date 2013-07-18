@@ -9,7 +9,7 @@ import se.sics.gvod.net.util.UserTypesDecoderFactory;
 
 public class Interleaved_PRC_ServersRequestForPredictionMsgFactory {
 
-    public static class Request extends HpMsgFactory {
+    public static class Request extends HpMsgFactory.Oneway {
 
         private Request() {
         }

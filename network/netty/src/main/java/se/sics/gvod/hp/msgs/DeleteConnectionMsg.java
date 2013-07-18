@@ -13,7 +13,7 @@ import se.sics.gvod.timer.TimeoutId;
  * z server sends this message to the initiator to start SHP
  * direction of msg: server ----> client
  */
-public class DeleteConnectionMsg extends HpMsg {
+public class DeleteConnectionMsg extends HpMsg.Oneway {
 
     static final long serialVersionUID = 8457363545748L;
 

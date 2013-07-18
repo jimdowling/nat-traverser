@@ -1006,7 +1006,7 @@ public class RendezvousServer extends MsgRetryComponent {
                 dest, timeoutId, response, remoteId, msgTimeoutId);
         delegator.doTrigger(responseMsg, network);
     }
-//    PRC_ServerRequestForConsecutiveMsg.Request
+
     Handler<PRC_OpenHoleMsg.Request> handle_PRC_OpenHoleMsg =
             new Handler<PRC_OpenHoleMsg.Request>() {
         @Override
@@ -1663,7 +1663,7 @@ public class RendezvousServer extends MsgRetryComponent {
         }
     }
 
-    private void printMsg(HpMsg msg) {
+    private void printMsg(HpMsg.Hp msg) {
         logger.trace(compName + msg.getClass().getCanonicalName() + " - "
                 + msg.getMsgTimeoutId());
     }

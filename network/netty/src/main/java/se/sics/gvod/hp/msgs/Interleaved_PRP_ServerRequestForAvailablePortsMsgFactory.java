@@ -8,7 +8,7 @@ import se.sics.gvod.net.util.UserTypesDecoderFactory;
 
 public class Interleaved_PRP_ServerRequestForAvailablePortsMsgFactory {
 
-    public static class Request extends HpMsgFactory {
+    public static class Request extends HpMsgFactory.Oneway {
 
         private Request() {
         }
@@ -16,7 +16,7 @@ public class Interleaved_PRP_ServerRequestForAvailablePortsMsgFactory {
         public static Interleaved_PRP_ServerRequestForAvailablePortsMsg.Request fromBuffer(ByteBuf buffer)
                 throws MessageDecodingException {
             return (Interleaved_PRP_ServerRequestForAvailablePortsMsg.Request)
-                    new Interleaved_PRP_ServerRequestForAvailablePortsMsgFactory.Request().decode(buffer, false);
+                    new Interleaved_PRP_ServerRequestForAvailablePortsMsgFactory.Request().decode(buffer);
         }
 
         @Override

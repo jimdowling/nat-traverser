@@ -151,7 +151,7 @@ public class EncodingDecodingTest {
                 Nat.FilteringPolicy.PORT_DEPENDENT,
                 1,
                 100 * 1000l);
-        DirectMsgNettyFactory.setMsgFrameDecoder(BaseMsgFrameDecoder.class);
+        DirectMsgNettyFactory.Base.setMsgFrameDecoder(BaseMsgFrameDecoder.class);
     }
 
     @AfterClass
@@ -172,7 +172,7 @@ public class EncodingDecodingTest {
     @Test
     public void unsignedIntTwoBytesNetty() throws MessageEncodingException, MessageDecodingException {
 
-    	ByteBuf buffer = Unpooled.buffer(2);
+        ByteBuf buffer = Unpooled.buffer(2);
         int t1 = 32231;
         UserTypesEncoderFactory.writeUnsignedintAsTwoBytes(buffer, t1);
         int t2 = UserTypesDecoderFactory.readUnsignedIntAsTwoBytes(buffer);
@@ -186,7 +186,7 @@ public class EncodingDecodingTest {
     @Test
     public void unsignedIntOneByteNetty() throws MessageEncodingException, MessageDecodingException {
 
-    	ByteBuf buffer = Unpooled.buffer(1);
+        ByteBuf buffer = Unpooled.buffer(1);
         int t1 = 255;
         UserTypesEncoderFactory.writeUnsignedintAsOneByte(buffer, t1);
         int t2 = UserTypesDecoderFactory.readUnsignedIntAsOneByte(buffer);
@@ -235,7 +235,7 @@ public class EncodingDecodingTest {
                 utility, true, BaseCommandLineConfig.DEFAULT_MTU);
         msg.setTimeoutId(UUID.nextUUID());
         try {
-        	ByteBuf buffer = msg.toByteArray();
+            ByteBuf buffer = msg.toByteArray();
             opCodeCorrect(buffer, msg);
             ConnectMsg.Request res = ConnectMsgFactory.Request.fromBuffer(buffer);
             compareNatMsgs(msg, res);
@@ -256,7 +256,7 @@ public class EncodingDecodingTest {
                 utility, availableChunks, availablePieces, true,
                 BaseCommandLineConfig.DEFAULT_MTU);
         try {
-        	ByteBuf buffer = msg.toByteArray();
+            ByteBuf buffer = msg.toByteArray();
             opCodeCorrect(buffer, msg);
             ConnectMsg.Response res = ConnectMsgFactory.Response.fromBuffer(buffer);
             compareNatMsgs(msg, res);
@@ -275,7 +275,7 @@ public class EncodingDecodingTest {
                 UUID.nextUUID(), ConnectMsg.ResponseType.OK,
                 utility, null, null, true, BaseCommandLineConfig.DEFAULT_MTU);
         try {
-        	ByteBuf buffer = msg.toByteArray();
+            ByteBuf buffer = msg.toByteArray();
             opCodeCorrect(buffer, msg);
             ConnectMsg.Response res = ConnectMsgFactory.Response.fromBuffer(buffer);
             compareNatMsgs(msg, res);
@@ -293,7 +293,7 @@ public class EncodingDecodingTest {
         DisconnectMsg.Request msg = new DisconnectMsg.Request(gSrc, gSrc);
         msg.setTimeoutId(UUID.nextUUID());
         try {
-        	ByteBuf buffer = msg.toByteArray();
+            ByteBuf buffer = msg.toByteArray();
             opCodeCorrect(buffer, msg);
             DisconnectMsg.Request res = DisconnectMsgFactory.Request.fromBuffer(buffer);
             compareNatMsgs(msg, res);
@@ -311,7 +311,7 @@ public class EncodingDecodingTest {
         TimeoutId id = UUID.nextUUID();
         DisconnectMsg.Response msg = new DisconnectMsg.Response(gSrc, gSrc, id, 4);
         try {
-        	ByteBuf buffer = msg.toByteArray();
+            ByteBuf buffer = msg.toByteArray();
             opCodeCorrect(buffer, msg);
             DisconnectMsg.Response res = DisconnectMsgFactory.Response.fromBuffer(buffer);
             compareNatMsgs(msg, res);
@@ -375,7 +375,7 @@ public class EncodingDecodingTest {
             assert (fromBuffer2.getBuffer().getPublicDescriptors().get(1).equals(desc2));
             assert (fromBuffer2.getBuffer().getPrivateDescriptors().get(0).equals(desc5));
             compareNatMsgs(request2, fromBuffer2);
-            
+
         } catch (MessageDecodingException ex) {
             assert (false);
             Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
@@ -460,7 +460,7 @@ public class EncodingDecodingTest {
         SetsExchangeMsg.Request msg = new SetsExchangeMsg.Request(
                 gSrc, gSrc, gSrc.getId(), gSrc.getId(), id);
         try {
-        	ByteBuf buffer = msg.toByteArray();
+            ByteBuf buffer = msg.toByteArray();
             opCodeCorrect(buffer, msg);
             SetsExchangeMsg.Request res =
                     SetsExchangeMsgFactory.Request.fromBuffer(buffer);
@@ -479,7 +479,7 @@ public class EncodingDecodingTest {
         SetsExchangeMsg.Response msg = new SetsExchangeMsg.Response(
                 gSrc, gSrc, gSrc.getId(), gSrc.getId(), gDest, id, descriptors, descriptors);
         try {
-        	ByteBuf buffer = msg.toByteArray();
+            ByteBuf buffer = msg.toByteArray();
             opCodeCorrect(buffer, msg);
             SetsExchangeMsg.Response res =
                     SetsExchangeMsgFactory.Response.fromBuffer(buffer);
@@ -499,7 +499,7 @@ public class EncodingDecodingTest {
                 hpMechanism, hpRole, 1,
                 UUID.nextUUID());
         try {
-        	ByteBuf buffer = msg.toByteArray();
+            ByteBuf buffer = msg.toByteArray();
             opCodeCorrect(buffer, msg);
             GoMsg.Request res = GoMsgFactory.Request.fromBuffer(buffer);
             compareNatMsgsNoTimeout(msg, res);
@@ -518,12 +518,12 @@ public class EncodingDecodingTest {
                 UUID.nextUUID());
         msg.setTimeoutId(UUID.nextUUID());
         try {
-        	ByteBuf buffer = msg.toByteArray();
+            ByteBuf buffer = msg.toByteArray();
             opCodeCorrect(buffer, msg);
             HolePunchingMsg.Request res =
                     HolePunchingMsgFactory.Request.fromBuffer(buffer);
             assert (msg.getRemoteClientId() == res.getRemoteClientId());
-            compareNatMsgs(msg, res);            
+            compareNatMsgs(msg, res);
         } catch (MessageDecodingException ex) {
             Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
             assert (false);
@@ -539,7 +539,7 @@ public class EncodingDecodingTest {
                 UUID.nextUUID());
         msg.setTimeoutId(UUID.nextUUID());
         try {
-        	ByteBuf buffer = msg.toByteArray();
+            ByteBuf buffer = msg.toByteArray();
             opCodeCorrect(buffer, msg);
             HolePunchingMsg.Response res =
                     HolePunchingMsgFactory.Response.fromBuffer(buffer);
@@ -558,7 +558,7 @@ public class EncodingDecodingTest {
         HolePunchingMsg.ResponseAck msg = new HolePunchingMsg.ResponseAck(gSrc, gDest,
                 UUID.nextUUID(), UUID.nextUUID());
         try {
-        	ByteBuf buffer = msg.toByteArray();
+            ByteBuf buffer = msg.toByteArray();
             opCodeCorrect(buffer, msg);
             HolePunchingMsg.ResponseAck res =
                     HolePunchingMsgFactory.ResponseAck.fromBuffer(buffer);
@@ -577,7 +577,7 @@ public class EncodingDecodingTest {
         HpFinishedMsg msg = new HpFinishedMsg(gSrc, gDest, remoteClientId, true,
                 UUID.nextUUID());
         try {
-        	ByteBuf buffer = msg.toByteArray();
+            ByteBuf buffer = msg.toByteArray();
             opCodeCorrect(buffer, msg);
             HpFinishedMsg res =
                     HpFinishedMsgFactory.Request.fromBuffer(buffer);
@@ -597,7 +597,7 @@ public class EncodingDecodingTest {
                 1, 1000, UUID.nextUUID());
         msg.setTimeoutId(UUID.nextUUID());
         try {
-        	ByteBuf buffer = msg.toByteArray();
+            ByteBuf buffer = msg.toByteArray();
             opCodeCorrect(buffer, msg);
             HpConnectMsg.Request res =
                     HpConnectMsgFactory.Request.fromBuffer(buffer);
@@ -614,7 +614,7 @@ public class EncodingDecodingTest {
                 OpenConnectionResponseType.NAT_COMBINATION_NOT_TRAVERSABLE,
                 UUID.nextUUID(), HPMechanism.PRP_PRC, false, UUID.nextUUID());
         try {
-        	ByteBuf buffer = response.toByteArray();
+            ByteBuf buffer = response.toByteArray();
             opCodeCorrect(buffer, response);
             HpConnectMsg.Response res2 =
                     HpConnectMsgFactory.Response.fromBuffer(buffer);
@@ -633,7 +633,7 @@ public class EncodingDecodingTest {
         HpRegisterMsg.Request msg = new HpRegisterMsg.Request(gSrc, gDest, 1, 100l);
         msg.setTimeoutId(UUID.nextUUID());
         try {
-        	ByteBuf buffer = msg.toByteArray();
+            ByteBuf buffer = msg.toByteArray();
             opCodeCorrect(buffer, msg);
             HpRegisterMsg.Request res = HpRegisterMsgFactory.Request.fromBuffer(buffer);
             compareNatMsgs(msg, res);
@@ -651,7 +651,7 @@ public class EncodingDecodingTest {
         HpRegisterMsg.Response resp = new HpRegisterMsg.Response(gSrc, gDest,
                 HpRegisterMsg.RegisterStatus.REJECT, UUID.nextUUID(), ports);
         try {
-        	ByteBuf buffer = resp.toByteArray();
+            ByteBuf buffer = resp.toByteArray();
             opCodeCorrect(buffer, resp);
             HpRegisterMsg.Response res2 = HpRegisterMsgFactory.Response.fromBuffer(buffer);
             compareNatMsgs(resp, res2);
@@ -667,7 +667,7 @@ public class EncodingDecodingTest {
         HpRegisterMsg.Response resp2 = new HpRegisterMsg.Response(gSrc, gDest,
                 HpRegisterMsg.RegisterStatus.ACCEPT, UUID.nextUUID(), ports2);
         try {
-        	ByteBuf buffer = resp2.toByteArray();
+            ByteBuf buffer = resp2.toByteArray();
             opCodeCorrect(buffer, resp2);
             HpRegisterMsg.Response res3 = HpRegisterMsgFactory.Response.fromBuffer(buffer);
             compareNatMsgs(resp2, res3);
@@ -687,7 +687,7 @@ public class EncodingDecodingTest {
                 HpRegisterMsg.RegisterStatus.BETTER_PARENT);
         msg.setTimeoutId(UUID.nextUUID());
         try {
-        	ByteBuf buffer = msg.toByteArray();
+            ByteBuf buffer = msg.toByteArray();
             opCodeCorrect(buffer, msg);
             HpUnregisterMsg.Request res = HpUnregisterMsgFactory.Request.fromBuffer(buffer);
             compareNatMsgs(msg, res);
@@ -702,7 +702,7 @@ public class EncodingDecodingTest {
         HpUnregisterMsg.Response resp = new HpUnregisterMsg.Response(gSrc, gDest,
                 HpUnregisterMsg.Response.Status.NOT_REGISTERED, UUID.nextUUID());
         try {
-        	ByteBuf buffer = resp.toByteArray();
+            ByteBuf buffer = resp.toByteArray();
             opCodeCorrect(buffer, resp);
             HpUnregisterMsg.Response res2 = HpUnregisterMsgFactory.Response.fromBuffer(buffer);
             compareNatMsgs(resp, res2);
@@ -721,7 +721,7 @@ public class EncodingDecodingTest {
                 new Interleaved_PRC_OpenHoleMsg.Request(gSrc, gDest, remoteClientId, UUID.nextUUID());
         msg.setTimeoutId(UUID.nextUUID());
         try {
-        	ByteBuf buffer = msg.toByteArray();
+            ByteBuf buffer = msg.toByteArray();
             opCodeCorrect(buffer, msg);
             Interleaved_PRC_OpenHoleMsg.Request res = Interleaved_PRC_OpenHoleMsgFactory.Request.fromBuffer(buffer);
             compareNatMsgs(msg, res);
@@ -737,7 +737,7 @@ public class EncodingDecodingTest {
                 UUID.nextUUID(), Interleaved_PRC_OpenHoleMsg.ResponseType.OK, remoteClientId,
                 UUID.nextUUID());
         try {
-        	ByteBuf buffer = resp.toByteArray();
+            ByteBuf buffer = resp.toByteArray();
             opCodeCorrect(buffer, resp);
             Interleaved_PRC_OpenHoleMsg.Response res2 = Interleaved_PRC_OpenHoleMsgFactory.Response.fromBuffer(buffer);
             compareNatMsgs(resp, res2);
@@ -756,7 +756,7 @@ public class EncodingDecodingTest {
                 new Interleaved_PRC_ServersRequestForPredictionMsg.Request(gSrc, gDest,
                 remoteClientId, HPMechanism.PRP_PRP, HPRole.PRC_INITIATOR, gDest, UUID.nextUUID());
         try {
-        	ByteBuf buffer = msg.toByteArray();
+            ByteBuf buffer = msg.toByteArray();
             opCodeCorrect(buffer, msg);
             Interleaved_PRC_ServersRequestForPredictionMsg.Request res =
                     Interleaved_PRC_ServersRequestForPredictionMsgFactory.Request.fromBuffer(buffer);
@@ -780,7 +780,7 @@ public class EncodingDecodingTest {
                 setPorts, UUID.nextUUID());
         msg.setTimeoutId(UUID.nextUUID());
         try {
-        	ByteBuf buffer = msg.toByteArray();
+            ByteBuf buffer = msg.toByteArray();
             opCodeCorrect(buffer, msg);
             Interleaved_PRP_ConnectMsg.Request res = Interleaved_PRP_ConnectMsgFactory.Request.fromBuffer(buffer);
             compareNatMsgs(msg, res);
@@ -796,7 +796,7 @@ public class EncodingDecodingTest {
                 UUID.nextUUID(), Interleaved_PRP_ConnectMsg.ResponseType.OK, remoteClientId,
                 UUID.nextUUID());
         try {
-        	ByteBuf buffer = resp.toByteArray();
+            ByteBuf buffer = resp.toByteArray();
             opCodeCorrect(buffer, resp);
             Interleaved_PRP_ConnectMsg.Response res2 = Interleaved_PRP_ConnectMsgFactory.Response.fromBuffer(buffer);
             compareNatMsgs(resp, res2);
@@ -815,7 +815,7 @@ public class EncodingDecodingTest {
                 gSrc, gDest, remoteClientId,
                 HPMechanism.PRP_PRP, HPRole.PRC_INITIATOR, UUID.nextUUID());
         try {
-        	ByteBuf buffer = msg.toByteArray();
+            ByteBuf buffer = msg.toByteArray();
             opCodeCorrect(buffer, msg);
             Interleaved_PRP_ServerRequestForAvailablePortsMsg.Request res =
                     Interleaved_PRP_ServerRequestForAvailablePortsMsgFactory.Request.fromBuffer(buffer);
@@ -835,7 +835,7 @@ public class EncodingDecodingTest {
                 remoteClientId, UUID.nextUUID());
         msg.setTimeoutId(UUID.nextUUID());
         try {
-        	ByteBuf buffer = msg.toByteArray();
+            ByteBuf buffer = msg.toByteArray();
             opCodeCorrect(buffer, msg);
             PRC_OpenHoleMsg.Request res = PRC_OpenHoleMsgFactory.Request.fromBuffer(buffer);
             compareNatMsgs(msg, res);
@@ -851,7 +851,7 @@ public class EncodingDecodingTest {
                 UUID.nextUUID(), PRC_OpenHoleMsg.ResponseType.OK, remoteClientId,
                 UUID.nextUUID());
         try {
-        	ByteBuf buffer = resp.toByteArray();
+            ByteBuf buffer = resp.toByteArray();
             opCodeCorrect(buffer, resp);
             PRC_OpenHoleMsg.Response res2 = PRC_OpenHoleMsgFactory.Response.fromBuffer(buffer);
             compareNatMsgs(resp, res2);
@@ -869,13 +869,12 @@ public class EncodingDecodingTest {
         PRC_ServerRequestForConsecutiveMsg.Request msg =
                 new PRC_ServerRequestForConsecutiveMsg.Request(gSrc, gDest, remoteClientId,
                 HPMechanism.PRP_PRP, HPRole.PRC_INITIATOR, gSrc, UUID.nextUUID());
-        msg.setTimeoutId(UUID.nextUUID());
         try {
-        	ByteBuf buffer = msg.toByteArray();
+            ByteBuf buffer = msg.toByteArray();
             opCodeCorrect(buffer, msg);
             PRC_ServerRequestForConsecutiveMsg.Request res =
                     PRC_ServerRequestForConsecutiveMsgFactory.Request.fromBuffer(buffer);
-            compareNatMsgs(msg, res);
+            compareNatMsgsNoTimeout(msg, res);
         } catch (MessageDecodingException ex) {
             Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
             assert (false);
@@ -895,7 +894,7 @@ public class EncodingDecodingTest {
                 setPorts, UUID.nextUUID());
         msg.setTimeoutId(UUID.nextUUID());
         try {
-        	ByteBuf buffer = msg.toByteArray();
+            ByteBuf buffer = msg.toByteArray();
             opCodeCorrect(buffer, msg);
             PRP_ConnectMsg.Request res = PRP_ConnectMsgFactory.Request.fromBuffer(buffer);
             compareNatMsgs(msg, res);
@@ -912,7 +911,7 @@ public class EncodingDecodingTest {
                 PRP_ConnectMsg.ResponseType.OK, remoteClientId,
                 gDest, 1088, false, UUID.nextUUID());
         try {
-        	ByteBuf buffer = res.toByteArray();
+            ByteBuf buffer = res.toByteArray();
             opCodeCorrect(buffer, res);
             PRP_ConnectMsg.Response res2 = PRP_ConnectMsgFactory.Response.fromBuffer(buffer);
             compareNatMsgs(res, res2);
@@ -930,7 +929,7 @@ public class EncodingDecodingTest {
         PRP_ServerRequestForAvailablePortsMsg.Request msg = new PRP_ServerRequestForAvailablePortsMsg.Request(gSrc, gDest, remoteClientId,
                 HPMechanism.PRP_PRP, HPRole.PRC_INITIATOR, UUID.nextUUID());
         try {
-        	ByteBuf buffer = msg.toByteArray();
+            ByteBuf buffer = msg.toByteArray();
             opCodeCorrect(buffer, msg);
             PRP_ServerRequestForAvailablePortsMsg.Request res =
                     PRP_ServerRequestForAvailablePortsMsgFactory.Request.fromBuffer(buffer);
@@ -952,7 +951,7 @@ public class EncodingDecodingTest {
                 req);
         msg.setTimeoutId(UUID.nextUUID());
         try {
-        	ByteBuf buffer = msg.toByteArray();
+            ByteBuf buffer = msg.toByteArray();
             opCodeCorrect(buffer, msg);
             RelayRequestMsg.ClientToServer res = RelayRequestMsgFactory.Request.fromBuffer(buffer);
             compareNatMsgs(msg, res);
@@ -968,7 +967,7 @@ public class EncodingDecodingTest {
                 req);
         msg2.setTimeoutId(UUID.nextUUID());
         try {
-        	ByteBuf buffer = msg2.toByteArray();
+            ByteBuf buffer = msg2.toByteArray();
             opCodeCorrect(buffer, msg2);
             RelayRequestMsg.ServerToClient res = RelayRequestMsgFactory.Response.fromBuffer(buffer);
             compareNatMsgs(msg2, res);
@@ -986,7 +985,7 @@ public class EncodingDecodingTest {
         SHP_InitiateSimpleHolePunchingMsg.Request msg = new SHP_InitiateSimpleHolePunchingMsg.Request(gSrc, gDest, remoteClientId,
                 HPMechanism.PRP_PRP, HPRole.PRC_INITIATOR, UUID.nextUUID());
         try {
-        	ByteBuf buffer = msg.toByteArray();
+            ByteBuf buffer = msg.toByteArray();
             opCodeCorrect(buffer, msg);
             SHP_InitiateSimpleHolePunchingMsg.Request res =
                     SHP_InitiateSimpleHolePunchingMsgFactory.Request.fromBuffer(buffer);
@@ -1007,7 +1006,7 @@ public class EncodingDecodingTest {
         SHP_OpenHoleMsg.Initiator msg = new SHP_OpenHoleMsg.Initiator(gSrc, gDest, gDest,
                 SHP_OpenHoleMsg.ResponseType.OK, UUID.nextUUID());
         try {
-        	ByteBuf buffer = msg.toByteArray();
+            ByteBuf buffer = msg.toByteArray();
             opCodeCorrect(buffer, msg);
             SHP_OpenHoleMsg.Initiator res = SHP_OpenHoleMsgFactory.Initiator.fromBuffer(buffer);
             compareNatMsgsNoTimeout(msg, res);
@@ -1025,7 +1024,7 @@ public class EncodingDecodingTest {
         ParentKeepAliveMsg.Ping msg = new ParentKeepAliveMsg.Ping(gSrc, gDest);
         msg.setTimeoutId(UUID.nextUUID());
         try {
-        	ByteBuf buffer = msg.toByteArray();
+            ByteBuf buffer = msg.toByteArray();
             opCodeCorrect(buffer, msg);
             ParentKeepAliveMsg.Ping res =
                     ParentKeepAliveMsgFactory.Request.fromBuffer(buffer);
@@ -1044,7 +1043,7 @@ public class EncodingDecodingTest {
     public void keepAliveMsgPong() {
         ParentKeepAliveMsg.Pong msg = new ParentKeepAliveMsg.Pong(gSrc, gDest, UUID.nextUUID());
         try {
-        	ByteBuf buffer = msg.toByteArray();
+            ByteBuf buffer = msg.toByteArray();
             opCodeCorrect(buffer, msg);
             ParentKeepAliveMsg.Pong res =
                     ParentKeepAliveMsgFactory.Response.fromBuffer(buffer);
@@ -1064,7 +1063,7 @@ public class EncodingDecodingTest {
         HpKeepAliveMsg.Ping msg = new HpKeepAliveMsg.Ping(gSrc, gDest);
         msg.setTimeoutId(UUID.nextUUID());
         try {
-        	ByteBuf buffer = msg.toByteArray();
+            ByteBuf buffer = msg.toByteArray();
             opCodeCorrect(buffer, msg);
             HpKeepAliveMsg.Ping res =
                     HpKeepAliveMsgFactory.Request.fromBuffer(buffer);
@@ -1083,7 +1082,7 @@ public class EncodingDecodingTest {
     public void hpKeepAliveMsgPong() {
         HpKeepAliveMsg.Pong msg = new HpKeepAliveMsg.Pong(gSrc, gDest, UUID.nextUUID());
         try {
-        	ByteBuf buffer = msg.toByteArray();
+            ByteBuf buffer = msg.toByteArray();
             opCodeCorrect(buffer, msg);
             HpKeepAliveMsg.Pong res =
                     HpKeepAliveMsgFactory.Response.fromBuffer(buffer);
@@ -1103,7 +1102,7 @@ public class EncodingDecodingTest {
         EchoMsg.Request msg = new EchoMsg.Request(gSrc, gDest, EchoMsg.Test.UDP_BLOCKED, remoteClientId);
         msg.setTimeoutId(UUID.nextUUID());
         try {
-        	ByteBuf buffer = msg.toByteArray();
+            ByteBuf buffer = msg.toByteArray();
             opCodeCorrect(buffer, msg);
             EchoMsg.Request res =
                     EchoMsgFactory.Request.fromBuffer(buffer);
@@ -1124,7 +1123,7 @@ public class EncodingDecodingTest {
         EchoMsg.Response msg = new EchoMsg.Response(gSrc, gDest, partners, 100,
                 EchoMsg.Test.UDP_BLOCKED, 1234, UUID.nextUUID(), 1234);
         try {
-        	ByteBuf buffer = msg.toByteArray();
+            ByteBuf buffer = msg.toByteArray();
             opCodeCorrect(buffer, msg);
             EchoMsg.Request res =
                     EchoMsgFactory.Request.fromBuffer(buffer);
@@ -1144,7 +1143,7 @@ public class EncodingDecodingTest {
                 gSrc, gDest, 100);
         msg.setTimeoutId(UUID.nextUUID());
         try {
-        	ByteBuf buffer = msg.toByteArray();
+            ByteBuf buffer = msg.toByteArray();
             opCodeCorrect(buffer, msg);
             EchoChangeIpAndPortMsg.Request res =
                     EchoChangeIpAndPortMsgFactory.Request.fromBuffer(buffer);
@@ -1163,7 +1162,7 @@ public class EncodingDecodingTest {
         EchoChangeIpAndPortMsg.Response msg = new EchoChangeIpAndPortMsg.Response(
                 gSrc, gDest, gDest.getPeerAddress(), 100, UUID.nextUUID());
         try {
-        	ByteBuf buffer = msg.toByteArray();
+            ByteBuf buffer = msg.toByteArray();
             opCodeCorrect(buffer, msg);
             EchoChangeIpAndPortMsg.Response res =
                     EchoChangeIpAndPortMsgFactory.Response.fromBuffer(buffer);
@@ -1183,7 +1182,7 @@ public class EncodingDecodingTest {
                 gSrc, gDest, 100);
         msg.setTimeoutId(UUID.nextUUID());
         try {
-        	ByteBuf buffer = msg.toByteArray();
+            ByteBuf buffer = msg.toByteArray();
             opCodeCorrect(buffer, msg);
             EchoChangePortMsg.Request res =
                     EchoChangePortMsgFactory.Request.fromBuffer(buffer);
@@ -1202,7 +1201,7 @@ public class EncodingDecodingTest {
         EchoChangePortMsg.Response msg = new EchoChangePortMsg.Response(
                 gSrc, gDest, 100, UUID.nextUUID());
         try {
-        	ByteBuf buffer = msg.toByteArray();
+            ByteBuf buffer = msg.toByteArray();
             opCodeCorrect(buffer, msg);
             EchoChangePortMsg.Response res =
                     EchoChangePortMsgFactory.Response.fromBuffer(buffer);
@@ -1222,7 +1221,7 @@ public class EncodingDecodingTest {
                 gSrc, gDest, dest, 100, UUID.nextUUID());
         msg.setTimeoutId(UUID.nextUUID());
         try {
-        	ByteBuf buffer = msg.toByteArray();
+            ByteBuf buffer = msg.toByteArray();
             opCodeCorrect(buffer, msg);
             ServerHostChangeMsg.Request res =
                     ServerHostChangeMsgFactory.Request.fromBuffer(buffer);
@@ -1241,7 +1240,7 @@ public class EncodingDecodingTest {
         ServerHostChangeMsg.Response msg = new ServerHostChangeMsg.Response(
                 gSrc, gDest, 100, UUID.nextUUID());
         try {
-        	ByteBuf buffer = msg.toByteArray();
+            ByteBuf buffer = msg.toByteArray();
             opCodeCorrect(buffer, msg);
             ServerHostChangeMsg.Response res =
                     ServerHostChangeMsgFactory.Response.fromBuffer(buffer);
@@ -1261,7 +1260,7 @@ public class EncodingDecodingTest {
                 gSrc, gDest, UUID.nextUUID());
         msg.setTimeoutId(UUID.nextUUID());
         try {
-        	ByteBuf buffer = msg.toByteArray();
+            ByteBuf buffer = msg.toByteArray();
             opCodeCorrect(buffer, msg);
             PRP_PreallocatedPortsMsg.Request res =
                     PRP_PreallocatedPortsMsgFactory.Request.fromBuffer(buffer);
@@ -1285,7 +1284,7 @@ public class EncodingDecodingTest {
                 PRP_PreallocatedPortsMsg.ResponseType.NO_PORTS_AVAILABLE,
                 prpPorts, UUID.nextUUID());
         try {
-        	ByteBuf buffer = msg.toByteArray();
+            ByteBuf buffer = msg.toByteArray();
             opCodeCorrect(buffer, msg);
             PRP_PreallocatedPortsMsg.Response res =
                     PRP_PreallocatedPortsMsgFactory.Response.fromBuffer(buffer);
@@ -1304,7 +1303,7 @@ public class EncodingDecodingTest {
         String report = "bbbbbbbbbbbbbbbbbbb";
         ReportMsg.Request msg = new ReportMsg.Request(gSrc, gDest, UUID.nextUUID(), report);
         try {
-        	ByteBuf buffer = msg.toByteArray();
+            ByteBuf buffer = msg.toByteArray();
             opCodeCorrect(buffer, msg);
             ReportMsg.Request request =
                     ReportMsgFactory.Request.fromBuffer(buffer);
@@ -1324,7 +1323,7 @@ public class EncodingDecodingTest {
         TimeoutId id = UUID.nextUUID();
         ReportMsg.Response msg = new ReportMsg.Response(gSrc, gDest, id);
         try {
-        	ByteBuf buffer = msg.toByteArray();
+            ByteBuf buffer = msg.toByteArray();
             opCodeCorrect(buffer, msg);
             ReportMsg.Response response =
                     ReportMsgFactory.Response.fromBuffer(buffer);
@@ -1337,8 +1336,7 @@ public class EncodingDecodingTest {
             assert (false);
         }
     }
-    
-    
+
     @Test
     public void tConnectionMsgPing() {
         TimeoutId id = UUID.nextUUID();
@@ -1357,8 +1355,7 @@ public class EncodingDecodingTest {
             assert (false);
         }
     }
-    
-    
+
     @Test
     public void tConnectionMsgPong() {
         TimeoutId id = UUID.nextUUID();
@@ -1367,7 +1364,7 @@ public class EncodingDecodingTest {
             ByteBuf buffer = msg.toByteArray();
             opCodeCorrect(buffer, msg);
             TConnectionMsg.Pong pong =
-	            TConnectionMsgFactory.Pong.fromBuffer(buffer);
+                    TConnectionMsgFactory.Pong.fromBuffer(buffer);
             compareNatMsgs(msg, pong);
         } catch (MessageDecodingException ex) {
             Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
@@ -1386,6 +1383,7 @@ public class EncodingDecodingTest {
         // ip is null and port is 0 after the factory deserializes                                                                                                       
         // objects. It is up to NettyHandler to set ip and port.                                                                                                         
     }
+
     private void compareNatMsgsNoTimeout(NatMsg a, NatMsg b) {
         assert (a.getVodSource().equals(b.getVodSource()));
         assert (a.getVodDestination().equals(b.getVodDestination()));
@@ -1394,5 +1392,4 @@ public class EncodingDecodingTest {
         // ip is null and port is 0 after the factory deserializes                                                                                                       
         // objects. It is up to NettyHandler to set ip and port.                                                                                                         
     }
-    
 }

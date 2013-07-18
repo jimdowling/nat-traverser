@@ -24,7 +24,7 @@ import se.sics.gvod.net.msgs.RewriteableMsg;
 public class RelayRequestMsg
 {
 
-    public final static class ClientToServer extends HpMsg
+    public final static class ClientToServer extends HpMsg.Request
     {
 
         static final long serialVersionUID = 1L;
@@ -78,7 +78,7 @@ public class RelayRequestMsg
 
     };
 
-     public final static class ServerToClient extends HpMsg
+     public final static class ServerToClient extends HpMsg.Response
     {
 
         static final long serialVersionUID = 1L;

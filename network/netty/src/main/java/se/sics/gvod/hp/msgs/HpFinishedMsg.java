@@ -19,7 +19,7 @@ import se.sics.gvod.timer.TimeoutId;
  *
  * message send by the client to zServer
  */
-public class HpFinishedMsg extends HpMsg
+public class HpFinishedMsg extends HpMsg.Oneway
 {
     static final long serialVersionUID = 1L;
     private final boolean hpSuccessful;

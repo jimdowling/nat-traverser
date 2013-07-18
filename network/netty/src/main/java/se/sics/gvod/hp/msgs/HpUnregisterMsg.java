@@ -18,7 +18,7 @@ import se.sics.gvod.timer.TimeoutId;
  */
 public class HpUnregisterMsg {
 
-    public static final class Request extends DirectMsgNetty {
+    public static final class Request extends DirectMsgNetty.Request {
 
         static final long serialVersionUID = 44574788L;
         private final int delay;
@@ -77,7 +77,7 @@ public class HpUnregisterMsg {
         }
     }
 
-    public final static class Response extends DirectMsgNetty {
+    public final static class Response extends DirectMsgNetty.Response {
 
         static final long serialVersionUID = 12453454251L;
 

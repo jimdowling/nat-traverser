@@ -1430,7 +1430,7 @@ public class HpClient extends MsgRetryComponent {
         }
     };
 
-    private void printMsg(HpMsg msg) {
+    private void printMsg(HpMsg.Hp msg) {
         logger.trace(compName + msg.getClass().getCanonicalName() + " - "
                 + msg.getMsgTimeoutId());
     }

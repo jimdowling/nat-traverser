@@ -6,7 +6,7 @@ import se.sics.gvod.net.util.UserTypesDecoderFactory;
 
 public class DisconnectMsgFactory {
 
-    public static class Request extends DirectMsgNettyFactory {
+    public static class Request extends DirectMsgNettyFactory.Request {
 
         private Request() {
         }
@@ -24,7 +24,7 @@ public class DisconnectMsgFactory {
         }
     }
 
-    public static class Response extends DirectMsgNettyFactory {
+    public static class Response extends DirectMsgNettyFactory.Response {
 
         private Response() {
         }

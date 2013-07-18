@@ -13,19 +13,17 @@ import se.sics.gvod.net.util.UserTypesEncoderFactory;
 import se.sics.gvod.timer.TimeoutId;
 
 /**
- * 
- * @author salman
- * z server sends this message to the initiator of PRP.
- * in response to this message the client must send some available ports to the
+ *
+ * @author salman z server sends this message to the initiator of PRP. in
+ * response to this message the client must send some available ports to the
  * zServer. zServer will select one open port and inofrm the client abt it
  *
  */
-public class PRC_ServerRequestForConsecutiveMsg
-{
-    public final static class Request extends HpMsg
-    {
-        static final long serialVersionUID = 1L;
+public class PRC_ServerRequestForConsecutiveMsg {
 
+    public final static class Request extends HpMsg.Oneway {
+
+        static final long serialVersionUID = 1L;
         private final HPMechanism holePunchingMechanism;
         private final HPRole holePunchingRole;
         private final VodAddress remoteAddr;
@@ -33,26 +31,22 @@ public class PRC_ServerRequestForConsecutiveMsg
         public Request(VodAddress src, VodAddress dest, int remoteClientId,
                 HPMechanism holePunchingMechanism,
                 HPRole holePunchingRole,
-                VodAddress remoteAddr, TimeoutId msgTimeoutId)
-        {
+                VodAddress remoteAddr, TimeoutId msgTimeoutId) {
             super(src, dest, remoteClientId, msgTimeoutId);
-            this.holePunchingMechanism =holePunchingMechanism;
-            this.holePunchingRole=holePunchingRole;
+            this.holePunchingMechanism = holePunchingMechanism;
+            this.holePunchingRole = holePunchingRole;
             this.remoteAddr = remoteAddr;
         }
 
-        public VodAddress getDummyRemoteClientPublicAddress()
-        {
+        public VodAddress getDummyRemoteClientPublicAddress() {
             return remoteAddr;
         }
-        
-        public HPMechanism getHolePunchingMechanism()
-        {
+
+        public HPMechanism getHolePunchingMechanism() {
             return holePunchingMechanism;
         }
 
-        public HPRole getHolePunchingRole()
-        {
+        public HPRole getHolePunchingRole() {
             return holePunchingRole;
         }
 
@@ -61,8 +55,7 @@ public class PRC_ServerRequestForConsecutiveMsg
             return getHeaderSize()
                     + 1
                     + 1
-                    + UserTypesEncoderFactory.VOD_ADDRESS_LEN_NO_PARENTS
-                    ;
+                    + UserTypesEncoderFactory.VOD_ADDRESS_LEN_NO_PARENTS;
         }
 
         @Override
@@ -72,10 +65,10 @@ public class PRC_ServerRequestForConsecutiveMsg
 
         @Override
         public ByteBuf toByteArray() throws MessageEncodingException {
-        	ByteBuf buffer = createChannelBufferWithHeader();
-            UserTypesEncoderFactory.writeUnsignedintAsOneByte(buffer, 
+            ByteBuf buffer = createChannelBufferWithHeader();
+            UserTypesEncoderFactory.writeUnsignedintAsOneByte(buffer,
                     holePunchingMechanism.ordinal());
-            UserTypesEncoderFactory.writeUnsignedintAsOneByte(buffer, 
+            UserTypesEncoderFactory.writeUnsignedintAsOneByte(buffer,
                     holePunchingRole.ordinal());
             UserTypesEncoderFactory.writeVodAddress(buffer, remoteAddr);
             return buffer;
@@ -83,31 +76,26 @@ public class PRC_ServerRequestForConsecutiveMsg
 
         @Override
         public RewriteableMsg copy() {
-            PRC_ServerRequestForConsecutiveMsg.Request copy = 
-                    new PRC_ServerRequestForConsecutiveMsg.Request(vodSrc, vodDest, 
-                            remoteClientId, holePunchingMechanism, holePunchingRole, 
-                            remoteAddr, msgTimeoutId);
+            PRC_ServerRequestForConsecutiveMsg.Request copy =
+                    new PRC_ServerRequestForConsecutiveMsg.Request(vodSrc, vodDest,
+                    remoteClientId, holePunchingMechanism, holePunchingRole,
+                    remoteAddr, msgTimeoutId);
             copy.setTimeoutId(timeoutId);
             return copy;
         }
-
     }
 
-    public static final class RequestRetryTimeout extends RewriteableRetryTimeout
-    {
+    public static final class RequestRetryTimeout extends RewriteableRetryTimeout {
+
         private final Request requestMsg;
 
-        public RequestRetryTimeout(ScheduleRetryTimeout st, Request requestMsg)
-        {
+        public RequestRetryTimeout(ScheduleRetryTimeout st, Request requestMsg) {
             super(st, requestMsg);
             this.requestMsg = requestMsg;
         }
 
-        public Request getRequestMsg()
-        {
+        public Request getRequestMsg() {
             return requestMsg;
         }
-
     }
-
 }

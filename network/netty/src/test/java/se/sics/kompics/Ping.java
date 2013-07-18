@@ -15,7 +15,7 @@ import se.sics.gvod.net.msgs.RewriteableMsg;
  *
  * @author Jim Dowling<jdowling@sics.se>
  */
-public class Ping extends DirectMsgNetty {
+public class Ping extends DirectMsgNetty.Request {
 
     public Ping(VodAddress client, VodAddress server) {
         super(client, server);

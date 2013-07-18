@@ -20,7 +20,7 @@ import se.sics.gvod.timer.TimeoutId;
  */
 public class SHP_InitiateSimpleHolePunchingMsg
 {
-    public final static class Request extends HpMsg
+    public final static class Request extends HpMsg.Oneway
     {
         static final long serialVersionUID = 1L;
         private final HPMechanism holePunchingMechanism;

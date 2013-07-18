@@ -21,7 +21,7 @@ import se.sics.gvod.timer.TimeoutId;
  */
 public class HpRegisterMsg {
 
-    public static final class Request extends DirectMsgNetty {
+    public static final class Request extends DirectMsgNetty.SystemRequest {
 
         static final long serialVersionUID = 62456664L;
         private final int delta;
@@ -97,7 +97,7 @@ public class HpRegisterMsg {
         NOT_CHILD, DEAD_PARENT, PARENT_REQUEST_FAILED;
     };
 
-    public final static class Response extends DirectMsgNetty {
+    public final static class Response extends DirectMsgNetty.SystemResponse {
 
         static final long serialVersionUID = 987545675L;
         private final RegisterStatus responseType;

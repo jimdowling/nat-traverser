@@ -10,7 +10,7 @@ import se.sics.gvod.net.util.UserTypesDecoderFactory;
 
 public class HpRegisterMsgFactory {
 
-    public static class Request extends DirectMsgNettyFactory {
+    public static class Request extends DirectMsgNettyFactory.SystemRequest {
 
         private Request() {
         }
@@ -31,7 +31,7 @@ public class HpRegisterMsgFactory {
         }
     }
 
-    public static class Response extends DirectMsgNettyFactory {
+    public static class Response extends DirectMsgNettyFactory.SystemResponse {
 
         private Response() {
         }

@@ -8,7 +8,7 @@ import se.sics.gvod.net.VodAddress;
 import se.sics.gvod.net.util.UserTypesEncoderFactory;
 import se.sics.gvod.timer.TimeoutId;
 
-public abstract class StunResponseMsg extends DirectMsgNetty {
+public abstract class StunResponseMsg extends DirectMsgNetty.SystemResponse {
 
     protected final long transactionId;
     protected final Address replyAddr;

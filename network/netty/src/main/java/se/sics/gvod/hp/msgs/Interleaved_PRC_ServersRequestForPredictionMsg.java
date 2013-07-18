@@ -22,7 +22,7 @@ import se.sics.gvod.timer.TimeoutId;
  */
 public class Interleaved_PRC_ServersRequestForPredictionMsg
 {
-    public final static class Request extends HpMsg
+    public final static class Request extends HpMsg.Oneway
     {
         static final long serialVersionUID = 1L;
 

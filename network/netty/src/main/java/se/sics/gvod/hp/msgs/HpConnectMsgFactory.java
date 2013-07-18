@@ -8,7 +8,7 @@ import se.sics.gvod.net.util.UserTypesDecoderFactory;
 
 public class HpConnectMsgFactory {
 
-    public static class Request extends HpMsgFactory {
+    public static class Request extends HpMsgFactory.Request {
 
         private Request() {
         }
@@ -17,7 +17,7 @@ public class HpConnectMsgFactory {
                 
                 throws MessageDecodingException {
             return (HpConnectMsg.Request)
-                    new HpConnectMsgFactory.Request().decode(buffer, true);
+                    new HpConnectMsgFactory.Request().decode(buffer);
         }
 
         @Override
@@ -29,7 +29,7 @@ public class HpConnectMsgFactory {
         }
     }
 
-    public static class Response extends HpMsgFactory {
+    public static class Response extends HpMsgFactory.Response {
 
         private Response() {
         }
@@ -38,7 +38,7 @@ public class HpConnectMsgFactory {
                 
                 throws MessageDecodingException {
             return (HpConnectMsg.Response)
-                    new HpConnectMsgFactory.Response().decode(buffer, true);
+                    new HpConnectMsgFactory.Response().decode(buffer);
         }
 
         @Override

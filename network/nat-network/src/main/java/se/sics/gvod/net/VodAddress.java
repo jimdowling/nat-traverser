@@ -48,6 +48,8 @@ public class VodAddress implements Serializable, Comparable {
      */
     private final transient int delta;
 
+    private transient Transport transport = Transport.UDP;
+    
     /**
      * Only public nodes use this constructor. Constructor that doesn't supply
      * any parents, as it assumes the node is OPEN.
@@ -455,5 +457,13 @@ public class VodAddress implements Serializable, Comparable {
             return HPMechanism.NONE;
         }
         return hp.getHolePunchingMechanism();
+    }
+
+    public Transport getTransport() {
+        return transport;
+    }
+
+    public void setTransport(Transport transport) {
+        this.transport = transport;
     }
 }

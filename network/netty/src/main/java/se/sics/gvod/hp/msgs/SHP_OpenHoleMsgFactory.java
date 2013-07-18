@@ -8,7 +8,7 @@ import se.sics.gvod.net.util.UserTypesDecoderFactory;
 public class SHP_OpenHoleMsgFactory {
 
 
-    public static class Initiator extends HpMsgFactory {
+    public static class Initiator extends HpMsgFactory.Oneway {
 
         private Initiator() {
         }
@@ -17,7 +17,7 @@ public class SHP_OpenHoleMsgFactory {
                 
                 throws MessageDecodingException {
             return (SHP_OpenHoleMsg.Initiator)
-                    new SHP_OpenHoleMsgFactory.Initiator().decode(buffer, false);
+                    new SHP_OpenHoleMsgFactory.Initiator().decode(buffer);
         }
 
         @Override

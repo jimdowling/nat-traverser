@@ -5,7 +5,7 @@ import se.sics.gvod.common.msgs.MessageDecodingException;
 
 public class HolePunchingMsgFactory {
 
-    public static class Request extends HpMsgFactory {
+    public static class Request extends HpMsgFactory.Request {
 
         private Request() {
         }
@@ -14,7 +14,7 @@ public class HolePunchingMsgFactory {
                 
                 throws MessageDecodingException {
             return (HolePunchingMsg.Request)
-                    new HolePunchingMsgFactory.Request().decode(buffer, true);
+                    new HolePunchingMsgFactory.Request().decode(buffer);
         }
 
         @Override
@@ -25,7 +25,7 @@ public class HolePunchingMsgFactory {
         }
     }
 
-    public static class Response extends HpMsgFactory {
+    public static class Response extends HpMsgFactory.Response {
 
         private Response() {
         }
@@ -34,7 +34,7 @@ public class HolePunchingMsgFactory {
                 
                 throws MessageDecodingException {
             return (HolePunchingMsg.Response)
-                    new HolePunchingMsgFactory.Response().decode(buffer, true);
+                    new HolePunchingMsgFactory.Response().decode(buffer);
         }
 
         @Override
@@ -45,7 +45,7 @@ public class HolePunchingMsgFactory {
 
     }
     
-    public static class ResponseAck extends HpMsgFactory {
+    public static class ResponseAck extends HpMsgFactory.Response {
 
         private ResponseAck() {
         }
@@ -53,7 +53,7 @@ public class HolePunchingMsgFactory {
         public static HolePunchingMsg.ResponseAck fromBuffer(ByteBuf buffer)
                 throws MessageDecodingException {
             return (HolePunchingMsg.ResponseAck)
-                    new HolePunchingMsgFactory.ResponseAck().decode(buffer, true);
+                    new HolePunchingMsgFactory.ResponseAck().decode(buffer);
         }
 
         @Override

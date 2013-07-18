@@ -6,7 +6,7 @@ import se.sics.gvod.net.util.UserTypesDecoderFactory;
 
 public class HpFinishedMsgFactory {
 
-    public static class Request extends HpMsgFactory {
+    public static class Request extends HpMsgFactory.Oneway {
 
         private Request() {
         }
@@ -14,7 +14,7 @@ public class HpFinishedMsgFactory {
         public static HpFinishedMsg fromBuffer(ByteBuf buffer)
                 throws MessageDecodingException {
             return (HpFinishedMsg)
-                    new HpFinishedMsgFactory.Request().decode(buffer, false);
+                    new HpFinishedMsgFactory.Request().decode(buffer);
         }
 
         @Override

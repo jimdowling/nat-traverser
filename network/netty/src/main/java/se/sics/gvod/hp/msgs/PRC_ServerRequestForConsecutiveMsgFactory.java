@@ -9,7 +9,7 @@ import se.sics.gvod.net.util.UserTypesDecoderFactory;
 
 public class PRC_ServerRequestForConsecutiveMsgFactory {
 
-    public static class Request extends HpMsgFactory {
+    public static class Request extends HpMsgFactory.Oneway {
 
         private Request() {
         }
@@ -18,7 +18,7 @@ public class PRC_ServerRequestForConsecutiveMsgFactory {
                 
                 throws MessageDecodingException {
             return (PRC_ServerRequestForConsecutiveMsg.Request)
-                    new PRC_ServerRequestForConsecutiveMsgFactory.Request().decode(buffer, true);
+                    new PRC_ServerRequestForConsecutiveMsgFactory.Request().decode(buffer);
         }
 
         @Override

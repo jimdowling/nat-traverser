@@ -9,7 +9,7 @@ import se.sics.gvod.net.util.UserTypesDecoderFactory;
 
 public class Interleaved_PRP_ConnectMsgFactory {
 
-    public static class Request extends HpMsgFactory {
+    public static class Request extends HpMsgFactory.Request {
 
         private Request() {
         }
@@ -28,7 +28,7 @@ public class Interleaved_PRP_ConnectMsgFactory {
         }
     }
 
-    public static class Response extends HpMsgFactory {
+    public static class Response extends HpMsgFactory.Response {
 
         private Response() {
         }

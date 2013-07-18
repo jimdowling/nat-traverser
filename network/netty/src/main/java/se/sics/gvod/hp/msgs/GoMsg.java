@@ -19,7 +19,7 @@ import se.sics.gvod.timer.TimeoutId;
  */
 public class GoMsg
 {
-    public final static class Request extends HpMsg
+    public final static class Request extends HpMsg.Oneway
     {
         static final long serialVersionUID = 13245324567L;
         private final VodAddress openedHole;

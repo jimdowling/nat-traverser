@@ -6,7 +6,7 @@ import se.sics.gvod.common.msgs.DirectMsgNettyFactory;
 import se.sics.gvod.common.msgs.MessageDecodingException;
 import se.sics.gvod.net.util.UserTypesDecoderFactory;
 
-public abstract class StunResponseMsgFactory extends DirectMsgNettyFactory {
+public abstract class StunResponseMsgFactory extends DirectMsgNettyFactory.SystemResponse {
 
     protected long transactionId;
     protected Address retryPubAddr;

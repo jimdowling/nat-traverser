@@ -7,7 +7,7 @@ import se.sics.gvod.net.util.UserTypesDecoderFactory;
 
 public class ConnectMsgFactory  {
 
-    public static class Request extends DirectMsgNettyFactory {
+    public static class Request extends DirectMsgNettyFactory.Request {
 
         private Request() {
         }
@@ -15,7 +15,7 @@ public class ConnectMsgFactory  {
         public static ConnectMsg.Request fromBuffer(ByteBuf buffer) 
                 throws MessageDecodingException {
             return (ConnectMsg.Request)
-                    new ConnectMsgFactory.Request().decode(buffer, true);
+                    new ConnectMsgFactory.Request().decode(buffer);
         }
 
         @Override
@@ -28,7 +28,7 @@ public class ConnectMsgFactory  {
 
     }
 
-    public static class Response extends DirectMsgNettyFactory {
+    public static class Response extends DirectMsgNettyFactory.Response {
 
         private Response() {
         }

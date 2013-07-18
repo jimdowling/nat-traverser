@@ -23,7 +23,7 @@ import se.sics.gvod.timer.TimeoutId;
  */
 public class ConnectMsg {
 
-    public static class Request extends DirectMsgNetty {
+    public static class Request extends DirectMsgNetty.Request {
 
         private final UtilityVod utility;
         private final boolean toUtilitySet;
@@ -32,7 +32,7 @@ public class ConnectMsg {
         public Request(VodAddress source,
                 VodAddress destination, UtilityVod utility,
                 boolean toUtilitySet, int mtu) {
-            super(source, destination, null);
+            super(source, destination);
             if(utility == null)  {
                 throw new IllegalArgumentException("Utility cannot be null");
             }
@@ -99,7 +99,7 @@ public class ConnectMsg {
         }
     }
 
-    public static class Response extends DirectMsgNetty {
+    public static class Response extends DirectMsgNetty.Response {
 
         private final ResponseType response;
         private final UtilityVod utility;

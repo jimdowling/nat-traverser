@@ -6,7 +6,7 @@ import se.sics.gvod.common.msgs.MessageDecodingException;
 
 public class HpKeepAliveMsgFactory {
 
-    public static class Request extends DirectMsgNettyFactory {
+    public static class Request extends DirectMsgNettyFactory.Request {
 
         private Request() {
         }
@@ -14,7 +14,7 @@ public class HpKeepAliveMsgFactory {
         public static HpKeepAliveMsg.Ping fromBuffer(ByteBuf buffer)
                 throws MessageDecodingException {
             return (HpKeepAliveMsg.Ping)
-                    new HpKeepAliveMsgFactory.Request().decode(buffer, true);
+                    new HpKeepAliveMsgFactory.Request().decode(buffer);
         }
 
         @Override
@@ -23,7 +23,7 @@ public class HpKeepAliveMsgFactory {
         }
     }
 
-    public static class Response extends DirectMsgNettyFactory {
+    public static class Response extends DirectMsgNettyFactory.Response {
 
         private Response() {
         }
@@ -31,7 +31,7 @@ public class HpKeepAliveMsgFactory {
         public static HpKeepAliveMsg.Pong fromBuffer(ByteBuf buffer)
                 throws MessageDecodingException {
             return (HpKeepAliveMsg.Pong)
-                    new HpKeepAliveMsgFactory.Response().decode(buffer, true);
+                    new HpKeepAliveMsgFactory.Response().decode(buffer);
         }
 
         @Override
