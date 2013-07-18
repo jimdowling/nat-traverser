@@ -3,17 +3,21 @@ package se.sics.gvod.net;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import se.sics.gvod.net.events.NetworkException;
+import se.sics.gvod.net.msgs.RewriteableMsg;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import se.sics.gvod.net.events.NetworkException;
-import se.sics.gvod.net.msgs.RewriteableMsg;
-
+/**
+ * Superclass providing the basic operations for our handlers.
+ * Subclasses should handle received messages.
+ *
+ * @author Steffen Grohsschmiedt
+ */
 public abstract class NettyBaseHandler<I> extends SimpleChannelInboundHandler<I> {
 
 	private static final Logger logger = LoggerFactory.getLogger(NettyStreamHandler.class);

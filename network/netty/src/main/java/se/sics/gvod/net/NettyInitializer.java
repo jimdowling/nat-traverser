@@ -4,6 +4,9 @@ import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
 
+/**
+ * @author Steffen Grohsschmiedt
+ */
 public class NettyInitializer<C extends Channel> extends ChannelInitializer<C> {
 	private final NettyBaseHandler handler;
 

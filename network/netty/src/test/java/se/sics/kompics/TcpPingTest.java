@@ -35,6 +35,8 @@ import java.util.concurrent.Semaphore;
 
 /**
  * Unit test for simple App.
+ *
+ * @author Steffen Grohsschmiedt
  */
 public class TcpPingTest extends TestCase {
 

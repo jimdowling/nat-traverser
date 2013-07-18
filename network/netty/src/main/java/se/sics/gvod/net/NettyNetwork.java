@@ -62,6 +62,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * PortBind or PortAlloc Request to this component for different transports
  *
  * @author Jim Dowling <jdowling@sics.se>
+ * @author Steffen Grohsschmiedt
  */
 public final class NettyNetwork extends ComponentDefinition {
 

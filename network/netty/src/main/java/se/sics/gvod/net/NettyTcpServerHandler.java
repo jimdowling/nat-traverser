@@ -3,6 +3,9 @@ package se.sics.gvod.net;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.socket.SocketChannel;
 
+/**
+ * @author Steffen Grohsschmiedt
+ */
 public class NettyTcpServerHandler extends NettyStreamHandler {
 
 	public NettyTcpServerHandler(NettyNetwork component) {

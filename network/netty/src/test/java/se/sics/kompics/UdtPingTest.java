@@ -38,6 +38,8 @@ import se.sics.gvod.timer.java.JavaTimer;
 
 /**
  * Unit test for simple App.
+ *
+ * @author Steffen Grohsschmiedt
  */
 public class UdtPingTest extends TestCase {
 
