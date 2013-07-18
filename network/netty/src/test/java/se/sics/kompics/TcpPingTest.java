@@ -34,7 +34,7 @@ import java.util.List;
 import java.util.concurrent.Semaphore;
 
 /**
- * Unit test for simple App.
+ * Simple ping pong test for UDP.
  *
  * @author Steffen Grohsschmiedt
  */
