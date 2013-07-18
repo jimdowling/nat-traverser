@@ -460,8 +460,6 @@ public final class NettyNetwork extends ComponentDefinition {
 
         if (udpPortsToSockets.containsKey(port)) {
             return true;
-        } else if (udtPortsToSockets.containsKey(port)) {
-            return false;
         }
 
         EventLoopGroup group = new NioEventLoopGroup();
@@ -567,8 +565,6 @@ public final class NettyNetwork extends ComponentDefinition {
 
         if (udtPortsToSockets.containsKey(port)) {
             return true;
-        } else if (udpPortsToSockets.containsKey(port)) {
-            return false;
         }
 
         ThreadFactory bossFactory = new UtilThreadFactory("boss");
