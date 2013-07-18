@@ -44,7 +44,7 @@ import se.sics.gvod.net.msgs.RewriteableMsg;
 import se.sics.gvod.timer.SchedulePeriodicTimeout;
 import se.sics.gvod.timer.Timeout;
 import se.sics.gvod.timer.Timer;
-import se.sics.gvod.util.UtilThreadFactory;
+import se.sics.gvod.net.util.UtilThreadFactory;
 import se.sics.kompics.*;
 
 import java.net.InetAddress;
@@ -140,6 +140,7 @@ public final class NettyNetwork extends ComponentDefinition {
         subscribe(handlePortBindRequest, netControl);
         subscribe(handlePortAllocRequest, netControl);
         subscribe(handlePortDeleteRequest, netControl);
+        subscribe(handleCloseConnectionRequest, netControl);
         subscribe(handleByteCounterTimeout, timer);
         subscribe(handleInit, control);
         subscribe(handleStop, control);
@@ -316,7 +317,6 @@ public final class NettyNetwork extends ComponentDefinition {
                 } else {
                     response.setStatus(PortBindResponse.Status.FAIL);
                 }
-                // TODO this is never thrown
             } catch (ChannelException e) {
                 response.setStatus(PortBindResponse.Status.PORT_ALREADY_BOUND);
             }
@@ -399,7 +399,26 @@ public final class NettyNetwork extends ComponentDefinition {
             }
         }
     };
+    Handler<CloseConnectionRequest> handleCloseConnectionRequest = new Handler<CloseConnectionRequest>() {
+        @Override
+        public void handle(CloseConnectionRequest msg) {
+            removeLocalSocket(address2SocketAddress(msg.getRemoteAddress()), msg.getTransport());
 
+            if (msg.getResponse() != null) {
+                // if a response is requested, send it
+                CloseConnectionResponse response = msg.getResponse();
+                trigger(response, netControl);
+            }
+        }
+    };
+
+    /**
+     *
+     * @param addr
+     * @param port
+     * @param protocol
+     * @return
+     */
     private boolean bindPort(InetAddress addr, int port, Transport protocol) {
         switch (protocol) {
             case TCP:
@@ -413,6 +432,13 @@ public final class NettyNetwork extends ComponentDefinition {
         }
     }
 
+    /**
+     *
+     * @param addr
+     * @param port
+     * @param bindAllNetworkIfs
+     * @return
+     */
     private boolean bindUdpPort(final InetAddress addr, final int port, final boolean bindAllNetworkIfs) {
 
         if (udpPortsToSockets.containsKey(port)) {
@@ -456,7 +482,6 @@ public final class NettyNetwork extends ComponentDefinition {
 
             addLocalSocket(new InetSocketAddress(addr, port), c);
             logger.info("Successfully bound to ip:port {}:{}", addr, port);
-            // TODO how to handle bind expections
         } catch (InterruptedException e) {
             logger.warn("Problem when trying to bind to {}:{}", addr.getHostAddress(), port);
             trigger(new Fault(e.getCause()), control);
@@ -468,6 +493,13 @@ public final class NettyNetwork extends ComponentDefinition {
         return true;
     }
 
+    /**
+     *
+     * @param addr
+     * @param port
+     * @param bindAllNetworkIfs
+     * @return
+     */
     private boolean bindTcpPort(InetAddress addr, int port, boolean bindAllNetworkIfs) {
 
         if (tcpPortsToSockets.containsKey(port)) {
@@ -490,7 +522,6 @@ public final class NettyNetwork extends ComponentDefinition {
             }
 
             logger.info("Successfully bound to ip:port {}:{}", addr, port);
-            // TODO how to handle bind exceptions
         } catch (InterruptedException e) {
             logger.warn("Problem when trying to bind to {}:{}", addr.getHostAddress(), port);
             trigger(new Fault(e.getCause()), control);
@@ -504,6 +535,13 @@ public final class NettyNetwork extends ComponentDefinition {
         return true;
     }
 
+    /**
+     *
+     * @param addr
+     * @param port
+     * @param bindAllNetworkIfs
+     * @return
+     */
     private boolean bindUdtPort(InetAddress addr, int port, boolean bindAllNetworkIfs) {
 
         if (udtPortsToSockets.containsKey(port)) {
@@ -532,7 +570,6 @@ public final class NettyNetwork extends ComponentDefinition {
             }
 
             logger.info("Successfully bound to ip:port {}:{}", addr, port);
-            // TODO how to handle bind exceptions
         } catch (InterruptedException e) {
             logger.warn("Problem when trying to bind to {}:{}", addr.getHostAddress(), port);
             trigger(new Fault(e.getCause()), control);
@@ -546,6 +583,13 @@ public final class NettyNetwork extends ComponentDefinition {
         return true;
     }
 
+    /**
+     * Connect to a TCP server.
+     *
+     * @param remoteAddress
+     * @param localAddress
+     * @return
+     */
     private boolean connectTcp(Address remoteAddress, Address localAddress) {
         InetSocketAddress remote = address2SocketAddress(remoteAddress);
         InetSocketAddress local = address2SocketAddress(localAddress);
@@ -567,7 +611,6 @@ public final class NettyNetwork extends ComponentDefinition {
             addLocalSocket(remote, c);
             logger.info("Successfully connected to ip:port {}", remote.toString());
         } catch (InterruptedException e) {
-            // TODO how to handle bind exceptions
             logger.warn("Problem when trying to connect to {}", remote);
             trigger(new Fault(e.getCause()), control);
             return false;
@@ -577,6 +620,13 @@ public final class NettyNetwork extends ComponentDefinition {
         return true;
     }
 
+    /**
+     * Connect to a UDT server.
+     *
+     * @param remoteAddress
+     * @param localAddress
+     * @return
+     */
     private boolean connectUdt(Address remoteAddress, Address localAddress) {
         InetSocketAddress remote = address2SocketAddress(remoteAddress);
         InetSocketAddress local = address2SocketAddress(localAddress);
@@ -609,25 +659,45 @@ public final class NettyNetwork extends ComponentDefinition {
         return true;
     }
 
-
-    private void addLocalSocket(InetSocketAddress addr, DatagramChannel channel) {
-        udpPortsToSockets.put(addr.getPort(), addr);
-        udpSocketsToChannels.put(addr, channel);
+    /**
+     *
+     * @param localAddress
+     * @param channel
+     */
+    private void addLocalSocket(InetSocketAddress localAddress, DatagramChannel channel) {
+        udpPortsToSockets.put(localAddress.getPort(), localAddress);
+        udpSocketsToChannels.put(localAddress, channel);
     }
 
-    void addLocalSocket(InetSocketAddress addr, SocketChannel channel) {
-        tcpSocketsToChannels.put(addr, channel);
+    /**
+     *
+     * @param remoteAddress
+     * @param channel
+     */
+    void addLocalSocket(InetSocketAddress remoteAddress, SocketChannel channel) {
+        tcpSocketsToChannels.put(remoteAddress, channel);
+        trigger(new NetworkSessionOpened(remoteAddress, Transport.TCP), netControl);
     }
 
-    void addLocalSocket(InetSocketAddress addr, UdtChannel channel) {
-        udtSocketsToChannels.put(addr, channel);
+    /**
+     *
+     * @param remoteAddress
+     * @param channel
+     */
+    void addLocalSocket(InetSocketAddress remoteAddress, UdtChannel channel) {
+        udtSocketsToChannels.put(remoteAddress, channel);
+        trigger(new NetworkSessionOpened(remoteAddress, Transport.UDT), netControl);
     }
 
+    /**
+     *
+     * @param addr
+     * @param protocol
+     */
     private void removeLocalSocket(InetSocketAddress addr, Transport protocol) {
         Bootstrap bootstrap;
         switch (protocol) {
             case TCP:
-                tcpPortsToSockets.remove(addr.getPort());
                 tcpSocketsToChannels.remove(addr);
                 bootstrap = tcpSocketsToBootstraps.remove(addr);
                 break;
@@ -637,7 +707,6 @@ public final class NettyNetwork extends ComponentDefinition {
                 bootstrap = udpSocketsToBootstraps.remove(addr);
                 break;
             case UDT:
-                udtPortsToSockets.remove(addr.getPort());
                 udtSocketsToChannels.remove(addr);
                 bootstrap = udtSocketsToBootstraps.remove(addr);
                 break;
@@ -651,12 +720,24 @@ public final class NettyNetwork extends ComponentDefinition {
                 group.shutdownGracefully();
             }
         }
+
+        trigger(new NetworkSessionClosed(addr, protocol), netControl);
     }
 
+    /**
+     *
+     * @param address
+     * @return
+     */
     private InetSocketAddress address2SocketAddress(Address address) {
         return new InetSocketAddress(address.getIp(), address.getPort());
     }
 
+    /**
+     * Send a message using UDP.
+     *
+     * @param msg
+     */
     private void sendUdp(RewriteableMsg msg) {
         InetSocketAddress src = address2SocketAddress(msg.getSource());
         InetSocketAddress dest = address2SocketAddress(msg.getDestination());
@@ -691,6 +772,11 @@ public final class NettyNetwork extends ComponentDefinition {
         }
     }
 
+    /**
+     * Send a message to using TCP. Connects to a server on  demand.
+     *
+     * @param msg
+     */
     private void sendTcp(RewriteableMsg msg) {
         InetSocketAddress dst = address2SocketAddress(msg.getDestination());
         SocketChannel channel = tcpSocketsToChannels.get(dst);
@@ -717,10 +803,15 @@ public final class NettyNetwork extends ComponentDefinition {
             logger.warn("Problem trying to write msg of type: "
                     + msg.getClass().getCanonicalName() + " with dst address: "
                     + dst.toString());
-            trigger(new Fault(ex), control);
+            throw new RuntimeException(ex.getMessage());
         }
     }
 
+    /**
+     * Send a message to using UDT. Connects to a server on  demand.
+     *
+     * @param msg
+     */
     private void sendUdt(RewriteableMsg msg) {
         InetSocketAddress dst = address2SocketAddress(msg.getDestination());
         UdtChannel channel = udtSocketsToChannels.get(dst);
@@ -747,10 +838,14 @@ public final class NettyNetwork extends ComponentDefinition {
             logger.warn("Problem trying to write msg of type: "
                     + msg.getClass().getCanonicalName() + " with dst address: "
                     + dst.toString());
-            trigger(new Fault(ex), control);
+            throw new RuntimeException(ex.getMessage());
         }
     }
 
+    /**
+     *
+     * @param msg
+     */
     final void deliverMessage(RewriteableMsg msg) {
         logger.trace("Receiving " + msg.getClass().getCanonicalName() + " source {} dest {} ",
                 msg.getSource().getId(), msg.getDestination().getId());
@@ -758,6 +853,11 @@ public final class NettyNetwork extends ComponentDefinition {
         totalReadBytes += msg.getSize();
     }
 
+    /**
+     *
+     * @param ctx
+     * @param e
+     */
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable e) {
         logger.warn("Fault for " + e.getCause().getMessage());
         trigger(new Fault(e.getCause()), control);
@@ -773,6 +873,11 @@ public final class NettyNetwork extends ComponentDefinition {
         trigger(event, netControl);
     }
 
+    /**
+     *
+     * @param ctx
+     * @param protocol
+     */
     final void channelInactive(ChannelHandlerContext ctx, Transport protocol) {
         Channel c = ctx.channel();
         SocketAddress addr;
