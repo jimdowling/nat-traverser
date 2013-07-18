@@ -1,4 +1,4 @@
-package se.sics.gvod.util;
+package se.sics.gvod.net.util;
 
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
