@@ -9,6 +9,8 @@ import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 
 /**
+ * Handler for stream based protocols.
+ *
  * @author Steffen Grohsschmiedt
  */
 public class NettyStreamHandler extends NettyBaseHandler<RewriteableMsg> {
