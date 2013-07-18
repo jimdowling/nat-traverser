@@ -6,14 +6,14 @@ package se.sics.gvod.net;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.MessageList;
 import io.netty.handler.codec.ReplayingDecoder;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import se.sics.gvod.common.msgs.MessageDecodingException;
 import se.sics.gvod.net.msgs.RewriteableMsg;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * 
@@ -33,11 +33,10 @@ public abstract class MsgFrameDecoder extends ReplayingDecoder<DecoderState> {
 	}
 
 	public Object parse(ByteBuf buffer) throws Exception {
-		MessageList<Object> out = MessageList.newInstance();
+		List<Object> out = new ArrayList<Object>();
 		state(DecoderState.READ_TYPE);
 		decode(null, buffer, out);
 		Object result = out.get(0);
-		out.recycle();
 		return result;
 	}
 
@@ -45,7 +44,7 @@ public abstract class MsgFrameDecoder extends ReplayingDecoder<DecoderState> {
 			throws MessageDecodingException;
 
 	@Override
-	protected void decode(ChannelHandlerContext ctx, ByteBuf buffer, MessageList<Object> out)
+	protected void decode(ChannelHandlerContext ctx, ByteBuf buffer, List<Object> out)
 			throws Exception {
 
 		switch (state()) {

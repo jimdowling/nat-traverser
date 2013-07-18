@@ -3,18 +3,21 @@ package se.sics.gvod.net;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.udt.UdtChannel;
 
-import java.net.InetAddress;
+/**
+ * Handler for a UDT server. Add new connections to the set of local connections.
+ *
+ * @author Steffen Grohsschmiedt
+ */
+public class NettyUdtServerHandler extends NettyStreamHandler {
 
-public class NettyUdtServerHandler extends NettyUdtHandler {
-
-	public NettyUdtServerHandler(NettyNetwork component, InetAddress addr, int port) {
-		super(component, addr, port);
+	public NettyUdtServerHandler(NettyNetwork component) {
+		super(component, Transport.UDT);
 	}
 
 	@Override
 	public void channelActive(ChannelHandlerContext ctx) {
 		UdtChannel channel = (UdtChannel) ctx.channel();
-		getComponent().addLocalUdtSocket(channel, channel.remoteAddress());
+		getComponent().addLocalSocket(channel.remoteAddress(), channel);
 		super.channelActive(ctx);
 	}
 }

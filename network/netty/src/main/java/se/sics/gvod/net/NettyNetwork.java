@@ -23,12 +23,7 @@ package se.sics.gvod.net;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
-import io.netty.channel.ChannelException;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelInitializer;
-import io.netty.channel.ChannelOption;
-import io.netty.channel.EventLoopGroup;
-import io.netty.channel.FixedRecvByteBufAllocator;
+import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.DatagramChannel;
 import io.netty.channel.socket.DatagramPacket;
@@ -38,46 +33,26 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.channel.udt.UdtChannel;
 import io.netty.channel.udt.nio.NioUdtProvider;
-
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.SocketAddress;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.Map;
-import java.util.Random;
-import java.util.Set;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.atomic.AtomicLong;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import se.sics.gvod.address.Address;
 import se.sics.gvod.common.msgs.DirectMsgNettyFactory;
 import se.sics.gvod.common.msgs.Encodable;
 import se.sics.gvod.config.VodConfig;
-import se.sics.gvod.net.events.BandwidthStats;
-import se.sics.gvod.net.events.NetworkException;
-import se.sics.gvod.net.events.NetworkSessionClosed;
-import se.sics.gvod.net.events.PortAllocRequest;
-import se.sics.gvod.net.events.PortAllocResponse;
-import se.sics.gvod.net.events.PortBindRequest;
-import se.sics.gvod.net.events.PortBindResponse;
-import se.sics.gvod.net.events.PortDeleteRequest;
-import se.sics.gvod.net.events.PortDeleteResponse;
+import se.sics.gvod.net.events.*;
 import se.sics.gvod.net.msgs.RewriteableMsg;
 import se.sics.gvod.timer.SchedulePeriodicTimeout;
 import se.sics.gvod.timer.Timeout;
 import se.sics.gvod.timer.Timer;
-import se.sics.gvod.util.UtilThreadFactory;
-import se.sics.kompics.ComponentDefinition;
-import se.sics.kompics.Fault;
-import se.sics.kompics.Handler;
-import se.sics.kompics.Negative;
-import se.sics.kompics.Positive;
-import se.sics.kompics.Stop;
+import se.sics.gvod.net.util.UtilThreadFactory;
+import se.sics.kompics.*;
+
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.SocketAddress;
+import java.util.*;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * The
@@ -87,15 +62,7 @@ import se.sics.kompics.Stop;
  * PortBind or PortAlloc Request to this component for different transports
  *
  * @author Jim Dowling <jdowling@sics.se>
- */
-/*
- * 
- * 
- * Ports in init
- * DirectMsgNettyFactory bug
- * upnp code
- * Connect API / asynchronous?
- * How to handle bind exceptions
+ * @author Steffen Grohsschmiedt
  */
 public final class NettyNetwork extends ComponentDefinition {
 
@@ -173,6 +140,7 @@ public final class NettyNetwork extends ComponentDefinition {
         subscribe(handlePortBindRequest, netControl);
         subscribe(handlePortAllocRequest, netControl);
         subscribe(handlePortDeleteRequest, netControl);
+        subscribe(handleCloseConnectionRequest, netControl);
         subscribe(handleByteCounterTimeout, timer);
         subscribe(handleInit, control);
         subscribe(handleStop, control);
@@ -196,7 +164,6 @@ public final class NettyNetwork extends ComponentDefinition {
 
             enableBandwidthStats = init.isEnableBandwidthStats();
 
-
             if (enableBandwidthStats) {
                 SchedulePeriodicTimeout spt = new SchedulePeriodicTimeout(0, 1000);
                 ByteCounterTimeout bct = new ByteCounterTimeout(spt);
@@ -207,7 +174,6 @@ public final class NettyNetwork extends ComponentDefinition {
     Handler<ByteCounterTimeout> handleByteCounterTimeout = new Handler<ByteCounterTimeout>() {
         @Override
         public void handle(ByteCounterTimeout event) {
-
             lastSecWrote.set(totalWrittenBytes - prevTotalWrote);
             lastSecRead.set(totalReadBytes - prevTotalRead);
             prevTotalWrote = totalWrittenBytes;
@@ -256,6 +222,10 @@ public final class NettyNetwork extends ComponentDefinition {
         }
         return count;
     }
+
+    /**
+     * Close all connections.
+     */
     Handler<Stop> handleStop = new Handler<Stop>() {
         @Override
         public void handle(Stop event) {
@@ -264,7 +234,6 @@ public final class NettyNetwork extends ComponentDefinition {
                     b.group().shutdownGracefully();
                 }
             }
-
             udpPortsToSockets.clear();
             udpSocketsToBootstraps.clear();
             udpSocketsToChannels.clear();
@@ -283,7 +252,6 @@ public final class NettyNetwork extends ComponentDefinition {
                     b.group().shutdownGracefully();
                 }
             }
-
             tcpPortsToSockets.clear();
             tcpSocketsToBootstraps.clear();
             tcpSocketsToChannels.clear();
@@ -303,7 +271,6 @@ public final class NettyNetwork extends ComponentDefinition {
                     b.group().shutdownGracefully();
                 }
             }
-
             udtPortsToSockets.clear();
             udtSocketsToBootstraps.clear();
             udtSocketsToChannels.clear();
@@ -311,7 +278,7 @@ public final class NettyNetwork extends ComponentDefinition {
         }
     };
     /**
-     * The handle msg.
+     * Send the received message over the network using the specified protocol.
      */
     Handler<RewriteableMsg> handleRewriteableMessage = new Handler<RewriteableMsg>() {
         @Override
@@ -341,6 +308,9 @@ public final class NettyNetwork extends ComponentDefinition {
             }
         }
     };
+    /**
+     * Start listening as a server on the given port.
+     */
     Handler<PortBindRequest> handlePortBindRequest = new Handler<PortBindRequest>() {
         @Override
         public void handle(PortBindRequest msg) {
@@ -354,7 +324,6 @@ public final class NettyNetwork extends ComponentDefinition {
                 } else {
                     response.setStatus(PortBindResponse.Status.FAIL);
                 }
-                // TODO this is never thrown
             } catch (ChannelException e) {
                 response.setStatus(PortBindResponse.Status.PORT_ALREADY_BOUND);
             }
@@ -398,12 +367,13 @@ public final class NettyNetwork extends ComponentDefinition {
             trigger(response, netControl);
         }
     };
-    // TODO check and do proper for all protocols
+    /**
+     * Stop listening as server on the given ports.
+     */
     Handler<PortDeleteRequest> handlePortDeleteRequest = new Handler<PortDeleteRequest>() {
         @Override
         public void handle(PortDeleteRequest msg) {
             Map<Integer, InetSocketAddress> portsToSockets;
-
             Transport protocol = msg.getTransport();
             if (protocol == Transport.UDP) {
                 portsToSockets = tcpPortsToSockets;
@@ -439,7 +409,31 @@ public final class NettyNetwork extends ComponentDefinition {
             }
         }
     };
+    /**
+     * Close the client socket connected to the given remote address.
+     */
+    Handler<CloseConnectionRequest> handleCloseConnectionRequest = new Handler<CloseConnectionRequest>() {
+        @Override
+        public void handle(CloseConnectionRequest msg) {
+            removeLocalSocket(address2SocketAddress(msg.getRemoteAddress()), msg.getTransport());
 
+            if (msg.getResponse() != null) {
+                // if a response is requested, send it
+                CloseConnectionResponse response = msg.getResponse();
+                trigger(response, netControl);
+            }
+        }
+    };
+
+    /**
+     * Start listening as a server at the given address with the given protocol.
+     *
+     * @param addr the address to listen at
+     * @param port the port number to listen at
+     * @param protocol the protocol to use
+     * @return true if listening was started
+     * @throws ChannelException in case binding failed
+     */
     private boolean bindPort(InetAddress addr, int port, Transport protocol) {
         switch (protocol) {
             case TCP:
@@ -453,24 +447,25 @@ public final class NettyNetwork extends ComponentDefinition {
         }
     }
 
+    /**
+     * Start listening as a server at the given address..
+     *
+     * @param addr the address to listen at
+     * @param port the port number to listen at
+     * @param bindAllNetworkIfs whether to bind on all network interfaces
+     * @return true if listening was started
+     * @throws ChannelException in case binding failed
+     */
     private boolean bindUdpPort(final InetAddress addr, final int port, final boolean bindAllNetworkIfs) {
 
         if (udpPortsToSockets.containsKey(port)) {
             return true;
-        } else if (udtPortsToSockets.containsKey(port)) {
-            return false;
         }
 
         EventLoopGroup group = new NioEventLoopGroup();
         Bootstrap bootstrap = new Bootstrap();
         bootstrap.group(group).channel(NioDatagramChannel.class)
-                .handler(new ChannelInitializer<Channel>() {
-            @Override
-            protected void initChannel(Channel ch) throws Exception {
-                ch.pipeline().addLast(
-                        new NettyUdpHandler(component, addr, port, msgDecoderClass));
-            }
-        });
+                .handler(new NettyMessageHandler(component, Transport.UDP, msgDecoderClass));
 
         // Allow packets as large as up to 1600 bytes (default is 768).
         // You could increase or decrease this value to avoid truncated packets
@@ -492,7 +487,6 @@ public final class NettyNetwork extends ComponentDefinition {
         bootstrap.option(ChannelOption.SO_REUSEADDR, true);
 
         try {
-            // TODO - bind on all network interfaces ??
             DatagramChannel c;
             if (bindAllNetworkIfs) {
                 c = (DatagramChannel) bootstrap.bind(new InetSocketAddress(port)).sync().channel();
@@ -501,10 +495,8 @@ public final class NettyNetwork extends ComponentDefinition {
                         .channel();
             }
 
-            addLocalUdpSocket(c, new InetSocketAddress(addr, port));
-
+            addLocalSocket(new InetSocketAddress(addr, port), c);
             logger.info("Successfully bound to ip:port {}:{}", addr, port);
-            // TODO how to handle bind expections
         } catch (InterruptedException e) {
             logger.warn("Problem when trying to bind to {}:{}", addr.getHostAddress(), port);
             trigger(new Fault(e.getCause()), control);
@@ -516,6 +508,15 @@ public final class NettyNetwork extends ComponentDefinition {
         return true;
     }
 
+    /**
+     * Start listening as a server at the given address..
+     *
+     * @param addr the address to listen at
+     * @param port the port number to listen at
+     * @param bindAllNetworkIfs whether to bind on all network interfaces
+     * @return true if listening was started
+     * @throws ChannelException in case binding failed
+     */
     private boolean bindTcpPort(InetAddress addr, int port, boolean bindAllNetworkIfs) {
 
         if (tcpPortsToSockets.containsKey(port)) {
@@ -524,14 +525,13 @@ public final class NettyNetwork extends ComponentDefinition {
 
         EventLoopGroup bossGroup = new NioEventLoopGroup();
         EventLoopGroup workerGroup = new NioEventLoopGroup();
-        NettyTcpServerHandler handler = new NettyTcpServerHandler(component, addr, port);
+        NettyTcpServerHandler handler = new NettyTcpServerHandler(component);
         ServerBootstrap bootstrap = new ServerBootstrap();
         bootstrap.group(bossGroup, workerGroup).channel(NioServerSocketChannel.class)
-                .childHandler((new NettyTcpInitializer(handler, msgDecoderClass)))
+                .childHandler((new NettyInitializer<SocketChannel>(handler, msgDecoderClass)))
                 .option(ChannelOption.SO_REUSEADDR, true);
 
         try {
-            // TODO - bind on all network interfaces ??
             if (bindAllNetworkIfs) {
                 bootstrap.bind(new InetSocketAddress(port)).sync();
             } else {
@@ -552,12 +552,19 @@ public final class NettyNetwork extends ComponentDefinition {
         return true;
     }
 
+    /**
+     * Start listening as a server at the given address..
+     *
+     * @param addr the address to listen at
+     * @param port the port number to listen at
+     * @param bindAllNetworkIfs whether to bind on all network interfaces
+     * @return true if listening was started
+     * @throws ChannelException in case binding failed
+     */
     private boolean bindUdtPort(InetAddress addr, int port, boolean bindAllNetworkIfs) {
 
         if (udtPortsToSockets.containsKey(port)) {
             return true;
-        } else if (udpPortsToSockets.containsKey(port)) {
-            return false;
         }
 
         ThreadFactory bossFactory = new UtilThreadFactory("boss");
@@ -566,14 +573,13 @@ public final class NettyNetwork extends ComponentDefinition {
                 NioUdtProvider.BYTE_PROVIDER);
         NioEventLoopGroup workerGroup = new NioEventLoopGroup(1, workerFactory,
                 NioUdtProvider.BYTE_PROVIDER);
-        NettyUdtServerHandler handler = new NettyUdtServerHandler(component, addr, port);
+        NettyUdtServerHandler handler = new NettyUdtServerHandler(component);
         ServerBootstrap bootstrap = new ServerBootstrap();
         bootstrap.group(bossGroup, workerGroup).channelFactory(NioUdtProvider.BYTE_ACCEPTOR)
-                .childHandler(new NettyUdtInitializer(handler, msgDecoderClass))
+                .childHandler(new NettyInitializer<UdtChannel>(handler, msgDecoderClass))
                 .option(ChannelOption.SO_REUSEADDR, true);
 
         try {
-            // TODO - bind on all network interfaces ??
             if (bindAllNetworkIfs) {
                 bootstrap.bind(new InetSocketAddress(port)).sync();
             } else {
@@ -581,7 +587,6 @@ public final class NettyNetwork extends ComponentDefinition {
             }
 
             logger.info("Successfully bound to ip:port {}:{}", addr, port);
-            // TODO how to handle bind exceptions
         } catch (InterruptedException e) {
             logger.warn("Problem when trying to bind to {}:{}", addr.getHostAddress(), port);
             trigger(new Fault(e.getCause()), control);
@@ -595,114 +600,163 @@ public final class NettyNetwork extends ComponentDefinition {
         return true;
     }
 
-    private boolean connectTcp(InetAddress addr, int port) {
-        InetSocketAddress iAddr = new InetSocketAddress(addr, port);
+    /**
+     * Connect to a TCP server.
+     *
+     * @param remoteAddress the remote address
+     * @param localAddress the local address to bind to
+     * @return true if connection succeeded
+     * @throws ChannelException if connecting failed
+     */
+    private boolean connectTcp(Address remoteAddress, Address localAddress) {
+        InetSocketAddress remote = address2SocketAddress(remoteAddress);
+        InetSocketAddress local = address2SocketAddress(localAddress);
 
-        if (tcpSocketsToBootstraps.containsKey(iAddr)) {
+        if (tcpSocketsToBootstraps.containsKey(remote)) {
             return true;
         }
 
         EventLoopGroup group = new NioEventLoopGroup();
-        NettyTcpHandler handler = new NettyTcpHandler(component, addr, port);
+        NettyStreamHandler handler = new NettyStreamHandler(component, Transport.TCP);
         Bootstrap bootstrap = new Bootstrap();
         bootstrap.group(group).channel(NioSocketChannel.class)
-                .handler(new NettyTcpInitializer(handler, msgDecoderClass))
+                .handler(new NettyInitializer<SocketChannel>(handler, msgDecoderClass))
                 .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, CONNECT_TIMEOUT_MS)
                 .option(ChannelOption.SO_REUSEADDR, true);
 
         try {
-            // TODO asynchronous?
-            SocketChannel c = (SocketChannel) bootstrap.connect(iAddr).sync().channel();
-            addLocalTcpSocket(c, iAddr);
-
-            logger.info("Successfully connected to ip:port {}:{}", addr, port);
+            SocketChannel c = (SocketChannel) bootstrap.connect(remote, local).sync().channel();
+            addLocalSocket(remote, c);
+            logger.info("Successfully connected to ip:port {}", remote.toString());
         } catch (InterruptedException e) {
-            logger.warn("Problem when trying to connect to {}:{}", addr.getHostAddress(), port);
+            logger.warn("Problem when trying to connect to {}", remote);
             trigger(new Fault(e.getCause()), control);
             return false;
         }
 
-        tcpSocketsToBootstraps.put(iAddr, bootstrap);
-
+        tcpSocketsToBootstraps.put(remote, bootstrap);
         return true;
     }
 
-    private boolean connectUdt(InetAddress addr, int port) {
-        InetSocketAddress iAddr = new InetSocketAddress(addr, port);
+    /**
+     * Connect to a UDT server.
+     *
+     * @param remoteAddress the remote address
+     * @param localAddress the local address to bind to
+     * @return true if connection succeeded
+     * @throws ChannelException if connecting failed
+     */
+    private boolean connectUdt(Address remoteAddress, Address localAddress) {
+        InetSocketAddress remote = address2SocketAddress(remoteAddress);
+        InetSocketAddress local = address2SocketAddress(localAddress);
 
-        if (udtSocketsToBootstraps.containsKey(iAddr)) {
+        if (udtSocketsToBootstraps.containsKey(remote)) {
             return true;
         }
 
         ThreadFactory workerFactory = new UtilThreadFactory("clientWorker");
         NioEventLoopGroup workerGroup = new NioEventLoopGroup(1, workerFactory,
                 NioUdtProvider.BYTE_PROVIDER);
-        NettyUdtHandler handler = new NettyUdtHandler(component, addr, port);
+        NettyStreamHandler handler = new NettyStreamHandler(component, Transport.UDT);
         Bootstrap bootstrap = new Bootstrap();
         bootstrap.group(workerGroup).channelFactory(NioUdtProvider.BYTE_CONNECTOR)
-                .handler(new NettyUdtInitializer(handler, msgDecoderClass));
-        // .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, CONNECT_TIMEOUT_MS)
-        // .option(ChannelOption.SO_REUSEADDR, true);
+                .handler(new NettyInitializer<UdtChannel>(handler, msgDecoderClass))
+                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, CONNECT_TIMEOUT_MS)
+                .option(ChannelOption.SO_REUSEADDR, true);
 
         try {
-            // TODO asynchronous?
-            UdtChannel c = (UdtChannel) bootstrap.connect(iAddr).sync().channel();
-            addLocalUdtSocket(c, iAddr);
-
-            logger.info("Successfully connected to ip:port {}:{}", addr, port);
+            UdtChannel c = (UdtChannel) bootstrap.connect(remote, local).sync().channel();
+            addLocalSocket(remote, c);
+            logger.info("Successfully connected to ip:port {}", remote.toString());
         } catch (InterruptedException e) {
-            logger.warn("Problem when trying to connect to {}:{}", addr.getHostAddress(), port);
+            logger.warn("Problem when trying to connect to {}", remote.toString());
             trigger(new Fault(e.getCause()), control);
             return false;
         }
 
-        udtSocketsToBootstraps.put(iAddr, bootstrap);
+        udtSocketsToBootstraps.put(remote, bootstrap);
         return true;
     }
 
-
-    private void addLocalUdpSocket(DatagramChannel channel, InetSocketAddress addr) {
-        udpPortsToSockets.put(addr.getPort(), addr);
-        udpSocketsToChannels.put(addr, channel);
+    /**
+     * Add a {@link DatagramChannel} to the local connections.
+     *
+     * @param localAddress the local address
+     * @param channel the channel to be added
+     */
+    private void addLocalSocket(InetSocketAddress localAddress, DatagramChannel channel) {
+        udpPortsToSockets.put(localAddress.getPort(), localAddress);
+        udpSocketsToChannels.put(localAddress, channel);
     }
 
-    void addLocalTcpSocket(SocketChannel channel, InetSocketAddress addr) {
-        tcpSocketsToChannels.put(addr, channel);
+    /**
+     * Add a {@link SocketChannel} to the local connections.
+     *
+     * @param remoteAddress the remote address
+     * @param channel the channel to be added
+     */
+    void addLocalSocket(InetSocketAddress remoteAddress, SocketChannel channel) {
+        tcpSocketsToChannels.put(remoteAddress, channel);
+        trigger(new NetworkSessionOpened(remoteAddress, Transport.TCP), netControl);
     }
 
-    void addLocalUdtSocket(UdtChannel channel, InetSocketAddress addr) {
-        udtSocketsToChannels.put(addr, channel);
+    /**
+     * Add a {@link UdtChannel} to the local connections.
+     *
+     * @param remoteAddress the remote address
+     * @param channel the channel to be added
+     */
+    void addLocalSocket(InetSocketAddress remoteAddress, UdtChannel channel) {
+        udtSocketsToChannels.put(remoteAddress, channel);
+        trigger(new NetworkSessionOpened(remoteAddress, Transport.UDT), netControl);
     }
 
+    /**
+     * Remove a channel from the local connections.
+     *
+     * @param addr the address of the channel to be removed
+     * @param protocol the protocol of the channel to be removed
+     */
     private void removeLocalSocket(InetSocketAddress addr, Transport protocol) {
+        Bootstrap bootstrap;
         switch (protocol) {
             case TCP:
-                // TODO do something smart
+                tcpSocketsToChannels.remove(addr);
+                bootstrap = tcpSocketsToBootstraps.remove(addr);
                 break;
             case UDP:
-                // TODO Does that work?
                 udpPortsToSockets.remove(addr.getPort());
-                udpSocketsToChannels.remove(addr);
-                Bootstrap b = udpSocketsToBootstraps.remove(addr);
-                if (b != null) {
-                    EventLoopGroup group = b.group();
-                    if (group != null) {
-                        group.shutdownGracefully();
-                    }
-                }
+                udpPortsToSockets.remove(addr);
+                bootstrap = udpSocketsToBootstraps.remove(addr);
                 break;
             case UDT:
-                // TODO do something smart
+                udtSocketsToChannels.remove(addr);
+                bootstrap = udtSocketsToBootstraps.remove(addr);
                 break;
             default:
                 throw new Error("Unknown Transport type");
         }
+
+        if (bootstrap != null) {
+            EventLoopGroup group = bootstrap.group();
+            if (group != null) {
+                group.shutdownGracefully();
+            }
+        }
+
+        trigger(new NetworkSessionClosed(addr, protocol), netControl);
     }
 
     private InetSocketAddress address2SocketAddress(Address address) {
         return new InetSocketAddress(address.getIp(), address.getPort());
     }
 
+    /**
+     * Send a message using UDP.
+     *
+     * @param msg the message to be sent
+     * @throws ChannelException in case of connection problems
+     */
     private void sendUdp(RewriteableMsg msg) {
         InetSocketAddress src = address2SocketAddress(msg.getSource());
         InetSocketAddress dest = address2SocketAddress(msg.getDestination());
@@ -727,7 +781,7 @@ public final class NettyNetwork extends ComponentDefinition {
         try {
             logger.trace("Sending " + msg.getClass().getCanonicalName() + " from {} to {} ",
                     msg.getSource().getId(), msg.getDestination().getId());
-            channel.write(new DatagramPacket(((Encodable) msg).toByteArray(), dest));
+            channel.writeAndFlush(new DatagramPacket(((Encodable) msg).toByteArray(), dest));
             totalWrittenBytes += msg.getSize();
         } catch (Exception ex) {
             logger.warn("Problem trying to write msg of type: "
@@ -737,12 +791,18 @@ public final class NettyNetwork extends ComponentDefinition {
         }
     }
 
+    /**
+     * Send a message to using TCP. Connects to a server on  demand.
+     *
+     * @param msg the message to be sent
+     * @throws ChannelException in case of connection problems
+     */
     private void sendTcp(RewriteableMsg msg) {
         InetSocketAddress dst = address2SocketAddress(msg.getDestination());
         SocketChannel channel = tcpSocketsToChannels.get(dst);
 
         if (channel == null) {
-            if (connectTcp(msg.getDestination().getIp(), msg.getDestination().getPort()) == false) {
+            if (connectTcp(msg.getDestination(), msg.getSource()) == false) {
                 logger.warn("Channel was null when trying to write msg of type: "
                         + msg.getClass().getCanonicalName() + " with dst address: "
                         + dst.toString());
@@ -757,25 +817,28 @@ public final class NettyNetwork extends ComponentDefinition {
         try {
             logger.trace("Sending " + msg.getClass().getCanonicalName() + " from {} to {} ",
                     msg.getSource().getId(), msg.getDestination().getId());
-            // TODO should not overwrite the given address and port!
-            msg.getSource().setIp(channel.localAddress().getAddress());
-            msg.getSource().setPort(channel.localAddress().getPort());
-            channel.write(msg).sync();
+            channel.writeAndFlush(msg);
             totalWrittenBytes += msg.getSize();
         } catch (Exception ex) {
             logger.warn("Problem trying to write msg of type: "
                     + msg.getClass().getCanonicalName() + " with dst address: "
                     + dst.toString());
-            trigger(new Fault(ex), control);
+            throw new RuntimeException(ex.getMessage());
         }
     }
 
+    /**
+     * Send a message to using UDT. Connects to a server on  demand.
+     *
+     * @param msg the message to be sent
+     * @throws ChannelException in case of connection problems
+     */
     private void sendUdt(RewriteableMsg msg) {
         InetSocketAddress dst = address2SocketAddress(msg.getDestination());
         UdtChannel channel = udtSocketsToChannels.get(dst);
 
         if (channel == null) {
-            if (connectUdt(msg.getDestination().getIp(), msg.getDestination().getPort()) == false) {
+            if (connectUdt(msg.getDestination(), msg.getSource()) == false) {
                 logger.warn("Channel was null when trying to write msg of type: "
                         + msg.getClass().getCanonicalName() + " with dst address: "
                         + dst.toString());
@@ -790,19 +853,21 @@ public final class NettyNetwork extends ComponentDefinition {
         try {
             logger.trace("Sending " + msg.getClass().getCanonicalName() + " from {} to {} ",
                     msg.getSource().getId(), msg.getDestination().getId());
-            // TODO should not overwrite the given address and port!
-            msg.getSource().setIp(channel.localAddress().getAddress());
-            msg.getSource().setPort(channel.localAddress().getPort());
-            channel.write(msg).sync();
+            channel.writeAndFlush(msg);
             totalWrittenBytes += msg.getSize();
         } catch (Exception ex) {
             logger.warn("Problem trying to write msg of type: "
                     + msg.getClass().getCanonicalName() + " with dst address: "
                     + dst.toString());
-            trigger(new Fault(ex), control);
+            throw new RuntimeException(ex.getMessage());
         }
     }
 
+    /**
+     * Deliver a message to the upper components.
+     *
+     * @param msg the message to be delivered
+     */
     final void deliverMessage(RewriteableMsg msg) {
         logger.trace("Receiving " + msg.getClass().getCanonicalName() + " source {} dest {} ",
                 msg.getSource().getId(), msg.getDestination().getId());
@@ -810,6 +875,12 @@ public final class NettyNetwork extends ComponentDefinition {
         totalReadBytes += msg.getSize();
     }
 
+    /**
+     * Forward an exception to the upper components.
+     *
+     * @param ctx the channel handler context
+     * @param e the caught exception
+     */
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable e) {
         logger.warn("Fault for " + e.getCause().getMessage());
         trigger(new Fault(e.getCause()), control);
@@ -825,6 +896,12 @@ public final class NettyNetwork extends ComponentDefinition {
         trigger(event, netControl);
     }
 
+    /**
+     * Remove a connection after it was lost or closed remotely and inform the upper components.
+     *
+     * @param ctx the channel handler context
+     * @param protocol the protocol
+     */
     final void channelInactive(ChannelHandlerContext ctx, Transport protocol) {
         Channel c = ctx.channel();
         SocketAddress addr;
