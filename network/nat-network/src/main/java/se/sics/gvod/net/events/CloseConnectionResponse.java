@@ -6,7 +6,7 @@ package se.sics.gvod.net.events;
  */
 public class CloseConnectionResponse extends DoubleDispatchResponseId<CloseConnectionRequest> {
 
-    protected CloseConnectionResponse(CloseConnectionRequest request) {
+    public CloseConnectionResponse(CloseConnectionRequest request) {
         super(request);
     }
 }

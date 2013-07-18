@@ -11,9 +11,10 @@ import se.sics.gvod.common.UtilityVod;
 import se.sics.gvod.common.VodDescriptor;
 import se.sics.gvod.config.BaseCommandLineConfig;
 import se.sics.gvod.config.VodConfig;
-import se.sics.gvod.gradient.msgs.SetsExchangeMsg;
 import se.sics.gvod.hp.msgs.TConnectionMsg;
 import se.sics.gvod.net.*;
+import se.sics.gvod.net.events.CloseConnectionRequest;
+import se.sics.gvod.net.events.CloseConnectionResponse;
 import se.sics.gvod.net.events.PortBindRequest;
 import se.sics.gvod.net.events.PortBindResponse;
 import se.sics.gvod.net.events.PortBindResponse.Status;
@@ -97,6 +98,7 @@ public class TcpPingTest extends TestCase {
             subscribe(handlePortBindResponse, server.getPositive(NatNetworkControl.class));
             subscribe(handlePing, server.getPositive(VodNetwork.class));
             subscribe(handleGetIpResponse, resolveIp.getPositive(ResolveIpPort.class));
+            subscribe(handleCloseConnectionResponse, client.getPositive(NatNetworkControl.class));
 
             trigger(new NettyInit(132, true,
                     BaseMsgFrameDecoder.class), client.getControl());
@@ -181,14 +183,22 @@ public class TcpPingTest extends TestCase {
         public Handler<TConnectionMsg.Pong> handlePong = new Handler<TConnectionMsg.Pong>() {
             @Override
             public void handle(TConnectionMsg.Pong event) {
-                trigger(new Stop(), client.getControl());
+                CloseConnectionRequest request = new CloseConnectionRequest(0, serverAddr.getPeerAddress(), Transport.TCP);
+                request.setResponse(new CloseConnectionResponse(request));
+                trigger(request, client.getPositive(NatNetworkControl.class));
                 trigger(new Stop(), server.getControl());
                 System.out.println("Received pong");
+            }
+        };
+        public Handler<CloseConnectionResponse> handleCloseConnectionResponse = new Handler<CloseConnectionResponse>() {
+            @Override
+            public void handle(CloseConnectionResponse event) {
+                trigger(new Stop(), client.getControl());
                 testObj.pass();
             }
         };
-        public Handler<SetsExchangeMsg.RequestTimeout> handleMsgTimeout = new Handler<SetsExchangeMsg.RequestTimeout>() {
-            public void handle(SetsExchangeMsg.RequestTimeout event) {
+        public Handler<MsgTimeout> handleMsgTimeout = new Handler<MsgTimeout>() {
+            public void handle(MsgTimeout event) {
                 trigger(new Stop(), client.getControl());
                 trigger(new Stop(), server.getControl());
                 System.out.println("Msg timeout");

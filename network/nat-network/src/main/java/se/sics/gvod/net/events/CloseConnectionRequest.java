@@ -12,7 +12,7 @@ public class CloseConnectionRequest extends DoubleDispatchRequestId<CloseConnect
     private final Address localAddress;
     private final Transport transport;
 
-    protected CloseConnectionRequest(int id, Address remoteAddress, Transport transport) {
+    public CloseConnectionRequest(int id, Address remoteAddress, Transport transport) {
         super(id);
         this.localAddress = remoteAddress;
         this.transport = transport;
