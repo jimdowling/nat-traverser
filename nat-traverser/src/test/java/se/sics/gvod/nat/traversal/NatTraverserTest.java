@@ -73,7 +73,7 @@ public class NatTraverserTest extends VodRetryComponentTestCase {
 
     @Test
      public void creation() {
-        nt.handleUpperMessage.handle(new ConnectMsg.Request(self, pubAddrs.get(0), 
+        nt.handleUpperDirectMsgNettyRequest.handle(new ConnectMsg.Request(self, pubAddrs.get(0), 
                 new UtilityVod(0), true, VodConfig.DEFAULT_MTU));
     
     }

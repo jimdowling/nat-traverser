@@ -79,6 +79,7 @@ import se.sics.gvod.timer.SchedulePeriodicTimeout;
 import se.sics.gvod.timer.ScheduleTimeout;
 import se.sics.gvod.timer.Timeout;
 import se.sics.gvod.common.hp.HPSessionKey;
+import se.sics.gvod.common.msgs.DirectMsgNetty;
 import se.sics.gvod.config.BaseCommandLineConfig;
 import se.sics.gvod.config.StunServerConfiguration;
 import se.sics.gvod.parentmaker.ParentMakerPort;
@@ -253,12 +254,19 @@ public class NatTraverser extends MsgRetryComponent {
         this.delegator.doSubscribe(handleConnectionEstablishmentTimeout, timer);
         this.delegator.doSubscribe(handleGarbageCleanupTimeout, timer);
 
-        this.delegator.doSubscribe(handleUpperMessage, upperNet);
+//        this.delegator.doSubscribe(handleUpperMessage, upperNet);
+        this.delegator.doSubscribe(handleUpperDirectMsgNettyRequest, upperNet);
+        this.delegator.doSubscribe(handleUpperDirectMsgNettyResponse, upperNet);
+        this.delegator.doSubscribe(handleUpperDirectMsgNettyOneway, upperNet);
+        
         this.delegator.doSubscribe(handleRelayRequestDown, upperNet);
         this.delegator.doSubscribe(handleRelayOnewayDown, upperNet);
         this.delegator.doSubscribe(handleRelayResponseDown, upperNet);
 
-        this.delegator.doSubscribe(handleLowerMessages, network);
+//        this.delegator.doSubscribe(handleLowerMessages, network);
+        this.delegator.doSubscribe(handleLowerDirectMsgRequest, network);
+        this.delegator.doSubscribe(handleLowerDirectMsgResponse, network);
+        this.delegator.doSubscribe(handleLowerDirectMsgOneway, network);
 //        this.delegator.doConnect(network, upperNet);
         this.delegator.doSubscribe(handleRelayRequestUp, network);
         this.delegator.doSubscribe(handleRelayOnewayUp, network);
@@ -386,43 +394,103 @@ public class NatTraverser extends MsgRetryComponent {
             }
         }
     };
-    Handler<DirectMsg> handleUpperMessage = new Handler<DirectMsg>() {
-        @Override
-        public void handle(DirectMsg msg) {
-            logger.trace("{} handleUpperMessage dest ID (" + msg.getDestination().getId()
-                    + ") message class :" + msg.getClass().getName(), msg.getTimeoutId());
-            // if the connection for the destination
-            // already exists then send the packet using that
-            // connection; otherwise do hole punching and put the
-            // packet in the map during the hole punching process if more of the
-            // packets are sent to the same destination
-            // then put them in a map
 
-            if (msg.getVodDestination().isOpen()) { // msg.getVodSource().isOpen() || 
-                // simply send the packet down
-                delegator.doTrigger(msg, network);
-            } else {
-                int remoteId = msg.getDestination().getId();
-                if (!sendMsgUsingConnection(msg, remoteId)) {
-                    // No open connection to dest. Start hole-punching.
-                    // if hole punching for the destion peer is going
-                    // on then save the mesage; otherwise start hp
-                    LinkedList<DirectMsg> msgList;
-                    if (onGoingHP.containsKey(remoteId)) {
-                        msgList = pendingMsgs.get(remoteId);
-                    } else {
-                        // start the hole punching process
-                        msgList = new LinkedList<DirectMsg>();
-                        pendingMsgs.put(remoteId, msgList);
-                        // create a session
-                        startHolePunchingProcess(msg.getVodDestination(), false, 0,
-                                msg.getTimeoutId());
-                    }
-                    msgList.add(msg);
+//    Handler<DirectMsg> handleUpperMessage = new Handler<DirectMsg>() {
+//        @Override
+//        public void handle(DirectMsg msg) {
+//            logger.trace("{} handleUpperMessage dest ID (" + msg.getDestination().getId()
+//                    + ") message class :" + msg.getClass().getName(), msg.getTimeoutId());
+//            // if the connection for the destination
+//            // already exists then send the packet using that
+//            // connection; otherwise do hole punching and put the
+//            // packet in the map during the hole punching process if more of the
+//            // packets are sent to the same destination
+//            // then put them in a map
+//
+//            if (msg.getVodDestination().isOpen()) { // msg.getVodSource().isOpen() || 
+//                // simply send the packet down
+//                delegator.doTrigger(msg, network);
+//            } else {
+//                int remoteId = msg.getDestination().getId();
+//                if (!sendMsgUsingConnection(msg, remoteId)) {
+//                    // No open connection to dest. Start hole-punching.
+//                    // if hole punching for the destion peer is going
+//                    // on then save the mesage; otherwise start hp
+//                    LinkedList<DirectMsg> msgList;
+//                    if (onGoingHP.containsKey(remoteId)) {
+//                        msgList = pendingMsgs.get(remoteId);
+//                    } else {
+//                        // start the hole punching process
+//                        msgList = new LinkedList<DirectMsg>();
+//                        pendingMsgs.put(remoteId, msgList);
+//                        // create a session
+//                        startHolePunchingProcess(msg.getVodDestination(), false, 0,
+//                                msg.getTimeoutId());
+//                    }
+//                    msgList.add(msg);
+//                }
+//            }
+//        }
+//    };
+    private void sendDownDirectMsg(DirectMsg msg) {
+        if (msg.getVodDestination().isOpen()) { // msg.getVodSource().isOpen() || 
+            // simply send the packet down
+            delegator.doTrigger(msg, network);
+        } else {
+            int remoteId = msg.getDestination().getId();
+            if (!sendMsgUsingConnection(msg, remoteId)) {
+                // No open connection to dest. Start hole-punching.
+                // if hole punching for the destion peer is going
+                // on then save the mesage; otherwise start hp
+                LinkedList<DirectMsg> msgList;
+                if (onGoingHP.containsKey(remoteId)) {
+                    msgList = pendingMsgs.get(remoteId);
+                } else {
+                    // start the hole punching process
+                    msgList = new LinkedList<DirectMsg>();
+                    pendingMsgs.put(remoteId, msgList);
+                    // create a session
+                    startHolePunchingProcess(msg.getVodDestination(), false, 0,
+                            msg.getTimeoutId());
                 }
+                msgList.add(msg);
             }
         }
+    }
+    // if the connection for the destination
+    // already exists then send the packet using that
+    // connection; otherwise do hole punching and put the
+    // packet in the map during the hole punching process if more of the
+    // packets are sent to the same destination
+    // then put them in a map
+    Handler<DirectMsgNetty.Request> handleUpperDirectMsgNettyRequest = new Handler<DirectMsgNetty.Request>() {
+        @Override
+        public void handle(DirectMsgNetty.Request msg) {
+            logger.trace("{} handleUpperMessageRequest dest ID (" + msg.getDestination().getId()
+                    + ") message class :" + msg.getClass().getName(), msg.getTimeoutId());
+            sendDownDirectMsg(msg);
+        }
     };
+
+    Handler<DirectMsgNetty.Response> handleUpperDirectMsgNettyResponse = new Handler<DirectMsgNetty.Response>() {
+        @Override
+        public void handle(DirectMsgNetty.Response msg) {
+            logger.trace("{} handleUpperMessageResponse dest ID (" + msg.getDestination().getId()
+                    + ") message class :" + msg.getClass().getName(), msg.getTimeoutId());
+            sendDownDirectMsg(msg);
+        }
+    };
+    
+    Handler<DirectMsgNetty.Oneway> handleUpperDirectMsgNettyOneway = new Handler<DirectMsgNetty.Oneway>() {
+        @Override
+        public void handle(DirectMsgNetty.Oneway msg) {
+            logger.trace("{} handleUpperMessageOneway dest ID (" + msg.getDestination().getId()
+                    + ") message class :" + msg.getClass().getName(), msg.getTimeoutId());
+            sendDownDirectMsg(msg);
+        }
+    };
+    
+    
     /**
      * Applications that timeout connections to private peers should send a
      * DeleteOpenConnection event to the NatTraverser.
@@ -439,23 +507,47 @@ public class NatTraverser extends MsgRetryComponent {
             initializeServerComponents(event.getNodes());
         }
     };
-    Handler<DirectMsg> handleLowerMessages = new Handler<DirectMsg>() {
+//    Handler<DirectMsg> handleLowerMessages = new Handler<DirectMsg>() {
+//        @Override
+//        public void handle(DirectMsg msg) {
+//            logger.trace("handleLowerMessage dest ID (" + msg.getDestination().getId()
+//                    + ") message class :" + msg.getClass().getName());
+//
+//            // incoming msgs don't refresh the nat-binding, so no point in updating the OpenConnectionMap
+//            int overlayId = msg.getVodDestination().getOverlayId();
+//
+//            // If the msg is destined for a system service (HP, Stun, System-Croupier, etc), don't
+//            // forward it up the NatTraverser, as it should have been handled already.
+//            if (overlayId != VodConfig.SYSTEM_OVERLAY_ID) {
+//                delegator.doTrigger(msg, upperNet);
+//            } else {
+//                logger.trace(compName + " Discarding msg of type {}", msg.getClass().getName());
+//            }
+//
+//        }
+//    };
+    Handler<DirectMsgNetty.Request> handleLowerDirectMsgRequest = new Handler<DirectMsgNetty.Request>() {
         @Override
-        public void handle(DirectMsg msg) {
+        public void handle(DirectMsgNetty.Request msg) {
             logger.trace("handleLowerMessage dest ID (" + msg.getDestination().getId()
                     + ") message class :" + msg.getClass().getName());
-
-            // incoming msgs don't refresh the nat-binding, so no point in updating the OpenConnectionMap
-            int overlayId = msg.getVodDestination().getOverlayId();
-
-            // If the msg is destined for a system service (HP, Stun, System-Croupier, etc), don't
-            // forward it up the NatTraverser, as it should have been handled already.
-            if (overlayId != VodConfig.SYSTEM_OVERLAY_ID) {
-                delegator.doTrigger(msg, upperNet);
-            } else {
-                logger.trace(compName + " Discarding msg of type {}", msg.getClass().getName());
-            }
-
+            delegator.doTrigger(msg, upperNet);
+        }
+    };
+    Handler<DirectMsgNetty.Response> handleLowerDirectMsgResponse = new Handler<DirectMsgNetty.Response>() {
+        @Override
+        public void handle(DirectMsgNetty.Response msg) {
+            logger.trace("handleLowerMessage dest ID (" + msg.getDestination().getId()
+                    + ") message class :" + msg.getClass().getName());
+            delegator.doTrigger(msg, upperNet);
+        }
+    };
+    Handler<DirectMsgNetty.Oneway> handleLowerDirectMsgOneway = new Handler<DirectMsgNetty.Oneway>() {
+        @Override
+        public void handle(DirectMsgNetty.Oneway msg) {
+            logger.trace("handleLowerMessage dest ID (" + msg.getDestination().getId()
+                    + ") message class :" + msg.getClass().getName());
+            delegator.doTrigger(msg, upperNet);
         }
     };
     Handler<ConnectionEstablishmentTimeout> handleConnectionEstablishmentTimeout =
@@ -990,11 +1082,11 @@ public class NatTraverser extends MsgRetryComponent {
                 }
             }
             for (Long l : keysToBeRemoved) {
-                    HPSessionKey sk = receivedRelaysIndex.remove(l);
-                    receivedRelays.remove(sk);
+                HPSessionKey sk = receivedRelaysIndex.remove(l);
+                receivedRelays.remove(sk);
             }
-            
-            
+
+
             // Clean up any old timestamps for relay msgs where the response wasn't received
             HashSet<Integer> tsToBeRemoved = new HashSet<Integer>();
             for (Integer i : outstandingTimestamps.keySet()) {
@@ -1002,10 +1094,10 @@ public class NatTraverser extends MsgRetryComponent {
                 if (t - l > VodConfig.NT_STALE_RELAY_MSG_TIME) {
                     tsToBeRemoved.add(i);
                 }
-            }            
+            }
             for (Integer i : tsToBeRemoved) {
                 outstandingTimestamps.remove(i);
-            }            
+            }
         }
     };
 
