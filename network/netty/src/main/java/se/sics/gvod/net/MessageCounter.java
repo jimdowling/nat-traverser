@@ -11,6 +11,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * @author <a href="mailto:bruno@factor45.org">Bruno de Carvalho</a>
+ * @author Steffen Grohsschmiedt
  */
 public class MessageCounter extends ChannelDuplexHandler {
 

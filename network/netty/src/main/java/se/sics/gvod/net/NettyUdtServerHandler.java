@@ -3,6 +3,9 @@ package se.sics.gvod.net;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.udt.UdtChannel;
 
+/**
+ * @author Steffen Grohsschmiedt
+ */
 public class NettyUdtServerHandler extends NettyStreamHandler {
 
 	public NettyUdtServerHandler(NettyNetwork component) {

@@ -9,6 +9,9 @@ import se.sics.gvod.net.msgs.RewriteableMsg;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 
+/**
+ * @author Steffen Grohsschmiedt
+ */
 public class NettyMessageHandler extends NettyBaseHandler<DatagramPacket> {
 
     private static final Logger logger = LoggerFactory.getLogger(NettyMessageHandler.class);
