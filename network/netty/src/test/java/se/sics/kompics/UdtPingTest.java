@@ -82,7 +82,7 @@ public class UdtPingTest extends TestCase {
             int serverPort = 54645;
 
             try {
-                ip = InetAddress.getLocalHost();
+                ip = InetAddress.getByName("127.0.1.1");
 
             } catch (UnknownHostException ex) {
                 logger.error("UnknownHostException");

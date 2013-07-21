@@ -387,10 +387,10 @@ public class VodConfig extends BaseCommandLineConfig {
             compositeConfig.setProperty(PROP_CONTROL_PORT, cPort);
         }
 
-        if (line.hasOption(seedOption.getOpt())) {
-            int seed = new Integer(line.getOptionValue(seedOption.getOpt()));
-            compositeConfig.setProperty(PROP_SEED, seed);
-        }
+//        if (line.hasOption(seedOption.getOpt())) {
+//            int seed = new Integer(line.getOptionValue(seedOption.getOpt()));
+//            compositeConfig.setProperty(PROP_SEED, seed);
+//        }
 
         if (line.hasOption(widthOption.getOpt())) {
             int width = new Integer(line.getOptionValue(widthOption.getOpt()));

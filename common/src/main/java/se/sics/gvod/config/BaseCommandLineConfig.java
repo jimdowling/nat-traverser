@@ -145,7 +145,8 @@ public abstract class BaseCommandLineConfig {
     public static final int DEFAULT_MEDIA_PORT = 58026;
     public static final int DEFAULT_WEB_REQUEST_TIMEOUT_MS = 30 * 1000;
     public static final int DEFAULT_WEB_THREADS = 2;
-    public static final int DEFAULT_SEED = new Random(System.currentTimeMillis()).nextInt();
+    public static final int DEFAULT_SEED = 123;
+//            new Random(System.currentTimeMillis()).nextInt();
     protected static final int DEFAULT_NUM_WORKERS = 4;
     protected static final String VAL_ADDRESS = "address";
     protected static final String VAL_NUMBER = "number";
