@@ -145,14 +145,13 @@ public final class NatTraverserSimulator extends ComponentDefinition {
 //-------------------------------------------------------------------    
     void connect(Integer src, Integer dest) {
         Component srcPeer = privatePeers.get(src);
-        if (srcPeer == null) {
+        if (srcPeer == null)
             srcPeer = publicPeers.get(src);
-        }
-
+        
         Self destNode = privateAddress.get(dest);
-        if (destNode == null) {
-            destNode = publicAddress.get(dest);
-        }
+        if (destNode == null)
+            destNode = publicAddress.get(dest);        
+        
         trigger(new Connect(destNode.clone(NT_PEER_OVERLAY_ID).getAddress()), srcPeer.getNegative(NatTraverserSimulatorPort.class));
     }
 

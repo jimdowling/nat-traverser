@@ -870,7 +870,7 @@ public class NatTraverser extends MsgRetryComponent {
             pendingMsgs.remove(destId);
             // TODO - can i use reflection to create a response msg, if we follow the 
             // request/response idiom?
-            trigger(new HpFailed(msgTimeoutId, flag), natTraverserPort);
+            trigger(new HpFailed(msgTimeoutId, flag, destAddress), natTraverserPort);
         }
     }
 

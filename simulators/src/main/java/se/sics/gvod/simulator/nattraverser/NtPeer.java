@@ -30,6 +30,8 @@ import se.sics.kompics.Positive;
  */
 public final class NtPeer extends ComponentDefinition {
 
+    public static int CNT = 0;
+
     private static final Logger logger = LoggerFactory.getLogger(NtPeer.class);
     Positive<VodNetwork> network = positive(VodNetwork.class);
     Positive<Timer> timer = positive(Timer.class);
@@ -82,9 +84,11 @@ public final class NtPeer extends ComponentDefinition {
             ScheduleTimeout st = new ScheduleTimeout(100 * 1000);
             HolePunch hp = new HolePunch(st, event.getDest(), NatStr.pairAsStr(self.getNat(), event.getDest().getNat()));
             st.setTimeoutEvent(hp);
-            TConnectionMsg.Ping ping = new TConnectionMsg.Ping(self.getAddress(), event.getDest(), hp.getTimeoutId());
             trigger(st, timer);
+
+            TConnectionMsg.Ping ping = new TConnectionMsg.Ping(self.getAddress(), event.getDest(), hp.getTimeoutId());
             trigger(ping, network);
+            
             activeMsgs.put(hp.getTimeoutId(), event.getDest().getNat());
         }
     };
@@ -122,6 +126,9 @@ public final class NtPeer extends ComponentDefinition {
             if (activeMsgs.containsKey(event.getMsgTimeoutId())) {
                 trigger(new CancelTimeout(event.getMsgTimeoutId()), timer);
                 logger.info("HP failed. " + event.getResponseType() + " - " + NatStr.pairAsStr(self.getNat(), activeMsgs.get(event.getMsgTimeoutId())));
+                
+                VodAddress dest = event.getHpFailedDestNode();
+                trigger(new ConnectionResult(self.getAddress(), dest, NatStr.pairAsStr(self.getNat(), dest.getNat()), false), ntsPort);
             }
         }
     };
