@@ -318,7 +318,15 @@ public class VodAddress implements Serializable, Comparable {
      */
     @Override
     public int compareTo(Object o) {
-        return equals(o) ? 0 : 1;
+        if (equals(o)) {
+            return 0;
+        }
+        VodAddress other = (VodAddress) o;
+        if (getId() > other.getId()) {
+            return 1;
+        } else {
+            return -1;
+        }
     }
 
     /**

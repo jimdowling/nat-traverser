@@ -5,7 +5,6 @@
 package se.sics.gvod.simulator.nattraverser;
 
 import se.sics.gvod.common.Self;
-import se.sics.gvod.net.VodAddress;
 import se.sics.kompics.Init;
 
 /**

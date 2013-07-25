@@ -10,7 +10,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 import java.util.Set;
 
 import org.slf4j.Logger;
@@ -33,7 +32,6 @@ import se.sics.gvod.nat.common.PortReservoirComp;
 import se.sics.gvod.nat.emu.DistributedNatGatewayEmulator;
 import se.sics.gvod.nat.emu.events.DistributedNatGatewayEmulatorInit;
 import se.sics.gvod.config.HpClientConfiguration;
-import se.sics.gvod.config.NatConfiguration;
 import se.sics.gvod.config.RendezvousServerConfiguration;
 import se.sics.gvod.nat.traversal.NatTraverser;
 import se.sics.gvod.config.NatTraverserConfiguration;
@@ -68,20 +66,14 @@ public final class NatTraverserSimulator extends ComponentDefinition {
     private final HashMap<Integer, Self> privateAddress;
     private final HashMap<Integer, Self> publicAddress;
     // peer initialization state
-    private StunServerConfiguration stunClientConfig;
-    private NatTraverserConfiguration natTraverserConfig;
-    private NatConfiguration natConfig;
-    private ParentMakerConfiguration parentMakerConfig;
-    private HpClientConfiguration hpClientConfig;
-    private RendezvousServerConfiguration rendezvousServerConfig;
     private int peerIdSequence;
     private ConsistentHashtable<Integer> view;
     private AsIpGenerator ipGenerator;
     private Map<String, Integer> successCount = new HashMap<String,Integer>();
     private Map<String, Integer> failCount  = new HashMap<String,Integer>();
     private VodAddress server1, server2;
-//-------------------------------------------------------------------	
-
+    
+//-------------------------------------------------------------------    
     public NatTraverserSimulator() {
         publicPeers = new HashMap<Integer, Component>();
         privatePeers = new HashMap<Integer, Component>();
@@ -100,33 +92,28 @@ public final class NatTraverserSimulator extends ComponentDefinition {
         subscribe(handleStopCollectData, simulator);
 
     }
-//-------------------------------------------------------------------	
+    
+//-------------------------------------------------------------------    
     Handler<NatTraverserSimulatorInit> handleInit = new Handler<NatTraverserSimulatorInit>() {
-        @Override
         public void handle(NatTraverserSimulatorInit init) {
             publicPeers.clear();
             privatePeers.clear();
             peerIdSequence = 100;
             ipGenerator = AsIpGenerator.getInstance(init.getNatTraverserConfig().getSeed());
-            natTraverserConfig = init.getNatTraverserConfig();
-            natConfig = init.getNatConfig();
-            stunClientConfig = init.getStunClientConfig();
-            parentMakerConfig = init.getParentMakerConfig();
-            hpClientConfig = init.getHpClientConfig();
-            rendezvousServerConfig = init.getRendezvousServerConfig();
-
         }
     };
+
+//-------------------------------------------------------------------    
     Handler<PeerJoin> handlePeerJoin = new Handler<PeerJoin>() {
-        @Override
         public void handle(PeerJoin event) {
             Integer id = event.getPeerId();
             VodAddress.NatType peerType = event.getPeerType();
             join(id, peerType);
         }
     };
+
+//-------------------------------------------------------------------    
     Handler<PeerFail> handlePeerFail = new Handler<PeerFail>() {
-        @Override
         public void handle(PeerFail event) {
             Integer id = event.getPeerId();
             VodAddress.NatType peerType = event.getPeerType();
@@ -134,8 +121,9 @@ public final class NatTraverserSimulator extends ComponentDefinition {
             fail(id, peerType);
         }
     };
+
+//-------------------------------------------------------------------    
     Handler<ConnectPeers> handleConnectPeers = new Handler<ConnectPeers>() {
-        @Override
         public void handle(ConnectPeers event) {
             Integer sId = event.getSrcId();
             Integer dId = event.getDestId();
@@ -154,20 +142,20 @@ public final class NatTraverserSimulator extends ComponentDefinition {
         }
     };
 
+//-------------------------------------------------------------------    
     void connect(Integer src, Integer dest) {
         Component srcPeer = privatePeers.get(src);
-        if (srcPeer == null) {
+        if (srcPeer == null)
             srcPeer = publicPeers.get(src);
-        }
-
+        
         Self destNode = privateAddress.get(dest);
-        if (destNode == null) {
-            destNode = publicAddress.get(dest);
-        }
-        trigger(new Connect(destNode.clone(NT_PEER_OVERLAY_ID).getAddress()),
-                srcPeer.getNegative(NatTraverserSimulatorPort.class));
+        if (destNode == null)
+            destNode = publicAddress.get(dest);        
+        
+        trigger(new Connect(destNode.clone(NT_PEER_OVERLAY_ID).getAddress()), srcPeer.getNegative(NatTraverserSimulatorPort.class));
     }
 
+//-------------------------------------------------------------------    
     private void createAndStartNewPeer(Integer id, VodAddress.NatType natType) {
         long seed = System.currentTimeMillis();
         Component peer = create(NtPeer.class);
@@ -186,8 +174,7 @@ public final class NatTraverserSimulator extends ComponentDefinition {
         boolean isOpen = false;
         if (natType == VodAddress.NatType.OPEN) {
             publicPeers.put(id, peer);
-            trigger(new DistributedNatGatewayEmulatorInit(new Nat(Nat.Type.OPEN),
-                    natIp, 10000, 65000), natGateway.control());
+            trigger(new DistributedNatGatewayEmulatorInit(new Nat(Nat.Type.OPEN), natIp, 10000, 65000), natGateway.control());
             addr = new VodAddress(peerAddress, NT_PEER_OVERLAY_ID);
             self = new SelfImpl(addr);
             publicAddress.put(id, self);
@@ -211,34 +198,23 @@ public final class NatTraverserSimulator extends ComponentDefinition {
         }
 
         int filterId = peerAddress.getId();
-        connect(natTraverser.getPositive(NatTraverserPort.class),
-                peer.getNegative(NatTraverserPort.class));
-        connect(natTraverser.getPositive(VodNetwork.class),
-                peer.getNegative(VodNetwork.class));
-        connect(natGateway.getPositive(VodNetwork.class),
-                natTraverser.getNegative(VodNetwork.class));
-        connect(natGateway.getNegative(VodNetwork.class), network,
-                new MsgDestFilterNodeId(filterId));
-        connect(croupier.getNegative(VodNetwork.class), network,
-                new MsgDestFilterNodeId(filterId));
-
-
+        connect(natTraverser.getPositive(NatTraverserPort.class), peer.getNegative(NatTraverserPort.class));
+        connect(natTraverser.getPositive(VodNetwork.class), peer.getNegative(VodNetwork.class));
+        connect(natGateway.getPositive(VodNetwork.class), natTraverser.getNegative(VodNetwork.class));
+        connect(natGateway.getNegative(VodNetwork.class), network, new MsgDestFilterNodeId(filterId));
+        connect(croupier.getNegative(VodNetwork.class), network, new MsgDestFilterNodeId(filterId));
 
         connect(timer, peer.getNegative(Timer.class));
         connect(timer, natTraverser.getNegative(Timer.class));
         connect(timer, natGateway.getNegative(Timer.class));
         connect(timer, croupier.getNegative(Timer.class));
 
-        connect(natGateway.getPositive(NatNetworkControl.class),
-                natTraverser.getNegative(NatNetworkControl.class));
-        connect(natGateway.getNegative(NatNetworkControl.class),
-                portReservoir.getPositive(NatNetworkControl.class));
+        connect(natGateway.getPositive(NatNetworkControl.class), natTraverser.getNegative(NatNetworkControl.class));
+        connect(natGateway.getNegative(NatNetworkControl.class), portReservoir.getPositive(NatNetworkControl.class));
 
-        connect(natTraverser.getNegative(PeerSamplePort.class),
-                croupier.getPositive(PeerSamplePort.class));
+        connect(natTraverser.getNegative(PeerSamplePort.class), croupier.getPositive(PeerSamplePort.class));
 
         subscribe(handleConnectionResult, peer.getNegative(NatTraverserSimulatorPort.class));
-
 
         Set<Address> servers = new HashSet<Address>();
         if (server2 != null && self.isOpen()) {
@@ -246,7 +222,8 @@ public final class NatTraverserSimulator extends ComponentDefinition {
         } else if (server2 != null) {
             servers.add(server2.getPeerAddress());
         }
-        trigger(new NatTraverserInit(self,
+
+        trigger(new NatTraverserInit(self, 
                 servers,
                 seed,
                 NatTraverserConfiguration.build(),
@@ -260,22 +237,21 @@ public final class NatTraverserSimulator extends ComponentDefinition {
 
 
         trigger(new NtPeerInit(self.clone(NT_PEER_OVERLAY_ID)), peer.getControl());
-        trigger(new CroupierInit(self.clone(VodConfig.SYSTEM_OVERLAY_ID),
-                CroupierConfiguration.build()), croupier.getControl());
+        trigger(new CroupierInit(self.clone(VodConfig.SYSTEM_OVERLAY_ID), CroupierConfiguration.build()), croupier.getControl());
 
         List<VodDescriptor> bootstrappers = new ArrayList<VodDescriptor>();
         if (server1 != null) {
-            bootstrappers.add(new VodDescriptor(ToVodAddr.systemAddr(server1.getPeerAddress()),
-                        new UtilityVod(-1), 0, VodConfig.DEFAULT_MTU));
+            bootstrappers.add(new VodDescriptor(ToVodAddr.systemAddr(server1.getPeerAddress()), new UtilityVod(-1), 0, VodConfig.DEFAULT_MTU));
         }
+        
         if (server2 != null) {
-            bootstrappers.add(new VodDescriptor(ToVodAddr.systemAddr(server2.getPeerAddress()),
-                        new UtilityVod(-1), 0, VodConfig.DEFAULT_MTU));
+            bootstrappers.add(new VodDescriptor(ToVodAddr.systemAddr(server2.getPeerAddress()), new UtilityVod(-1), 0, VodConfig.DEFAULT_MTU));
         }
+        
         trigger(new CroupierJoin(bootstrappers), croupier.getPositive(CroupierPort.class));
     }
 
-//-------------------------------------------------------------------	
+//-------------------------------------------------------------------    
     private void stopAndDestroyPeer(Integer id) {
         Component peer = privatePeers.get(id);
         if (peer == null) {
@@ -292,14 +268,16 @@ public final class NatTraverserSimulator extends ComponentDefinition {
 
         destroy(peer);
     }
+
+//-------------------------------------------------------------------    
     Handler<StartCollectData> handleStartCollectData = new Handler<StartCollectData>() {
-        @Override
         public void handle(StartCollectData event) {
             logger.info(" START COLLECT DATA");
         }
     };
+
+//-------------------------------------------------------------------    
     Handler<StopCollectData> handleStopCollectData = new Handler<StopCollectData>() {
-        @Override
         public void handle(StopCollectData event) {
             int totalSuccess=0;
             int totalFail=0;
@@ -308,11 +286,13 @@ public final class NatTraverserSimulator extends ComponentDefinition {
                 System.out.println("\t" + natType + "/" + successCount.get(natType));
                 totalSuccess += successCount.get(natType);
             }
+
             System.out.println("Fail");
             for (String natType : failCount.keySet()) {
                 System.out.println("\t" + natType + "/" + failCount.get(natType));
                 totalFail += failCount.get(natType);
             }
+            
             System.out.println("Total Success = " + totalSuccess);
             System.out.println("Total Fail = " + totalFail);
 
@@ -321,8 +301,8 @@ public final class NatTraverserSimulator extends ComponentDefinition {
         }
     };
     
+//-------------------------------------------------------------------    
     Handler<ConnectionResult> handleConnectionResult = new Handler<ConnectionResult>() {
-        @Override
         public void handle(ConnectionResult event) {
             logger.info(event.isRes() + ":: " + event.getSrc() + " ---> " + event.getDest());
             String natPair = event.getNatPair();
@@ -344,6 +324,7 @@ public final class NatTraverserSimulator extends ComponentDefinition {
         }
     };
 
+//-------------------------------------------------------------------    
     private void join(Integer id, VodAddress.NatType peerType) {
         // join with the next id if this id is taken
         Integer successor = view.getNode(id);
@@ -358,7 +339,6 @@ public final class NatTraverserSimulator extends ComponentDefinition {
         view.addNode(id);
         peerTypes.put(id, peerType);
     }
-
 
 //-------------------------------------------------------------------	
     private void fail(Integer id, VodAddress.NatType peerType) {

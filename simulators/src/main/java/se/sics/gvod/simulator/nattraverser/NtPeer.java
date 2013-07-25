@@ -30,14 +30,17 @@ import se.sics.kompics.Positive;
  */
 public final class NtPeer extends ComponentDefinition {
 
+    public static int CNT = 0;
+
     private static final Logger logger = LoggerFactory.getLogger(NtPeer.class);
     Positive<VodNetwork> network = positive(VodNetwork.class);
     Positive<Timer> timer = positive(Timer.class);
     Positive<NatTraverserSimulatorPort> ntsPort = positive(NatTraverserSimulatorPort.class);
     Positive<NatTraverserPort> ntPort = positive(NatTraverserPort.class);
-    Self self;
     Map<TimeoutId, Nat> activeMsgs = new HashMap<TimeoutId, Nat>();
+    Self self;
 
+//-------------------------------------------------------------------    
     public static class HolePunch extends Timeout {
 
         private VodAddress dest;
@@ -58,6 +61,7 @@ public final class NtPeer extends ComponentDefinition {
         }
     }
 
+//-------------------------------------------------------------------    
     public NtPeer() throws IOException {
         subscribe(handleInit, control);
         subscribe(handlePing, network);
@@ -66,72 +70,65 @@ public final class NtPeer extends ComponentDefinition {
         subscribe(handleConnect, ntsPort);
         subscribe(handleHpFailed, ntPort);
     }
-    private Handler<NtPeerInit> handleInit =
-            new Handler<NtPeerInit>() {
-        @Override
+
+//-------------------------------------------------------------------    
+    private Handler<NtPeerInit> handleInit = new Handler<NtPeerInit>() {
         public void handle(NtPeerInit event) {
             self = event.getSelf();
         }
     };
-    private Handler<Connect> handleConnect =
-            new Handler<Connect>() {
-        @Override
+
+//-------------------------------------------------------------------    
+    private Handler<Connect> handleConnect = new Handler<Connect>() {
         public void handle(Connect event) {
             ScheduleTimeout st = new ScheduleTimeout(100 * 1000);
-            HolePunch hp = new HolePunch(st, event.getDest(),
-                    NatStr.pairAsStr(self.getNat(), event.getDest().getNat()));
+            HolePunch hp = new HolePunch(st, event.getDest(), NatStr.pairAsStr(self.getNat(), event.getDest().getNat()));
             st.setTimeoutEvent(hp);
-            TConnectionMsg.Ping ping = new TConnectionMsg.Ping(self.getAddress(),
-                    event.getDest(), hp.getTimeoutId());
             trigger(st, timer);
+
+            TConnectionMsg.Ping ping = new TConnectionMsg.Ping(self.getAddress(), event.getDest(), hp.getTimeoutId());
             trigger(ping, network);
+            
             activeMsgs.put(hp.getTimeoutId(), event.getDest().getNat());
         }
     };
-    Handler<HolePunch> handleHolePunch = new Handler<HolePunch>() {
-        @Override
-        public void handle(HolePunch msg) {
 
-            trigger(new ConnectionResult(self.getAddress(), msg.getDest(),
-                    msg.getNatPair(), false), ntsPort);
+//-------------------------------------------------------------------    
+    Handler<HolePunch> handleHolePunch = new Handler<HolePunch>() {
+        public void handle(HolePunch msg) {
+            trigger(new ConnectionResult(self.getAddress(), msg.getDest(), msg.getNatPair(), false), ntsPort);
             activeMsgs.remove(msg.getTimeoutId());
         }
     };
-    public Handler<TConnectionMsg.Ping> handlePing =
-            new Handler<TConnectionMsg.Ping>() {
-        @Override
-        public void handle(TConnectionMsg.Ping ping) {
 
-            logger.info("Received ping from "
-                    + ping.getSource());
-            TConnectionMsg.Pong pong =
-                    new TConnectionMsg.Pong(self.getAddress(),
-                    ping.getVodSource(), ping.getTimeoutId());
+//-------------------------------------------------------------------    
+    public Handler<TConnectionMsg.Ping> handlePing = new Handler<TConnectionMsg.Ping>() {
+        public void handle(TConnectionMsg.Ping ping) {
+            logger.info("Received ping from " + ping.getSource());
+            TConnectionMsg.Pong pong = new TConnectionMsg.Pong(self.getAddress(), ping.getVodSource(), ping.getTimeoutId());
             trigger(pong, network);
         }
     };
-    public Handler<TConnectionMsg.Pong> handlePong =
-            new Handler<TConnectionMsg.Pong>() {
-        @Override
+
+//-------------------------------------------------------------------    
+    public Handler<TConnectionMsg.Pong> handlePong = new Handler<TConnectionMsg.Pong>() {
         public void handle(TConnectionMsg.Pong pong) {
             logger.debug("pong recvd " + " from " + pong.getSource());
             trigger(new CancelTimeout(pong.getTimeoutId()), timer);
-            trigger(new ConnectionResult(self.getAddress(), pong.getVodSource(),
-                    NatStr.pairAsStr(self.getNat(), pong.getVodSource().getNat()),
-                    true), ntsPort);
+            trigger(new ConnectionResult(self.getAddress(), pong.getVodSource(), NatStr.pairAsStr(self.getNat(), pong.getVodSource().getNat()), true), ntsPort);
             activeMsgs.remove(pong.getTimeoutId());
         }
     };
-    private Handler<HpFailed> handleHpFailed =
-            new Handler<HpFailed>() {
-        @Override
-        public void handle(HpFailed event) {
 
+//-------------------------------------------------------------------    
+    private Handler<HpFailed> handleHpFailed = new Handler<HpFailed>() {
+        public void handle(HpFailed event) {
             if (activeMsgs.containsKey(event.getMsgTimeoutId())) {
                 trigger(new CancelTimeout(event.getMsgTimeoutId()), timer);
-                logger.info("HP failed. " + event.getResponseType() + " - "
-                        + NatStr.pairAsStr(self.getNat(),
-                        activeMsgs.get(event.getMsgTimeoutId())));
+                logger.info("HP failed. " + event.getResponseType() + " - " + NatStr.pairAsStr(self.getNat(), activeMsgs.get(event.getMsgTimeoutId())));
+                
+                VodAddress dest = event.getHpFailedDestNode();
+                trigger(new ConnectionResult(self.getAddress(), dest, NatStr.pairAsStr(self.getNat(), dest.getNat()), false), ntsPort);
             }
         }
     };
