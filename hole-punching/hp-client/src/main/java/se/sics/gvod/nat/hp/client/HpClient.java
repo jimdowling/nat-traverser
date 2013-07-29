@@ -611,7 +611,7 @@ public class HpClient extends MsgRetryComponent {
                 if (remoteAddr.getParents().isEmpty()) {
                     logger.warn(compName + "Parents were null when zserver multicasting. "
                             + msgTimeoutId);
-                    return;
+                    throw new IllegalStateException("Shouldn't have gotten this far");
                 }
                 Address addr = remoteAddr.getParents().iterator().next();
                 VodAddress zServer = ToVodAddr.hpServer(addr);
@@ -833,52 +833,8 @@ public class HpClient extends MsgRetryComponent {
                 return;
             }
 
-            // if i have an open ip then there is no need to keep track of keep alive messages
-//            if (self.getAddress().isOpen()) {
-//                // send back the response message
-//                logger.trace(compName + "sending back response to (" + request.getClientId() + ")");
-//                HolePunchingMsg.Response responseMessage = new HolePunchingMsg.Response(
-//                        self.getAddress(),
-//                        request.getGVodSource(),
-//                        request.getRendezvousServerAddress(),
-//                        request.getTimeoutId(),
-//                        self.getId());
-//                delegator.doTrigger(responseMessage, network);
-//
-//                // inform zServer that i have completed HP
-//                sendHpFinishedMsgMsgTozServer(self, request.getRendezvousServerAddress(),
-//                        request.getClientId(), true/*hp successful*/);
-//
-
-//                HPSessionKey key = new HPSessionKey(request.getClientId(), request.getRendezvousServerAddress().getId());
-//                HpSession session = hpSessions.get(key);
-//                if (session != null && session.openConnectionRequest != null) {
-//                    logger.debug(compName + "sending response to the outer component remote client id (" + request.getClientId() + ") HP Mechanism " + session.getHolePunchingMechanism());
-//                    OpenConnectionResponse response = new OpenConnectionResponse(
-//                            session.getOpenConnectionRequest(),
-//                            OpenConnectionResponseType.OK,
-//                            request.getGVodSource());
-//                    response.setHpMechanismUsed(session.getHolePunchingMechanism());
-//                    delegator.doTrigger(response, hpClientPort);
-//
-//                    HPStats stats = hpStats.get(HPMechanism.CONNECTION_REVERSAL);
-//                    if (stats != null) {
-//                        stats.incrementSuccessCounter();
-//                    }
-//
-//                }
-//
-//                // remove the hole punching session
-//                hpSessions.remove(key);
-
-
-//
-//            } else if (self.isOpen() == false) {
-//            HPSessionKey key = new HPSessionKey(mrequest.getClientId(),
-//                    request.getRendezvousServerAddress().getId());
             HpSession session = hpSessions.get(remoteId);
             if (session != null) {
-
 
                 // Remove the session after 30 seconds.
                 logger.debug(compName + " Hole punching is successful. Removing session key in 30s.");
@@ -1040,6 +996,8 @@ public class HpClient extends MsgRetryComponent {
         int natBindingTimeout = (int) Math.min(self.getNat().getBindingTimeout(),
                 openedHole.getNatBindingTimeout());
         if (session.isHeartbeatConnection()) {
+            
+            // TODO - do all removeOpenedConnections cancel the Timeout for this Heartbeat code??
             ScheduleTimeout st = new ScheduleTimeout(natBindingTimeout - 5);
             SendHeartbeatTimeout sht = new SendHeartbeatTimeout(st, openedHole.getId());
             st.setTimeoutEvent(sht);
@@ -1207,12 +1165,6 @@ public class HpClient extends MsgRetryComponent {
                             // no need to send response to the upper component
                         }
 
-                        // send hpFinished (Fail) msg to zServer
-//                                sendHpFinishedMsgTozServer(self,
-//                                        oldRequestMessage.getRendezvousServerAddress(),
-//                                        session.getRemoteClientId()/*other client id*/,
-//                                        false /*hp fail*/);
-
                         // terminate session
                         // TODO: Jim - when we get a duplicate connection request, this
                         // gives us a problem. Remove session using timer later?
@@ -1334,12 +1286,7 @@ public class HpClient extends MsgRetryComponent {
                 // put the session in the map
                 hpSessions.put(remoteId, session);
                 logger.info(compName + " Putting session after GoMsg. Remote-id: " + remoteId);
-            } else {
-//                if (session.isHpOngoing()) {
-//                    logger.debug(compName + " Session exists and HP ongoing to : " + remoteId);
-//                    return;
-//                } 
-            }
+            } 
 
             session.setHolePunchingMechanism(request.getHolePunchingMechanism());
             session.setHolePunchingRole(request.getHolePunchingRole());
@@ -1465,7 +1412,6 @@ public class HpClient extends MsgRetryComponent {
     };
 
     private void prepareAndSendHPMessage(int srcPort, Integer sessionKey, int zServerId,
-//            int rtoRetries, 
             TimeoutId msgTimeoutId) {
         // sanity check
         assert (srcPort >= 1024 && srcPort <= 65535);

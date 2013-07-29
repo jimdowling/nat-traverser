@@ -6,7 +6,10 @@ package se.sics.gvod.common.hp;
 
 /**
  *
- * @author Owner
+ * @author jim
+ * 
+ * This object tells us for each HpSession, what type of hole-punching algorithm
+ * to use, and what the roles of the participants are.
  */
 public class HolePunching {
 
