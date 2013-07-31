@@ -24,7 +24,6 @@ import se.sics.gvod.common.VodRetryComponentTestCase;
 import se.sics.gvod.config.StunClientConfiguration;
 import static se.sics.gvod.stun.client.StunClientTest.StunClientComponentTester.ruleLifeTime;
 import se.sics.kompics.Event;
-import se.sics.gvod.timer.CancelTimeout;
 
 /**
  *
