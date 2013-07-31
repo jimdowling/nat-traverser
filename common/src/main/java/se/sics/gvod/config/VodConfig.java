@@ -153,6 +153,7 @@ public class VodConfig extends BaseCommandLineConfig {
     public static final int GRADIENT_SHUFFLE_LENGTH = 10;
     public static final double GRADIENT_TEMPERATURE = 0.9d;
     public static final double GRADIENT_CONVERGENCE_TEST = 0.9d;
+    public static final int GRADIENT_CONVERGENCE_TEST_ROUNDS = 20;
     public static final int GRADIENT_UTILITY_SET_FILLING_RATE = 10;
     // NAT-TRAVERSER'S DEFAULTS
     public final static int NT_STUN_RETRIES = 5;
