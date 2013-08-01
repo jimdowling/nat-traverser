@@ -33,6 +33,9 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.channel.udt.UdtChannel;
 import io.netty.channel.udt.nio.NioUdtProvider;
+import io.netty.util.concurrent.Future;
+import io.netty.util.concurrent.FutureListener;
+import io.netty.util.concurrent.GenericFutureListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import se.sics.gvod.address.Address;
@@ -41,10 +44,10 @@ import se.sics.gvod.common.msgs.Encodable;
 import se.sics.gvod.config.VodConfig;
 import se.sics.gvod.net.events.*;
 import se.sics.gvod.net.msgs.RewriteableMsg;
+import se.sics.gvod.net.util.UtilThreadFactory;
 import se.sics.gvod.timer.SchedulePeriodicTimeout;
 import se.sics.gvod.timer.Timeout;
 import se.sics.gvod.timer.Timer;
-import se.sics.gvod.net.util.UtilThreadFactory;
 import se.sics.kompics.*;
 
 import java.net.InetAddress;
@@ -58,18 +61,11 @@ import java.util.concurrent.atomic.AtomicLong;
  * The
  * <code>NettyNetwork</code> class.
  *
- * Usage: 1. Create NettyNetwork 2. Send Init event to this component 3. Send
- * PortBind or PortAlloc Request to this component for different transports
- *
  * @author Jim Dowling <jdowling@sics.se>
  * @author Steffen Grohsschmiedt
  */
 public final class NettyNetwork extends ComponentDefinition {
 
-    // 1868836467 is the data packet size
-    // public static final int MAX_OBJECT_SIZE = 1868836468;
-    public static final int MAX_OBJECT_SIZE = 1048576; // default
-    private static final int CHANNEL_POOLSIZE = 200;
     private static final int CONNECT_TIMEOUT_MS = 5000;
     private static final int RECV_BUFFER_SIZE = 65536;
     private static final int SEND_BUFFER_SIZE = 65536;
@@ -118,7 +114,7 @@ public final class NettyNetwork extends ComponentDefinition {
     private int bwSampleCounter = 0;
 
     private boolean bindAllNetworkIfs;
-    
+
     private class ByteCounterTimeout extends Timeout {
 
         public ByteCounterTimeout(SchedulePeriodicTimeout spt) {
@@ -229,52 +225,23 @@ public final class NettyNetwork extends ComponentDefinition {
     Handler<Stop> handleStop = new Handler<Stop>() {
         @Override
         public void handle(Stop event) {
-            for (Bootstrap b : udpSocketsToBootstraps.values()) {
-                if (b != null && b.group() != null) {
-                    b.group().shutdownGracefully();
-                }
+            for (InetSocketAddress address : udpSocketsToBootstraps.keySet()) {
+                closeSocket(address, Transport.UDP);
             }
-            udpPortsToSockets.clear();
-            udpSocketsToBootstraps.clear();
-            udpSocketsToChannels.clear();
 
-            for (ServerBootstrap b : tcpSocketsToServerBootstraps.values()) {
-                if (b != null && b.group() != null) {
-                    b.group().shutdownGracefully();
-                }
+            for (InetSocketAddress address : tcpSocketsToServerBootstraps.keySet()) {
+                closeServerSocket(address, Transport.TCP);
+            }
+            for (InetSocketAddress address : tcpSocketsToBootstraps.keySet()) {
+                closeSocket(address, Transport.TCP);
+            }
 
-                if (b != null && b.childGroup() != null) {
-                    b.childGroup().shutdownGracefully();
-                }
+            for (InetSocketAddress address : udtSocketsToServerBootstraps.keySet()) {
+                closeServerSocket(address, Transport.UDT);
             }
-            for (Bootstrap b : tcpSocketsToBootstraps.values()) {
-                if (b != null & b.group() != null) {
-                    b.group().shutdownGracefully();
-                }
+            for (InetSocketAddress address : udtSocketsToBootstraps.keySet()) {
+                closeSocket(address, Transport.UDT);
             }
-            tcpPortsToSockets.clear();
-            tcpSocketsToBootstraps.clear();
-            tcpSocketsToChannels.clear();
-            tcpSocketsToServerBootstraps.clear();
-
-            for (ServerBootstrap b : udtSocketsToServerBootstraps.values()) {
-                if (b != null && b.group() != null) {
-                    b.group().shutdownGracefully();
-                }
-
-                if (b != null && b.childGroup() != null) {
-                    b.childGroup().shutdownGracefully();
-                }
-            }
-            for (Bootstrap b : udtSocketsToBootstraps.values()) {
-                if (b != null & b.group() != null) {
-                    b.group().shutdownGracefully();
-                }
-            }
-            udtPortsToSockets.clear();
-            udtSocketsToBootstraps.clear();
-            udtSocketsToChannels.clear();
-            udtSocketsToServerBootstraps.clear();
         }
     };
     /**
@@ -374,6 +341,7 @@ public final class NettyNetwork extends ComponentDefinition {
         @Override
         public void handle(PortDeleteRequest msg) {
             Map<Integer, InetSocketAddress> portsToSockets;
+
             Transport protocol = msg.getTransport();
             if (protocol == Transport.UDP) {
                 portsToSockets = tcpPortsToSockets;
@@ -385,22 +353,17 @@ public final class NettyNetwork extends ComponentDefinition {
                 throw new Error("Unknown Transport type");
             }
 
-            Set<Integer> p = msg.getPortsToDelete();
-            Set<Integer> setPorts = portsToSockets.keySet();
-            Set<InetSocketAddress> socketsToRemove = new HashSet<InetSocketAddress>();
             Set<Integer> portsDeleted = new HashSet<Integer>();
-
-            for (int i : p) {
-                if (setPorts.contains(i)) {
-                    socketsToRemove.add(portsToSockets.get(i));
+            for (int i : msg.getPortsToDelete()) {
+                InetSocketAddress address = portsToSockets.remove(i);
+                if (address != null) {
+                    closeServerSocket(address, msg.getTransport());
+                    removeServerSocket(address, msg.getTransport());
                     portsDeleted.add(i);
                 }
             }
 
-            for (InetSocketAddress toRemove : socketsToRemove) {
-                removeLocalSocket(toRemove, msg.getTransport());
-            }
-
+            // TODO this is triggered before they might have been closed
             if (msg.getResponse() != null) {
                 // if a response is requested, send it
                 PortDeleteResponse response = msg.getResponse();
@@ -415,13 +378,12 @@ public final class NettyNetwork extends ComponentDefinition {
     Handler<CloseConnectionRequest> handleCloseConnectionRequest = new Handler<CloseConnectionRequest>() {
         @Override
         public void handle(CloseConnectionRequest msg) {
-            removeLocalSocket(address2SocketAddress(msg.getRemoteAddress()), msg.getTransport());
-
-            if (msg.getResponse() != null) {
-                // if a response is requested, send it
-                CloseConnectionResponse response = msg.getResponse();
-                trigger(response, netControl);
+            if (msg.getTransport() == Transport.UDP) {
+                throw new RuntimeException("Cannot close connection for connectionless UDP");
             }
+
+            closeSocket(address2SocketAddress(msg.getRemoteAddress()), msg.getTransport(), msg.getResponse());
+            removeSocket(address2SocketAddress(msg.getRemoteAddress()), msg.getTransport());
         }
     };
 
@@ -711,40 +673,104 @@ public final class NettyNetwork extends ComponentDefinition {
         trigger(new NetworkSessionOpened(remoteAddress, Transport.UDT), netControl);
     }
 
+    private void removeServerSocket(InetSocketAddress addr, Transport protocol) {
+        switch (protocol) {
+            case TCP:
+                tcpSocketsToServerBootstraps.remove(addr);
+                break;
+            case UDP:
+                removeSocket(addr, Transport.UDP);
+                break;
+            case UDT:
+                udtSocketsToServerBootstraps.remove(addr);
+                break;
+            default:
+                throw new Error("Transport type not supported");
+        }
+    }
+
+    private void closeServerSocket(InetSocketAddress addr, Transport protocol) {
+        switch (protocol) {
+            case TCP:
+                closeSeverBootstrap(tcpSocketsToServerBootstraps.get(addr));
+                break;
+            case UDP:
+                closeSocket(addr, Transport.UDP);
+                break;
+            case UDT:
+                closeSeverBootstrap(udtSocketsToServerBootstraps.get(addr));
+                break;
+            default:
+                throw new Error("Transport type not supported");
+        }
+    }
+
+    private void closeSeverBootstrap(ServerBootstrap serverBootstrap) {
+        serverBootstrap.childGroup().shutdownGracefully();
+        serverBootstrap.group().shutdownGracefully();
+    }
+
     /**
-     * Remove a channel from the local connections.
+     * Remove a channel from the local connections and triggers the given response at the netControl port.
      *
      * @param addr the address of the channel to be removed
      * @param protocol the protocol of the channel to be removed
      */
-    private void removeLocalSocket(InetSocketAddress addr, Transport protocol) {
-        Bootstrap bootstrap;
+    private void removeSocket(final InetSocketAddress addr, final Transport protocol) {
         switch (protocol) {
             case TCP:
                 tcpSocketsToChannels.remove(addr);
-                bootstrap = tcpSocketsToBootstraps.remove(addr);
+                tcpSocketsToBootstraps.remove(addr);
                 break;
             case UDP:
                 udpPortsToSockets.remove(addr.getPort());
-                udpPortsToSockets.remove(addr);
-                bootstrap = udpSocketsToBootstraps.remove(addr);
+                udpSocketsToChannels.remove(addr);
+                udpSocketsToBootstraps.remove(addr);
                 break;
             case UDT:
                 udtSocketsToChannels.remove(addr);
-                bootstrap = udtSocketsToBootstraps.remove(addr);
+                udtSocketsToBootstraps.remove(addr);
                 break;
             default:
-                throw new Error("Unknown Transport type");
+                throw new Error("Transport type not supported");
+        }
+    }
+
+    private void closeSocket(final InetSocketAddress addr, final Transport protocol) {
+        closeSocket(addr, protocol, null);
+    }
+
+    private void closeSocket(final InetSocketAddress addr, final Transport protocol, final CloseConnectionResponse response) {
+        Bootstrap bootstrap;
+        switch (protocol) {
+            case TCP:
+                bootstrap = tcpSocketsToBootstraps.get(addr);
+                break;
+            case UDP:
+                bootstrap = udpSocketsToBootstraps.get(addr);
+                break;
+            case UDT:
+                bootstrap = udtSocketsToBootstraps.get(addr);
+                break;
+            default:
+                throw new Error("Transport type not supported");
         }
 
-        if (bootstrap != null) {
-            EventLoopGroup group = bootstrap.group();
-            if (group != null) {
-                group.shutdownGracefully();
+        // Has been removed before
+        if (bootstrap == null) {
+            return;
+        }
+
+        Future future = bootstrap.group().shutdownGracefully();
+        future.addListener(new GenericFutureListener<Future<?>>() {
+            @Override
+            public void operationComplete(Future<?> future) throws Exception {
+                if (response != null) {
+                    // if a response is requested, send it
+                    trigger(response, netControl);
+                }
             }
-        }
-
-        trigger(new NetworkSessionClosed(addr, protocol), netControl);
+        });
     }
 
     private InetSocketAddress address2SocketAddress(Address address) {
@@ -807,7 +833,7 @@ public final class NettyNetwork extends ComponentDefinition {
                         + msg.getClass().getCanonicalName() + " with dst address: "
                         + dst.toString());
                 trigger(new Fault(new IllegalStateException(
-                        "Could not send messge because connection could not be established to "
+                        "Could not send message because connection could not be established to "
                         + dst.toString())), control);
                 return;
             }
@@ -903,29 +929,15 @@ public final class NettyNetwork extends ComponentDefinition {
      * @param protocol the protocol
      */
     final void channelInactive(ChannelHandlerContext ctx, Transport protocol) {
-        Channel c = ctx.channel();
-        SocketAddress addr;
+        SocketAddress addr = ctx.channel().remoteAddress();;
 
-        switch (protocol) {
-            case UDP:
-                addr = c.localAddress();
-                break;
-            case UDT:
-            case TCP:
-                addr = c.remoteAddress();
-                break;
-            default:
-                throw new Error("Unknown Transport type");
-        }
-
-        InetSocketAddress clientSocketAddress = null;
         if (addr instanceof InetSocketAddress) {
-            clientSocketAddress = (InetSocketAddress) addr;
-            removeLocalSocket(clientSocketAddress, protocol);
+            InetSocketAddress remoteAddress = (InetSocketAddress) addr;
+            trigger(new NetworkSessionClosed(remoteAddress, protocol), netControl);
+            // Schedule a thread secure close event for this component
+            trigger(new CloseConnectionRequest(0, new Address(remoteAddress.getAddress(), remoteAddress.getPort(), 0), protocol), positive(NatNetworkControl.class));
             logger.trace("Channel closed");
         }
-
-        trigger(new NetworkSessionClosed(clientSocketAddress, protocol), netControl);
     }
 
     public static long getNumBytesReadLastSec() {

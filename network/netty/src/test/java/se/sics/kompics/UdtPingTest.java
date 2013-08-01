@@ -13,10 +13,7 @@ import se.sics.gvod.config.BaseCommandLineConfig;
 import se.sics.gvod.config.VodConfig;
 import se.sics.gvod.hp.msgs.TConnectionMsg;
 import se.sics.gvod.net.*;
-import se.sics.gvod.net.events.CloseConnectionRequest;
-import se.sics.gvod.net.events.CloseConnectionResponse;
-import se.sics.gvod.net.events.PortBindRequest;
-import se.sics.gvod.net.events.PortBindResponse;
+import se.sics.gvod.net.events.*;
 import se.sics.gvod.net.events.PortBindResponse.Status;
 import se.sics.gvod.timer.ScheduleTimeout;
 import se.sics.gvod.timer.Timer;
@@ -26,7 +23,9 @@ import se.sics.gvod.timer.java.JavaTimer;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.Semaphore;
 
 /**
@@ -36,7 +35,7 @@ import java.util.concurrent.Semaphore;
  */
 public class UdtPingTest extends TestCase {
 
-    private static final Logger logger = LoggerFactory.getLogger(SetsExchangeTest.class);
+    private static final Logger logger = LoggerFactory.getLogger(UdtPingTest.class);
     private boolean testStatus = true;
 
     /**
@@ -103,6 +102,7 @@ public class UdtPingTest extends TestCase {
             subscribe(handlePing, server.getPositive(VodNetwork.class));
             subscribe(handlePong, client.getPositive(VodNetwork.class));
             subscribe(handleCloseConnectionResponse, client.getPositive(NatNetworkControl.class));
+            subscribe(handlePortDeletionResponse, server.getPositive(NatNetworkControl.class));
 
             trigger(new NettyInit(132, true, BaseMsgFrameDecoder.class),
                     client.getControl());
@@ -113,8 +113,8 @@ public class UdtPingTest extends TestCase {
         public Handler<Start> handleStart = new Handler<Start>() {
 
             public void handle(Start event) {
-                System.out.println("Starting");
-                ScheduleTimeout st = new ScheduleTimeout(10 * 1000);
+                logger.info("Starting");
+                ScheduleTimeout st = new ScheduleTimeout(30 * 1000);
                 MsgTimeout mt = new MsgTimeout(st);
                 st.setTimeoutEvent(mt);
                 PortBindRequest request =
@@ -130,7 +130,7 @@ public class UdtPingTest extends TestCase {
 
             @Override
             public void handle(PortBindResponse event) {
-                System.out.println("Port bind response");
+                logger.info("Port bind response");
 
                 if (event.getStatus() == Status.FAIL) {
                     testObj.failAndRelease();
@@ -146,7 +146,7 @@ public class UdtPingTest extends TestCase {
 
             @Override
             public void handle(TConnectionMsg.Ping event) {
-                System.out.println("Received ping");
+                logger.info("Received ping");
                 trigger(new TConnectionMsg.Pong(serverAddr, clientAddr, Transport.UDT,
                         event.getTimeoutId()),
                         server.getPositive(VodNetwork.class));
@@ -155,26 +155,39 @@ public class UdtPingTest extends TestCase {
         public Handler<TConnectionMsg.Pong> handlePong = new Handler<TConnectionMsg.Pong>() {
             @Override
             public void handle(TConnectionMsg.Pong event) {
-                CloseConnectionRequest request = new CloseConnectionRequest(0, serverAddr.getPeerAddress(), Transport.TCP);
+                logger.info("Received pong");
+                CloseConnectionRequest request = new CloseConnectionRequest(0, serverAddr.getPeerAddress(), Transport.UDT);
                 request.setResponse(new CloseConnectionResponse(request));
                 trigger(request, client.getPositive(NatNetworkControl.class));
-                trigger(new Stop(), server.getControl());
-                System.out.println("Received pong");
             }
         };
         public Handler<CloseConnectionResponse> handleCloseConnectionResponse = new Handler<CloseConnectionResponse>() {
             @Override
             public void handle(CloseConnectionResponse event) {
+                logger.info("Received CloseConnectionResponse");
+                Set set = new HashSet<Integer>();
+                set.add(serverAddr.getPort());
+                PortDeleteRequest request = new PortDeleteRequest(0, set, Transport.UDT);
+                request.setResponse(new PortDeleteResponse(request, 0) {
+                });
+                trigger(request, server.getPositive(NatNetworkControl.class));
+            }
+        };
+        public Handler<PortDeleteResponse> handlePortDeletionResponse = new Handler<PortDeleteResponse>() {
+            @Override
+            public void handle(PortDeleteResponse event) {
+                logger.info("Received PortDeleteResponse");
                 trigger(new Stop(), client.getControl());
+                trigger(new Stop(), server.getControl());
                 testObj.pass();
             }
         };
         public Handler<MsgTimeout> handleMsgTimeout = new Handler<MsgTimeout>() {
-
+            @Override
             public void handle(MsgTimeout event) {
+                logger.info("Msg timeout");
                 trigger(new Stop(), client.getControl());
                 trigger(new Stop(), server.getControl());
-                System.out.println("Msg timeout");
                 testObj.failAndRelease();
             }
         };
@@ -194,7 +207,7 @@ public class UdtPingTest extends TestCase {
 
         try {
             UdtPingTest.semaphore.acquire(EVENT_COUNT);
-            System.out.println("Finished test.");
+            logger.info("Finished test.");
         } catch (InterruptedException e) {
             assert (false);
         } finally {

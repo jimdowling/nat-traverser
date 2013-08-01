@@ -37,25 +37,15 @@
         <dependency>
             <groupId>io.netty</groupId>
             <artifactId>netty-all</artifactId>
-            <version>4.0.2.Final</version>
+            <version>4.0.5.Final</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>com.barchart.udt</groupId>
             <artifactId>barchart-udt-bundle</artifactId>
             <version>2.3.0</version>
-        </dependency>                
+        </dependency>
 
     </dependencies>
-
-    <repositories>
-        <repository>
-            <id>repository.jboss.org</id>
-            <url>http://repository.jboss.org/nexus/content/groups/public/</url>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-        </repository>
-    </repositories>
 </project>
 
