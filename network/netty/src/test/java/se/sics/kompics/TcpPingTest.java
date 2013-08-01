@@ -13,10 +13,7 @@ import se.sics.gvod.config.BaseCommandLineConfig;
 import se.sics.gvod.config.VodConfig;
 import se.sics.gvod.hp.msgs.TConnectionMsg;
 import se.sics.gvod.net.*;
-import se.sics.gvod.net.events.CloseConnectionRequest;
-import se.sics.gvod.net.events.CloseConnectionResponse;
-import se.sics.gvod.net.events.PortBindRequest;
-import se.sics.gvod.net.events.PortBindResponse;
+import se.sics.gvod.net.events.*;
 import se.sics.gvod.net.events.PortBindResponse.Status;
 import se.sics.gvod.timer.ScheduleTimeout;
 import se.sics.gvod.timer.Timer;
@@ -29,9 +26,7 @@ import se.sics.kompics.nat.utils.getip.events.GetIpResponse;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.EnumSet;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.Semaphore;
 
 /**
@@ -41,7 +36,7 @@ import java.util.concurrent.Semaphore;
  */
 public class TcpPingTest extends TestCase {
 
-    private static final Logger logger = LoggerFactory.getLogger(SetsExchangeTest.class);
+    private static final Logger logger = LoggerFactory.getLogger(TcpPingTest.class);
     private boolean testStatus = true;
 
     /**
@@ -63,13 +58,6 @@ public class TcpPingTest extends TestCase {
 
     public static void setTestObj(TcpPingTest testObj) {
         TestStClientComponent.testObj = testObj;
-    }
-
-    public static class TestPortBindResponse extends PortBindResponse {
-
-        public TestPortBindResponse(PortBindRequest request) {
-            super(request);
-        }
     }
 
     public static class TestStClientComponent extends ComponentDefinition {
@@ -99,6 +87,7 @@ public class TcpPingTest extends TestCase {
             subscribe(handlePing, server.getPositive(VodNetwork.class));
             subscribe(handleGetIpResponse, resolveIp.getPositive(ResolveIpPort.class));
             subscribe(handleCloseConnectionResponse, client.getPositive(NatNetworkControl.class));
+            subscribe(handlePortDeletionResponse, server.getPositive(NatNetworkControl.class));
 
             trigger(new NettyInit(132, true,
                     BaseMsgFrameDecoder.class), client.getControl());
@@ -106,6 +95,20 @@ public class TcpPingTest extends TestCase {
                     BaseMsgFrameDecoder.class), server.getControl());
         }
 
+        public Handler<Start> handleStart = new Handler<Start>() {
+            public void handle(Start event) {
+                trigger(new GetIpRequest(false, EnumSet.of(
+                        GetIpRequest.NetworkInterfacesMask.IGNORE_LOOPBACK,
+                        GetIpRequest.NetworkInterfacesMask.IGNORE_TEN_DOT_PRIVATE)),
+                        resolveIp.getPositive(ResolveIpPort.class));
+
+                logger.info("Starting");
+                ScheduleTimeout st = new ScheduleTimeout(30 * 1000);
+                MsgTimeout mt = new MsgTimeout(st);
+                st.setTimeoutEvent(mt);
+                trigger(st, timer.getPositive(Timer.class));
+            }
+        };
         public Handler<GetIpResponse> handleGetIpResponse = new Handler<GetIpResponse>() {
             @Override
             public void handle(GetIpResponse event) {
@@ -141,25 +144,10 @@ public class TcpPingTest extends TestCase {
                 trigger(requestServer, server.getPositive(NatNetworkControl.class));
             }
         };
-
-        public Handler<Start> handleStart = new Handler<Start>() {
-            public void handle(Start event) {
-                trigger(new GetIpRequest(false, EnumSet.of(
-                        GetIpRequest.NetworkInterfacesMask.IGNORE_LOOPBACK,
-                        GetIpRequest.NetworkInterfacesMask.IGNORE_TEN_DOT_PRIVATE)),
-                        resolveIp.getPositive(ResolveIpPort.class));
-
-                System.out.println("Starting");
-                ScheduleTimeout st = new ScheduleTimeout(10 * 1000);
-                MsgTimeout mt = new MsgTimeout(st);
-                st.setTimeoutEvent(mt);
-                trigger(st, timer.getPositive(Timer.class));
-            }
-        };
         public Handler<PortBindResponse> handlePortBindResponse = new Handler<PortBindResponse>() {
             @Override
             public void handle(PortBindResponse event) {
-                System.out.println("Port bind response");
+                logger.info("Port bind response");
 
                 if (event.getStatus() == Status.FAIL) {
                     testObj.failAndRelease();
@@ -175,7 +163,7 @@ public class TcpPingTest extends TestCase {
         public Handler<TConnectionMsg.Ping> handlePing = new Handler<TConnectionMsg.Ping>() {
             @Override
             public void handle(TConnectionMsg.Ping event) {
-                System.out.println("Received ping");
+                logger.info("Received ping");
                 trigger(new TConnectionMsg.Pong(serverAddr, clientAddr, Transport.TCP, event.getTimeoutId()),
                         server.getPositive(VodNetwork.class));
             }
@@ -183,25 +171,39 @@ public class TcpPingTest extends TestCase {
         public Handler<TConnectionMsg.Pong> handlePong = new Handler<TConnectionMsg.Pong>() {
             @Override
             public void handle(TConnectionMsg.Pong event) {
+                logger.info("Received pong");
                 CloseConnectionRequest request = new CloseConnectionRequest(0, serverAddr.getPeerAddress(), Transport.TCP);
                 request.setResponse(new CloseConnectionResponse(request));
                 trigger(request, client.getPositive(NatNetworkControl.class));
                 trigger(new Stop(), server.getControl());
-                System.out.println("Received pong");
             }
         };
         public Handler<CloseConnectionResponse> handleCloseConnectionResponse = new Handler<CloseConnectionResponse>() {
             @Override
             public void handle(CloseConnectionResponse event) {
+                logger.info("Received CloseConnectionResponse");
+                Set set = new HashSet<Integer>();
+                set.add(serverAddr.getPort());
+                PortDeleteRequest request = new PortDeleteRequest(0, set, Transport.UDT);
+                request.setResponse(new PortDeleteResponse(request, 0) {
+                });
+                trigger(request, server.getPositive(NatNetworkControl.class));
+            }
+        };
+        public Handler<PortDeleteResponse> handlePortDeletionResponse = new Handler<PortDeleteResponse>() {
+            @Override
+            public void handle(PortDeleteResponse event) {
+                logger.info("Received PortDeleteResponse");
                 trigger(new Stop(), client.getControl());
+                trigger(new Stop(), server.getControl());
                 testObj.pass();
             }
         };
         public Handler<MsgTimeout> handleMsgTimeout = new Handler<MsgTimeout>() {
             public void handle(MsgTimeout event) {
+                logger.info("Msg timeout");
                 trigger(new Stop(), client.getControl());
                 trigger(new Stop(), server.getControl());
-                System.out.println("Msg timeout");
                 testObj.testStatus = false;
                 testObj.failAndRelease();
             }
@@ -222,7 +224,7 @@ public class TcpPingTest extends TestCase {
 
         try {
             TcpPingTest.semaphore.acquire(EVENT_COUNT);
-            System.out.println("Finished test.");
+            logger.info("Finished test.");
         } catch (InterruptedException e) {
             assert (false);
         } finally {

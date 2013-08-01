@@ -49,12 +49,6 @@ public abstract class NettyBaseHandler<I> extends SimpleChannelInboundHandler<I>
 		logger.error(cause.getMessage());
 	}
 
-	@Override
-	public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-		component.channelInactive(ctx, getProtocol());
-		super.channelInactive(ctx);
-	}
-	
 	protected Transport getProtocol() {
         return protocol;
     }
