@@ -33,6 +33,9 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.channel.udt.UdtChannel;
 import io.netty.channel.udt.nio.NioUdtProvider;
+import io.netty.util.concurrent.Future;
+import io.netty.util.concurrent.FutureListener;
+import io.netty.util.concurrent.GenericFutureListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import se.sics.gvod.address.Address;
@@ -360,6 +363,7 @@ public final class NettyNetwork extends ComponentDefinition {
                 }
             }
 
+            // TODO this is triggered before they might have been closed
             if (msg.getResponse() != null) {
                 // if a response is requested, send it
                 PortDeleteResponse response = msg.getResponse();
@@ -704,9 +708,6 @@ public final class NettyNetwork extends ComponentDefinition {
     private void closeSeverBootstrap(ServerBootstrap serverBootstrap) {
         serverBootstrap.childGroup().shutdownGracefully();
         serverBootstrap.group().shutdownGracefully();
-
-        serverBootstrap.childGroup().terminationFuture().syncUninterruptibly();
-        serverBootstrap.group().terminationFuture().syncUninterruptibly();
     }
 
     /**
@@ -741,18 +742,14 @@ public final class NettyNetwork extends ComponentDefinition {
 
     private void closeSocket(final InetSocketAddress addr, final Transport protocol, final CloseConnectionResponse response) {
         Bootstrap bootstrap;
-        Channel channel;
         switch (protocol) {
             case TCP:
-                channel = tcpSocketsToChannels.get(addr);
                 bootstrap = tcpSocketsToBootstraps.get(addr);
                 break;
             case UDP:
-                channel = udpSocketsToChannels.get(addr);
                 bootstrap = udpSocketsToBootstraps.get(addr);
                 break;
             case UDT:
-                channel = udtSocketsToChannels.get(addr);
                 bootstrap = udtSocketsToBootstraps.get(addr);
                 break;
             default:
@@ -760,20 +757,14 @@ public final class NettyNetwork extends ComponentDefinition {
         }
 
         // Has been removed before
-        if (channel == null) {
+        if (bootstrap == null) {
             return;
         }
 
-        ChannelFuture future = channel.close();
-        // A server doesn't have a bootstrap for a client connection
-        final EventLoopGroup group = bootstrap == null? null : bootstrap.group();
-        future.addListener(new ChannelFutureListener() {
+        Future future = bootstrap.group().shutdownGracefully();
+        future.addListener(new GenericFutureListener<Future<?>>() {
             @Override
-            public void operationComplete(ChannelFuture future) throws Exception {
-                if (group != null) {
-                    group.shutdownGracefully();
-                }
-
+            public void operationComplete(Future<?> future) throws Exception {
                 if (response != null) {
                     // if a response is requested, send it
                     trigger(response, netControl);
