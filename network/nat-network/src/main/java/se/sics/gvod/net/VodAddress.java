@@ -475,11 +475,11 @@ public class VodAddress implements Serializable, Comparable {
     }
 
     public static int encodePartitionAndCategoryIdAsInt(int partitionId, int categoryId) {
-        if (partitionId > 65535 ) {
-            throw new RuntimeException("Partition id cannot be greater than 65535");
+        if (partitionId >= Math.pow(2, 8) || partitionId < 0) {
+            throw new RuntimeException("Partition id cannot be in the interval (0, 65535)");
         }
-        if (categoryId > 65535 ) {
-            throw new RuntimeException("Category id cannot be greater than 65535");
+        if (categoryId >= Math.pow(2, 8) || categoryId < 0) {
+            throw new RuntimeException("Category id cannot be in the interval (0, 65535)");
         }
 
         int val = categoryId << 16;

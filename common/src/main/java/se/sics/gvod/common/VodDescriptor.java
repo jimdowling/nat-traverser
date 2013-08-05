@@ -32,6 +32,7 @@ public class VodDescriptor implements Comparable<VodDescriptor>, Serializable {
      * 2 bytes in length
      */
     private int uploadRate;
+    private long numberOfIndexEntries;
     /**
      * Don't serialize. Sender side of data request. Determines number of
      * outstanding requests that can be in-flight.
@@ -103,15 +104,26 @@ public class VodDescriptor implements Comparable<VodDescriptor>, Serializable {
                 VodConfig.LB_MAX_WINDOW_SIZE),
                 VodConfig.LB_DEFAULT_PIPELINE_SIZE, VodConfig.DEFAULT_MTU);
     }
+
+    public VodDescriptor(VodAddress vodAddress, long numberOfIndexEntries) {
+        this(vodAddress, new UtilityVod(0), 0, 0, numberOfIndexEntries);
+    }
     
-    public VodDescriptor(VodAddress vodAddress, Utility utility,
-            int age,
-            int mtu) {
+    public VodDescriptor(VodAddress vodAddress, Utility utility, int age, int mtu) {
         this(vodAddress, age,
                 utility, 0, 0, new LinkedList<Block>(),
                 new CommunicationWindow(VodConfig.LB_WINDOW_SIZE,
                 VodConfig.LB_MAX_WINDOW_SIZE),
                 VodConfig.LB_DEFAULT_PIPELINE_SIZE, mtu);
+    }
+
+    public VodDescriptor(VodAddress vodAddress, Utility utility, int age, int mtu, long numberOfIndexEntries) {
+        this(vodAddress, age,
+                utility, 0, 0, new LinkedList<Block>(),
+                new CommunicationWindow(VodConfig.LB_WINDOW_SIZE,
+                        VodConfig.LB_MAX_WINDOW_SIZE),
+                VodConfig.LB_DEFAULT_PIPELINE_SIZE, mtu);
+        this.numberOfIndexEntries = numberOfIndexEntries;
     }
 
     public VodDescriptor(VodDescriptor descriptor, int age) {
@@ -318,6 +330,14 @@ public class VodDescriptor implements Comparable<VodDescriptor>, Serializable {
 
     public long getCurrentDelay() {
         return window.currentDelay();
+    }
+
+    public long getNumberOfIndexEntries() {
+        return numberOfIndexEntries;
+    }
+
+    public void setNumberOfIndexEntries(long numberOfIndexEntries) {
+        this.numberOfIndexEntries = numberOfIndexEntries;
     }
 
     public int getId() {
