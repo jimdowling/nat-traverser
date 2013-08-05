@@ -112,7 +112,6 @@ public class VodAddress implements Serializable, Comparable {
      * @param mp
      * @param ap
      * @param fp
-     * @param aap
      * @param parents
      */
     public VodAddress(Address peerAddress, int overlayId,
@@ -473,5 +472,28 @@ public class VodAddress implements Serializable, Comparable {
 
     public void setTransport(Transport transport) {
         this.transport = transport;
+    }
+
+    public static int encodePartitionAndCategoryIdAsInt(int partitionId, int categoryId) {
+        if (partitionId > 65535 ) {
+            throw new RuntimeException("Partition id cannot be greater than 65535");
+        }
+        if (categoryId > 65535 ) {
+            throw new RuntimeException("Category id cannot be greater than 65535");
+        }
+
+        int val = categoryId << 16;
+        val = val | partitionId;
+
+        return val;
+    }
+
+    public int getCategoryId() {
+        int val = overlayId & 0xFFFF0000;
+        return val >>> 16;
+    }
+
+    public int getPartitionId() {
+        return overlayId & 0x0000FFFF;
     }
 }
