@@ -320,6 +320,10 @@ public class VodDescriptor implements Comparable<VodDescriptor>, Serializable {
         return window.currentDelay();
     }
 
+    public int getId() {
+        return vodAddress.getId();
+    }
+
     @Override
     public String toString() {
         return vodAddress.toString() + ":u(" + utility + ")";
