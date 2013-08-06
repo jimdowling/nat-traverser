@@ -89,18 +89,6 @@ public class UserTypesEncoderFactory {
         buffer.writeBytes(result);
     }
 
-    public static void writeUnsignedLongAsFourBytes(ByteBuf buffer, long value) throws MessageEncodingException {
-        byte[] result = new byte[4];
-        if ((value >= Math.pow(2, 32)) || (value < 0)) {
-            throw new MessageEncodingException("Integer value < 0 or " + value + " is larger than 2^32 - 1");
-        }
-        result[0] = (byte) ((value >>> 24) & 0xFF);
-        result[1] = (byte) ((value >>> 16) & 0xFF);
-        result[2] = (byte) ((value >>> 8) & 0xFF);
-        result[3] = (byte) (value & 0xFF);
-        buffer.writeBytes(result);
-    }
-
     public static void writeTimeoutId(ByteBuf buffer, TimeoutId id)
             throws MessageEncodingException {
         if (id instanceof NoTimeoutId) {
@@ -178,7 +166,7 @@ public class UserTypesEncoderFactory {
         UserTypesEncoderFactory.writeUnsignedintAsTwoBytes(buffer, nodeDescriptor.getAge());
         UserTypesEncoderFactory.writeUtility(buffer, nodeDescriptor.getUtility());
         UserTypesEncoderFactory.writeUnsignedintAsTwoBytes(buffer, nodeDescriptor.getMtu());
-        UserTypesEncoderFactory.writeUnsignedLongAsFourBytes(buffer, nodeDescriptor.getNumberOfIndexEntries());
+        buffer.writeLong(nodeDescriptor.getNumberOfIndexEntries());
     }
 
     public static void writeCollectionInts(ByteBuf buffer,

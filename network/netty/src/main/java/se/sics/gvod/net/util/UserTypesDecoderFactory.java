@@ -51,16 +51,6 @@ public class UserTypesDecoderFactory {
         return ((temp0 << 8) + temp1);
     }
 
-    public static long readUnsignedLongAsFourBytes(ByteBuf buffer) {
-        byte[] bytes = new byte[4];
-        buffer.readBytes(bytes);
-        int temp0 = (bytes[0] & 0xFF) << 24;
-        int temp1 = (bytes[1] & 0xFF) << 16;
-        int temp2 = (bytes[2] & 0xFF) << 8;
-        int temp3 = bytes[3] & 0xFF;
-        return temp0 | temp1 | temp2 | temp3;
-    }
-
     public static boolean readBoolean(ByteBuf buffer)
             throws MessageDecodingException {
         int i = readUnsignedIntAsOneByte(buffer);
@@ -302,7 +292,7 @@ public class UserTypesDecoderFactory {
         int age = UserTypesDecoderFactory.readUnsignedIntAsTwoBytes(buffer);
         Utility utility = UserTypesDecoderFactory.readUtility(buffer);
         int mtu = UserTypesDecoderFactory.readUnsignedIntAsTwoBytes(buffer);
-        long numberOfEntries = UserTypesDecoderFactory.readUnsignedLongAsFourBytes(buffer);
+        long numberOfEntries = buffer.readLong();
         return new VodDescriptor(addr, utility, age, mtu, numberOfEntries);
     }
 
