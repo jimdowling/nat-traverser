@@ -340,6 +340,10 @@ public class VodDescriptor implements Comparable<VodDescriptor>, Serializable {
         this.numberOfIndexEntries = numberOfIndexEntries;
     }
 
+    public void incrementNumberOfIndexEntries() {
+        numberOfIndexEntries++;
+    }
+
     public int getId() {
         return vodAddress.getId();
     }
