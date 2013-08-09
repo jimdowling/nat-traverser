@@ -52,6 +52,10 @@ public class VodDescriptor implements Comparable<VodDescriptor>, Serializable {
      * Don't serialize. 2 bytes
      */
     private transient final int mtu;
+    /**
+     * Don't serialize.
+     */
+    private transient boolean connected;
 
     public VodDescriptor(VodAddress vodAddress, Utility utility,
             int uploadRate,
@@ -338,6 +342,14 @@ public class VodDescriptor implements Comparable<VodDescriptor>, Serializable {
 
     public int getId() {
         return vodAddress.getId();
+    }
+
+    public boolean isConnected() {
+        return connected;
+    }
+
+    public void setConnected(boolean connected) {
+        this.connected = connected;
     }
 
     @Override
