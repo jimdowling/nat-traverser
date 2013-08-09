@@ -89,7 +89,6 @@ public class UserTypesEncoderFactory {
         buffer.writeBytes(result);
     }
 
-    
     public static void writeTimeoutId(ByteBuf buffer, TimeoutId id)
             throws MessageEncodingException {
         if (id instanceof NoTimeoutId) {
@@ -167,6 +166,7 @@ public class UserTypesEncoderFactory {
         UserTypesEncoderFactory.writeUnsignedintAsTwoBytes(buffer, nodeDescriptor.getAge());
         UserTypesEncoderFactory.writeUtility(buffer, nodeDescriptor.getUtility());
         UserTypesEncoderFactory.writeUnsignedintAsTwoBytes(buffer, nodeDescriptor.getMtu());
+        buffer.writeLong(nodeDescriptor.getNumberOfIndexEntries());
     }
 
     public static void writeCollectionInts(ByteBuf buffer,
