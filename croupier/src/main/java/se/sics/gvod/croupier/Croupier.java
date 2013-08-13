@@ -26,7 +26,6 @@ import org.slf4j.LoggerFactory;
 import se.sics.gvod.common.*;
 import se.sics.gvod.common.msgs.RelayMsgNetty;
 import se.sics.gvod.config.CroupierConfiguration;
-import se.sics.gvod.config.VodConfig;
 import se.sics.gvod.croupier.events.*;
 import se.sics.gvod.croupier.msgs.ShuffleMsg;
 import se.sics.gvod.croupier.snapshot.CroupierStats;
@@ -51,11 +50,11 @@ public class Croupier extends MsgRetryComponent {
     private Self self;
     View publicView;
     View privateView;
-    private boolean joining;
-    CroupierConfiguration config;    
+    private boolean firstSuccessfulShuffle = false;
+    CroupierConfiguration config;
     private TimeoutId shuffleTimeoutId;
     String compName;
-    private Map<Integer,Long> shuffleTimes = new HashMap<Integer,Long>();
+    private Map<Integer, Long> shuffleTimes = new HashMap<Integer, Long>();
 
     public Croupier() {
         this(null);
@@ -75,11 +74,17 @@ public class Croupier extends MsgRetryComponent {
             privateView = new View(self, config.getViewSize(), config.getSeed());
             self.updateUtility(new UtilityVod(0));
             CroupierStats.addNode(self.getAddress());
+
+            SchedulePeriodicTimeout spt = new SchedulePeriodicTimeout(config.getShufflePeriod(),
+                    config.getShufflePeriod());
+            spt.setTimeoutEvent(new CroupierShuffleCycle(spt));
+            delegator.doTrigger(spt, timer);
+
         }
     };
 
     private boolean initializeCaches(List<VodDescriptor> nodes) {
-        if (nodes.isEmpty()) {
+        if (nodes == null || nodes.isEmpty()) {
             return false;
         }
         Set<VodDescriptor> pub = new HashSet<VodDescriptor>();
@@ -116,10 +121,12 @@ public class Croupier extends MsgRetryComponent {
 
             logger.debug(compName + "JOIN {} using {} public nodes", self.getId(), insiders.size());
 
-            SchedulePeriodicTimeout spt = new SchedulePeriodicTimeout(config.getShufflePeriod(), 
-                    config.getShufflePeriod());
-            spt.setTimeoutEvent(new CroupierShuffleCycle(spt));
-            delegator.doTrigger(spt, timer);
+//            if (!initialized) {
+//                SchedulePeriodicTimeout spt = new SchedulePeriodicTimeout(config.getShufflePeriod(),
+//                        config.getShufflePeriod());
+//                spt.setTimeoutEvent(new CroupierShuffleCycle(spt));
+//                delegator.doTrigger(spt, timer);
+//            }
 
             if (!initializeCaches(insiders)) {
                 logger.warn(compName + "No insiders, not shuffling.");
@@ -130,13 +137,11 @@ public class Croupier extends MsgRetryComponent {
             }
 
             logger.trace(compName + "initiateShuffle join");
-            joining = true;
 
             // Send bootstrap descriptors to Vod Component and others
             publishSample();
         }
     };
-    
 
     private void initiateShuffle(int shuffleSize, VodAddress node) {
         if (node == null) {
@@ -168,8 +173,8 @@ public class Croupier extends MsgRetryComponent {
                 buffer, self.getDescriptor());
         ShuffleMsg.RequestTimeout retryRequest = new ShuffleMsg.RequestTimeout(st, request);
         TimeoutId id = delegator.doRetry(retryRequest);
-        
-        
+
+
         shuffleTimes.put(id.getId(), System.currentTimeMillis());
         logger.debug(compName + "SHUFFLE SENT from {} to {} . Id=" + id, self.getId(), node);
     }
@@ -188,14 +193,12 @@ public class Croupier extends MsgRetryComponent {
 
                 CroupierStats.instance(self).incSelectedTimes();
                 initiateShuffle(config.getShuffleLength(), peer);
-
+                publicView.incrementDescriptorAges();
+                privateView.incrementDescriptorAges();
             }
 
-            publicView.incrementDescriptorAges();
-            privateView.incrementDescriptorAges();
         }
     };
-
     /**
      * handle requests to shuffle
      */
@@ -263,11 +266,11 @@ public class Croupier extends MsgRetryComponent {
 
 
                 long timeStarted = shuffleTimes.remove(event.getTimeoutId().getId());
-                RTTStore.addSample(self.getId(), event.getVodSource(), 
-                        System.currentTimeMillis()-timeStarted);
-                
-                if (joining) {
-                    joining = false;
+                RTTStore.addSample(self.getId(), event.getVodSource(),
+                        System.currentTimeMillis() - timeStarted);
+
+                if (!firstSuccessfulShuffle) {
+                    firstSuccessfulShuffle = true;
                     delegator.doTrigger(new CroupierJoinCompleted(), croupierPort);
                 }
 
@@ -295,8 +298,10 @@ public class Croupier extends MsgRetryComponent {
                     + " Nat=" + event.getPeer().getNatAsString());
             CroupierStats.instance(self).incShuffleTimeout();
             shuffleTimes.remove(event.getTimeoutId().getId());
-            
+
             VodAddress suspected = event.getPeer();
+            RTTStore.addSample(self.getId(), suspected, config.getRto() * 2);
+
             if (suspected.isOpen()) {
                 publicView.timedOutForShuffle(suspected);
             } else {

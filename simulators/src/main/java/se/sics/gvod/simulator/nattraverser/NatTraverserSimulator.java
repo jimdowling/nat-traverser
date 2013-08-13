@@ -44,6 +44,8 @@ import se.sics.gvod.croupier.CroupierPort;
 import se.sics.gvod.croupier.PeerSamplePort;
 import se.sics.gvod.croupier.events.CroupierInit;
 import se.sics.gvod.croupier.events.CroupierJoin;
+import se.sics.gvod.croupier.snapshot.CroupierStats;
+import se.sics.gvod.filters.MsgDestFilterIp;
 import se.sics.gvod.nat.traversal.NatTraverserPort;
 import se.sics.gvod.timer.Timer;
 import se.sics.kompics.Component;
@@ -194,7 +196,7 @@ public final class NatTraverserSimulator extends ComponentDefinition {
             addr = new VodAddress(peerAddress, NT_PEER_OVERLAY_ID, nat);
             self = new SelfImpl(addr);
             privateAddress.put(id, self);
-            logger.info("Starting node (Nat Type is) : " + addr);
+            logger.info("Starting peer " + peerAddress + " nat ip" + natIp + " (Nat Type is) : " + nat);
         }
 
         int filterId = peerAddress.getId();
@@ -202,7 +204,7 @@ public final class NatTraverserSimulator extends ComponentDefinition {
         connect(natTraverser.getPositive(VodNetwork.class), peer.getNegative(VodNetwork.class));
         connect(natGateway.getPositive(VodNetwork.class), natTraverser.getNegative(VodNetwork.class));
         connect(natGateway.getNegative(VodNetwork.class), network, new MsgDestFilterNodeId(filterId));
-        connect(croupier.getNegative(VodNetwork.class), network, new MsgDestFilterNodeId(filterId));
+        connect(natTraverser.getPositive(VodNetwork.class), croupier.getNegative(VodNetwork.class));
 
         connect(timer, peer.getNegative(Timer.class));
         connect(timer, natTraverser.getNegative(Timer.class));
@@ -281,6 +283,9 @@ public final class NatTraverserSimulator extends ComponentDefinition {
         public void handle(StopCollectData event) {
             int totalSuccess=0;
             int totalFail=0;
+            logger.info("Croupier Stats:");
+            CroupierStats.report(VodConfig.SYSTEM_OVERLAY_ID);
+            
             System.out.println("Success");
             for (String natType : successCount.keySet()) {
                 System.out.println("\t" + natType + "/" + successCount.get(natType));

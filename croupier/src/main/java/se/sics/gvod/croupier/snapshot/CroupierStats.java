@@ -346,7 +346,7 @@ public final class CroupierStats {
                     append("), min(").append(min).
                     append("), std(").append(std).
                     append("), timedOut(").append(t).
-                    append("), avg resps(").append(recvd / sz).append(")\n");
+                    append("), avg #ShuffleResps(").append(recvd / sz).append(")\n");
 //            sb.append(shufflesRecvdHistogram(overlayId)).append("\n");
         }
         return sb.toString();

@@ -9,6 +9,7 @@ import se.sics.gvod.common.RetryComponentDelegator;
 import se.sics.gvod.config.VodConfig;
 import se.sics.gvod.common.msgs.RelayMsgNetty;
 import se.sics.gvod.config.BaseCommandLineConfig;
+import se.sics.gvod.croupier.msgs.ShuffleMsg;
 import se.sics.gvod.hp.msgs.HpMsg;
 import se.sics.gvod.nat.common.MsgRetryComponent;
 import se.sics.gvod.nat.emu.events.DistributedNatGatewayEmulatorInit;
@@ -199,6 +200,7 @@ public class DistributedNatGatewayEmulator extends MsgRetryComponent {
             delegator.doTrigger(response, upperNetControl);
         }
     };
+    
     Handler<PortDeleteRequest> handlePortDeleteRequest = new Handler<PortDeleteRequest>() {
         @Override
         public void handle(PortDeleteRequest message) {
@@ -366,13 +368,21 @@ public class DistributedNatGatewayEmulator extends MsgRetryComponent {
                 RelayMsgNetty.Response vm = (RelayMsgNetty.Response) msg;
                 src = vm.getVodSource().toString();
             }
+
             if (msg instanceof RelayMsgNetty.Request) {
                 RelayMsgNetty.Request vm = (RelayMsgNetty.Request) msg;
                 src = vm.getVodSource().toString();
                 Nat n = vm.getVodSource().getNat();
                 if (mappingPolicy != n.getMappingPolicy() || allocationPolicy
                         != n.getAllocationPolicy() || filteringPolicy != n.getFilteringPolicy()) {
-                    logger.warn(compName + " VIOLATION");
+                    logger.debug(compName + "\t\t VIOLATION for " + msg.getClass()
+                            + "\tSrc: " + src + "\tdest: " + msg.getDestination()
+                            + "\t\tparent " + vm.getNextDest().getPeerAddress());
+                    
+                    logger.debug(compName + "\tVIOLATION " + mappingPolicy + "\t" +
+                            allocationPolicy + "\t" + filteringPolicy);
+                    logger.debug(compName + "\tVIOLATION " + vm.getVodSource().getNatAsString());
+                    
                 }
             }
 
@@ -606,9 +616,18 @@ public class DistributedNatGatewayEmulator extends MsgRetryComponent {
                                         logger.warn(compName + "Drop PD-1 " + msg.getClass().getCanonicalName());
                                         logger.warn(compName + "Existing mappings: "
                                                 + portMap);
+                                        if (msg instanceof ShuffleMsg.Response) {
+                                            ShuffleMsg.Response hm = (ShuffleMsg.Response) msg;
+                                            logger.warn(compName + "Drop PD-1. Nat addr " 
+                                                    + natPublicAddress + " src= "
+                                                    + msg.getSource() + " -- dest= "
+                                                    + msg.getDestination() + " of type "
+                                                    + msg.getClass().getCanonicalName() + " - vodSrc: "
+                                                    + hm.getVodSource() + " - vodDest: " + hm.getVodDestination());
+                                        }
                                         if (msg instanceof HpMsg.Hp) {
                                             HpMsg.Hp hm = (HpMsg.Hp) msg;
-                                            logger.debug(compName + "Drop PD-1 " + msg.getSource() + " -- "
+                                            logger.warn(compName + "Drop PD-1 " + msg.getSource() + " -- "
                                                     + msg.getDestination() + " of type "
                                                     + msg.getClass().getCanonicalName() + " - "
                                                     + hm.getMsgTimeoutId());
@@ -639,7 +658,7 @@ public class DistributedNatGatewayEmulator extends MsgRetryComponent {
                                     logger.warn(compName + sb.toString());
                                     if (msg instanceof HpMsg.Hp) {
                                         HpMsg.Hp hm = (HpMsg.Hp) msg;
-                                        logger.debug(compName + "Drop PD-2 " + msg.getSource() + " -- "
+                                        logger.warn(compName + "Drop PD-2 " + msg.getSource() + " -- "
                                                 + msg.getDestination() + " of type "
                                                 + msg.getClass().getCanonicalName() + " - "
                                                 + hm.getMsgTimeoutId());
