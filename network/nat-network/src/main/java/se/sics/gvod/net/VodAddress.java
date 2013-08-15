@@ -25,7 +25,7 @@ public class VodAddress implements Serializable, Comparable {
     private static final int DEFAULT_DELTA_PC = 1;
     private static final long serialVersionUID = -7968846333L;
     protected final Address addr;
-    protected final int overlayId;
+    protected int overlayId;
 //    This could be used by Gradient for searching - add up to 256
     // different partitions for the search namespace.
 //    protected final byte extension;
@@ -495,5 +495,9 @@ public class VodAddress implements Serializable, Comparable {
 
     public int getPartitionId() {
         return overlayId & 0x0000FFFF;
+    }
+
+    public void setOverlayId(int overlayId) {
+        this.overlayId = overlayId;
     }
 }

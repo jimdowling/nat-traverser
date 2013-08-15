@@ -293,7 +293,9 @@ public class UserTypesDecoderFactory {
         Utility utility = UserTypesDecoderFactory.readUtility(buffer);
         int mtu = UserTypesDecoderFactory.readUnsignedIntAsTwoBytes(buffer);
         long numberOfIndexEntries = buffer.readLong();
-        return new VodDescriptor(addr, utility, age, mtu, numberOfIndexEntries);
+        long numberOfEntries = buffer.readLong();
+        int patritionsNumber = buffer.readInt();
+        return new VodDescriptor(addr, utility, age, mtu, numberOfEntries, patritionsNumber);
     }
 
     public static List<VodDescriptor> readListVodNodeDescriptors(ByteBuf buffer)
