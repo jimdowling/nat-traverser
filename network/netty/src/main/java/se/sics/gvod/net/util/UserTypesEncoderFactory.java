@@ -167,6 +167,7 @@ public class UserTypesEncoderFactory {
         UserTypesEncoderFactory.writeUtility(buffer, nodeDescriptor.getUtility());
         UserTypesEncoderFactory.writeUnsignedintAsTwoBytes(buffer, nodeDescriptor.getMtu());
         buffer.writeLong(nodeDescriptor.getNumberOfIndexEntries());
+        buffer.writeInt(nodeDescriptor.getPartitionsNumber());
     }
 
     public static void writeCollectionInts(ByteBuf buffer,
