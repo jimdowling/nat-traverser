@@ -9,12 +9,8 @@ import io.netty.buffer.ByteBuf;
 import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Set;
-import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -168,6 +164,21 @@ public class UserTypesEncoderFactory {
         UserTypesEncoderFactory.writeUnsignedintAsTwoBytes(buffer, nodeDescriptor.getMtu());
         buffer.writeLong(nodeDescriptor.getNumberOfIndexEntries());
         buffer.writeInt(nodeDescriptor.getPartitionsNumber());
+
+        byte[] partitionId = toByteArray(nodeDescriptor.getPartitionId());
+
+        buffer.writeInt(partitionId.length);
+        buffer.writeBytes(partitionId);
+    }
+
+    private static byte[] toByteArray(BitSet bits) {
+        byte[] bytes = new byte[(bits.length() + 7) / 8];
+        for (int i=0; i<bits.length(); i++) {
+            if (bits.get(i)) {
+                bytes[bytes.length-i/8-1] |= 1<<(i%8);
+            }
+        }
+        return bytes;
     }
 
     public static void writeCollectionInts(ByteBuf buffer,

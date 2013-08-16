@@ -1,6 +1,7 @@
 package se.sics.gvod.common;
 
 import java.io.Serializable;
+import java.util.BitSet;
 import java.util.LinkedList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,6 +34,8 @@ public class VodDescriptor implements Comparable<VodDescriptor>, Serializable {
      */
     private int uploadRate;
     private long numberOfIndexEntries;
+    private int partitionsNumber;
+    private BitSet partitionId = new BitSet();
     /**
      * Don't serialize. Sender side of data request. Determines number of
      * outstanding requests that can be in-flight.
@@ -57,33 +60,31 @@ public class VodDescriptor implements Comparable<VodDescriptor>, Serializable {
      */
     private transient boolean connected;
 
-    private int partitionsNumber;
-
     public VodDescriptor(VodAddress vodAddress, Utility utility,
             int uploadRate,
             LinkedList<Block> requestPipeline,
             CommunicationWindow window,
-            int pipeSize, int mtu, int partitionsNumber) {
+            int pipeSize, int mtu) {
         this(vodAddress, 0,
                 utility, 0, uploadRate, requestPipeline,
-                window, pipeSize, mtu, partitionsNumber);
+                window, pipeSize, mtu);
     }
 
     public VodDescriptor(VodAddress vodAddress, Utility utility,
             /*int bitfieldSize*/ int windowSize, int pipeSize, int maxWindowSize,
-            int mtu, int partitionsNumber) {
+            int mtu) {
         this(vodAddress, 0,
                 utility, 0,
                 0,
                 new LinkedList<Block>(),
                 new CommunicationWindow(windowSize, maxWindowSize),
-                pipeSize, mtu, partitionsNumber);
+                pipeSize, mtu);
     }
 
     public VodDescriptor(VodAddress vodAddress, int age,
             Utility utility, int refs, int uploadRate,
             LinkedList<Block> requestPipeline,
-            CommunicationWindow window, int pipeSize, int mtu, int partitionsNumber) {
+            CommunicationWindow window, int pipeSize, int mtu) {
         assert (vodAddress != null);
         assert (utility != null);
         this.vodAddress = vodAddress;
@@ -94,7 +95,6 @@ public class VodDescriptor implements Comparable<VodDescriptor>, Serializable {
         this.requestPipeline = requestPipeline;
         this.window = window;
         this.pipeSize = pipeSize;
-        this.partitionsNumber = partitionsNumber;
         if (mtu < BaseCommandLineConfig.MIN_MTU) {
             this.mtu = BaseCommandLineConfig.MIN_MTU;
         } else if (mtu > BaseCommandLineConfig.DEFAULT_MTU) {
@@ -109,15 +109,15 @@ public class VodDescriptor implements Comparable<VodDescriptor>, Serializable {
                 new UtilityVod(0), 0, 0, new LinkedList<Block>(),
                 new CommunicationWindow(VodConfig.LB_WINDOW_SIZE,
                 VodConfig.LB_MAX_WINDOW_SIZE),
-                VodConfig.LB_DEFAULT_PIPELINE_SIZE, VodConfig.DEFAULT_MTU, 1);
+                VodConfig.LB_DEFAULT_PIPELINE_SIZE, VodConfig.DEFAULT_MTU);
     }
 
-    public VodDescriptor(VodAddress vodAddress, long numberOfIndexEntries) {
-        this(vodAddress, new UtilityVod(0), 0, 0, numberOfIndexEntries, 1);
+    public VodDescriptor(VodAddress vodAddress, long numberOfIndexEntries, int partitionsNumber, BitSet partitionId) {
+        this(vodAddress, new UtilityVod(0), 0, 0, numberOfIndexEntries, partitionsNumber, partitionId);
     }
 
     public VodDescriptor(VodAddress vodAddress, int partitionsNumber) {
-        this(vodAddress, new UtilityVod(0), 0, 0, 0, partitionsNumber);
+        this(vodAddress, new UtilityVod(0), 0, 0, 0, partitionsNumber, new BitSet());
     }
     
     public VodDescriptor(VodAddress vodAddress, Utility utility, int age, int mtu) {
@@ -125,30 +125,34 @@ public class VodDescriptor implements Comparable<VodDescriptor>, Serializable {
                 utility, 0, 0, new LinkedList<Block>(),
                 new CommunicationWindow(VodConfig.LB_WINDOW_SIZE,
                 VodConfig.LB_MAX_WINDOW_SIZE),
-                VodConfig.LB_DEFAULT_PIPELINE_SIZE, mtu, 1);
+                VodConfig.LB_DEFAULT_PIPELINE_SIZE, mtu);
     }
 
-    public VodDescriptor(VodAddress vodAddress, Utility utility, int age, int mtu, long numberOfIndexEntries, int partitionsNumber) {
+    public VodDescriptor(VodAddress vodAddress, Utility utility, int age, int mtu,
+                         long numberOfIndexEntries, int partitionsNumber, BitSet partitionId) {
         this(vodAddress, age,
                 utility, 0, 0, new LinkedList<Block>(),
                 new CommunicationWindow(VodConfig.LB_WINDOW_SIZE,
                         VodConfig.LB_MAX_WINDOW_SIZE),
-                VodConfig.LB_DEFAULT_PIPELINE_SIZE, mtu, partitionsNumber);
+                VodConfig.LB_DEFAULT_PIPELINE_SIZE, mtu);
         this.numberOfIndexEntries = numberOfIndexEntries;
+        this.partitionsNumber = partitionsNumber;
+        this.partitionId = partitionId;
+
     }
 
     public VodDescriptor(VodDescriptor descriptor, int age) {
         this(descriptor.vodAddress, age,
                 descriptor.getUtility(), descriptor.refs, descriptor.uploadRate,
                 descriptor.requestPipeline,
-                descriptor.window, descriptor.pipeSize, descriptor.mtu, descriptor.partitionsNumber);
+                descriptor.window, descriptor.pipeSize, descriptor.mtu);
     }
 
     public VodDescriptor(VodDescriptor descriptor, VodAddress newAddr) {
         this(newAddr, descriptor.age,
                 descriptor.getUtility(), descriptor.refs, descriptor.uploadRate,
                 descriptor.requestPipeline,
-                descriptor.window, descriptor.pipeSize, descriptor.mtu, descriptor.partitionsNumber);
+                descriptor.window, descriptor.pipeSize, descriptor.mtu);
     }
 
     public VodDescriptor(VodDescriptor descriptor, Utility utility, int piece) {
@@ -156,14 +160,14 @@ public class VodDescriptor implements Comparable<VodDescriptor>, Serializable {
                 utility,
                 descriptor.refs, descriptor.uploadRate,
                 descriptor.requestPipeline,
-                descriptor.window, descriptor.pipeSize, descriptor.mtu, descriptor.partitionsNumber);
+                descriptor.window, descriptor.pipeSize, descriptor.mtu);
     }
 
     public VodDescriptor clone(int newOverlayId) {
         VodAddress o = new VodAddress(this.vodAddress.getPeerAddress(), newOverlayId,
                 this.vodAddress.getNat(), this.vodAddress.getParents());
         return new VodDescriptor(o, age, utility, refs, uploadRate,
-                requestPipeline, window, pipeSize, mtu, partitionsNumber);
+                requestPipeline, window, pipeSize, mtu);
     }
 
     public int getMtu() {
@@ -361,6 +365,14 @@ public class VodDescriptor implements Comparable<VodDescriptor>, Serializable {
 
     public void setPartitionsNumber(int partitionsNumber) {
         this.partitionsNumber = partitionsNumber;
+    }
+
+    public BitSet getPartitionId() {
+        return partitionId;
+    }
+
+    public void setPartitionId(BitSet partitionId) {
+        this.partitionId = partitionId;
     }
 
     public int getPartitionsNumber() {
