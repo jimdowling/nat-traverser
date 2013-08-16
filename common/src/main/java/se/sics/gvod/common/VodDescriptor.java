@@ -35,7 +35,7 @@ public class VodDescriptor implements Comparable<VodDescriptor>, Serializable {
     private int uploadRate;
     private long numberOfIndexEntries;
     private int partitionsNumber;
-    private BitSet partitionId = new BitSet();
+    private LinkedList<Boolean> partitionId = new LinkedList<Boolean>();
     /**
      * Don't serialize. Sender side of data request. Determines number of
      * outstanding requests that can be in-flight.
@@ -112,12 +112,12 @@ public class VodDescriptor implements Comparable<VodDescriptor>, Serializable {
                 VodConfig.LB_DEFAULT_PIPELINE_SIZE, VodConfig.DEFAULT_MTU);
     }
 
-    public VodDescriptor(VodAddress vodAddress, long numberOfIndexEntries, int partitionsNumber, BitSet partitionId) {
+    public VodDescriptor(VodAddress vodAddress, long numberOfIndexEntries, int partitionsNumber, LinkedList<Boolean> partitionId) {
         this(vodAddress, new UtilityVod(0), 0, 0, numberOfIndexEntries, partitionsNumber, partitionId);
     }
 
     public VodDescriptor(VodAddress vodAddress, int partitionsNumber) {
-        this(vodAddress, new UtilityVod(0), 0, 0, 0, partitionsNumber, new BitSet());
+        this(vodAddress, new UtilityVod(0), 0, 0, 0, partitionsNumber, new LinkedList<Boolean>());
     }
     
     public VodDescriptor(VodAddress vodAddress, Utility utility, int age, int mtu) {
@@ -129,7 +129,7 @@ public class VodDescriptor implements Comparable<VodDescriptor>, Serializable {
     }
 
     public VodDescriptor(VodAddress vodAddress, Utility utility, int age, int mtu,
-                         long numberOfIndexEntries, int partitionsNumber, BitSet partitionId) {
+                         long numberOfIndexEntries, int partitionsNumber, LinkedList<Boolean> partitionId) {
         this(vodAddress, age,
                 utility, 0, 0, new LinkedList<Block>(),
                 new CommunicationWindow(VodConfig.LB_WINDOW_SIZE,
@@ -367,11 +367,11 @@ public class VodDescriptor implements Comparable<VodDescriptor>, Serializable {
         this.partitionsNumber = partitionsNumber;
     }
 
-    public BitSet getPartitionId() {
+    public LinkedList<Boolean> getPartitionId() {
         return partitionId;
     }
 
-    public void setPartitionId(BitSet partitionId) {
+    public void setPartitionId(LinkedList<Boolean> partitionId) {
         this.partitionId = partitionId;
     }
 

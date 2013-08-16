@@ -292,20 +292,20 @@ public class UserTypesDecoderFactory {
         long numberOfEntries = buffer.readLong();
         int partitionsNumber = buffer.readInt();
 
-        int partitionIdLength = buffer.readInt();
-        BitSet set = fromByteArray(buffer.readBytes(partitionIdLength).array());
+        LinkedList<Boolean> partitionId = readBooleanLinkedList(buffer);
 
-        return new VodDescriptor(addr, utility, age, mtu, numberOfEntries, partitionsNumber, set);
+        return new VodDescriptor(addr, utility, age, mtu, numberOfEntries, partitionsNumber, partitionId);
     }
 
-    private static BitSet fromByteArray(byte[] bytes) {
-        BitSet bits = new BitSet();
-        for (int i = 0; i < bytes.length * 8; i++) {
-            if ((bytes[bytes.length - i / 8 - 1] & (1 << (i % 8))) > 0) {
-                bits.set(i);
-            }
-        }
-        return bits;
+    public static LinkedList<Boolean> readBooleanLinkedList(ByteBuf buffer) throws MessageDecodingException {
+        int partitionsLength = buffer.readInt();
+
+        LinkedList<Boolean> list = new LinkedList<Boolean>();
+
+        for(int i=0; i<partitionsLength; i++)
+            list.addLast(readBoolean(buffer));
+
+        return list;
     }
 
     public static List<VodDescriptor> readListVodNodeDescriptors(ByteBuf buffer)
