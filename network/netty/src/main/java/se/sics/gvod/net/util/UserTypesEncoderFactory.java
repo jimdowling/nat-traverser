@@ -164,21 +164,16 @@ public class UserTypesEncoderFactory {
         UserTypesEncoderFactory.writeUnsignedintAsTwoBytes(buffer, nodeDescriptor.getMtu());
         buffer.writeLong(nodeDescriptor.getNumberOfIndexEntries());
         buffer.writeInt(nodeDescriptor.getPartitionsNumber());
-
-        byte[] partitionId = toByteArray(nodeDescriptor.getPartitionId());
-
-        buffer.writeInt(partitionId.length);
-        buffer.writeBytes(partitionId);
+        writeBooleanLinkedList(buffer, nodeDescriptor.getPartitionId());
     }
 
-    private static byte[] toByteArray(BitSet bits) {
-        byte[] bytes = new byte[(bits.length() + 7) / 8];
-        for (int i=0; i<bits.length(); i++) {
-            if (bits.get(i)) {
-                bytes[bytes.length-i/8-1] |= 1<<(i%8);
-            }
-        }
-        return bytes;
+    public static void writeBooleanLinkedList(ByteBuf buffer, LinkedList<Boolean> list) throws MessageEncodingException {
+        int partitionsLength = list.size();
+
+        buffer.writeInt(partitionsLength);
+        for(int i=0; i<partitionsLength; i++)
+            writeBoolean(buffer, list.get(i));
+
     }
 
     public static void writeCollectionInts(ByteBuf buffer,
