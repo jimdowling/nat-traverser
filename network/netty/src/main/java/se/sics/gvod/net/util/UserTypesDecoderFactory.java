@@ -9,12 +9,8 @@ import io.netty.buffer.ByteBuf;
 import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.nio.ByteBuffer;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -294,8 +290,22 @@ public class UserTypesDecoderFactory {
         int mtu = UserTypesDecoderFactory.readUnsignedIntAsTwoBytes(buffer);
         long numberOfIndexEntries = buffer.readLong();
         long numberOfEntries = buffer.readLong();
-        int patritionsNumber = buffer.readInt();
-        return new VodDescriptor(addr, utility, age, mtu, numberOfEntries, patritionsNumber);
+        int partitionsNumber = buffer.readInt();
+
+        int partitionIdLength = buffer.readInt();
+        BitSet set = fromByteArray(buffer.readBytes(partitionIdLength).array());
+
+        return new VodDescriptor(addr, utility, age, mtu, numberOfEntries, partitionsNumber, set);
+    }
+
+    private static BitSet fromByteArray(byte[] bytes) {
+        BitSet bits = new BitSet();
+        for (int i = 0; i < bytes.length * 8; i++) {
+            if ((bytes[bytes.length - i / 8 - 1] & (1 << (i % 8))) > 0) {
+                bits.set(i);
+            }
+        }
+        return bits;
     }
 
     public static List<VodDescriptor> readListVodNodeDescriptors(ByteBuf buffer)
