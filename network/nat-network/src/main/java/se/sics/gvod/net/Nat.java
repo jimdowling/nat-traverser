@@ -428,15 +428,15 @@ public class Nat implements Serializable, Comparable {
         return false;
     }
 
-    public boolean moreRestrictiveMappingThan(Nat other) {
-        return mappingPolicy.ordinal() > other.getMappingPolicy().ordinal();
+    public boolean moreRestrictiveThan(MappingPolicy other) {
+        return mappingPolicy.ordinal() > other.ordinal();
     }
     
-    public boolean moreRestrictiveAllocationThan(Nat other) {
-        return allocationPolicy.ordinal() > other.getAllocationPolicy().ordinal();
+    public boolean moreRestrictiveThan(AllocationPolicy other) {
+        return allocationPolicy.ordinal() > other.ordinal();
     }
-    public boolean moreRestrictiveFilteringThan(Nat other) {
-        return filteringPolicy.ordinal() > other.getFilteringPolicy().ordinal();
+    public boolean moreRestrictiveThan(FilteringPolicy other) {
+        return filteringPolicy.ordinal() > other.ordinal();
     }
 }
 

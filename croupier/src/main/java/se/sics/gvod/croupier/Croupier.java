@@ -121,13 +121,6 @@ public class Croupier extends MsgRetryComponent {
 
             logger.debug(compName + "JOIN {} using {} public nodes", self.getId(), insiders.size());
 
-//            if (!initialized) {
-//                SchedulePeriodicTimeout spt = new SchedulePeriodicTimeout(config.getShufflePeriod(),
-//                        config.getShufflePeriod());
-//                spt.setTimeoutEvent(new CroupierShuffleCycle(spt));
-//                delegator.doTrigger(spt, timer);
-//            }
-
             if (!initializeCaches(insiders)) {
                 logger.warn(compName + "No insiders, not shuffling.");
                 // I am the first peer

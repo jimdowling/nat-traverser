@@ -25,6 +25,7 @@ import se.sics.gvod.config.VodConfig;
 import se.sics.gvod.common.evts.GarbageCleanupTimeout;
 import se.sics.gvod.common.util.PortSelector;
 import se.sics.gvod.common.util.ToVodAddr;
+import se.sics.gvod.config.RendezvousServerConfiguration;
 import se.sics.gvod.hp.events.OpenConnectionResponseType;
 import se.sics.gvod.hp.msgs.*;
 import se.sics.gvod.nat.common.MsgRetryComponent;
@@ -67,7 +68,8 @@ public class RendezvousServer extends MsgRetryComponent {
     int sessionExpirationTime;
     boolean throwException = false;
     private TimeoutId garbageCleanupTimeoutId;
-    private int numChildren;
+//    private int numChildren;
+    RendezvousServerConfiguration config;
 
     public static class NoPortsException extends Exception {
 
@@ -218,7 +220,8 @@ public class RendezvousServer extends MsgRetryComponent {
             self = init.getSelf();
             registeredClients = init.getRegisteredClients();
 
-            numChildren = init.getConfig().getNumChildren();
+//            numChildren = init.getConfig().getNumChildren();
+            config = init.getConfig();
             compName = "(" + self.getId() + ") ";
 
             // session epiration time
@@ -268,7 +271,7 @@ public class RendezvousServer extends MsgRetryComponent {
                 }
             }
 
-            if (currentSize < numChildren) {
+            if (currentSize < config.getNumChildren()) {
                 RTTStore.addSample(self.getId(), peer, rtt);
                 boolean alreadyRegistered = registerClientRecord(peer, request.getSource().getId(), request.getDelta(), rtt,
                         request.getPrpPorts(), false);
@@ -301,7 +304,7 @@ public class RendezvousServer extends MsgRetryComponent {
                     }
                 } else {
                     logger.warn(compName + " Worst child was null. Num children {} ; Max children {}",
-                            currentSize, numChildren);
+                            currentSize, config.getNumChildren());
                 }
             }
 

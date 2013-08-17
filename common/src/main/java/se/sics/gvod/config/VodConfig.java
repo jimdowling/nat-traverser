@@ -117,10 +117,11 @@ public class VodConfig extends BaseCommandLineConfig {
     public static int PM_PARENT_UPDATE_PERIOD = 60 * 1000;
     public static int PM_PARENT_SIZE = 3;
     public static int PM_PARENT_KEEP_RTT_TOLERANCE = 20;
-    public static int PM_CHILDREN_SIZE = 50;
+    public static int PM_CHILDREN_SIZE = 1000;
     public static int PM_CHILDREN_REMOVE_TIMEOUT = 0 * 1000;
     public static int PM_PARENT_TIMEOUT_DELAY = 4 * 1000;
     public static int PM_PARENT_REJECTED_CLEANUP_TIMEOUT = 300 * 1000;
+    
     // VOD's params
     public static final int BITTORRENT_SET_SIZE = 100;
     public static final int UPPER_SET_SIZE = 100;
