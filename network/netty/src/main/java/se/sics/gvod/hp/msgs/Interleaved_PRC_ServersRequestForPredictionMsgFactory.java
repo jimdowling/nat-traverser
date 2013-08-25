@@ -18,7 +18,7 @@ public class Interleaved_PRC_ServersRequestForPredictionMsgFactory {
                 
                 throws MessageDecodingException {
             return (Interleaved_PRC_ServersRequestForPredictionMsg.Request)
-                    new Interleaved_PRC_ServersRequestForPredictionMsgFactory.Request().decode(buffer, false);
+                    new Interleaved_PRC_ServersRequestForPredictionMsgFactory.Request().decode(buffer);
         }
 
         @Override

@@ -6,6 +6,7 @@ import java.util.Set;
 
 import se.sics.gvod.address.Address;
 import se.sics.gvod.net.VodAddress;
+import se.sics.gvod.net.msgs.RewriteableMsg;
 import se.sics.gvod.net.util.UserTypesDecoderFactory;
 
 public abstract class RelayMsgNettyFactory {
@@ -42,6 +43,15 @@ public abstract class RelayMsgNettyFactory {
     }
 
     public abstract static class Request extends Base {
+
+        protected RewriteableMsg decode(ByteBuf buffer) throws MessageDecodingException {
+            return super.decode(buffer, true);
+        }
+        @Override
+        protected RewriteableMsg decode(ByteBuf buffer, boolean timeout) throws MessageDecodingException {
+               throw new UnsupportedOperationException("Call decode() without timeout parameter");
+        }
+
     }
 
     public abstract static class Response extends Base {
@@ -50,16 +60,34 @@ public abstract class RelayMsgNettyFactory {
 
         protected Response() {
         }
+
+        protected RewriteableMsg decode(ByteBuf buffer) throws MessageDecodingException {
+            return super.decode(buffer, true);
+        }
+        @Override
+        protected RewriteableMsg decode(ByteBuf buffer, boolean timeout) throws MessageDecodingException {
+               throw new UnsupportedOperationException("Call decode() without timeout parameter");
+        }        
         
         @Override
         protected void decodeHeader(ByteBuf buffer, boolean timeout)
                 throws MessageDecodingException {
-            super.decodeHeader(buffer, timeout);
+            super.decodeHeader(buffer, true);
             int statusVal = UserTypesDecoderFactory.readUnsignedIntAsOneByte(buffer);
             status = RelayMsgNetty.Status.create(statusVal);
-        }        
+        }
+
     }
 
     public abstract static class Oneway extends Base {
+
+        protected RewriteableMsg decode(ByteBuf buffer) throws MessageDecodingException {
+            return super.decode(buffer, false);
+        }
+        @Override
+        protected RewriteableMsg decode(ByteBuf buffer, boolean timeout) throws MessageDecodingException {
+               throw new UnsupportedOperationException("Call decode() without timeout parameter");
+        }
+        
     }
 };

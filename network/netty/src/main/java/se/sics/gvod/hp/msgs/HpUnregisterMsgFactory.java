@@ -16,7 +16,7 @@ public class HpUnregisterMsgFactory {
                 
                 throws MessageDecodingException {
             return (HpUnregisterMsg.Request)
-                    new HpUnregisterMsgFactory.Request().decode(buffer, true);
+                    new HpUnregisterMsgFactory.Request().decode(buffer);
         }
 
         @Override
@@ -37,7 +37,7 @@ public class HpUnregisterMsgFactory {
                 
                 throws MessageDecodingException {
             return (HpUnregisterMsg.Response)
-                    new HpUnregisterMsgFactory.Response().decode(buffer, true);
+                    new HpUnregisterMsgFactory.Response().decode(buffer);
         }
 
         @Override

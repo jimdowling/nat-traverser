@@ -1464,7 +1464,7 @@ public class HpClient extends MsgRetryComponent {
             }
             for (OpenedConnection oc : toDeleteOc) {
                 openedConnections.remove(oc.getHoleOpened().getId());
-                logger.info(compName + " Deleting opened connections "
+                logger.info(compName + " Deleting opened connection: "
                         + oc.getHoleOpened());
 
             }

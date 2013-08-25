@@ -22,7 +22,7 @@ public class GradientSearchMsgFactory {
         public static GradientSearchMsg.Request fromBuffer(ByteBuf buffer)
                 throws MessageDecodingException {
             return (GradientSearchMsg.Request) 
-                    new GradientSearchMsgFactory.Request().decode(buffer, true);
+                    new GradientSearchMsgFactory.Request().decode(buffer);
         }
 
         @Override
@@ -44,12 +44,12 @@ public class GradientSearchMsgFactory {
         public static GradientSearchMsg.Response fromBuffer(ByteBuf buffer)
                 throws MessageDecodingException {
             return (GradientSearchMsg.Response)
-                    new GradientSearchMsgFactory.Response().decode(buffer, true);
+                    new GradientSearchMsgFactory.Response().decode(buffer);
         }
 
         @Override
         protected RewriteableMsg process(ByteBuf buffer) throws MessageDecodingException {
-            List<VodDescriptor> similarSet = UserTypesDecoderFactory.readListGVodNodeDescriptors(buffer);
+            List<VodDescriptor> similarSet = UserTypesDecoderFactory.readListVodNodeDescriptors(buffer);
             return new GradientSearchMsg.Response(gvodSrc, gvodDest, clientId, remoteId,
                     nextDest, timeoutId,  similarSet);
         }

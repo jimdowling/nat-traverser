@@ -18,7 +18,7 @@ public abstract class ServerHostChangeMsgFactory {
                 
                 throws MessageDecodingException {
             return (ServerHostChangeMsg.Request)
-                    new ServerHostChangeMsgFactory.Request().decode(buffer, true);
+                    new ServerHostChangeMsgFactory.Request().decode(buffer);
         }
 
         @Override
@@ -35,13 +35,13 @@ public abstract class ServerHostChangeMsgFactory {
 
         private Response() {
         }
-
+        
 
         public static ServerHostChangeMsg.Response fromBuffer(ByteBuf buffer)
                 
                 throws MessageDecodingException {
             return (ServerHostChangeMsg.Response)
-                    new ServerHostChangeMsgFactory.Response().decode(buffer, true);
+                    new ServerHostChangeMsgFactory.Response().decode(buffer);
         }
 
         @Override

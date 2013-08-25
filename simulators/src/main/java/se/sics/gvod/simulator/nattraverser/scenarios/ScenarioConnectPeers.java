@@ -23,7 +23,7 @@ public class ScenarioConnectPeers extends Scenario {
                 
 		StochasticProcess connectNodes = new StochasticProcess() {{
 			eventInterArrivalTime(constant(1000));
-			raise(1500, Operations.connectPeers(), 
+			raise(2500, Operations.connectPeers(), 
                                 uniform(0, 10000), uniform(0, 10000));
 		}};
 

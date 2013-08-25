@@ -15,7 +15,7 @@ public class DisconnectMsgFactory {
                 
                 throws MessageDecodingException {
             return (DisconnectMsg.Request)
-                    new DisconnectMsgFactory.Request().decode(buffer, true);
+                    new DisconnectMsgFactory.Request().decode(buffer);
         }
 
         @Override
@@ -33,7 +33,7 @@ public class DisconnectMsgFactory {
                 
                 throws MessageDecodingException {
             return (DisconnectMsg.Response)
-                    new DisconnectMsgFactory.Response().decode(buffer, true);
+                    new DisconnectMsgFactory.Response().decode(buffer);
         }
 
         @Override

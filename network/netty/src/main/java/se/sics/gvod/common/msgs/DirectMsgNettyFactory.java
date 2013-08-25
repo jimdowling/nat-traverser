@@ -83,15 +83,17 @@ public abstract class DirectMsgNettyFactory {
     };
 
     public static abstract class Request extends Base {
+        
         protected DirectMsg decode(ByteBuf buffer) throws MessageDecodingException {
             return super.decode(buffer, true);
         }
+        @Override
+        protected DirectMsg decode(ByteBuf buffer, boolean timeout) throws MessageDecodingException {
+            throw new UnsupportedOperationException("Call decode(), not decode(.., boolean timeout)");
+        }        
+        @Override
         protected void finish(DirectMsg msg) {
             msg.setTimeoutId(timeoutId);
-        }
-        protected void decodeHeader(ByteBuf buffer)
-                throws MessageDecodingException {
-            super.decodeHeader(buffer, true);
         }
     }
     
@@ -99,12 +101,13 @@ public abstract class DirectMsgNettyFactory {
         protected DirectMsg decode(ByteBuf buffer) throws MessageDecodingException {
             return super.decode(buffer, true);
         }
+        @Override
+        protected DirectMsg decode(ByteBuf buffer, boolean timeout) throws MessageDecodingException {
+            throw new UnsupportedOperationException("Call decode(), not decode(.., boolean timeout)");
+        }        
+        @Override
         protected void finish(DirectMsg msg) {
             msg.setTimeoutId(timeoutId);
-        }
-        protected void decodeHeader(ByteBuf buffer)
-                throws MessageDecodingException {
-            super.decodeHeader(buffer, true);
         }
     }
     
@@ -112,24 +115,26 @@ public abstract class DirectMsgNettyFactory {
         protected DirectMsg decode(ByteBuf buffer) throws MessageDecodingException {
             return super.decode(buffer, false);
         }
+        @Override
+        protected DirectMsg decode(ByteBuf buffer, boolean timeout) throws MessageDecodingException {
+            throw new UnsupportedOperationException("Call decode(), not decode(.., boolean timeout)");
+        }        
+        @Override
         protected void finish(DirectMsg msg) {
         }
-        protected void decodeHeader(ByteBuf buffer)
-                throws MessageDecodingException {
-            super.decodeHeader(buffer, false);
-        }    
     }
     
     public static abstract class SystemRequest extends Base  {
         protected DirectMsg decode(ByteBuf buffer) throws MessageDecodingException {
             return super.decode(buffer, true);
         }
+        @Override
+        protected DirectMsg decode(ByteBuf buffer, boolean timeout) throws MessageDecodingException {
+            throw new UnsupportedOperationException("Call decode(), not decode(.., boolean timeout)");
+        }        
+        @Override
         protected void finish(DirectMsg msg) {
             msg.setTimeoutId(timeoutId);
-        }
-        protected void decodeHeader(ByteBuf buffer)
-                throws MessageDecodingException {
-            super.decodeHeader(buffer, true);
         }
         
     }
@@ -138,12 +143,13 @@ public abstract class DirectMsgNettyFactory {
         protected DirectMsg decode(ByteBuf buffer) throws MessageDecodingException {
             return super.decode(buffer, true);
         }
+        @Override
+        protected DirectMsg decode(ByteBuf buffer, boolean timeout) throws MessageDecodingException {
+            throw new UnsupportedOperationException("Call decode(), not decode(.., boolean timeout)");
+        }        
+        @Override
         protected void finish(DirectMsg msg) {
             msg.setTimeoutId(timeoutId);
-        }
-        protected void decodeHeader(ByteBuf buffer)
-                throws MessageDecodingException {
-            super.decodeHeader(buffer, true);
         }
     }
     
@@ -151,11 +157,12 @@ public abstract class DirectMsgNettyFactory {
         protected DirectMsg decode(ByteBuf buffer) throws MessageDecodingException {
             return super.decode(buffer, false);
         }
+        @Override
+        protected DirectMsg decode(ByteBuf buffer, boolean timeout) throws MessageDecodingException {
+            throw new UnsupportedOperationException("Call decode(), not decode(.., boolean timeout)");
+        }        
+        @Override
         protected void finish(DirectMsg msg) {
         }
-        protected void decodeHeader(ByteBuf buffer)
-                throws MessageDecodingException {
-            super.decodeHeader(buffer, false);
-        }    
     }
 }

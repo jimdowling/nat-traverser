@@ -20,7 +20,7 @@ public class GradientSetsExchangeMsgFactory {
         public static GradientSetsExchangeMsg.Request fromBuffer(ByteBuf buffer)
                 throws MessageDecodingException {
             return (GradientSetsExchangeMsg.Request) 
-                    new GradientSetsExchangeMsgFactory.Request().decode(buffer, true);
+                    new GradientSetsExchangeMsgFactory.Request().decode(buffer);
         }
 
         @Override
@@ -37,12 +37,12 @@ public class GradientSetsExchangeMsgFactory {
         public static GradientSetsExchangeMsg.Response fromBuffer(ByteBuf buffer)
                 throws MessageDecodingException {
             return (GradientSetsExchangeMsg.Response)
-                    new GradientSetsExchangeMsgFactory.Response().decode(buffer, true);
+                    new GradientSetsExchangeMsgFactory.Response().decode(buffer);
         }
 
         @Override
         protected RewriteableMsg process(ByteBuf buffer) throws MessageDecodingException {
-            List<VodDescriptor> similarSet = UserTypesDecoderFactory.readListGVodNodeDescriptors(buffer);
+            List<VodDescriptor> similarSet = UserTypesDecoderFactory.readListVodNodeDescriptors(buffer);
             return new GradientSetsExchangeMsg.Response(gvodSrc, gvodDest, nextDest, timeoutId, 
                     similarSet);
         }

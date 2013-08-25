@@ -38,7 +38,7 @@ public class ConnectMsgFactory  {
                 
                 throws MessageDecodingException {
             return (ConnectMsg.Response)
-                    new ConnectMsgFactory.Response().decode(buffer, true);
+                    new ConnectMsgFactory.Response().decode(buffer);
         }
 
         @Override

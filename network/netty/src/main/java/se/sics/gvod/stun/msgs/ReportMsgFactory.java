@@ -16,7 +16,7 @@ public class ReportMsgFactory  {
         public static ReportMsg.Request fromBuffer(ByteBuf buffer)
                 
                 throws MessageDecodingException {
-            return (ReportMsg.Request) new ReportMsgFactory.Request().decode(buffer, true);
+            return (ReportMsg.Request) new ReportMsgFactory.Request().decode(buffer);
         }
 
         @Override
@@ -37,7 +37,7 @@ public class ReportMsgFactory  {
                 
                 throws MessageDecodingException {
             return (ReportMsg.Response)
-                    new ReportMsgFactory.Response().decode(buffer, true);
+                    new ReportMsgFactory.Response().decode(buffer);
         }
 
         @Override

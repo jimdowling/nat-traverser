@@ -15,7 +15,7 @@ public class Interleaved_PRC_OpenHoleMsgFactory {
                 
                 throws MessageDecodingException {
             return (Interleaved_PRC_OpenHoleMsg.Request)
-                    new Interleaved_PRC_OpenHoleMsgFactory.Request().decode(buffer, true);
+                    new Interleaved_PRC_OpenHoleMsgFactory.Request().decode(buffer);
         }
 
         @Override
@@ -35,7 +35,7 @@ public class Interleaved_PRC_OpenHoleMsgFactory {
                 
                 throws MessageDecodingException {
             return (Interleaved_PRC_OpenHoleMsg.Response)
-                    new Interleaved_PRC_OpenHoleMsgFactory.Response().decode(buffer, true);
+                    new Interleaved_PRC_OpenHoleMsgFactory.Response().decode(buffer);
         }
 
         @Override

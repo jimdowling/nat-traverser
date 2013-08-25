@@ -286,22 +286,22 @@ public class UserTypesDecoderFactory {
         return bytes;
     }
 
-    public static VodDescriptor readGVodNodeDescriptor(ByteBuf buffer)
+    public static VodDescriptor readVodNodeDescriptor(ByteBuf buffer)
             throws MessageDecodingException {
         VodAddress addr = UserTypesDecoderFactory.readVodAddress(buffer);
         int age = UserTypesDecoderFactory.readUnsignedIntAsTwoBytes(buffer);
         Utility utility = UserTypesDecoderFactory.readUtility(buffer);
         int mtu = UserTypesDecoderFactory.readUnsignedIntAsTwoBytes(buffer);
-        long numberOfEntries = buffer.readLong();
-        return new VodDescriptor(addr, utility, age, mtu, numberOfEntries);
+        long numberOfIndexEntries = buffer.readLong();
+        return new VodDescriptor(addr, utility, age, mtu, numberOfIndexEntries);
     }
 
-    public static List<VodDescriptor> readListGVodNodeDescriptors(ByteBuf buffer)
+    public static List<VodDescriptor> readListVodNodeDescriptors(ByteBuf buffer)
             throws MessageDecodingException {
         int len = UserTypesDecoderFactory.readUnsignedIntAsTwoBytes(buffer);
         List<VodDescriptor> addrs = new ArrayList<VodDescriptor>();
         for (int i = 0; i < len; i++) {
-            addrs.add(readGVodNodeDescriptor(buffer));
+            addrs.add(readVodNodeDescriptor(buffer));
         }
         return addrs;
     }
@@ -321,8 +321,8 @@ public class UserTypesDecoderFactory {
     public static DescriptorBuffer readDescriptorBuffer(ByteBuf buffer)
             throws MessageDecodingException {
         VodAddress src = readVodAddress(buffer);
-        List<VodDescriptor> publicDescs = readListGVodNodeDescriptors(buffer);
-        List<VodDescriptor> privateDescs = readListGVodNodeDescriptors(buffer);
+        List<VodDescriptor> publicDescs = readListVodNodeDescriptors(buffer);
+        List<VodDescriptor> privateDescs = readListVodNodeDescriptors(buffer);
         return new DescriptorBuffer(src, publicDescs, privateDescs);
     }
     public static Nat readNat(ByteBuf buffer)

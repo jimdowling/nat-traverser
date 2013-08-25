@@ -431,7 +431,7 @@ public class EncodingDecodingTest {
 
             ShuffleMsg.Response response2 = new ShuffleMsg.Response(vodAddress1, vodAddress2, 1, 2,
                     vodAddress2, timeoutId, RelayMsgNetty.Status.FAIL, descBuffer, nodeDescriptor);
-            response.setTimeoutId(UUID.nextUUID());
+            response2.setTimeoutId(UUID.nextUUID());
             ByteBuf channelBuffer2 = response2.toByteArray();
             opCodeCorrect(channelBuffer2, response2);
             ShuffleMsg.Response fromBuffer2 = ShuffleMsgFactory.Response.fromBuffer(channelBuffer2);
@@ -454,6 +454,8 @@ public class EncodingDecodingTest {
             Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
+    
+    
 
     @Test
     public void setsExchangeRequestMsg() {

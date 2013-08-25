@@ -20,7 +20,7 @@ public class SetsExchangeMsgFactory {
         public static SetsExchangeMsg.Request fromBuffer(ByteBuf buffer)
                 throws MessageDecodingException {
             return (SetsExchangeMsg.Request) 
-                    new SetsExchangeMsgFactory.Request().decode(buffer, true);
+                    new SetsExchangeMsgFactory.Request().decode(buffer);
         }
 
         @Override
@@ -37,13 +37,13 @@ public class SetsExchangeMsgFactory {
         public static SetsExchangeMsg.Response fromBuffer(ByteBuf buffer)
                 throws MessageDecodingException {
             return (SetsExchangeMsg.Response)
-                    new SetsExchangeMsgFactory.Response().decode(buffer, true);
+                    new SetsExchangeMsgFactory.Response().decode(buffer);
         }
 
         @Override
         protected RewriteableMsg process(ByteBuf buffer) throws MessageDecodingException {
-            List<VodDescriptor> utilitySet = UserTypesDecoderFactory.readListGVodNodeDescriptors(buffer);
-            List<VodDescriptor> upperSet = UserTypesDecoderFactory.readListGVodNodeDescriptors(buffer);
+            List<VodDescriptor> utilitySet = UserTypesDecoderFactory.readListVodNodeDescriptors(buffer);
+            List<VodDescriptor> upperSet = UserTypesDecoderFactory.readListVodNodeDescriptors(buffer);
             return new SetsExchangeMsg.Response(gvodSrc, gvodDest, clientId, remoteId, nextDest, timeoutId, 
                     utilitySet, upperSet);
         }

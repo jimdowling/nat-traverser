@@ -153,11 +153,6 @@ public class RelayMsgNetty {
         private final Status status;
         private transient long rtt;
 
-//        public Response(VodAddress source, VodAddress destination, 
-//                VodAddress nextDest, TimeoutId timeoutId, Status status) {
-//            super(source, destination, nextDest.getId(), source.getId(), nextDest, timeoutId);
-//            this.status = status;
-//        }
         public Response(VodAddress source, VodAddress destination, int clientId, int remoteId,
                 VodAddress nextDest, TimeoutId timeoutId, Status status) {
             super(source, destination, clientId, remoteId, nextDest, timeoutId);

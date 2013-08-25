@@ -22,7 +22,6 @@ import se.sics.gvod.timer.TimeoutId;
  */
 public class ShuffleMsg {
 
-
     public static class Request extends RelayMsgNetty.Request {
 
         private static final long serialVersionUID = 8493601671018888143L;
@@ -61,7 +60,7 @@ public class ShuffleMsg {
 
         @Override
         public ByteBuf toByteArray() throws MessageEncodingException {
-        	ByteBuf buf = createChannelBufferWithHeader();
+            ByteBuf buf = createChannelBufferWithHeader();
             UserTypesEncoderFactory.writeDescriptorBuffer(buf, buffer);
             UserTypesEncoderFactory.writeVodNodeDescriptor(buf, desc);
             return buf;
@@ -69,8 +68,7 @@ public class ShuffleMsg {
 
         @Override
         public RewriteableMsg copy() {
-            ShuffleMsg.Request copy = new ShuffleMsg.Request(vodSrc, vodDest, buffer,
-                    desc);
+            ShuffleMsg.Request copy = new ShuffleMsg.Request(vodSrc, vodDest, buffer, desc);
             copy.setTimeoutId(timeoutId);
             return copy;
         }
@@ -113,13 +111,12 @@ public class ShuffleMsg {
             return super.getSize()
                     + UserTypesEncoderFactory.getDescriptorBufferSize(buffer)
                     + UserTypesEncoderFactory.GVOD_NODE_DESCRIPTOR_LEN
-                    + 1
-                    ;
+                    + 1;
         }
 
         @Override
         public ByteBuf toByteArray() throws MessageEncodingException {
-        	ByteBuf buf = createChannelBufferWithHeader();
+            ByteBuf buf = createChannelBufferWithHeader();
             UserTypesEncoderFactory.writeDescriptorBuffer(buf, buffer);
             UserTypesEncoderFactory.writeVodNodeDescriptor(buf, desc);
             return buf;

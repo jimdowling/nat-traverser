@@ -22,7 +22,7 @@ public class LeaderHeartbeatMsgFactory {
         public static GradientSearchMsg.Request fromBuffer(ByteBuf buffer)
                 throws MessageDecodingException {
             return (GradientSearchMsg.Request) 
-                    new LeaderHeartbeatMsgFactory.Request().decode(buffer, true);
+                    new LeaderHeartbeatMsgFactory.Request().decode(buffer);
         }
 
         @Override
@@ -43,12 +43,12 @@ public class LeaderHeartbeatMsgFactory {
         public static GradientSearchMsg.Response fromBuffer(ByteBuf buffer)
                 throws MessageDecodingException {
             return (GradientSearchMsg.Response)
-                    new LeaderHeartbeatMsgFactory.Response().decode(buffer, true);
+                    new LeaderHeartbeatMsgFactory.Response().decode(buffer);
         }
 
         @Override
         protected RewriteableMsg process(ByteBuf buffer) throws MessageDecodingException {
-            List<VodDescriptor> similarSet = UserTypesDecoderFactory.readListGVodNodeDescriptors(buffer);
+            List<VodDescriptor> similarSet = UserTypesDecoderFactory.readListVodNodeDescriptors(buffer);
             return new GradientSearchMsg.Response(gvodSrc, gvodDest, clientId, remoteId, nextDest, timeoutId, 
                     similarSet);
         }

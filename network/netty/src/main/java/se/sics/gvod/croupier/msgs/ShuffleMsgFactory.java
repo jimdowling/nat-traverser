@@ -22,13 +22,13 @@ public class ShuffleMsgFactory {
 
         public static ShuffleMsg.Request fromBuffer(ByteBuf buffer)
                 throws MessageDecodingException {
-            return (ShuffleMsg.Request) new ShuffleMsgFactory.Request().decode(buffer, true);
+            return (ShuffleMsg.Request) new ShuffleMsgFactory.Request().decode(buffer);
         }
         
         @Override
         protected RelayMsgNetty.Request process(ByteBuf buffer) throws MessageDecodingException {
             DescriptorBuffer descBuf = UserTypesDecoderFactory.readDescriptorBuffer(buffer);
-            VodDescriptor nodeDescriptor = UserTypesDecoderFactory.readGVodNodeDescriptor(buffer);
+            VodDescriptor nodeDescriptor = UserTypesDecoderFactory.readVodNodeDescriptor(buffer);
             
             
             return new ShuffleMsg.Request(gvodSrc, gvodDest, descBuf, nodeDescriptor);
@@ -40,13 +40,13 @@ public class ShuffleMsgFactory {
 
         public static ShuffleMsg.Response fromBuffer(ByteBuf buffer)
                 throws MessageDecodingException {
-            return (ShuffleMsg.Response) new ShuffleMsgFactory.Response().decode(buffer, true);
+            return (ShuffleMsg.Response) new ShuffleMsgFactory.Response().decode(buffer);
         }
         
         @Override
         protected RelayMsgNetty.Response process(ByteBuf buffer) throws MessageDecodingException {
             DescriptorBuffer descBuf = UserTypesDecoderFactory.readDescriptorBuffer(buffer);
-            VodDescriptor nodeDescriptor = UserTypesDecoderFactory.readGVodNodeDescriptor(buffer);
+            VodDescriptor nodeDescriptor = UserTypesDecoderFactory.readVodNodeDescriptor(buffer);
             return new ShuffleMsg.Response(gvodSrc, gvodDest, clientId, remoteId, nextDest, 
                     timeoutId, status, descBuf, nodeDescriptor);
         }

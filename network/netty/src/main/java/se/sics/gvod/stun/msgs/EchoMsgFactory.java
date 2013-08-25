@@ -19,7 +19,7 @@ public class EchoMsgFactory  {
         public static EchoMsg.Request fromBuffer(ByteBuf buffer)
                 
                 throws MessageDecodingException {
-            return (EchoMsg.Request) new EchoMsgFactory.Request().decode(buffer, true);
+            return (EchoMsg.Request) new EchoMsgFactory.Request().decode(buffer);
         }
 
         @Override
@@ -42,7 +42,7 @@ public class EchoMsgFactory  {
                 
                 throws MessageDecodingException {
             return (EchoMsg.Response)
-                    new EchoMsgFactory.Response().decode(buffer, true);
+                    new EchoMsgFactory.Response().decode(buffer);
         }
 
         @Override

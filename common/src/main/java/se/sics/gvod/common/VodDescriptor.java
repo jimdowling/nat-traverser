@@ -83,7 +83,7 @@ public class VodDescriptor implements Comparable<VodDescriptor>, Serializable {
             LinkedList<Block> requestPipeline,
             CommunicationWindow window, int pipeSize, int mtu) {
         assert (vodAddress != null);
-        assert (utility != null);
+//        assert (utility != null);
         this.vodAddress = vodAddress;
         this.age = age;
         this.utility = utility;

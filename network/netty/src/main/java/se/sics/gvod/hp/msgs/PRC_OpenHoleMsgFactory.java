@@ -33,7 +33,7 @@ public class PRC_OpenHoleMsgFactory {
                 
                 throws MessageDecodingException {
             return (PRC_OpenHoleMsg.Response)
-                    new PRC_OpenHoleMsgFactory.Response().decode(buffer, true);
+                    new PRC_OpenHoleMsgFactory.Response().decode(buffer);
         }
 
         @Override

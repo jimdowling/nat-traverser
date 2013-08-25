@@ -15,7 +15,7 @@ public class EchoChangePortMsgFactory  {
                 
                 throws MessageDecodingException {
             return (EchoChangePortMsg.Request)
-                    new EchoChangePortMsgFactory.Request().decode(buffer, true);
+                    new EchoChangePortMsgFactory.Request().decode(buffer);
         }
 
         @Override
@@ -33,7 +33,7 @@ public class EchoChangePortMsgFactory  {
                 
                 throws MessageDecodingException {
             return (EchoChangePortMsg.Response)
-                    new EchoChangePortMsgFactory.Response().decode(buffer, true);
+                    new EchoChangePortMsgFactory.Response().decode(buffer);
         }
 
         @Override

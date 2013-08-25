@@ -17,7 +17,7 @@ public class Interleaved_PRP_ConnectMsgFactory {
         public static Interleaved_PRP_ConnectMsg.Request fromBuffer(ByteBuf buffer)
                 throws MessageDecodingException {
             return (Interleaved_PRP_ConnectMsg.Request)
-                    new Interleaved_PRP_ConnectMsgFactory.Request().decode(buffer, true);
+                    new Interleaved_PRP_ConnectMsgFactory.Request().decode(buffer);
         }
 
         @Override
@@ -37,7 +37,7 @@ public class Interleaved_PRP_ConnectMsgFactory {
                 
                 throws MessageDecodingException {
             return (Interleaved_PRP_ConnectMsg.Response)
-                    new Interleaved_PRP_ConnectMsgFactory.Response().decode(buffer, true);
+                    new Interleaved_PRP_ConnectMsgFactory.Response().decode(buffer);
         }
 
         @Override

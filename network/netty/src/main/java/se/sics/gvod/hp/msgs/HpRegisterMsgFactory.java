@@ -19,7 +19,7 @@ public class HpRegisterMsgFactory {
                 
                 throws MessageDecodingException {
             return (HpRegisterMsg.Request)
-                    new HpRegisterMsgFactory.Request().decode(buffer, true);
+                    new HpRegisterMsgFactory.Request().decode(buffer);
         }
 
         @Override
@@ -40,7 +40,7 @@ public class HpRegisterMsgFactory {
                 
                 throws MessageDecodingException {
             return (HpRegisterMsg.Response)
-                    new HpRegisterMsgFactory.Response().decode(buffer, true);
+                    new HpRegisterMsgFactory.Response().decode(buffer);
         }
 
         @Override
