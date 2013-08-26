@@ -272,10 +272,14 @@ public class Croupier extends MsgRetryComponent {
                 CroupierStats.instance(self).incShuffleResp();
 
 
-                long timeStarted = shuffleTimes.remove(event.getTimeoutId().getId());
-                RTTStore.addSample(self.getId(), event.getVodSource(),
+                
+                Long timeStarted = shuffleTimes.remove(event.getTimeoutId().getId());
+                if (timeStarted != null) {
+                    RTTStore.addSample(self.getId(), event.getVodSource(),
                         System.currentTimeMillis() - timeStarted);
-
+                } else {
+                    logger.warn(compName + "Timestarted was null when trying to add a RTT sample");
+                }
                 if (!firstSuccessfulShuffle) {
                     firstSuccessfulShuffle = true;
                     delegator.doTrigger(new CroupierJoinCompleted(), croupierPort);

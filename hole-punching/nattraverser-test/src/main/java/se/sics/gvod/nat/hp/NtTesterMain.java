@@ -322,7 +322,7 @@ public final class NtTesterMain extends ComponentDefinition {
                 if (alreadyConnected.contains(va) == false) {
                     // try and send a msg to the new VodAddress if it is private and
                     // has parents
-                    if (va.isOpen() == false && va.getParents().size() > 1) {
+                    if (va.isOpen() == false && va.getParents().size() >= 1) {
                         ScheduleTimeout st = new ScheduleTimeout(10 * 1000);
                         HolePunchTimeout hp = new HolePunchTimeout(st);
                         st.setTimeoutEvent(hp);
