@@ -580,15 +580,17 @@ public class NatTraverser extends MsgRetryComponent {
     Handler<RelayMsgNetty.Response> handleRelayResponseDown = new Handler<RelayMsgNetty.Response>() {
         @Override
         public void handle(RelayMsgNetty.Response msg) {
-            logger.debug("{} ClientId({}) handleRelayResponseDown (" + msg.getDestination().getId()
-                    + ") message class :" + msg.getClass().getName(),
-                    msg.getTimeoutId(), msg.getClientId());
-
+    
             // Send the response to the parent that I received the message from.
             // It should have an open NAT connection to the client.
             if (!self.isOpen() && msg.getNextDest().isOpen()) {
                 msg.rewriteDestination(msg.getNextDest().getPeerAddress());
             }
+    
+            logger.debug("{} ClientId({}) handleRelayResponseDown (" + msg.getDestination().getId()
+                    + ") message class :" + msg.getClass().getName() + " - nextDest: " +
+                    msg.getNextDest(),
+                    msg.getTimeoutId(), msg.getClientId());
 
             delegator.doTrigger(msg, network);
         }
