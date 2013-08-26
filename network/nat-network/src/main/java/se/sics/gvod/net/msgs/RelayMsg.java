@@ -43,6 +43,7 @@ public class RelayMsg {
         public Base(VodAddress source, VodAddress destination, int clientId, int remoteId
                 , VodAddress nextDest, TimeoutId timeoutId) {
             super(source, destination, Transport.UDP, timeoutId);
+            assert(nextDest != null);
             this.nextDest = nextDest;
             this.remoteId = remoteId;
             this.clientId = clientId;
