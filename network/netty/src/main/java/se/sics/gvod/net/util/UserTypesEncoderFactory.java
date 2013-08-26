@@ -7,6 +7,8 @@ package se.sics.gvod.net.util;
 import io.netty.buffer.ByteBuf;
 
 import java.io.UnsupportedEncodingException;
+import java.net.Inet4Address;
+import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Collection;
@@ -267,13 +269,19 @@ public class UserTypesEncoderFactory {
             }
         } else {
             // TODO - this cannot be a 
-            bytes = addr.getIp().getAddress();
+            InetAddress ip = addr.getIp();
+            bytes = ip.getAddress();
             port = addr.getPort();
             id = addr.getId();
         }
         // sometimes you get Ipv6 addresses. Shouldn't happen, unless some uses
         // InetAddress.getLocalHost() to generate an IP address.
-        assert (bytes.length == 4);
+        if (bytes.length != 4) {
+            Logger.getGlobal().log(Level.WARNING, "IP Address encoding - IPV6 address seen: {0}", addr);
+            System.err.println("IP Address encoding - IPV6 address seen: " + addr);
+            throw new MessageEncodingException("Saw an IP v6 ip address: " + addr);
+        }
+        
         buffer.writeBytes(bytes);
         writeUnsignedintAsTwoBytes(buffer, port);
         buffer.writeInt(id);

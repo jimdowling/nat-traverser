@@ -94,6 +94,9 @@ public final class NtTesterMain extends ComponentDefinition {
     private Set<VodAddress> alreadyConnected = new HashSet<VodAddress>();
 
     public static void main(String[] args) {
+        
+        System.setProperty("java.net.preferIPv4Stack", "true");
+        
         // This initializes the Kompics runtime, and creates an instance of Root
         if (args.length < 3) {
             logger.info("Usage: <prog> upnp id bindIp bootstrapNode [openServer] [destId destNatType]");

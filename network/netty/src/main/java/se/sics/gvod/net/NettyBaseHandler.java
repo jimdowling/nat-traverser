@@ -3,6 +3,7 @@ package se.sics.gvod.net;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
+import java.net.Inet4Address;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import se.sics.gvod.net.events.NetworkException;
@@ -54,7 +55,9 @@ public abstract class NettyBaseHandler<I> extends SimpleChannelInboundHandler<I>
     }
 
     protected RewriteableMsg updateAddress(RewriteableMsg msg, ChannelHandlerContext ctx, InetSocketAddress remoteAddress) {
-        msg.getSource().setIp(remoteAddress.getAddress());
+        InetAddress ip = (Inet4Address) remoteAddress.getAddress();
+        
+        msg.getSource().setIp(ip);
         msg.getSource().setPort(remoteAddress.getPort());
 
         msg.getDestination().setIp(getAddress(ctx));
@@ -70,8 +73,12 @@ public abstract class NettyBaseHandler<I> extends SimpleChannelInboundHandler<I>
         return msg;
     }
 
+    // Should return an IPv4 address
 	protected InetAddress getAddress(ChannelHandlerContext ctx) {
-		return ((InetSocketAddress)ctx.channel().localAddress()).getAddress();
+             Channel c = ctx.channel();
+             SocketAddress s = c.localAddress();
+             InetSocketAddress i = (InetSocketAddress) s;
+            return (Inet4Address) i.getAddress();
 	}
 
 	protected int getPort(ChannelHandlerContext ctx) {
