@@ -75,7 +75,7 @@ public class VodConfig extends BaseCommandLineConfig {
     protected Option bootstrapRefreshOption;
     
     //Croupier parameters
-    public static final int CROUPIER_SHUFFLE_PERIOD = 5 * 1000;
+    public static final int CROUPIER_SHUFFLE_PERIOD = 10 * 1000;
     public static final int CROUPIER_SHUFFLE_LENGTH = 15;
     public static final int CROUPIER_VIEW_SIZE = 15;
 

@@ -238,6 +238,8 @@ public class Croupier extends MsgRetryComponent {
             logger.trace(compName + "SHUFFLE_REQ from {}. r={} public + {} private s={} public + {} private", new Object[]{srcAddress.getId(),
                 recPublicDescs.size(), recPrivateDescs.size(), toSendPublicDescs.size(), toSendPrivateDescs.size()});
 
+            logger.debug(compName + " Next dest is: " + msg.getNextDest());
+            
             ShuffleMsg.Response response = new ShuffleMsg.Response(self.getAddress(),
                     msg.getVodSource(), msg.getClientId(), msg.getRemoteId(),
                     msg.getNextDest(), msg.getTimeoutId(), RelayMsgNetty.Status.OK,
