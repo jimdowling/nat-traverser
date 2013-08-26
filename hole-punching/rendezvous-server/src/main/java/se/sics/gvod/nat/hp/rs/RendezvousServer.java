@@ -4,6 +4,7 @@
  */
 package se.sics.gvod.nat.hp.rs;
 
+import se.sics.gvod.timer.UUID;
 import se.sics.gvod.common.hp.HolePunching;
 import se.sics.gvod.common.hp.HPRole;
 import se.sics.gvod.common.hp.HPMechanism;

@@ -4,10 +4,6 @@
  */
 package se.sics.gvod.timer;
 
-import se.sics.gvod.timer.SchedulePeriodicTimeout;
-import se.sics.gvod.timer.ScheduleTimeout;
-import se.sics.gvod.timer.Timeout;
-
 
 /**
  * This class is used to filter timeouts to Vod components.

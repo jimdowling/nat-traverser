@@ -201,11 +201,11 @@ public class View {
     private void addEntry(ViewEntry entry) {
 
         // if the entry refers to a stun port, change it to the default port.
-        if (entry.getDescriptor().getVodAddress().getPort() == VodConfig.DEFAULT_STUN_PORT ||
-            entry.getDescriptor().getVodAddress().getPort() == VodConfig.DEFAULT_STUN_PORT_2) {
+        if (entry.getDescriptor().getVodAddress().getPort() == VodConfig.DEFAULT_STUN_PORT
+                || entry.getDescriptor().getVodAddress().getPort() == VodConfig.DEFAULT_STUN_PORT_2) {
             entry.getDescriptor().getVodAddress().getPeerAddress().setPort(VodConfig.DEFAULT_PORT);
         }
-        
+
         if (!entries.contains(entry)) {
             entries.add(entry);
             d2e.put(entry.getDescriptor().getVodAddress(), entry);

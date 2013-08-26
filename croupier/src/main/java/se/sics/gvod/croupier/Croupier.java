@@ -24,6 +24,7 @@ import java.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import se.sics.gvod.common.*;
+import se.sics.gvod.common.RTTStore.RTT;
 import se.sics.gvod.common.msgs.RelayMsgNetty;
 import se.sics.gvod.config.CroupierConfiguration;
 import se.sics.gvod.croupier.events.*;
@@ -176,6 +177,17 @@ public class Croupier extends MsgRetryComponent {
         public void handle(CroupierShuffleCycle event) {
             logger.trace(compName + "shuffle: Pub({})/Priv({})", publicView.size(),
                     privateView.size());
+            
+            // If I don't have any references to any public nodes, use RTT to see if I can
+            // find any
+            if (publicView.isEmpty()) {
+                List<RTT> n = RTTStore.getOnAvgBest(self.getId(), 5);
+                Set<VodDescriptor> nodes = new HashSet<VodDescriptor>();
+                for (RTT r : n) {
+                    nodes.add(new VodDescriptor(r.getAddress()));
+                }
+                publicView.initialize(nodes);
+            }
             VodAddress peer = selectPeerToShuffleWith();
 
             if (peer != null) {
