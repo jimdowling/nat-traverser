@@ -1,6 +1,7 @@
 package se.sics.gvod.common;
 
 import java.io.Serializable;
+import java.util.BitSet;
 import java.util.LinkedList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,6 +34,8 @@ public class VodDescriptor implements Comparable<VodDescriptor>, Serializable {
      */
     private int uploadRate;
     private long numberOfIndexEntries;
+    private int partitionsNumber;
+    private LinkedList<Boolean> partitionId = new LinkedList<Boolean>();
     /**
      * Don't serialize. Sender side of data request. Determines number of
      * outstanding requests that can be in-flight.
@@ -109,8 +112,12 @@ public class VodDescriptor implements Comparable<VodDescriptor>, Serializable {
                 VodConfig.LB_DEFAULT_PIPELINE_SIZE, VodConfig.DEFAULT_MTU);
     }
 
-    public VodDescriptor(VodAddress vodAddress, long numberOfIndexEntries) {
-        this(vodAddress, new UtilityVod(0), 0, 0, numberOfIndexEntries);
+    public VodDescriptor(VodAddress vodAddress, long numberOfIndexEntries, int partitionsNumber, LinkedList<Boolean> partitionId) {
+        this(vodAddress, new UtilityVod(0), 0, 0, numberOfIndexEntries, partitionsNumber, partitionId);
+    }
+
+    public VodDescriptor(VodAddress vodAddress, int partitionsNumber) {
+        this(vodAddress, new UtilityVod(0), 0, 0, 0, partitionsNumber, new LinkedList<Boolean>());
     }
     
     public VodDescriptor(VodAddress vodAddress, Utility utility, int age, int mtu) {
@@ -121,13 +128,17 @@ public class VodDescriptor implements Comparable<VodDescriptor>, Serializable {
                 VodConfig.LB_DEFAULT_PIPELINE_SIZE, mtu);
     }
 
-    public VodDescriptor(VodAddress vodAddress, Utility utility, int age, int mtu, long numberOfIndexEntries) {
+    public VodDescriptor(VodAddress vodAddress, Utility utility, int age, int mtu,
+                         long numberOfIndexEntries, int partitionsNumber, LinkedList<Boolean> partitionId) {
         this(vodAddress, age,
                 utility, 0, 0, new LinkedList<Block>(),
                 new CommunicationWindow(VodConfig.LB_WINDOW_SIZE,
                         VodConfig.LB_MAX_WINDOW_SIZE),
                 VodConfig.LB_DEFAULT_PIPELINE_SIZE, mtu);
         this.numberOfIndexEntries = numberOfIndexEntries;
+        this.partitionsNumber = partitionsNumber;
+        this.partitionId = partitionId;
+
     }
 
     public VodDescriptor(VodDescriptor descriptor, int age) {
@@ -350,6 +361,22 @@ public class VodDescriptor implements Comparable<VodDescriptor>, Serializable {
 
     public void setConnected(boolean connected) {
         this.connected = connected;
+    }
+
+    public void setPartitionsNumber(int partitionsNumber) {
+        this.partitionsNumber = partitionsNumber;
+    }
+
+    public LinkedList<Boolean> getPartitionId() {
+        return partitionId;
+    }
+
+    public void setPartitionId(LinkedList<Boolean> partitionId) {
+        this.partitionId = partitionId;
+    }
+
+    public int getPartitionsNumber() {
+        return partitionsNumber;
     }
 
     @Override

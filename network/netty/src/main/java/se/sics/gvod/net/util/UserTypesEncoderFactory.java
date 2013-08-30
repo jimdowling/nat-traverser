@@ -11,12 +11,8 @@ import java.net.Inet4Address;
 import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Set;
-import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -169,6 +165,17 @@ public class UserTypesEncoderFactory {
         UserTypesEncoderFactory.writeUtility(buffer, nodeDescriptor.getUtility());
         UserTypesEncoderFactory.writeUnsignedintAsTwoBytes(buffer, nodeDescriptor.getMtu());
         buffer.writeLong(nodeDescriptor.getNumberOfIndexEntries());
+        buffer.writeInt(nodeDescriptor.getPartitionsNumber());
+        writeBooleanLinkedList(buffer, nodeDescriptor.getPartitionId());
+    }
+
+    public static void writeBooleanLinkedList(ByteBuf buffer, LinkedList<Boolean> list) throws MessageEncodingException {
+        int partitionsLength = list.size();
+
+        buffer.writeInt(partitionsLength);
+        for(int i=0; i<partitionsLength; i++)
+            writeBoolean(buffer, list.get(i));
+
     }
 
     public static void writeCollectionInts(ByteBuf buffer,

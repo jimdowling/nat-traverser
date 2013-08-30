@@ -9,12 +9,8 @@ import io.netty.buffer.ByteBuf;
 import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.nio.ByteBuffer;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -293,7 +289,23 @@ public class UserTypesDecoderFactory {
         Utility utility = UserTypesDecoderFactory.readUtility(buffer);
         int mtu = UserTypesDecoderFactory.readUnsignedIntAsTwoBytes(buffer);
         long numberOfIndexEntries = buffer.readLong();
-        return new VodDescriptor(addr, utility, age, mtu, numberOfIndexEntries);
+        long numberOfEntries = buffer.readLong();
+        int partitionsNumber = buffer.readInt();
+
+        LinkedList<Boolean> partitionId = readBooleanLinkedList(buffer);
+
+        return new VodDescriptor(addr, utility, age, mtu, numberOfEntries, partitionsNumber, partitionId);
+    }
+
+    public static LinkedList<Boolean> readBooleanLinkedList(ByteBuf buffer) throws MessageDecodingException {
+        int partitionsLength = buffer.readInt();
+
+        LinkedList<Boolean> list = new LinkedList<Boolean>();
+
+        for(int i=0; i<partitionsLength; i++)
+            list.addLast(readBoolean(buffer));
+
+        return list;
     }
 
     public static List<VodDescriptor> readListVodNodeDescriptors(ByteBuf buffer)
