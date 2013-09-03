@@ -288,7 +288,6 @@ public class UserTypesDecoderFactory {
         int age = UserTypesDecoderFactory.readUnsignedIntAsTwoBytes(buffer);
         Utility utility = UserTypesDecoderFactory.readUtility(buffer);
         int mtu = UserTypesDecoderFactory.readUnsignedIntAsTwoBytes(buffer);
-        long numberOfIndexEntries = buffer.readLong();
         long numberOfEntries = buffer.readLong();
         int partitionsNumber = buffer.readInt();
 
