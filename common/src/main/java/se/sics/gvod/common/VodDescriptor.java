@@ -364,9 +364,11 @@ public class VodDescriptor implements Comparable<VodDescriptor>, Serializable {
 //    public void setPartitionsNumber(int partitionsNumber) {
 //        this.partitionsNumber = partitionsNumber;
 //    }
+
 //    public LinkedList<Boolean> getPartitionId() {
 //        return partitionId;
 //    }
+
 //    public void setPartitionId(LinkedList<Boolean> partitionId) {
 //        this.partitionId = partitionId;
 //    }
