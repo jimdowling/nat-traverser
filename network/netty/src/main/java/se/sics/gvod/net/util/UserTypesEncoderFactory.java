@@ -165,8 +165,8 @@ public class UserTypesEncoderFactory {
         UserTypesEncoderFactory.writeUtility(buffer, nodeDescriptor.getUtility());
         UserTypesEncoderFactory.writeUnsignedintAsTwoBytes(buffer, nodeDescriptor.getMtu());
         buffer.writeLong(nodeDescriptor.getNumberOfIndexEntries());
-        buffer.writeInt(nodeDescriptor.getPartitionsNumber());
-        writeBooleanLinkedList(buffer, nodeDescriptor.getPartitionId());
+//        buffer.writeInt(nodeDescriptor.getPartitionsNumber());
+//        writeBooleanLinkedList(buffer, nodeDescriptor.getPartitionId());
     }
 
     public static void writeBooleanLinkedList(ByteBuf buffer, LinkedList<Boolean> list) throws MessageEncodingException {
