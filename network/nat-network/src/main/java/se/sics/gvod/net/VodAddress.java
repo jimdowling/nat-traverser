@@ -494,8 +494,7 @@ public class VodAddress implements Serializable, Comparable {
 //    public int getPartitionIdLength() {
 //        return overlayId & 0x0000FFFF;
 //    }
-    public void setOverlayId(int overlayId) {
-        this.overlayId = overlayId;
+
     public int getPartitionId() {
         return (overlayId & 67043328) >>> 16;
     }
