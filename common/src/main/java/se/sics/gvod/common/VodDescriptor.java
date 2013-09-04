@@ -376,6 +376,14 @@ public class VodDescriptor implements Comparable<VodDescriptor>, Serializable {
 //    public int getPartitionsNumber() {
 //        return partitionsNumber;
 //    }
+
+//    public void setPartitionId(LinkedList<Boolean> partitionId) {
+//        this.partitionId = partitionId;
+//    }
+//
+//    public int getPartitionsNumber() {
+//        return partitionsNumber;
+//    }
     @Override
     public String toString() {
         return vodAddress.toString() + ":u(" + utility + ")";
