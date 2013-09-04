@@ -126,7 +126,16 @@ public class NatTraverser extends MsgRetryComponent {
     private StunServerConfiguration stunServerConfiguration;
     private StunClientConfiguration stunClientConfiguration;
     private ParentMakerConfiguration parentMakerConfig;
-    private Set<HPSessionKey> receivedRelays = new HashSet<HPSessionKey>();
+    // <UniqueIdOfRequest,<ids of nodes that sent requests>>
+    // When the NT receives a request, it makes an entry in the Map with 
+    // (<clientId,timeoutId>, <ids of nodes that sent requests>)
+    // If there is no HPSessionKey, the request is forwarded up and an id is entered into
+    // the value's HashSet. If another request arrives and it does not have its id in the
+    // HashSet, then the request is dropped, and its id is entered into the HashSet.
+    // If another request arrives and it does have its id in the
+    // HashSet, then the request is forwarded up (it's a retry request), and 
+    // all other ids (apart from its own) are removed from the HashSet.
+    private Map<HPSessionKey, Set<Integer>> receivedRelays = new HashMap<HPSessionKey, Set<Integer>>();
     // TODO: tell Cosmin, i got a concurrentModificationException, even though this map
     // is only accessed within this component. It is accessed by 3 handlers, one
     // from the timer port, 2 from network port. Is the timer port a problem?
@@ -144,7 +153,9 @@ public class NatTraverser extends MsgRetryComponent {
     }
 
     private class StunRetryTimeout extends Timeout {
+
         private final int nodeId;
+
         public StunRetryTimeout(ScheduleTimeout st, int nodeId) {
             super(st);
             this.nodeId = nodeId;
@@ -153,7 +164,6 @@ public class NatTraverser extends MsgRetryComponent {
         public int getNodeId() {
             return nodeId;
         }
-        
     }
 
     private static class HpProcess {
@@ -338,7 +348,7 @@ public class NatTraverser extends MsgRetryComponent {
     };
 
     private void sendDownDirectMsg(DirectMsg msg) {
-        if (msg.getVodDestination().isOpen()) { 
+        if (msg.getVodDestination().isOpen()) {
             // simply send the packet down
             delegator.doTrigger(msg, network);
         } else {
@@ -527,15 +537,29 @@ public class NatTraverser extends MsgRetryComponent {
                     timeoutId = msg.getTimeoutId().getId();
                 }
 
+                // Ignore duplicates.
+                // Note: it is easy to confuse a retry-msg with a duplicate relayed msg that
+                // came via a different relay server. We can differentiate them by looking at
+                // the relay server that forwarded the msg. 
+                // TODO: - maybe a 3-way handshake is really needed for relayed msgs to make
+                // them reliable and distinguish the difference retried msgs and duplicate requests
+                // via different relay servers.
                 HPSessionKey sk = new HPSessionKey(msg.getClientId(), timeoutId);
-                if (!receivedRelays.contains(sk)) {
-                    // only discard duplicates if TimeoutId is supported
-                    if (msg.getTimeoutId().isSupported()) {
-                        receivedRelays.add(sk);
-                        receivedRelaysIndex.put(System.currentTimeMillis(), sk);
+                Integer relayId = msg.getSource().getId();
+                if (!receivedRelays.containsKey(sk)
+                        || (receivedRelays.containsKey(sk)
+                        && receivedRelays.get(sk).contains(relayId))) {
+                    Set<Integer> ids = receivedRelays.get(sk);
+                    if (!receivedRelays.containsKey(sk)) {
+                        ids = new HashSet<Integer>();
+                        receivedRelays.put(sk, ids);
                     }
+                    ids.clear();
+                    ids.add(relayId);
+                    receivedRelaysIndex.put(System.currentTimeMillis(), sk);
                     delegator.doTrigger(msg, upperNet);
                 } else {
+                    receivedRelays.get(sk).add(relayId);
                     // silently discard duplicates as many requests will arrive via multiple relay servers
                     logger.debug(compName + msg.getClass()
                             + " relay msg discarded at {} from {} "
@@ -580,16 +604,16 @@ public class NatTraverser extends MsgRetryComponent {
     Handler<RelayMsgNetty.Response> handleRelayResponseDown = new Handler<RelayMsgNetty.Response>() {
         @Override
         public void handle(RelayMsgNetty.Response msg) {
-    
+
             // Send the response to the parent that I received the message from.
             // It should have an open NAT connection to the client.
             if (!self.isOpen() && msg.getNextDest().isOpen()) {
                 msg.rewriteDestination(msg.getNextDest().getPeerAddress());
             }
-    
+
             logger.debug("{} ClientId({}) handleRelayResponseDown (" + msg.getDestination().getId()
-                    + ") message class :" + msg.getClass().getName() + " - nextDest: " +
-                    msg.getNextDest(),
+                    + ") message class :" + msg.getClass().getName() + " - nextDest: "
+                    + msg.getNextDest(),
                     msg.getTimeoutId(), msg.getClientId());
 
             delegator.doTrigger(msg, network);
@@ -659,10 +683,13 @@ public class NatTraverser extends MsgRetryComponent {
             if (msg.getRemoteId() != self.getId()) {
                 relayMsg(msg);
             } else {
-                // Ignore duplicates
+                // Ignore duplicates. No need to differentiate between retries and 
+                // duplicates that arrive via different relay servers, as a oneway
+                // msg doesn't expect a reply. All that matters is that it is received 
+                // and executed once.
                 HPSessionKey sk = new HPSessionKey(msg.getClientId(), msg.getTimeoutId().getId());
-                if (!receivedRelays.contains(sk)) {
-                    receivedRelays.add(sk);
+                if (!receivedRelays.containsKey(sk)) {
+                    receivedRelays.put(sk, null);
                     receivedRelaysIndex.put(System.currentTimeMillis(), sk);
                     delegator.doTrigger(msg, upperNet);
                 } else {
@@ -761,10 +788,11 @@ public class NatTraverser extends MsgRetryComponent {
     }
 
     /**
-     * 
+     *
      * @param msg
-     * @param remoteId This may be either the destination node Id OR the id of the Relay msg destination (not next hop's id).
-     * @return 
+     * @param remoteId This may be either the destination node Id OR the id of
+     * the Relay msg destination (not next hop's id).
+     * @return
      */
     public boolean sendMsgUsingConnection(RewriteableMsg msg, int remoteId) {
         if (openedConnections.containsKey(remoteId)) {

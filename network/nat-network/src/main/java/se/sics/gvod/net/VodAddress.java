@@ -442,21 +442,10 @@ public class VodAddress implements Serializable, Comparable {
                 getNatBindingTimeout());
     }
 
-//    public boolean isNatTraversalPossible(VodAddress dest) {
-//        if (!isOpen() && !dest.isOpen()) {
-//            if (getFilteringPolicy() != Nat.FilteringPolicy.OPEN
-//                    && dest.getNat().getFilteringPolicy() != Nat.FilteringPolicy.OPEN) {
-//                if (getMappingPolicy() != Nat.MappingPolicy.ENDPOINT_INDEPENDENT
-//                        && dest.getNat().getMappingPolicy() != Nat.MappingPolicy.ENDPOINT_INDEPENDENT) {
-//                    if (getAllocationPolicy() == Nat.AllocationPolicy.RANDOM
-//                            && dest.getNat().getAllocationPolicy() == Nat.AllocationPolicy.RANDOM) {
-//                        return false;
-//                    }
-//                }
-//            }
-//        }
-//        return true;
-//    }
+    public boolean isHpPossible(VodAddress src) {
+        HolePunching hp = HpFeasability.isPossible(this, src);
+        return (hp == null) ? false : true;
+    }
 
     public HPMechanism getHpMechanism(VodAddress dest) {
         HolePunching hp = HpFeasability.isPossible(this, dest);

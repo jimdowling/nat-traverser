@@ -82,8 +82,8 @@ public final class Address implements Serializable, Comparable<Address> {
     public final String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append(nodeId).append("@").append(ip == null ? "null" : 
-                ip.getHostName()
-//                ip.getHostAddress()
+//                ip.getHostName()
+                ip.getHostAddress()
                 )
                 .append(":").append(port);
         return sb.toString();

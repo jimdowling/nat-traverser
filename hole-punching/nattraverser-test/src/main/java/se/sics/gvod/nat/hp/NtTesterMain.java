@@ -170,7 +170,7 @@ public final class NtTesterMain extends ComponentDefinition {
         subscribe(handlePing, natTraverser.getPositive(VodNetwork.class));
         subscribe(handlePong, natTraverser.getPositive(VodNetwork.class));
         subscribe(handleNtPortBindResponse, network.getPositive(NatNetworkControl.class));
-//        subscribe(handleFault, natTraverser.getControl());    
+        subscribe(handleFault, natTraverser.getControl());    
 //        subscribe(handleNettyFault, network.getControl());
         subscribe(handleHolePunchTimeout, timer.getPositive(Timer.class));
         subscribe(handleCroupierSample, croupier.getPositive(PeerSamplePort.class));
@@ -296,15 +296,15 @@ public final class NtTesterMain extends ComponentDefinition {
             logger.info("Total Success/Failure ratio is: {}/{}", numSuccess, numFail);
         }
     };
-//    public Handler<Fault> handleFault =
-//            new Handler<Fault>() {
-//        @Override
-//        public void handle(Fault ex) {
-//
-//            logger.debug(ex.getFault().toString());
-//            System.exit(-1);
-//        }
-//    };
+    public Handler<Fault> handleFault =
+            new Handler<Fault>() {
+        @Override
+        public void handle(Fault ex) {
+
+            logger.debug(ex.getFault().toString());
+            System.exit(-1);
+        }
+    };
     Handler<HolePunchTimeout> handleHolePunchTimeout = new Handler<HolePunchTimeout>() {
         @Override
         public void handle(HolePunchTimeout msg) {
@@ -322,7 +322,9 @@ public final class NtTesterMain extends ComponentDefinition {
                 if (alreadyConnected.contains(va) == false) {
                     // try and send a msg to the new VodAddress if it is private and
                     // has parents
-                    if (va.isOpen() == false && va.getParents().size() >= 1) {
+                    if (va.isOpen() == false && va.getParents().size() >= 1 &&
+                            va.isHpPossible(self.getAddress())) 
+                    {
                         ScheduleTimeout st = new ScheduleTimeout(10 * 1000);
                         HolePunchTimeout hp = new HolePunchTimeout(st);
                         st.setTimeoutEvent(hp);

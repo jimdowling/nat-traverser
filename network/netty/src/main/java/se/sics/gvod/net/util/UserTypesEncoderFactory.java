@@ -284,7 +284,6 @@ public class UserTypesEncoderFactory {
         // sometimes you get Ipv6 addresses. Shouldn't happen, unless some uses
         // InetAddress.getLocalHost() to generate an IP address.
         if (bytes.length != 4) {
-            Logger.getGlobal().log(Level.WARNING, "IP Address encoding - IPV6 address seen: {0}", addr);
             System.err.println("IP Address encoding - IPV6 address seen: " + addr);
             throw new MessageEncodingException("Saw an IP v6 ip address: " + addr);
         }

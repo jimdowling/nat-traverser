@@ -271,8 +271,6 @@ public class Croupier extends MsgRetryComponent {
 
                 CroupierStats.instance(self).incShuffleResp();
 
-
-                
                 Long timeStarted = shuffleTimes.remove(event.getTimeoutId().getId());
                 if (timeStarted != null) {
                     RTTStore.addSample(self.getId(), event.getVodSource(),

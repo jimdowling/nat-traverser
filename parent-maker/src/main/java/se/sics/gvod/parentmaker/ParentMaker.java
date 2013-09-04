@@ -79,6 +79,7 @@ public class ParentMaker extends MsgRetryComponent {
     Map<VodAddress, Connection> connections = new HashMap<VodAddress, Connection>();
     Map<Address, Long> rejections = new HashMap<Address, Long>();
     private Map<TimeoutId, Long> requestStartTimes = new HashMap<TimeoutId, Long>();
+    private Set<Integer> outstandingParentRequests = new HashSet<Integer>();
     private ParentMakerConfiguration config;
     private long needParentsRoundTimeout, fullParentsRoundTimeout = 60 * 1000;
     private TimeoutId periodicTimeoutId;
@@ -218,6 +219,12 @@ public class ParentMaker extends MsgRetryComponent {
     Handler<ParentMakerCycle> handleCycle = new Handler<ParentMakerCycle>() {
         @Override
         public void handle(ParentMakerCycle e) {
+
+            // Print out list of parents periodically
+            if (count % 3 == 0) {
+                logger.debug(compName + getParentsAsStr());
+            }
+            
             List<RTT> currentRtts = getCurrentRtts();
 
             if (count++ > 5 && self.getParents().isEmpty()) {
@@ -232,7 +239,8 @@ public class ParentMaker extends MsgRetryComponent {
                             config.getParentSize(),
                             rejections.keySet()).size());
                 }
-            }
+            } 
+            
 
 
             List<RTT> betterRtts;
@@ -458,6 +466,12 @@ public class ParentMaker extends MsgRetryComponent {
             logger.debug(compName + " trying to re-add the parent: " + hpServer);
             return;
         }
+        
+        if (outstandingParentRequests.contains(hpServer.getId())){
+            logger.trace(compName + " connection request already ongoing for the parent: " + hpServer);
+            return;
+        }
+        
         if (hpServer.getId() == self.getId()) {
             logger.debug(compName + " trying to add myself as a parent.");
             return;
@@ -478,10 +492,13 @@ public class ParentMaker extends MsgRetryComponent {
         TimeoutId id = delegator.doRetry(requestTimeout);
         logger.debug(compName + "HpRegisterMsg.Request sent to " + hpServer);
         requestStartTimes.put(id, System.currentTimeMillis());
+        outstandingParentRequests.add(hpServer.getId());
     }
     Handler<HpRegisterMsg.Response> handleHpRegisterMsgResponse = new Handler<HpRegisterMsg.Response>() {
         @Override
         public void handle(HpRegisterMsg.Response event) {
+            
+            outstandingParentRequests.remove(event.getSource().getId());
             // discard duplicate responses or late responses - unless I don't have any parents
             if (delegator.doCancelRetry(event.getTimeoutId()) || connections.isEmpty()) {
                 CroupierStats.instance(self.clone(VodConfig.SYSTEM_OVERLAY_ID)).parentChangeEvent(event.getSource(),
@@ -578,6 +595,9 @@ public class ParentMaker extends MsgRetryComponent {
             new Handler<HpRegisterMsg.RequestRetryTimeout>() {
         @Override
         public void handle(HpRegisterMsg.RequestRetryTimeout event) {
+            
+            outstandingParentRequests.remove(event.getRequest().getDestination().getId());            
+            
             if (delegator.doCancelRetry(event.getTimeoutId())) {
                 CroupierStats.instance(self.clone(VodConfig.SYSTEM_OVERLAY_ID)).parentChangeEvent(event.getRequest().getDestination(),
                         RegisterStatus.PARENT_REQUEST_FAILED);
