@@ -468,29 +468,60 @@ public class VodAddress implements Serializable, Comparable {
         this.transport = transport;
     }
 
-    public static int encodePartitionAndCategoryIdAsInt(int partitionId, int categoryId) {
-        if (partitionId >= Math.pow(2, 16) || partitionId < 0) {
-            throw new RuntimeException("Partition id cannot be in the interval (0, 65535)");
-        }
-        if (categoryId >= Math.pow(2, 16) || categoryId < 0) {
-            throw new RuntimeException("Category id cannot be in the interval (0, 65535)");
-        }
-
-        int val = categoryId << 16;
-        val = val | partitionId;
-
-        return val;
-    }
-
-    public int getCategoryId() {
-        int val = overlayId & 0xFFFF0000;
-        return val >>> 16;
-    }
+//
+//    public int getCategoryId() {
+//        int val = overlayId & 0xFFFF0000;
+//        return val >>> 16;
+//    }
 
 //    public int getPartitionIdLength() {
 //        return overlayId & 0x0000FFFF;
 //    }
+
     public void setOverlayId(int overlayId) {
         this.overlayId = overlayId;
+    }
+
+    //
+    // partitioningType - 2 bits
+    // partitionIdDepth - 9 bits
+    // partitionId - 9 bits
+    // categoryId - 12 bits
+    //
+
+    public int getCategoryId() {
+        return overlayId & 4095;
+    }
+
+    public int getPartitionId() {
+        return (overlayId & 2093056) >>> 12;
+    }
+
+    public int getPartitionIdDepth() {
+        return (overlayId & 1071644672) >>> 21;
+    }
+
+    public int getPartitioningType() {
+        return (overlayId & -1073741824) >>> 30;
+    }
+
+    public int encodePartitionDataAndCategoryIdAsInt(int partitioningType, int partitionIdDepth,
+                                                     int partitionId, int categoryId) {
+        if(partitioningType > 3 || partitioningType < 0)
+            throw new IllegalArgumentException("partitionType must be between 0 and 3");
+        if(partitionIdDepth > 511 || partitionIdDepth < 0)
+            throw new IllegalArgumentException("partitionIdDepth must be between 0 and 511");
+        if(partitionId > 511 || partitionId < 0)
+            throw new IllegalArgumentException("partitionId must be between 0 and 511");
+        if(categoryId > 4095 || categoryId < 0)
+            throw new IllegalArgumentException("categoryId must be between 0 and 4095");
+
+        int result = partitioningType << 30;
+        result = result | (partitionIdDepth << 21);
+        result = result | (partitionId << 12);
+        result = result | categoryId;
+
+
+        return result;
     }
 }
