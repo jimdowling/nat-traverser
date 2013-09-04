@@ -501,8 +501,8 @@ public class VodAddress implements Serializable, Comparable {
         return (overlayId & 1006632960) >>> 26;
     }
 
-    public int getPartitioningType() {
-        return (overlayId & -1073741824) >>> 30;
+    public PartitioningType getPartitioningType() {
+        return PartitioningType.values()[(overlayId & -1073741824) >>> 30];
     }
 
     public static int encodePartitionDataAndCategoryIdAsInt(int partitioningType, int partitionIdDepth,
