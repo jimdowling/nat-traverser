@@ -487,13 +487,13 @@ public class VodAddress implements Serializable, Comparable {
 
     //
     // partitioningType - 2 bits
-    // partitionIdDepth - 9 bits
-    // partitionId - 9 bits
-    // categoryId - 12 bits
+    // partitionIdDepth - 4 bits
+    // partitionId - 10 bits
+    // categoryId - 16 bits
     //
 
     public int getCategoryId() {
-        return overlayId & 4095;
+        return overlayId & 65535;
     }
 
 //    public int getPartitionIdLength() {
@@ -501,31 +501,31 @@ public class VodAddress implements Serializable, Comparable {
 //    }
 
     public int getPartitionId() {
-        return (overlayId & 2093056) >>> 12;
+        return (overlayId & 67043328) >>> 16;
     }
 
     public int getPartitionIdDepth() {
-        return (overlayId & 1071644672) >>> 21;
+        return (overlayId & 1006632960) >>> 26;
     }
 
     public int getPartitioningType() {
         return (overlayId & -1073741824) >>> 30;
     }
 
-    public int encodePartitionDataAndCategoryIdAsInt(int partitioningType, int partitionIdDepth,
+    public static int encodePartitionDataAndCategoryIdAsInt(int partitioningType, int partitionIdDepth,
                                                      int partitionId, int categoryId) {
         if(partitioningType > 3 || partitioningType < 0)
             throw new IllegalArgumentException("partitionType must be between 0 and 3");
-        if(partitionIdDepth > 511 || partitionIdDepth < 0)
-            throw new IllegalArgumentException("partitionIdDepth must be between 0 and 511");
-        if(partitionId > 511 || partitionId < 0)
-            throw new IllegalArgumentException("partitionId must be between 0 and 511");
-        if(categoryId > 4095 || categoryId < 0)
-            throw new IllegalArgumentException("categoryId must be between 0 and 4095");
+        if(partitionIdDepth > 15 || partitionIdDepth < 0)
+            throw new IllegalArgumentException("partitionIdDepth must be between 0 and 15");
+        if(partitionId > 1023 || partitionId < 0)
+            throw new IllegalArgumentException("partitionId must be between 0 and 1023");
+        if(categoryId > 65535 || categoryId < 0)
+            throw new IllegalArgumentException("categoryId must be between 0 and 65535");
 
         int result = partitioningType << 30;
-        result = result | (partitionIdDepth << 21);
-        result = result | (partitionId << 12);
+        result = result | (partitionIdDepth << 26);
+        result = result | (partitionId << 16);
         result = result | categoryId;
 
         return result;
