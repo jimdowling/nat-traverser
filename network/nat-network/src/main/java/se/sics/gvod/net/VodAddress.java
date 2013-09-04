@@ -516,9 +516,9 @@ public class VodAddress implements Serializable, Comparable {
         if(categoryId > 65535 || categoryId < 0)
             throw new IllegalArgumentException("categoryId must be between 0 and 65535");
 
-        int result = partitioningType.ordinal() << 30;
-        result = result | (partitionIdDepth << 26);
-        result = result | (partitionId << 16);
+        int result = partitioningType << 30;
+        result = result | (partitionIdDepth << 21);
+        result = result | (partitionId << 12);
         result = result | categoryId;
 
 
