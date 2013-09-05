@@ -110,7 +110,8 @@ public class VodDescriptor implements Comparable<VodDescriptor>, Serializable {
                 VodConfig.LB_DEFAULT_PIPELINE_SIZE, VodConfig.DEFAULT_MTU);
     }
 
-    public VodDescriptor(VodAddress vodAddress, long numberOfIndexEntries) {
+    public VodDescriptor(VodAddress vodAddress, long numberOfIndexEntries, 
+            PartitioningType partitionsNumber, LinkedList<Boolean> partitionId) {
         this(vodAddress, new UtilityVod(0), 0, 0, numberOfIndexEntries);
     }
 
@@ -123,11 +124,11 @@ public class VodDescriptor implements Comparable<VodDescriptor>, Serializable {
     }
 
     public VodDescriptor(VodAddress vodAddress, Utility utility, int age, int mtu,
-                         long numberOfIndexEntries) {
+            long numberOfIndexEntries) {
         this(vodAddress, age,
                 utility, 0, 0, new LinkedList<Block>(),
                 new CommunicationWindow(VodConfig.LB_WINDOW_SIZE,
-                        VodConfig.LB_MAX_WINDOW_SIZE),
+                VodConfig.LB_MAX_WINDOW_SIZE),
                 VodConfig.LB_DEFAULT_PIPELINE_SIZE, mtu);
         this.numberOfIndexEntries = numberOfIndexEntries;
 
@@ -297,10 +298,11 @@ public class VodDescriptor implements Comparable<VodDescriptor>, Serializable {
         return result;
     }
 
-    /** 
+    /**
      * Two ViewEntries are equivalent if their VodAddresses are the same.
+     *
      * @param obj
-     * @return 
+     * @return
      */
     @Override
     public boolean equals(Object obj) {
@@ -363,11 +365,9 @@ public class VodDescriptor implements Comparable<VodDescriptor>, Serializable {
 //    public void setPartitionsNumber(int partitionsNumber) {
 //        this.partitionsNumber = partitionsNumber;
 //    }
-
 //    public LinkedList<Boolean> getPartitionId() {
 //        return partitionId;
 //    }
-
 //    public void setPartitionId(LinkedList<Boolean> partitionId) {
 //        this.partitionId = partitionId;
 //    }
@@ -375,7 +375,6 @@ public class VodDescriptor implements Comparable<VodDescriptor>, Serializable {
 //    public int getPartitionsNumber() {
 //        return partitionsNumber;
 //    }
-
     @Override
     public String toString() {
         return vodAddress.toString() + ":u(" + utility + ")";
