@@ -502,8 +502,8 @@ public class VodAddress implements Serializable, Comparable {
 
     public static int encodePartitionDataAndCategoryIdAsInt(PartitioningType partitioningType, int partitionIdDepth,
                                                      int partitionId, int categoryId) {
-        if(partitionIdDepth > 15 || partitionIdDepth < 0)
-            throw new IllegalArgumentException("partitionIdDepth must be between 0 and 15");
+        if(partitionIdDepth > 15 || partitionIdDepth < 1)
+            throw new IllegalArgumentException("partitionIdDepth must be between 1 and 15");
         if(partitionId > 1023 || partitionId < 0)
             throw new IllegalArgumentException("partitionId must be between 0 and 1023");
         if(categoryId > 65535 || categoryId < 0)
