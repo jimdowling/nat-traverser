@@ -17,7 +17,7 @@ import se.sics.gvod.net.VodAddress;
 public abstract class SelfBase implements Self {
 
     protected final int nodeId;
-    protected final int overlayId;
+    protected int overlayId;
     protected final int port;
     
     public SelfBase(Nat nat, InetAddress ip, int port, int nodeId, int overlayId) {

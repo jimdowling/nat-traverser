@@ -30,7 +30,6 @@ public class SelfImpl extends SelfBase
     }
     
     
-    
     @Override
     public Utility getUtility() {
         return VodView.getPeerUtility(this);
