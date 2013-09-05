@@ -18,7 +18,7 @@ public abstract class SelfBase implements Self {
 
     protected final InetAddress ip;
     protected final int nodeId;
-    protected final int overlayId;
+    protected int overlayId;
     protected final int port;
     protected final Address addr;
     
