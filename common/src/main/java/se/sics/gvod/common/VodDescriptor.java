@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import se.sics.gvod.config.BaseCommandLineConfig;
 import se.sics.gvod.config.VodConfig;
+import se.sics.gvod.net.PartitioningType;
 import se.sics.gvod.net.VodAddress;
 
 public class VodDescriptor implements Comparable<VodDescriptor>, Serializable {
@@ -109,7 +110,7 @@ public class VodDescriptor implements Comparable<VodDescriptor>, Serializable {
                 VodConfig.LB_DEFAULT_PIPELINE_SIZE, VodConfig.DEFAULT_MTU);
     }
 
-    public VodDescriptor(VodAddress vodAddress, long numberOfIndexEntries) {
+    public VodDescriptor(VodAddress vodAddress, long numberOfIndexEntries, PartitioningType partitionsNumber, LinkedList<Boolean> partitionId) {
         this(vodAddress, new UtilityVod(0), 0, 0, numberOfIndexEntries);
     }
 
