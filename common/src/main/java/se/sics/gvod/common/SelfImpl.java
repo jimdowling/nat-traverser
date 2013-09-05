@@ -29,7 +29,6 @@ public class SelfImpl extends SelfBase
         super(nat, ip, port, nodeId, overlayId);
     }
     
-    
     @Override
     public Utility getUtility() {
         return VodView.getPeerUtility(this);
