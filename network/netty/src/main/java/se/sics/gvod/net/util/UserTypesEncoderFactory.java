@@ -165,8 +165,6 @@ public class UserTypesEncoderFactory {
         UserTypesEncoderFactory.writeUtility(buffer, nodeDescriptor.getUtility());
         UserTypesEncoderFactory.writeUnsignedintAsTwoBytes(buffer, nodeDescriptor.getMtu());
         buffer.writeLong(nodeDescriptor.getNumberOfIndexEntries());
-//        buffer.writeInt(nodeDescriptor.getPartitionsNumber());
-//        writeBooleanLinkedList(buffer, nodeDescriptor.getPartitionId());
     }
 
     public static void writeBooleanLinkedList(ByteBuf buffer, LinkedList<Boolean> list) throws MessageEncodingException {
@@ -284,7 +282,7 @@ public class UserTypesEncoderFactory {
         // sometimes you get Ipv6 addresses. Shouldn't happen, unless some uses
         // InetAddress.getLocalHost() to generate an IP address.
         if (bytes.length != 4) {
-            Logger.getGlobal().log(Level.WARNING, "IP Address encoding - IPV6 address seen: {0}", addr);
+            Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).log(Level.WARNING, "IP Address encoding - IPV6 address seen: {0}", addr);
             System.err.println("IP Address encoding - IPV6 address seen: " + addr);
             throw new MessageEncodingException("Saw an IP v6 ip address: " + addr);
         }
