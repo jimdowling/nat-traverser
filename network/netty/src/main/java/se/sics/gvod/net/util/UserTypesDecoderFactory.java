@@ -22,6 +22,7 @@ import se.sics.gvod.common.UtilityVod;
 import se.sics.gvod.common.VodDescriptor;
 import se.sics.gvod.common.msgs.MessageDecodingException;
 import se.sics.gvod.net.Nat;
+import se.sics.gvod.net.PartitioningType;
 import se.sics.gvod.net.VodAddress;
 import se.sics.gvod.timer.NoTimeoutId;
 import se.sics.gvod.timer.TimeoutId;
@@ -289,11 +290,8 @@ public class UserTypesDecoderFactory {
         Utility utility = UserTypesDecoderFactory.readUtility(buffer);
         int mtu = UserTypesDecoderFactory.readUnsignedIntAsTwoBytes(buffer);
         long numberOfEntries = buffer.readLong();
-        int partitionsNumber = buffer.readInt();
 
-        LinkedList<Boolean> partitionId = readBooleanLinkedList(buffer);
-
-        return new VodDescriptor(addr, utility, age, mtu, numberOfEntries, partitionsNumber, partitionId);
+        return new VodDescriptor(addr, utility, age, mtu, numberOfEntries);
     }
 
     public static LinkedList<Boolean> readBooleanLinkedList(ByteBuf buffer) throws MessageDecodingException {
