@@ -54,6 +54,10 @@ public class SelfImpl extends SelfBase
         return port;
     }
 
+    public void setOverlayId(int overlayId) {
+        this.overlayId = overlayId;
+    }
+
     @Override
     public InetAddress getIp() {
         return ip;
