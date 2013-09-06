@@ -835,10 +835,10 @@ public class HpClient extends MsgRetryComponent {
             HpSession session = hpSessions.get(remoteId);
             if (session == null) {
                 Set<Address> zServers = new HashSet<Address>();
-                for (Address p : request.getVodSource().getParents()) {
-                    zServers.add(p);
+                for (Address p :request.getVodSource().getParents()) {
+                    zServers.add(null);
                 }
-                session = new HpSession(remoteId, null, null, config.getScanRetries(), config.isScanningEnabled()
+                session = new HpSession(remoteId, zServers, null, config.getScanRetries(), config.isScanningEnabled()
                         , System.currentTimeMillis()
                         , request.getMsgTimeoutId());
             }
