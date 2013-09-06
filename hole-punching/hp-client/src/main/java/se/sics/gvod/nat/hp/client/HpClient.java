@@ -825,15 +825,20 @@ public class HpClient extends MsgRetryComponent {
             String compName = HpClient.this.compName + " - " + request.getMsgTimeoutId() + " - ";
 
             int remoteId = request.getClientId();
-            logger.debug(compName + " Hole Punching Request Message Recvd from id: ("
-                    + remoteId + ")");
+            logger.debug(compName + " Hole Punching Request Message Recvd from: ("
+                    + request.getSource() + ")");
 
             if (openedConnections.containsKey(remoteId) == true) {
                 logger.debug(compName + " Hole Punched connection already established with " + remoteId);
             }
 
             HpSession session = hpSessions.get(remoteId);
-            if (session != null) {
+            if (session == null) {
+                session = new HpSession(remoteId, null, null, config.getScanRetries(), config.isScanningEnabled()
+                        , System.currentTimeMillis()
+                        , request.getMsgTimeoutId());
+            }
+//            if (session != null) {
                 // Remove the session after 30 seconds.
                 logger.debug(compName + "Removing session key in 30s.");
                 ScheduleTimeout scheduleTimeout = new ScheduleTimeout(30 * 1000);
@@ -843,10 +848,10 @@ public class HpClient extends MsgRetryComponent {
                 delegator.doTrigger(scheduleTimeout, timer);
                 //                int port = (session.getPortInUse() == 0) ? request.getVodDestination().getPort()
 //                        : self.getPort();
-                int port = request.getVodDestination().getPort();
+                int srcPort = request.getVodDestination().getPort();
 
                 // sending the response to the remote client
-                Address srcAddress = new Address(self.getIp(), port, self.getId());
+                Address srcAddress = new Address(self.getIp(), srcPort, self.getId());
                 VodAddress sourceAddress = new VodAddress(srcAddress, self.getOverlayId(),
                         self.getNat(), self.getParents());
                 logger.debug(compName + "sending back response to (" 
@@ -872,7 +877,7 @@ public class HpClient extends MsgRetryComponent {
                             null,
                             HPMechanism.CONNECTION_REVERSAL,
                             HPRole.CONNECTION_REVERSAL_OPEN,
-                            port,
+                            srcPort,
                             request.getSource(), null,
                             request.getVodSource().getNatBindingTimeout(),
                             heartbeatConnection, null);
@@ -896,10 +901,10 @@ public class HpClient extends MsgRetryComponent {
                         logger.debug(compName + "no need to send HpMsg.Request response to the upper component");
                     }
                 }
-            } else {
-                logger.warn(compName + "ERROR: Session not found session key " + remoteId
-                        + " - " + request.getMsgTimeoutId());
-            }
+//            } else {
+//                logger.warn(compName + "ERROR: I did not request this Session. Session key not found " + remoteId
+//                        + " - " + request.getMsgTimeoutId());
+//            }
         }
     };
     Handler<HolePunchingMsg.Response> handleHolePunchingMsgResponse = new Handler<HolePunchingMsg.Response>() {
