@@ -79,6 +79,8 @@ import se.sics.gvod.timer.SchedulePeriodicTimeout;
 import se.sics.gvod.timer.ScheduleTimeout;
 import se.sics.gvod.timer.Timeout;
 import se.sics.gvod.common.hp.HPSessionKey;
+import se.sics.gvod.common.hp.HolePunching;
+import se.sics.gvod.common.hp.HpFeasability;
 import se.sics.gvod.common.msgs.DirectMsgNetty;
 import se.sics.gvod.config.BaseCommandLineConfig;
 import se.sics.gvod.config.StunServerConfiguration;
@@ -413,28 +415,38 @@ public class NatTraverser extends MsgRetryComponent {
             initializeServerComponents(event.getNodes());
         }
     };
+    
+    
+    private void forwardMsgUp(DirectMsgNetty.Base msg) {
+            logger.trace("handleLowerMessage src (" + msg.getSource()
+                    + ") message class :" + msg.getClass().getName());
+            if (!openedConnections.containsKey(msg.getSource().getId())) {
+                HolePunching hp = HpFeasability.isPossible(self.getAddress(),msg.getVodSource());
+                OpenedConnection oc = new OpenedConnection(null, hp.getHolePunchingMechanism(),
+                        hp.getClient_A_HPRole(), msg.getSource().getPort(),
+                        msg.getSource(), null, Nat.DEFAULT_RULE_EXPIRATION_TIME,
+                        false, null);
+                openedConnections.put(msg.getSource().getId(), oc);
+            }
+            delegator.doTrigger(msg, upperNet);
+    }
+
     Handler<DirectMsgNetty.Request> handleLowerDirectMsgRequest = new Handler<DirectMsgNetty.Request>() {
         @Override
         public void handle(DirectMsgNetty.Request msg) {
-            logger.trace("handleLowerMessage src (" + msg.getSource()
-                    + ") message class :" + msg.getClass().getName());
-            delegator.doTrigger(msg, upperNet);
+            forwardMsgUp(msg);
         }
     };
     Handler<DirectMsgNetty.Response> handleLowerDirectMsgResponse = new Handler<DirectMsgNetty.Response>() {
         @Override
         public void handle(DirectMsgNetty.Response msg) {
-            logger.trace("handleLowerMessage src (" + msg.getSource()
-                    + ") message class :" + msg.getClass().getName());
-            delegator.doTrigger(msg, upperNet);
+            forwardMsgUp(msg);
         }
     };
     Handler<DirectMsgNetty.Oneway> handleLowerDirectMsgOneway = new Handler<DirectMsgNetty.Oneway>() {
         @Override
         public void handle(DirectMsgNetty.Oneway msg) {
-            logger.trace("handleLowerMessage src (" + msg.getSource()
-                    + ") message class :" + msg.getClass().getName());
-            delegator.doTrigger(msg, upperNet);
+            forwardMsgUp(msg);
         }
     };
     Handler<ConnectionEstablishmentTimeout> handleConnectionEstablishmentTimeout = new Handler<ConnectionEstablishmentTimeout>() {
