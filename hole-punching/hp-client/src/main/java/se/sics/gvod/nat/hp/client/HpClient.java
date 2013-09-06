@@ -833,16 +833,16 @@ public class HpClient extends MsgRetryComponent {
             }
 
             HpSession session = hpSessions.get(remoteId);
-            if (session == null) {
-                Set<Address> zServers = new HashSet<Address>();
-                for (Address p :request.getVodSource().getParents()) {
-                    zServers.add(null);
-                }
-                session = new HpSession(remoteId, zServers, null, config.getScanRetries(), config.isScanningEnabled()
-                        , System.currentTimeMillis()
-                        , request.getMsgTimeoutId());
-            }
-//            if (session != null) {
+//            if (session == null) {
+//                Set<Address> zServers = new HashSet<Address>();
+//                for (Address p :request.getVodSource().getParents()) {
+//                    zServers.add(null);
+//                }
+//                session = new HpSession(remoteId, zServers, null, config.getScanRetries(), config.isScanningEnabled()
+//                        , System.currentTimeMillis()
+//                        , request.getMsgTimeoutId());
+//            }
+            if (session != null) {
                 // Remove the session after 30 seconds.
                 logger.debug(compName + "Removing session key in 30s.");
                 ScheduleTimeout scheduleTimeout = new ScheduleTimeout(30 * 1000);
@@ -905,10 +905,10 @@ public class HpClient extends MsgRetryComponent {
                         logger.debug(compName + "no need to send HpMsg.Request response to the upper component");
                     }
                 }
-//            } else {
-//                logger.warn(compName + "ERROR: I did not request this Session. Session key not found " + remoteId
-//                        + " - " + request.getMsgTimeoutId());
-//            }
+            } else {
+                logger.warn(compName + "ERROR: I did not request this Session. Session key not found " + remoteId
+                        + " - " + request.getMsgTimeoutId());
+            }
         }
     };
     Handler<HolePunchingMsg.Response> handleHolePunchingMsgResponse = new Handler<HolePunchingMsg.Response>() {
