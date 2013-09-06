@@ -830,7 +830,6 @@ public class HpClient extends MsgRetryComponent {
 
             if (openedConnections.containsKey(remoteId) == true) {
                 logger.debug(compName + " Hole Punched connection already established with " + remoteId);
-                return;
             }
 
             HpSession session = hpSessions.get(remoteId);
@@ -843,11 +842,9 @@ public class HpClient extends MsgRetryComponent {
                         new DeleteSessionTimeout(scheduleTimeout, remoteId);
                 scheduleTimeout.setTimeoutEvent(dst);
                 delegator.doTrigger(scheduleTimeout, timer);
-
                 //                int port = (session.getPortInUse() == 0) ? request.getVodDestination().getPort()
 //                        : self.getPort();
                 int port = request.getVodDestination().getPort();
-
 
                 // sending the response to the remote client
                 Address srcAddress = new Address(self.getIp(), port, self.getId());
@@ -862,39 +859,43 @@ public class HpClient extends MsgRetryComponent {
                 HolePunchingMsg.ResponseRetryTimeout hrrt = new HolePunchingMsg.ResponseRetryTimeout(st, hpResponse);
                 delegator.doRetry(hrrt);
 
-                OpenConnectionRequest req = session.getOpenConnectionRequest();
-                boolean heartbeatConnection =
-                        (req == null) ? false : req.isKeepConnectionOpenWithHeartbeat();
 
-                // Save the connection
-                OpenedConnection openedConnection = new OpenedConnection(
-                        null,
-                        HPMechanism.CONNECTION_REVERSAL,
-                        HPRole.CONNECTION_REVERSAL_OPEN,
-                        port,
-                        request.getSource(), null,
-                        request.getVodSource().getNatBindingTimeout(),
-                        heartbeatConnection, null);
+                // if the connection is not already opened, then send response
+                if (!openedConnections.containsKey(remoteId)) {
 
-                openedConnections.put(remoteId, openedConnection);
+                    OpenConnectionRequest req = session.getOpenConnectionRequest();
+                    boolean heartbeatConnection =
+                            (req == null) ? false : req.isKeepConnectionOpenWithHeartbeat();
 
-                if (req != null) {
-                    logger.debug(compName + "sending response to the outer component from hp-ack-ack. remote client id ("
-                            + request.getClientId() + ")");
-                    sendOpenConnectionResponseMessage(req,
-                            request.getVodSource(),
-                            OpenConnectionResponseType.OK,
-                            session.getHolePunchingMechanism(),
-                            request.getMsgTimeoutId());
-                    HPStats stats = hpStats.get(session.getHolePunchingMechanism());
-                    if (stats != null) {
-                        stats.incrementSuccessCounter();
+                    // Save the connection
+                    OpenedConnection openedConnection = new OpenedConnection(
+                            null,
+                            HPMechanism.CONNECTION_REVERSAL,
+                            HPRole.CONNECTION_REVERSAL_OPEN,
+                            port,
+                            request.getSource(), null,
+                            request.getVodSource().getNatBindingTimeout(),
+                            heartbeatConnection, null);
+
+                    openedConnections.put(remoteId, openedConnection);
+
+                    if (req != null) {
+                        logger.debug(compName + "sending response to the outer component from hp-ack-ack. remote client id ("
+                                + request.getClientId() + ")");
+                        sendOpenConnectionResponseMessage(req,
+                                request.getVodSource(),
+                                OpenConnectionResponseType.OK,
+                                session.getHolePunchingMechanism(),
+                                request.getMsgTimeoutId());
+                        HPStats stats = hpStats.get(session.getHolePunchingMechanism());
+                        if (stats != null) {
+                            stats.incrementSuccessCounter();
+                        }
+                    } else {
+                        // no need to send response to the upper component
+                        logger.debug(compName + "no need to send HpMsg.Request response to the upper component");
                     }
-                } else {
-                    // no need to send response to the upper component
-                    logger.debug(compName + "no need to send HpMsg.Request response to the upper component");
                 }
-
             } else {
                 logger.warn(compName + "ERROR: Session not found session key " + remoteId
                         + " - " + request.getMsgTimeoutId());
@@ -1141,7 +1142,7 @@ public class HpClient extends MsgRetryComponent {
                                     OpenConnectionResponseType.REMOTE_PEER_FAILED,
                                     session.getHolePunchingMechanism(),
                                     requestMsg.getMsgTimeoutId());
-                        } 
+                        }
                         // terminate session
                         // TODO: Jim - when we get a duplicate connection request, this
                         // gives us a problem. Remove session using timer later?

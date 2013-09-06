@@ -459,7 +459,7 @@ public class RendezvousServer extends MsgRetryComponent {
                     responseType = OpenConnectionResponseType.NAT_COMBINATION_NOT_TRAVERSABLE;
                 } else {
                     // traversable clients
-                    responseType = OpenConnectionResponseType.OK;
+                    responseType = OpenConnectionResponseType.HP_WILL_START;
                     hpMechanism = session.getHolePunchingMechanism();
                 }
             }

@@ -18,7 +18,7 @@ public class View {
     private final int size;
     private final Self self;
     private List<ViewEntry> entries;
-    private HashMap<VodAddress, ViewEntry> d2e;
+    private HashMap<Integer, ViewEntry> d2e;
     private final Random random;
     private Comparator<ViewEntry> comparatorByAge = new Comparator<ViewEntry>() {
         @Override
@@ -39,7 +39,7 @@ public class View {
         this.self = self;
         this.size = size;
         this.entries = new ArrayList<ViewEntry>();
-        this.d2e = new HashMap<VodAddress, ViewEntry>();
+        this.d2e = new HashMap<Integer, ViewEntry>();
         this.random = new Random(seed);
     }
 
@@ -100,7 +100,7 @@ public class View {
             return;
         }
         LinkedList<ViewEntry> entriesSentToThisPeer = new LinkedList<ViewEntry>();
-        ViewEntry fromEntry = d2e.get(from);
+        ViewEntry fromEntry = d2e.get(from.getId());
         if (fromEntry != null) {
             entriesSentToThisPeer.add(fromEntry);
         }
@@ -112,13 +112,14 @@ public class View {
         }
 
         for (VodDescriptor descriptor : descriptors) {
-            if (self.getDescriptor().equals(descriptor)) {
+            if (self.getDescriptor().getVodAddress().getId() == descriptor.getVodAddress().getId()) {
                 // do not keep descriptor of self
                 continue;
             }
-            if (d2e.containsKey(descriptor.getVodAddress())) {
+            int id = descriptor.getVodAddress().getId();
+            if (d2e.containsKey(id)) {
                 // we already have an entry for this peer. keep the youngest one
-                ViewEntry entry = d2e.get(descriptor.getVodAddress());
+                ViewEntry entry = d2e.get(id);
                 if (entry.getDescriptor().getAge() > descriptor.getAge()) {
                     // we keep the lowest age descriptor
                     removeEntry(entry);
@@ -208,7 +209,7 @@ public class View {
 
         if (!entries.contains(entry)) {
             entries.add(entry);
-            d2e.put(entry.getDescriptor().getVodAddress(), entry);
+            d2e.put(entry.getDescriptor().getVodAddress().getId(), entry);
             checkSize();
         } else {
             // replace the entry if it already exists
@@ -220,13 +221,13 @@ public class View {
 //-------------------------------------------------------------------	
     private boolean removeEntry(ViewEntry entry) {
         boolean res = entries.remove(entry);
-        d2e.remove(entry.getDescriptor().getVodAddress());
+        d2e.remove(entry.getDescriptor().getVodAddress().getId());
         checkSize();
         return res;
     }
 
     public boolean timedOutForShuffle(VodAddress node) {
-        ViewEntry entry = d2e.get(node);
+        ViewEntry entry = d2e.get(node.getId());
         if (entry == null) {
             return false;
         }

@@ -332,6 +332,14 @@ public class Croupier extends MsgRetryComponent {
         if (!nodes.isEmpty()) {
             delegator.doTrigger(new CroupierSample(nodes), peerSamplePort);
         }
+        
+        StringBuilder sb = new StringBuilder("Neighbours: { ");
+        for (VodDescriptor d : nodes) {
+            sb.append(d.getVodAddress().getId()).append(", ");
+        }
+        sb.append("}");
+        
+        logger.trace(compName + sb);
     }
 
     @Override

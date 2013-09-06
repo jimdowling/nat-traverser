@@ -330,6 +330,8 @@ public class NatTraverser extends MsgRetryComponent {
                 OpenConnectionResponseType flag = response.getResponseType();
                 if (flag.equals(OpenConnectionResponseType.OK)) {
                     holePunchingSuccessful(destId);
+                } else if (flag.equals(OpenConnectionResponseType.HP_WILL_START)) {
+                    logger.debug(compName + "Hole punching starting");
                 } else if (flag.equals(OpenConnectionResponseType.NAT_COMBINATION_NOT_TRAVERSABLE)
                         || flag.equals(OpenConnectionResponseType.REMOTE_PEER_FAILED)) {
                     // cleanup, set the retry counter to zero
@@ -831,7 +833,7 @@ public class NatTraverser extends MsgRetryComponent {
     public void startHolePunchingProcess(VodAddress destAddress, boolean keepConnectionOpenWithHeartbeat, int connRetries, TimeoutId msgTimeoutId) {
         logger.debug(compName + "Starting hole punching for [" + self.getId() + ", " + destAddress.getId() + "]");
         // starting timer
-        ScheduleTimeout st = new ScheduleTimeout(connectionEstablishmentWaitTime);
+        ScheduleTimeout st = new ScheduleTimeout(connectionEstablishmentWaitTime + 3000);
         ConnectionEstablishmentTimeout timeoutEvent = new ConnectionEstablishmentTimeout(st, destAddress, msgTimeoutId);
         st.setTimeoutEvent(timeoutEvent);
 

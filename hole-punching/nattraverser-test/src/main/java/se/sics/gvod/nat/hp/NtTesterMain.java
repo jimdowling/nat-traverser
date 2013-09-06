@@ -58,6 +58,7 @@ import se.sics.gvod.net.BaseMsgFrameDecoder;
 import se.sics.gvod.net.Transport;
 import se.sics.gvod.net.events.PortBindRequest;
 import se.sics.gvod.net.events.PortBindResponse;
+import se.sics.gvod.timer.CancelTimeout;
 import se.sics.gvod.timer.ScheduleTimeout;
 import se.sics.gvod.timer.Timeout;
 import se.sics.gvod.timer.UUID;
@@ -279,11 +280,10 @@ public final class NtTesterMain extends ComponentDefinition {
 
             logger.info("Received ping from "
                     + ping.getSource().getId());
-            TimeoutId id = UUID.nextUUID();
             TConnectionMsg.Pong pong =
                     new TConnectionMsg.Pong(self.getAddress(),
-                    ping.getVodSource(), id);
-            trigger(pong, network.getPositive(VodNetwork.class));
+                    ping.getVodSource(), ping.getTimeoutId());
+            trigger(pong, natTraverser.getPositive(VodNetwork.class));
         }
     };
     public Handler<TConnectionMsg.Pong> handlePong =
@@ -291,9 +291,10 @@ public final class NtTesterMain extends ComponentDefinition {
         @Override
         public void handle(TConnectionMsg.Pong pong) {
 
-            logger.info("pong recvd " + " from " + pong.getSource());
+            logger.info("pong recvd " + " from " + pong.getSource() + " - "  + pong.getTimeoutId());
             numSuccess++;
             logger.info("Total Success/Failure ratio is: {}/{}", numSuccess, numFail);
+            trigger(new CancelTimeout(pong.getTimeoutId()), timer.getPositive(Timer.class));
         }
     };
     public Handler<Fault> handleFault =
@@ -333,6 +334,8 @@ public final class NtTesterMain extends ComponentDefinition {
                                 natTraverser.getPositive(VodNetwork.class));
                         trigger(st, timer.getPositive(Timer.class));
                         alreadyConnected.add(va);
+                        logger.info("sending ping with TimeoutId {} to {} ",
+                                hp.getTimeoutId(), va);
                     }
                 }
             }

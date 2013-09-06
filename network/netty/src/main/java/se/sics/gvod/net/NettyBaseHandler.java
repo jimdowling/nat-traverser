@@ -54,8 +54,13 @@ public abstract class NettyBaseHandler<I> extends SimpleChannelInboundHandler<I>
         return protocol;
     }
 
-    protected RewriteableMsg updateAddress(RewriteableMsg msg, ChannelHandlerContext ctx, InetSocketAddress remoteAddress) {
+    protected RewriteableMsg updateAddress(RewriteableMsg msg, ChannelHandlerContext ctx, InetSocketAddress remoteAddress) 
+    throws Exception {
         InetAddress ip = (Inet4Address) remoteAddress.getAddress();
+        
+        if (ip == null) {
+            throw new NullPointerException("NettyBaseHandler: IpAddress was NULL");
+        }
         
         msg.getSource().setIp(ip);
         msg.getSource().setPort(remoteAddress.getPort());
