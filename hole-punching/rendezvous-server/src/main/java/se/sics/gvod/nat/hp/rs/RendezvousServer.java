@@ -429,9 +429,6 @@ public class RendezvousServer extends MsgRetryComponent {
         public void handle(HpConnectMsg.Request request) {
             printMsg(request);
 
-            logger.debug(compName + "HpConnectMsg.Request Recvd from Client id: ("
-                    + request.getClientId() + ")."
-                    + "HP [" + request.getClientId() + ", " + request.getRemoteClientId() + "]");
             OpenConnectionResponseType responseType;
             HolePunching session = null;
             // if HP is possible then this variable will have information like which stratagy to use etc etc
@@ -478,7 +475,7 @@ public class RendezvousServer extends MsgRetryComponent {
                     request.getMsgTimeoutId());
             delegator.doTrigger(responseMsg, network);
 
-            if (responseType == OpenConnectionResponseType.OK) {
+            if (responseType == OpenConnectionResponseType.HP_WILL_START) {
                 // HP is possible. lets start HP
 
                 // JIM - should I not create a duplicate session here???
@@ -1668,7 +1665,8 @@ public class RendezvousServer extends MsgRetryComponent {
     }
 
     private void printMsg(HpMsg.Hp msg) {
-        logger.trace(compName + msg.getClass().getCanonicalName() + " - "
+        logger.trace(compName + msg.getClass().getCanonicalName() + " from " 
+                + msg.getClientId() + " to " + msg.getRemoteClientId() + " - "
                 + msg.getMsgTimeoutId());
     }
     Handler<PRP_PreallocatedPortsMsg.Response> handle_PRP_PreallocatedPortsMsgResponse = new Handler<PRP_PreallocatedPortsMsg.Response>() {

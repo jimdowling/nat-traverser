@@ -158,7 +158,7 @@ public class RendezvousServerUnitTest extends VodRetryComponentTestCase {
         assertSequence(events, HpConnectMsg.Response.class, GoMsg.Request.class);
         HpConnectMsg.Response e1 = (HpConnectMsg.Response) events.get(0);
         assert(e1.getVodDestination().equals(client));
-        assert (e1.getResponseType() == OpenConnectionResponseType.OK);
+        assert (e1.getResponseType() == OpenConnectionResponseType.HP_WILL_START);
         GoMsg.Request e2 = (GoMsg.Request) events.get(1);
         assert (e2.getRemoteId() == client.getId());
         assert (e2.getVodDestination().equals(responder));
@@ -182,7 +182,7 @@ public class RendezvousServerUnitTest extends VodRetryComponentTestCase {
         
         HpConnectMsg.Response e0 = (HpConnectMsg.Response) events.get(0);
         assert(e0.getVodDestination().equals(responder));
-        assert(e0.getResponseType() == OpenConnectionResponseType.OK);
+        assert(e0.getResponseType() == OpenConnectionResponseType.HP_WILL_START);
         
         SHP_OpenHoleMsg.Initiator e1 = (SHP_OpenHoleMsg.Initiator) events.get(1);
         assert (e1.getVodDestination().equals(client));
@@ -208,7 +208,7 @@ public class RendezvousServerUnitTest extends VodRetryComponentTestCase {
         assertSequence(events, HpConnectMsg.Response.class, SHP_OpenHoleMsg.Initiator.class,
                 GoMsg.Request.class);
         HpConnectMsg.Response e1 = (HpConnectMsg.Response) events.get(0);
-        assert (e1.getResponseType() == OpenConnectionResponseType.OK);
+        assert (e1.getResponseType() == OpenConnectionResponseType.HP_WILL_START);
         GoMsg.Request e2 = (GoMsg.Request) events.get(2);
         assert (e2.getRemoteId() == client.getId());
         assert (e2.getVodDestination().equals(responder));
@@ -240,7 +240,7 @@ public class RendezvousServerUnitTest extends VodRetryComponentTestCase {
                 PRP_ConnectMsg.Response.class, GoMsg.Request.class,
                 PRP_PreallocatedPortsMsg.Request.class);
         HpConnectMsg.Response e1 = (HpConnectMsg.Response) events.get(0);
-        assert (e1.getResponseType() == OpenConnectionResponseType.OK);
+        assert (e1.getResponseType() == OpenConnectionResponseType.HP_WILL_START);
         PRP_ConnectMsg.Response e3 = (PRP_ConnectMsg.Response) events.get(1);
         assert (e3.getPortToUse() == 23445);
         GoMsg.Request e4 = (GoMsg.Request) events.get(2);
@@ -335,7 +335,7 @@ public class RendezvousServerUnitTest extends VodRetryComponentTestCase {
         assertSequence(events, HpConnectMsg.Response.class,
                 PRC_ServerRequestForConsecutiveMsg.Request.class);
         HpConnectMsg.Response e1 = (HpConnectMsg.Response) events.get(0);
-        assert (e1.getResponseType() == OpenConnectionResponseType.OK);
+        assert (e1.getResponseType() == OpenConnectionResponseType.HP_WILL_START);
 
 
         PRC_OpenHoleMsg.Request openHoleReqMsg = new PRC_OpenHoleMsg.Request(responder,
@@ -365,7 +365,7 @@ public class RendezvousServerUnitTest extends VodRetryComponentTestCase {
         assertSequence(events, HpConnectMsg.Response.class,
                 PRC_ServerRequestForConsecutiveMsg.Request.class);
         HpConnectMsg.Response e1 = (HpConnectMsg.Response) events.get(0);
-        assert (e1.getResponseType() == OpenConnectionResponseType.OK);
+        assert (e1.getResponseType() == OpenConnectionResponseType.HP_WILL_START);
 
 
         PRC_OpenHoleMsg.Request openHoleReqMsg = new PRC_OpenHoleMsg.Request(client,
@@ -395,7 +395,7 @@ public class RendezvousServerUnitTest extends VodRetryComponentTestCase {
                 Interleaved_PRC_ServersRequestForPredictionMsg.Request.class,
                 Interleaved_PRC_ServersRequestForPredictionMsg.Request.class);
         HpConnectMsg.Response e1 = (HpConnectMsg.Response) events.get(0);
-        assert (e1.getResponseType() == OpenConnectionResponseType.OK);
+        assert (e1.getResponseType() == OpenConnectionResponseType.HP_WILL_START);
 
 
         Interleaved_PRC_OpenHoleMsg.Request open1 = new Interleaved_PRC_OpenHoleMsg.Request(client,
@@ -436,7 +436,7 @@ public class RendezvousServerUnitTest extends VodRetryComponentTestCase {
         assertSequence(events, HpConnectMsg.Response.class,
                 Interleaved_PRC_ServersRequestForPredictionMsg.Request.class);
         HpConnectMsg.Response e1 = (HpConnectMsg.Response) events.get(0);
-        assert (e1.getResponseType() == OpenConnectionResponseType.OK);
+        assert (e1.getResponseType() == OpenConnectionResponseType.HP_WILL_START);
         ports.add(10202);
         Interleaved_PRP_ConnectMsg.Request open1 = new Interleaved_PRP_ConnectMsg.Request(client,
                 getAddress(), responder.getId(), ports, UUID.nextUUID());

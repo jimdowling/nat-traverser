@@ -928,7 +928,8 @@ public class HpClient extends MsgRetryComponent {
                         // has Nat.FilteringPolicy.PORT_DEPENDENT, it will reject the response.
                         // So, use the original openedHole to send the msg.
                         openedHole = session.getRemoteOpenedHole();
-                        logger.info(compName + " Using a new openedHole, not the source of the msg: " + openedHole);
+                        logger.info(compName + " New openedHole {} <-> source of the msg {} ", 
+                                openedHole, response.getVodSource());
                     }
 
                     if (!openedConnections.containsKey(remoteId)) {
