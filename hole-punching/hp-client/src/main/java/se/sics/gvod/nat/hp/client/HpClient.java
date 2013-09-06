@@ -834,7 +834,6 @@ public class HpClient extends MsgRetryComponent {
 
             HpSession session = hpSessions.get(remoteId);
             if (session != null) {
-
                 // Remove the session after 30 seconds.
                 logger.debug(compName + "Removing session key in 30s.");
                 ScheduleTimeout scheduleTimeout = new ScheduleTimeout(30 * 1000);
@@ -850,15 +849,16 @@ public class HpClient extends MsgRetryComponent {
                 Address srcAddress = new Address(self.getIp(), port, self.getId());
                 VodAddress sourceAddress = new VodAddress(srcAddress, self.getOverlayId(),
                         self.getNat(), self.getParents());
-                logger.debug(compName + "sending back response to (" + request.getClientId() + ")");
+                logger.debug(compName + "sending back response to (" 
+                        + request.getVodSource() + ") - " + request.getMsgTimeoutId() + " : " +
+                        request.getTimeoutId());
                 HolePunchingMsg.Response hpResponse = new HolePunchingMsg.Response(sourceAddress,
                         request.getVodSource(),
-                        request.getTimeoutId());
+                        request.getMsgTimeoutId());
                 ScheduleRetryTimeout st = new ScheduleRetryTimeout(config.getRto(),
                         config.getRtoRetries(), config.getRtoScale());
                 HolePunchingMsg.ResponseRetryTimeout hrrt = new HolePunchingMsg.ResponseRetryTimeout(st, hpResponse);
                 delegator.doRetry(hrrt);
-
 
                 // if the connection is not already opened, then send response
                 if (!openedConnections.containsKey(remoteId)) {
@@ -1507,13 +1507,14 @@ public class HpClient extends MsgRetryComponent {
                 session.setHolePunchingRole(request.getHolePunchingRole());
                 hpSessions.put(remoteId, session);
             }
-            if (!session.isHpOngoing()) {
+            // TODO - why is this here?
+//            if (!session.isHpOngoing()) {
                 sendPrcPortsToServer(request.getVodSource(), remoteId,
                         request.getDummyRemoteClientPublicAddress(),
                         request.getMsgTimeoutId());
-            } else {
-                logger.warn(compName + "HP was ongoing: " + session);
-            }
+//            } else {
+//                logger.warn(compName + "HP was ongoing: " + session);
+//            }
         }
     };
 
