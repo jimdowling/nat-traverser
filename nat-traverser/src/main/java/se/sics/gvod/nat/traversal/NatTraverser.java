@@ -378,7 +378,9 @@ public class NatTraverser extends MsgRetryComponent {
     Handler<DirectMsgNetty.Request> handleUpperDirectMsgNettyRequest = new Handler<DirectMsgNetty.Request>() {
         @Override
         public void handle(DirectMsgNetty.Request msg) {
-            logger.trace("{} handleUpperMessageRequest dest ID (" + msg.getDestination().getId()
+            logger.debug("{} handleUpperMessageRequest "
+                    + "src (" + msg.getSource() 
+                    + ")  DEST_ID (" + msg.getDestination().getId()
                     + ") message class :" + msg.getClass().getName(), msg.getTimeoutId());
             sendDownDirectMsg(msg);
         }
@@ -386,7 +388,9 @@ public class NatTraverser extends MsgRetryComponent {
     Handler<DirectMsgNetty.Response> handleUpperDirectMsgNettyResponse = new Handler<DirectMsgNetty.Response>() {
         @Override
         public void handle(DirectMsgNetty.Response msg) {
-            logger.trace("{} handleUpperMessageResponse dest ID (" + msg.getDestination().getId()
+            logger.debug("{} handleUpperMessageResponse "
+                    + "src (" + msg.getSource() 
+                    + ")  DEST_ID (" + msg.getDestination().getId()
                     + ") message class :" + msg.getClass().getName(), msg.getTimeoutId());
             sendDownDirectMsg(msg);
         }

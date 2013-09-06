@@ -279,7 +279,7 @@ public final class NtTesterMain extends ComponentDefinition {
         public void handle(TConnectionMsg.Ping ping) {
 
             logger.info("Received ping from "
-                    + ping.getSource().getId());
+                    + ping.getSource());
             TConnectionMsg.Pong pong =
                     new TConnectionMsg.Pong(self.getAddress(),
                     ping.getVodSource(), ping.getTimeoutId());
@@ -323,7 +323,8 @@ public final class NtTesterMain extends ComponentDefinition {
                 if (alreadyConnected.contains(va) == false) {
                     // try and send a msg to the new VodAddress if it is private and
                     // has parents
-                    if (va.isOpen() == false && va.getParents().size() >= 1 &&
+                    if (self.getId() != va.getId() && 
+                            va.isOpen() == false && va.getParents().size() >= 1 &&
                             va.isHpPossible(self.getAddress())) 
                     {
                         ScheduleTimeout st = new ScheduleTimeout(10 * 1000);

@@ -1418,7 +1418,7 @@ public class RendezvousServer extends MsgRetryComponent {
         if (session.getHolePunchingMechanism() == HPMechanism.CONNECTION_REVERSAL) {
             // send go message to the peer behind the nat
             if (client_A_HPRole == HPRole.CONNECTION_REVERSAL_OPEN) {
-                // send go message to client B
+                // send go message to client B 
                 GoMsg.Request goMessageForB = new GoMsg.Request(self.getAddress(),
                         client_B_PublicAddress,
                         client_A_PublicAddress,
