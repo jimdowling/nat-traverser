@@ -112,11 +112,11 @@ public class View {
         }
 
         for (VodDescriptor descriptor : descriptors) {
-            if (self.getDescriptor().getVodAddress().getId() == descriptor.getVodAddress().getId()) {
+            int id = descriptor.getVodAddress().getId();
+            if (self.getDescriptor().getVodAddress().getId() == id) {
                 // do not keep descriptor of self
                 continue;
             }
-            int id = descriptor.getVodAddress().getId();
             if (d2e.containsKey(id)) {
                 // we already have an entry for this peer. keep the youngest one
                 ViewEntry entry = d2e.get(id);
@@ -124,10 +124,9 @@ public class View {
                     // we keep the lowest age descriptor
                     removeEntry(entry);
                     addEntry(new ViewEntry(descriptor));
-                    continue;
-                } else {
-                    continue;
-                }
+                }                     
+                continue;
+
             }
             if (entries.size() < size) {
                 // fill an empty slot

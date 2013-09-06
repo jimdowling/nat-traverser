@@ -124,7 +124,7 @@ public class ViewEntry {
             if (other.descriptor != null) {
                 return false;
             }
-        } else if (!descriptor.equals(other.descriptor)) {
+        } else if (descriptor.getId() != other.descriptor.getId()) {
             return false;
         }
         return true;
