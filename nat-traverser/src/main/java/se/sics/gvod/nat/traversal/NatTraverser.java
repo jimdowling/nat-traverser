@@ -417,10 +417,11 @@ public class NatTraverser extends MsgRetryComponent {
     };
     
     
-    private void forwardMsgUp(DirectMsgNetty.Base msg) {
+    private void forwardDirectMsgUp(DirectMsgNetty.Base msg) {
             logger.trace("handleLowerMessage src (" + msg.getSource()
                     + ") message class :" + msg.getClass().getName());
-            if (!openedConnections.containsKey(msg.getSource().getId())) {
+            if (!msg.getVodSource().isOpen() && 
+                    !openedConnections.containsKey(msg.getSource().getId())) {
                 HolePunching hp = HpFeasability.isPossible(self.getAddress(),msg.getVodSource());
                 OpenedConnection oc = new OpenedConnection(null, hp.getHolePunchingMechanism(),
                         hp.getClient_A_HPRole(), msg.getSource().getPort(),
@@ -434,19 +435,19 @@ public class NatTraverser extends MsgRetryComponent {
     Handler<DirectMsgNetty.Request> handleLowerDirectMsgRequest = new Handler<DirectMsgNetty.Request>() {
         @Override
         public void handle(DirectMsgNetty.Request msg) {
-            forwardMsgUp(msg);
+            forwardDirectMsgUp(msg);
         }
     };
     Handler<DirectMsgNetty.Response> handleLowerDirectMsgResponse = new Handler<DirectMsgNetty.Response>() {
         @Override
         public void handle(DirectMsgNetty.Response msg) {
-            forwardMsgUp(msg);
+            forwardDirectMsgUp(msg);
         }
     };
     Handler<DirectMsgNetty.Oneway> handleLowerDirectMsgOneway = new Handler<DirectMsgNetty.Oneway>() {
         @Override
         public void handle(DirectMsgNetty.Oneway msg) {
-            forwardMsgUp(msg);
+            forwardDirectMsgUp(msg);
         }
     };
     Handler<ConnectionEstablishmentTimeout> handleConnectionEstablishmentTimeout = new Handler<ConnectionEstablishmentTimeout>() {
