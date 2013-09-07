@@ -1004,18 +1004,21 @@ public class HpClient extends MsgRetryComponent {
     Handler<HpKeepAliveMsg.Ping> handleHpKeepAliveMsgPing =
             new Handler<HpKeepAliveMsg.Ping>() {
         @Override
-        public void handle(HpKeepAliveMsg.Ping event) {
-            HpKeepAliveMsg.Pong reply = new HpKeepAliveMsg.Pong(self.getAddress(), event.getVodSource(),
-                    event.getTimeoutId());
+        public void handle(HpKeepAliveMsg.Ping msg) {
+            HpKeepAliveMsg.Pong reply = new HpKeepAliveMsg.Pong(self.getAddress(), msg.getVodSource(),
+                    msg.getTimeoutId());
             trigger(reply, network);
-            updateLastHeardFrom(event.getSource().getId());
+            updateOrAddOpenedConnection(msg.getSource(), msg.getDestination().getPort());
         }
     };
 
-    private void updateLastHeardFrom(int remoteId) {
-        OpenedConnection oc = openedConnections.get(remoteId);
+    private void updateOrAddOpenedConnection(Address remote, int srcPort) {
+        OpenedConnection oc = openedConnections.get(remote.getId());
         if (oc == null) {
-            logger.error(compName + "Couldn'd find connection to: " + remoteId);
+            logger.info(compName + "Couldn'd find, but now adding, an OpenedConnection to: " + remote.getId());
+            OpenedConnection newOc = new OpenedConnection(srcPort, remote,
+                    (int) self.getNat().getBindingTimeout(), false);
+            openedConnections.put(remote.getId(), newOc);
         } else {
             oc.setLastUsed(System.currentTimeMillis());
         }
@@ -1023,11 +1026,11 @@ public class HpClient extends MsgRetryComponent {
     Handler<HpKeepAliveMsg.Pong> handleHpKeepAliveMsgPong =
             new Handler<HpKeepAliveMsg.Pong>() {
         @Override
-        public void handle(HpKeepAliveMsg.Pong event) {
-            int remoteId = event.getSource().getId();
+        public void handle(HpKeepAliveMsg.Pong msg) {
+            int remoteId = msg.getSource().getId();
             OpenedConnection oc = openedConnections.get(remoteId);
             if (oc == null) {
-                logger.error(compName + "Couldn'd find connection to heartbeat to: " + remoteId);
+                logger.warn(compName + "Couldn'd find connection to heartbeat to: " + remoteId);
             } else {
                 VodAddress openedHole = ToVodAddr.hpServer(oc.getHoleOpened());
                 ScheduleTimeout st = new ScheduleTimeout(Math.min(
@@ -1036,8 +1039,9 @@ public class HpClient extends MsgRetryComponent {
                 SendHeartbeatTimeout sht = new SendHeartbeatTimeout(st, remoteId);
                 st.setTimeoutEvent(sht);
                 trigger(st, timer);
-                updateLastHeardFrom(event.getSource().getId());
             }
+            // update or add an openedConnection
+            updateOrAddOpenedConnection(msg.getSource(), msg.getDestination().getPort());
         }
     };
     Handler<SendHeartbeatTimeout> handleSendHeartbeatTimeout =
