@@ -2,20 +2,24 @@ package se.sics.gvod.nat.hp.client.events;
 
 import se.sics.kompics.Request;
 
+/**
+ * Request sent to delete the openedConnection object
+ * representing a remote private node.
+ * 
+ * @author jdowling
+ */
 public final class DeleteConnectionRequest extends Request
 {
-    // request sent by the upper/outer component to delete the connection
+    private final Integer remoteId;
 
-    private final Integer connectionKey;
-
-    public DeleteConnectionRequest(Integer connectionKey)
+    public DeleteConnectionRequest(Integer remoteId)
     {
-        this.connectionKey = connectionKey;
+        this.remoteId = remoteId;
     }
 
-    public Integer getConnectionKey()
+    public Integer getRemoteId()
     {
-        return connectionKey;
+        return remoteId;
     }
 
 }

@@ -415,23 +415,20 @@ public class NatTraverser extends MsgRetryComponent {
             initializeServerComponents(event.getNodes());
         }
     };
-    
-    
-    private void forwardDirectMsgUp(DirectMsgNetty.Base msg) {
-            logger.trace("handleLowerMessage src (" + msg.getSource()
-                    + ") message class :" + msg.getClass().getName());
-            if (!msg.getVodSource().isOpen() && 
-                    !openedConnections.containsKey(msg.getSource().getId())) {
-                HolePunching hp = HpFeasability.isPossible(self.getAddress(),msg.getVodSource());
-                OpenedConnection oc = new OpenedConnection(null, hp.getHolePunchingMechanism(),
-                        hp.getClient_A_HPRole(), msg.getSource().getPort(),
-                        msg.getSource(), null, Nat.DEFAULT_RULE_EXPIRATION_TIME,
-                        false, null);
-                openedConnections.put(msg.getSource().getId(), oc);
-            }
-            delegator.doTrigger(msg, upperNet);
-    }
 
+    private void forwardDirectMsgUp(DirectMsgNetty.Base msg) {
+        logger.trace("handleLowerMessage src (" + msg.getSource()
+                + ") message class :" + msg.getClass().getName());
+        if (!msg.getVodSource().isOpen()
+                && !openedConnections.containsKey(msg.getSource().getId())) {
+            OpenedConnection oc = new OpenedConnection(msg.getDestination().getPort(),
+                    msg.getSource(), Nat.DEFAULT_RULE_EXPIRATION_TIME, false);
+            openedConnections.put(msg.getSource().getId(), oc);
+            logger.info(compName + " Adding OpenedConnection to " + msg.getSource()
+                    + " from Local Port" + msg.getDestination().getPort());
+        }
+        delegator.doTrigger(msg, upperNet);
+    }
     Handler<DirectMsgNetty.Request> handleLowerDirectMsgRequest = new Handler<DirectMsgNetty.Request>() {
         @Override
         public void handle(DirectMsgNetty.Request msg) {

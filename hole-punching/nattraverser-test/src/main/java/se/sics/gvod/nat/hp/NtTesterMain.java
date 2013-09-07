@@ -279,7 +279,7 @@ public final class NtTesterMain extends ComponentDefinition {
         public void handle(TConnectionMsg.Ping ping) {
 
             logger.info("Received ping from "
-                    + ping.getSource());
+                    + ping.getSource() + " at " + ping.getDestination());
             TConnectionMsg.Pong pong =
                     new TConnectionMsg.Pong(self.getAddress(),
                     ping.getVodSource(), ping.getTimeoutId());
