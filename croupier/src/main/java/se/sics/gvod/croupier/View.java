@@ -18,7 +18,7 @@ public class View {
     private final int size;
     private final Self self;
     private List<ViewEntry> entries;
-    private HashMap<Integer, ViewEntry> d2e;
+    private HashMap<VodAddress, ViewEntry> d2e;
     private final Random random;
     private Comparator<ViewEntry> comparatorByAge = new Comparator<ViewEntry>() {
         @Override
@@ -39,7 +39,7 @@ public class View {
         this.self = self;
         this.size = size;
         this.entries = new ArrayList<ViewEntry>();
-        this.d2e = new HashMap<Integer, ViewEntry>();
+        this.d2e = new HashMap<VodAddress, ViewEntry>();
         this.random = new Random(seed);
     }
 
@@ -100,7 +100,7 @@ public class View {
             return;
         }
         LinkedList<ViewEntry> entriesSentToThisPeer = new LinkedList<ViewEntry>();
-        ViewEntry fromEntry = d2e.get(from.getId());
+        ViewEntry fromEntry = d2e.get(from);
         if (fromEntry != null) {
             entriesSentToThisPeer.add(fromEntry);
         }
@@ -112,8 +112,8 @@ public class View {
         }
 
         for (VodDescriptor descriptor : descriptors) {
-            int id = descriptor.getVodAddress().getId();
-            if (self.getDescriptor().getVodAddress().getId() == id) {
+            VodAddress id = descriptor.getVodAddress();
+            if (self.getDescriptor().getVodAddress().equals(id)) {
                 // do not keep descriptor of self
                 continue;
             }
@@ -208,7 +208,7 @@ public class View {
 
         if (!entries.contains(entry)) {
             entries.add(entry);
-            d2e.put(entry.getDescriptor().getVodAddress().getId(), entry);
+            d2e.put(entry.getDescriptor().getVodAddress(), entry);
             checkSize();
         } else {
             // replace the entry if it already exists
@@ -220,13 +220,13 @@ public class View {
 //-------------------------------------------------------------------	
     private boolean removeEntry(ViewEntry entry) {
         boolean res = entries.remove(entry);
-        d2e.remove(entry.getDescriptor().getVodAddress().getId());
+        d2e.remove(entry.getDescriptor().getVodAddress());
         checkSize();
         return res;
     }
 
     public boolean timedOutForShuffle(VodAddress node) {
-        ViewEntry entry = d2e.get(node.getId());
+        ViewEntry entry = d2e.get(node);
         if (entry == null) {
             return false;
         }

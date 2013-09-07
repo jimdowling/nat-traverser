@@ -124,7 +124,10 @@ public class ViewEntry {
             if (other.descriptor != null) {
                 return false;
             }
-        } else if (descriptor.getId() != other.descriptor.getId()) {
+        } else if (descriptor.getId() != other.descriptor.getId()
+                || descriptor.getVodAddress().getOverlayId() !=
+                    other.descriptor.getVodAddress().getOverlayId()
+                ) {
             return false;
         }
         return true;
