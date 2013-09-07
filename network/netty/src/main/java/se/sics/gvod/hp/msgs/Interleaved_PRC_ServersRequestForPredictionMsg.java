@@ -85,7 +85,6 @@ public class Interleaved_PRC_ServersRequestForPredictionMsg
                     Interleaved_PRC_ServersRequestForPredictionMsg.Request(vodSrc, 
                     vodDest, remoteClientId, holePunchingMechanism, holePunchingRole, hole,
                     msgTimeoutId);
-            copy.setTimeoutId(timeoutId);
             return copy;
         }
 

@@ -132,9 +132,12 @@ public final class NatTraverserSimulator extends ComponentDefinition {
             Integer src = view.getNode(sId);
             if (src != null) {
                 Integer dest = view.getNode(dId);
-                while (src.equals(dest)) {
+                VodAddress srcAddr = getAddress(src);
+                VodAddress destAddr = getAddress(dest);
+                while (src.equals(dest) || !srcAddr.isHpPossible(destAddr)) {
                     dest++;
                     dest = view.getNode(dest);
+                    destAddr = getAddress(dest);
                 }
                 connect(src, dest);
             } else {
@@ -144,6 +147,14 @@ public final class NatTraverserSimulator extends ComponentDefinition {
         }
     };
 
+    private VodAddress getAddress(int id) {
+        Self destNode = privateAddress.get(id);
+        if (destNode == null)
+            destNode = publicAddress.get(id);        
+
+        return destNode.getAddress();
+    }
+    
 //-------------------------------------------------------------------    
     void connect(Integer src, Integer dest) {
         Component srcPeer = privatePeers.get(src);
