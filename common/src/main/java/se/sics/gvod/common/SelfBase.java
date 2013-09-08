@@ -57,6 +57,9 @@ public abstract class SelfBase implements Self {
     @Override
     public boolean isOpen() {
         return getNat().isOpen();
-    }    
-    
+    }
+
+    public void setOverlayId(int overlayId) {
+        this.overlayId = overlayId;
+    }
 }
