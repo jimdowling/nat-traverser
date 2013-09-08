@@ -21,6 +21,9 @@ import se.sics.gvod.net.Nat.BindingTimeoutCategory;
  * @author jdowling
  */
 public class VodAddress implements Serializable, Comparable {
+    public static enum PartitioningType {
+        NEVER_BEFORE, ONCE_BEFORE, MANY_BEFORE
+    }
 
     private static final int DEFAULT_DELTA_PC = 1;
     private static final long serialVersionUID = -7968846333L;

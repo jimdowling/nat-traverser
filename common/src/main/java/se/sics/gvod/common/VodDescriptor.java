@@ -1,13 +1,11 @@
 package se.sics.gvod.common;
 
 import java.io.Serializable;
-import java.util.BitSet;
 import java.util.LinkedList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import se.sics.gvod.config.BaseCommandLineConfig;
 import se.sics.gvod.config.VodConfig;
-import se.sics.gvod.net.PartitioningType;
 import se.sics.gvod.net.VodAddress;
 
 public class VodDescriptor implements Comparable<VodDescriptor>, Serializable {
