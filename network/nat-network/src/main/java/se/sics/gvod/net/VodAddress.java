@@ -512,8 +512,8 @@ public class VodAddress implements Serializable, Comparable {
         return PartitioningType.values()[(overlayId & -1073741824) >>> 30];
     }
 
-    public static int encodePartitionDataAndCategoryIdAsInt(PartitioningType partitioningType, int partitionIdDepth,
-                                                     int partitionId, int categoryId) {
+    public static int encodePartitionDataAndCategoryIdAsInt(PartitioningType partitioningType, 
+            int partitionIdDepth, int partitionId, int categoryId) {
         if(partitionIdDepth > 15 || partitionIdDepth < 1)
             throw new IllegalArgumentException("partitionIdDepth must be between 1 and 15");
         if(partitionId > 1023 || partitionId < 0)
@@ -521,7 +521,7 @@ public class VodAddress implements Serializable, Comparable {
         if(categoryId > 65535 || categoryId < 0)
             throw new IllegalArgumentException("categoryId must be between 0 and 65535");
 
-        int result = partitioningType << 30;
+        int result = partitioningType.ordinal() << 30;
         result = result | (partitionIdDepth << 21);
         result = result | (partitionId << 12);
         result = result | categoryId;

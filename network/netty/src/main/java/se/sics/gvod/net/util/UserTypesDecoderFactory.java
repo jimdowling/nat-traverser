@@ -21,7 +21,6 @@ import se.sics.gvod.common.UtilityVod;
 import se.sics.gvod.common.VodDescriptor;
 import se.sics.gvod.common.msgs.MessageDecodingException;
 import se.sics.gvod.net.Nat;
-import se.sics.gvod.net.PartitioningType;
 import se.sics.gvod.net.VodAddress;
 import se.sics.gvod.timer.NoTimeoutId;
 import se.sics.gvod.timer.TimeoutId;
