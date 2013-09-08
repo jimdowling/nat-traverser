@@ -141,4 +141,9 @@ public class ViewEntry {
         descriptor.setUtility(utility);
     }
 
+    @Override
+    public String toString() {
+        return descriptor.toString();
+    }
+
 }

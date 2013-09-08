@@ -1227,7 +1227,7 @@ public class HpClient extends MsgRetryComponent {
 
             int remoteId = request.getRemoteId();
             logger.debug(compName + "Hole Punching Client Recvd GO Message. remote client is "
-                    + remoteId
+                    + remoteId 
                     + " zServer ID (" + request.getSource().getId()
                     + ")  Mechanism: " + request.getHolePunchingMechanism()
                     + " Role: " + request.getHolePunchingRole());

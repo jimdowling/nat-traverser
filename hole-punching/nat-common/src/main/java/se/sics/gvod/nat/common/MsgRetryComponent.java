@@ -54,8 +54,8 @@ public abstract class MsgRetryComponent extends AutoSubscribeComponent
             new ConcurrentHashMap<TimeoutId, Retry>();
 
     /**
-     * This is the timeout event that is recvd by MsgRetryComp if the timer isn't
-     * cancelled before the timeout expires.
+     * This is the timeout event that is recvd by MsgRetryComp if the timer
+     * isn't cancelled before the timeout expires.
      */
     public static class RequestTimeoutEvent extends Timeout {
 
@@ -69,7 +69,6 @@ public abstract class MsgRetryComponent extends AutoSubscribeComponent
         public RewriteableMsg getMsg() {
             return msg;
         }
-
     }
 
     /**
@@ -190,9 +189,10 @@ public abstract class MsgRetryComponent extends AutoSubscribeComponent
     }
 
     /**
-     * The base class should call autosubscribe().
-     * If it doesn't, then we have to also subscribe the timeoutHadler to the timer port.
-     * @param delegator 
+     * The base class should call autosubscribe(). If it doesn't, then we have
+     * to also subscribe the timeoutHadler to the timer port.
+     *
+     * @param delegator
      */
     public MsgRetryComponent(RetryComponentDelegator delegator) {
         this.delegator = (delegator == null) ? this : delegator;
@@ -290,16 +290,17 @@ public abstract class MsgRetryComponent extends AutoSubscribeComponent
                 rtoRetries, rtoScaleAfterRetry, request, multicastAddrs),
                 timeoutInMilliSecs, oldTimeoutId);
     }
-    
+
     /**
-     * 
+     *
      * @param retry
      * @param timeoutInMilliSecs
-     * @param oldTimeoutId leave this as null, normally. To replace the timeoutId 
-     * that would be generated with an oldTimeoutId, set this variable.
-     * @return 
+     * @param oldTimeoutId leave this as null, normally. To replace the
+     * timeoutId that would be generated with an oldTimeoutId, set this
+     * variable.
+     * @return
      */
-    private TimeoutId scheduleMessageRetry(Retry retry, 
+    private TimeoutId scheduleMessageRetry(Retry retry,
             long timeoutInMilliSecs, TimeoutId oldTimeoutId) {
         RewriteableMsg msg = retry.getMessage();
 
@@ -397,20 +398,20 @@ public abstract class MsgRetryComponent extends AutoSubscribeComponent
             }
 
             cancelRetry(timeoutId);
-            
+
+            RewriteableMsg msg = retryData.getMessage();
             if (retryData.getRetriesLeft() > 0) {
                 retryData.decRetriesLeft();
                 retryData.rtoScale();
-                RewriteableMsg msg = retryData.getMessage();
                 if (msg instanceof DirectMsg) {
                     DirectMsg m = (DirectMsg) msg;
 
-                    logger.info("Message Retry Comp (" + m.getSource().getId() + ")"
+                    logger.debug("Message Retry Comp (" + m.getSource().getId() + ")"
                             + " : Retrying Src: " + m.getVodSource().getId()
                             + " dest: " + m.getVodDestination().getId() + " "
                             + msg.getClass().toString() + " retries=" + retryData.getRetriesLeft());
                 } else {
-                    logger.info("Message Retry Comp (" + msg.getSource().getId() + ")"
+                    logger.debug("Message Retry Comp (" + msg.getSource().getId() + ")"
                             + " : Retrying Src: " + msg.getSource().getId()
                             + " dest: " + msg.getDestination().getId() + " "
                             + msg.getClass().toString() + " retries=" + retryData.getRetriesLeft());
@@ -426,6 +427,11 @@ public abstract class MsgRetryComponent extends AutoSubscribeComponent
                     ScheduleTimeout st = retryData.getScheduleTimeout();
                     st.getTimeoutEvent().setTimeoutId(callbackTimeoutId);
                     trigger(st, timer);
+                    logger.info("Msg timeout: no retries left: "
+                            + retryData.getMessage().getClass().getName()
+                            +" src: " + msg.getSource()
+                            + " dest: " + msg.getDestination() + " "
+                            + msg.getTimeoutId());
                 } else {
                     logger.warn("MsgRetry: timeout obj was null with no retries left: {} ",
                             retryData.getMessage().getClass().getName());
@@ -558,7 +564,7 @@ public abstract class MsgRetryComponent extends AutoSubscribeComponent
     @Override
     public TimeoutId doMulticast(RewriteableMsg msg, Set<Address> multicastAddrs,
             long timeoutInMilliSecs, int rtoRetries, double rtoScaleAfterRetry, Object request) {
-        return retry(msg, timeoutInMilliSecs, rtoRetries, rtoScaleAfterRetry, request, 
+        return retry(msg, timeoutInMilliSecs, rtoRetries, rtoScaleAfterRetry, request,
                 multicastAddrs, null);
     }
 
