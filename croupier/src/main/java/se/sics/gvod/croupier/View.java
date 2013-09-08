@@ -236,6 +236,14 @@ public class View {
 //-------------------------------------------------------------------	
     private void checkSize() {
         if (entries.size() != d2e.size()) {
+            StringBuilder sb = new StringBuilder("Entries: \n");
+            for (ViewEntry d : entries) {
+                sb.append(d.toString()).append(", ");
+            }
+            sb.append(" \n IndexEntries: \n");
+            for (VodAddress d : d2e.keySet()) {
+                sb.append(d.toString()).append(", ");
+            }            
             throw new RuntimeException("WHD " + entries.size() + " <> " + d2e.size());
         }
     }

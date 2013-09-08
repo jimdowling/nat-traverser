@@ -31,6 +31,7 @@ public class VodAddress implements Serializable, Comparable {
 //    protected final byte extension;
 
     public static enum NatType {
+
         OPEN,
         NAT;
     };
@@ -47,9 +48,8 @@ public class VodAddress implements Serializable, Comparable {
      * Nat's delta value for PC prediction not serialized and sent over network
      */
     private final transient int delta;
-
     private transient Transport transport = Transport.UDP;
-    
+
     /**
      * Only public nodes use this constructor. Constructor that doesn't supply
      * any parents, as it assumes the node is OPEN.
@@ -323,9 +323,12 @@ public class VodAddress implements Serializable, Comparable {
         VodAddress other = (VodAddress) o;
         if (getId() > other.getId()) {
             return 1;
-        } else {
-            return -1;
+        } else if (getId() == other.getId()) {
+            if (getOverlayId() > other.getOverlayId()) {
+                return 1;
+            }
         }
+        return -1;
     }
 
     /**
@@ -388,7 +391,7 @@ public class VodAddress implements Serializable, Comparable {
     public boolean hasParents() {
         return !(parents == null || parents.isEmpty());
     }
-    
+
     public boolean isContactable() {
         return !(hasParents() && isOpen());
     }
@@ -485,7 +488,6 @@ public class VodAddress implements Serializable, Comparable {
 //    public int getPartitionIdLength() {
 //        return overlayId & 0x0000FFFF;
 //    }
-
     public void setOverlayId(int overlayId) {
         this.overlayId = overlayId;
     }
