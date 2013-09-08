@@ -244,6 +244,7 @@ public class View {
             for (VodAddress d : d2e.keySet()) {
                 sb.append(d.toString()).append(", ");
             }            
+            logger.warn(sb.toString());
             throw new RuntimeException("WHD " + entries.size() + " <> " + d2e.size());
         }
     }
