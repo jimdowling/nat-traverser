@@ -125,7 +125,8 @@ public final class NtPeer extends ComponentDefinition {
         public void handle(HpFailed event) {
             if (activeMsgs.containsKey(event.getMsgTimeoutId())) {
                 trigger(new CancelTimeout(event.getMsgTimeoutId()), timer);
-                logger.info("HP failed. " + event.getResponseType() + " - " + NatStr.pairAsStr(self.getNat(), activeMsgs.get(event.getMsgTimeoutId())));
+                logger.info("HP failed. " + event.getResponseType() + " - " 
+                        + NatStr.pairAsStr(self.getNat(), activeMsgs.get(event.getMsgTimeoutId())));
                 
                 VodAddress dest = event.getHpFailedDestNode();
                 trigger(new ConnectionResult(self.getAddress(), dest, NatStr.pairAsStr(self.getNat(), dest.getNat()), false), ntsPort);

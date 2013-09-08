@@ -82,6 +82,7 @@ import se.sics.gvod.common.hp.HPSessionKey;
 import se.sics.gvod.common.hp.HolePunching;
 import se.sics.gvod.common.hp.HpFeasability;
 import se.sics.gvod.common.msgs.DirectMsgNetty;
+import se.sics.gvod.common.util.NatStr;
 import se.sics.gvod.config.BaseCommandLineConfig;
 import se.sics.gvod.config.StunServerConfiguration;
 import se.sics.gvod.parentmaker.ParentMakerPort;
@@ -340,7 +341,6 @@ public class NatTraverser extends MsgRetryComponent {
                     NatTraverser.HpProcess session = onGoingHP.get(destId);
                     session.setRemainingConnectionRetries(0);
                     holePunchingFailed(true, destId, flag, response.getHpMechanismUsed(), response.getMsgTimeoutId());
-
                 } else {
                     logger.warn(compName + "cant establish connection with remote client ID (" + destId
                             + ") flag: " + response.getResponseType() + " hp mechanism: " + response.getHpMechanismUsed()
@@ -450,14 +450,10 @@ public class NatTraverser extends MsgRetryComponent {
     Handler<ConnectionEstablishmentTimeout> handleConnectionEstablishmentTimeout = new Handler<ConnectionEstablishmentTimeout>() {
         @Override
         public void handle(ConnectionEstablishmentTimeout timeout) {
-            logger.debug(compName + "Connection establishment timeout. Remote client ID is (" + timeout.getDestAddress().getId() + ")");
-            int destId = timeout.getDestAddress().getId();
-            holePunchingFailed(false, destId, OpenConnectionResponseType.LOOKUP_FAILED,
+
+            holePunchingFailed(false, timeout.getDestAddress().getId(), 
+                    OpenConnectionResponseType.HP_TIMEOUT,
                     null, timeout.getMsgTimeoutId());
-            //   why lookup failed response type?
-            // if lookup fails then i do noting and wait for this timeout to expire coz
-            // this wait will give OPMP some time to stablelize. when this timer
-            // expires HP will be repeated and hopefully lookup will succeede.
         }
     };
 
@@ -878,7 +874,9 @@ public class NatTraverser extends MsgRetryComponent {
         onGoingHP.remove(destId);
     }
 
-    public void holePunchingFailed(boolean cancelTimer, int destId, OpenConnectionResponseType flag, HPMechanism hpMechanism, TimeoutId msgTimeoutId) {
+    public void holePunchingFailed(boolean cancelTimer, int destId, 
+            OpenConnectionResponseType flag, HPMechanism hpMechanism, 
+            TimeoutId msgTimeoutId) {
         NatTraverser.HpProcess session = onGoingHP.get(destId);
         onGoingHP.remove(destId);
 
@@ -900,6 +898,15 @@ public class NatTraverser extends MsgRetryComponent {
             // request/response idiom?
             trigger(new HpFailed(msgTimeoutId, flag, destAddress), natTraverserPort);
         }
+        
+
+        logger.info(compName + "HP Failed. "
+                    + "client/Remote client ID ({}/{}): " 
+                    + NatStr.pairAsStr(self.getNat(), destAddress.getNat())
+                    + " - "
+                    + msgTimeoutId,
+                    self.getId(), destId);
+        
     }
 
     void printAllOpenedConnections() {

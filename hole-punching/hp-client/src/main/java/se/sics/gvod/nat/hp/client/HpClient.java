@@ -212,9 +212,9 @@ public class HpClient extends MsgRetryComponent {
                 boolean scanningEnabled,
                 long sessionStartTime,
                 TimeoutId msgTimeoutId) {
-            if (zServers == null || zServers.isEmpty()) {
-                throw new NullPointerException(compName + "ZServers were null or empty.");
-            }
+//            if (zServers == null || zServers.isEmpty()) {
+//                throw new NullPointerException(compName + "ZServers were null or empty.");
+//            }
             this.zServers = zServers;
             this.remoteClientID = remoteClientID;
             this.openConnectionRequest = openConnectionRequest;
@@ -750,6 +750,7 @@ public class HpClient extends MsgRetryComponent {
             logger.debug(compName + " Open Hole message response is recvd Flag: "
                     + response.getResponseType()
                     + " zServer ID (" + response.getSource().getId() + ")");
+            
             if (response.getResponseType() != SHP_OpenHoleMsg.ResponseType.OK) {
                 HpSession session = hpSessions.get(dummyAddr.getId());
                 if (session == null) {
@@ -825,16 +826,21 @@ public class HpClient extends MsgRetryComponent {
             }
 
             HpSession session = hpSessions.get(remoteId);
-//            if (session == null) {
-//                Set<Address> zServers = new HashSet<Address>();
-//                for (Address p :request.getVodSource().getParents()) {
-//                    zServers.add(null);
-//                }
-//                session = new HpSession(remoteId, zServers, null, config.getScanRetries(), config.isScanningEnabled()
-//                        , System.currentTimeMillis()
-//                        , request.getMsgTimeoutId());
-//            }
-            if (session != null) {
+            if (session == null) {
+                Set<Address> zServers = new HashSet<Address>();
+                if (!request.getVodSource().isOpen()) {
+                    for (Address p :request.getVodSource().getParents()) {
+                        zServers.add(p);
+                    }
+                } else {
+                    zServers.add(request.getSource());
+                }
+                session = new HpSession(remoteId, zServers, null, 
+                        config.getScanRetries(), config.isScanningEnabled()
+                        , System.currentTimeMillis()
+                        , request.getMsgTimeoutId());
+            }
+//            if (session != null) {
                 // Remove the session after 30 seconds.
                 logger.debug(compName + "Removing session key in 30s.");
                 ScheduleTimeout scheduleTimeout = new ScheduleTimeout(30 * 1000);
@@ -894,10 +900,10 @@ public class HpClient extends MsgRetryComponent {
                         logger.debug(compName + "no need to send HpMsg.Request response to the upper component");
                     }
                 }
-            } else {
-                logger.warn(compName + "ERROR: I did not request this Session. Session key not found " + remoteId
-                        + " - " + request.getMsgTimeoutId());
-            }
+//            } else {
+//                logger.warn(compName + "ERROR: I did not request this Session. Session key not found " + remoteId
+//                        + " - " + request.getMsgTimeoutId());
+//            }
         }
     };
     Handler<HolePunchingMsg.Response> handleHolePunchingMsgResponse = new Handler<HolePunchingMsg.Response>() {
@@ -1214,6 +1220,7 @@ public class HpClient extends MsgRetryComponent {
             printMsg(request);
             String compName = HpClient.this.compName + " - " + request.getMsgTimeoutId() + " - ";
 
+            // TODO:
             // CHECK FOR DUPLICATES
             // CHECK FOR ALREADY OPEN CONNECTIONS
             // TODO: Access control (DoS attacks)
