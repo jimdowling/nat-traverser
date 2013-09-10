@@ -132,6 +132,7 @@ public class BaseMsgFrameDecoder extends MsgFrameDecoder {
     // TEST MSGS
     public static final byte PING                          = 0x56;
     public static final byte PONG                          = 0x57;
+    public static final byte PANG                          = 0x58;
     //
     // NB: RANGE OF +VE BYTES ENDS AT 0x7F
     
@@ -272,6 +273,8 @@ public class BaseMsgFrameDecoder extends MsgFrameDecoder {
                 return TConnectionMsgFactory.Ping.fromBuffer(buffer);
             case PONG:
                 return TConnectionMsgFactory.Pong.fromBuffer(buffer);
+            case PANG:
+                return TConnectionMsgFactory.Pang.fromBuffer(buffer);
             default:
                 break;
         }

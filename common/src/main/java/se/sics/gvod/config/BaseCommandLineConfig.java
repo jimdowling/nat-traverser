@@ -160,8 +160,8 @@ public abstract class BaseCommandLineConfig {
 
     // All protocol default params
     public static final int DEFAULT_RTO = 1 * 1000;
-    public static final int DEFAULT_RTO_RETRIES = 2;
-    public static final double DEFAULT_RTO_SCALE = 1.5;
+    public static final int DEFAULT_RTO_RETRIES = 3;
+    public static final double DEFAULT_RTO_SCALE = 1.33;
     
     // Bootstrap defaults
     public final static int DEFAULT_BS_CLIENT_RETRY_PERIOD = 10 * 1000;

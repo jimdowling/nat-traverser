@@ -143,6 +143,11 @@ public abstract class VodComponentTestCase extends Assert implements ComponentDe
         return null;
     }
 
+    /**
+     * Pull a number of events from the FIFO eventBuffer
+     * @param num the number of events to pull
+     * @return a list containing the events
+     */
     protected LinkedList<Event> pollEvent(int num) {
         try {
             if (!eventSemaphore.tryAcquire(num, 1, TimeUnit.SECONDS)) {

@@ -28,7 +28,6 @@ import java.util.List;
  * The <code>DescriptorBuffer</code> class represents a buffer of GVod node
  * descriptors sent by one node to another during a shuffle.
  * 
- * @author Gautier Berthou
  */
 public class DescriptorBuffer implements Serializable {
 

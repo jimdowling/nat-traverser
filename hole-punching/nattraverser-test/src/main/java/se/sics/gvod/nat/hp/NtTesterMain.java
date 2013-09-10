@@ -5,9 +5,11 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import se.sics.gvod.timer.TimeoutId;
 import java.util.logging.Level;
 
@@ -61,7 +63,6 @@ import se.sics.gvod.net.events.PortBindResponse;
 import se.sics.gvod.timer.CancelTimeout;
 import se.sics.gvod.timer.ScheduleTimeout;
 import se.sics.gvod.timer.Timeout;
-import se.sics.gvod.timer.UUID;
 import se.sics.gvod.timer.java.JavaTimer;
 import se.sics.kompics.Fault;
 import se.sics.kompics.nat.utils.getip.IpAddrStatus;
@@ -93,6 +94,7 @@ public final class NtTesterMain extends ComponentDefinition {
     private static Integer pickIp;
     private static Integer numFail = 0, numSuccess = 0;
     private Set<VodAddress> alreadyConnected = new HashSet<VodAddress>();
+    private Map<TimeoutId,TimeoutId> pangTimeouts = new HashMap<TimeoutId,TimeoutId>();
 
     public static void main(String[] args) {
         
@@ -132,8 +134,12 @@ public final class NtTesterMain extends ComponentDefinition {
     }
 
     public static class HolePunchTimeout extends Timeout {
-
         public HolePunchTimeout(ScheduleTimeout st) {
+            super(st);
+        }
+    }
+    public static class PangTimeout extends Timeout {
+        public PangTimeout(ScheduleTimeout st) {
             super(st);
         }
     }
@@ -170,10 +176,12 @@ public final class NtTesterMain extends ComponentDefinition {
         subscribe(handleGetIpResponse, resolveIp.getPositive(ResolveIpPort.class));
         subscribe(handlePing, natTraverser.getPositive(VodNetwork.class));
         subscribe(handlePong, natTraverser.getPositive(VodNetwork.class));
+        subscribe(handlePang, natTraverser.getPositive(VodNetwork.class));
         subscribe(handleNtPortBindResponse, network.getPositive(NatNetworkControl.class));
         subscribe(handleFault, natTraverser.getControl());    
 //        subscribe(handleNettyFault, network.getControl());
         subscribe(handleHolePunchTimeout, timer.getPositive(Timer.class));
+        subscribe(handlePangTimeout, timer.getPositive(Timer.class));
         subscribe(handleCroupierSample, croupier.getPositive(PeerSamplePort.class));
 
     }
@@ -284,6 +292,12 @@ public final class NtTesterMain extends ComponentDefinition {
                     new TConnectionMsg.Pong(self.getAddress(),
                     ping.getVodSource(), ping.getTimeoutId());
             trigger(pong, natTraverser.getPositive(VodNetwork.class));
+
+            ScheduleTimeout st = new ScheduleTimeout(10 * 1000);
+            PangTimeout pt = new PangTimeout(st);
+            st.setTimeoutEvent(pt);
+            trigger(st, timer.getPositive(Timer.class));
+            pangTimeouts.put(ping.getTimeoutId(), pt.getTimeoutId());
         }
     };
     public Handler<TConnectionMsg.Pong> handlePong =
@@ -291,10 +305,27 @@ public final class NtTesterMain extends ComponentDefinition {
         @Override
         public void handle(TConnectionMsg.Pong pong) {
 
-            logger.info("pong recvd " + " from " + pong.getSource() + " - "  + pong.getTimeoutId());
+            logger.info("pang recvd " + " from " + pong.getSource() + " - "  + pong.getTimeoutId());
             numSuccess++;
             logger.info("Total Success/Failure ratio is: {}/{}", numSuccess, numFail);
             trigger(new CancelTimeout(pong.getTimeoutId()), timer.getPositive(Timer.class));
+            
+            TConnectionMsg.Pang pang =
+                    new TConnectionMsg.Pang(self.getAddress(),
+                    pong.getVodSource(), pong.getTimeoutId());
+            trigger(pang, natTraverser.getPositive(VodNetwork.class));            
+        }
+    };
+    
+    public Handler<TConnectionMsg.Pang> handlePang =
+            new Handler<TConnectionMsg.Pang>() {
+        @Override
+        public void handle(TConnectionMsg.Pang pang) {
+            TimeoutId pt = pangTimeouts.remove(pang.getMsgTimeoutId());
+            trigger(new CancelTimeout(pt), timer.getPositive(Timer.class));
+            logger.info("pang recvd " + " from " + pang.getSource() + " - "  + pang.getMsgTimeoutId());
+            numSuccess++;
+            logger.info("Total Success/Failure ratio is: {}/{}", numSuccess, numFail);
         }
     };
     public Handler<Fault> handleFault =
@@ -313,6 +344,21 @@ public final class NtTesterMain extends ComponentDefinition {
             numFail++;
             logger.info("Total Success/Failure ratio is: {}/{}", numSuccess, numFail);
 
+        }
+    };
+    Handler<PangTimeout> handlePangTimeout = new Handler<PangTimeout>() {
+        @Override
+        public void handle(PangTimeout timeout) {
+            TimeoutId pt = null;
+            for (TimeoutId t : pangTimeouts.keySet()) {
+                if (pangTimeouts.get(t).equals(timeout)) {
+                    pt = t;
+                }
+            }
+            pangTimeouts.remove(pt);
+            logger.info("FAILURE: pang not recvd for TimeoutId: " + timeout.getTimeoutId());
+            numFail++;
+            logger.info("Total Success/Failure ratio is: {}/{}", numSuccess, numFail);
         }
     };
     Handler<CroupierSample> handleCroupierSample = new Handler<CroupierSample>() {

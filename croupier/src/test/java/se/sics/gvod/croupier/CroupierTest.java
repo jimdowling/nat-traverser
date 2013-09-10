@@ -5,11 +5,10 @@
 package se.sics.gvod.croupier;
 
 import se.sics.gvod.config.CroupierConfiguration;
-import java.io.IOException;
-import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Random;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -17,45 +16,34 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import se.sics.gvod.address.Address;
-import se.sics.gvod.common.UtilityVod;
+import se.sics.gvod.common.DescriptorBuffer;
 import se.sics.gvod.common.VodDescriptor;
 import se.sics.gvod.common.VodRetryComponentTestCase;
 import se.sics.gvod.config.VodConfig;
-import se.sics.gvod.common.util.ToVodAddr;
 import se.sics.gvod.croupier.events.CroupierInit;
 import se.sics.gvod.croupier.events.CroupierJoin;
 import se.sics.gvod.croupier.events.CroupierJoinCompleted;
+import se.sics.gvod.croupier.events.CroupierSample;
 import se.sics.gvod.croupier.events.CroupierShuffleCycle;
-import se.sics.gvod.net.VodAddress;
+import se.sics.gvod.croupier.msgs.ShuffleMsg;
+import se.sics.gvod.timer.ScheduleTimeout;
 import se.sics.kompics.Event;
-import se.sics.gvod.timer.SchedulePeriodicTimeout;
 
 /**
  *
  */
 public class CroupierTest extends VodRetryComponentTestCase {
-    
+
     private static Logger logger = LoggerFactory.getLogger(CroupierTest.class);
-    
     Croupier croupier = null;
-    long shufflePeriod;
-    int shuffleLength;
-    int shuffleTimeout;
     int seed;
-    int viewSize;
-    InetAddress address1;
-    InetAddress address2;
-    VodAddress vodAddress1;
-    VodAddress vodAddress2;
-    VodDescriptor desc1;
-    VodDescriptor desc2;
     List<VodDescriptor> neighbours;
+    int numEntries = Math.min(pubDescs.size(), VodConfig.CROUPIER_VIEW_SIZE);
 
     public CroupierTest() {
         super();
     }
-    
+
     @BeforeClass
     public static void setUpClass() throws Exception {
     }
@@ -69,36 +57,13 @@ public class CroupierTest extends VodRetryComponentTestCase {
     public void setUp() {
         super.setUp();
         croupier = new Croupier(this);
-        shufflePeriod = 1000;
-        shuffleLength = 2;
-        shuffleTimeout = 500;
         seed = 300;
-        viewSize = 2;
         neighbours = new ArrayList<VodDescriptor>();
 
-        try {
-            address1 = InetAddress.getByName("192.168.0.2");
-            address2 = InetAddress.getByName("192.168.0.3");
-
-            vodAddress1 = ToVodAddr.systemAddr(new Address(address1, 8082, 2));
-            vodAddress2 = ToVodAddr.systemAddr(new Address(address2, 8083, 3));
-
-            desc1 = new VodDescriptor(vodAddress1, new UtilityVod(0), 0, 0);
-            desc2 = new VodDescriptor(vodAddress2, new UtilityVod(0), 0, 0);
-            VodConfig.init(new String[]{});
-        } catch (IOException ex) {
-            logger.error(null, ex);
-        }
-
-        CroupierConfiguration config = 
+        CroupierConfiguration config =
                 CroupierConfiguration.build()
                 .setPolicy(VodConfig.CroupierSelectionPolicy.TAIL.name())
-                .setShuffleLength(shuffleLength)
-                .setShufflePeriod(shufflePeriod)
-                .setRto(shuffleTimeout)
-                .setViewSize(viewSize)
-                .setSeed(seed)
-                ;
+                .setSeed(seed);
         croupier.handleInit.handle(new CroupierInit(this, config));
     }
 
@@ -108,37 +73,84 @@ public class CroupierTest extends VodRetryComponentTestCase {
         super.tearDown();
         croupier.stop(null);
     }
+
     @Test
     public void testJoinComplete() {
         croupier.handleJoin.handle(new CroupierJoin(neighbours));
         LinkedList<Event> events = pollEvent(2);
         assertSequence(events, CroupierShuffleCycle.class, CroupierJoinCompleted.class);
     }
-    
 
+    private void join() {
+        // pubDesc and privDescs are the same 
+        for (int i = 0; i < pubDescs.size(); i++) {
+            neighbours.add(pubDescs.get(i));
+            if (i % (numEntries - 1) == 0) {
+                croupier.handleJoin.handle(new CroupierJoin(neighbours));
+            }
+        }
+    }
 
     @Test
     public void testJoin() {
-        neighbours.add(desc1);
-        neighbours.add(desc2);
-        croupier.handleJoin.handle(new CroupierJoin(neighbours));
+
+        join();
         assert (croupier.privateView.isEmpty());
-        assert (croupier.publicView.size() == 2);
+        assert (croupier.publicView.size() == numEntries);
     }
 
-    
     @Test
     public void testShuffleCycle() {
-        neighbours.add(desc1);
-        neighbours.add(desc2);
-        croupier.handleJoin.handle(new CroupierJoin(neighbours));
-        croupier.handleCycle.handle(new CroupierShuffleCycle(new SchedulePeriodicTimeout(shufflePeriod, shufflePeriod)));
+        join();
+
+        // pubDesc and privDescs are the same 
+        List<VodDescriptor> pubNeighbours = new ArrayList<VodDescriptor>();
+        List<VodDescriptor> privNeighbours = new ArrayList<VodDescriptor>();
+        DescriptorBuffer descriptorBuffer = new DescriptorBuffer(self, pubNeighbours, privNeighbours);
+        for (int i = 0; i < pubDescs.size(); i++) {
+            pubNeighbours.add(pubDescs.get(i));
+            privNeighbours.add(privDescs.get(i));
+            if (i % VodConfig.CROUPIER_SHUFFLE_LENGTH == VodConfig.CROUPIER_SHUFFLE_LENGTH - 1) {
+                int destId = new Random(VodConfig.getSeed()).nextInt(pubAddrs.size());
+                ShuffleMsg.Request req = new ShuffleMsg.Request(self,
+                        pubAddrs.get(destId),
+                        descriptorBuffer, selfDesc);
+                croupier.handleShuffleRequest.handle(req);
+                pubDescs.clear();
+                privDescs.clear();
+                LinkedList<Event> e = pollEvent(2);
+
+                // check response
+                ShuffleMsg.Response sr = (ShuffleMsg.Response) e.get(0);
+                assert (sr.getVodDestination().equals(pubAddrs.get(destId)));
+                assert (sr.getBuffer().getFrom().equals(self));
+                assert (sr.getBuffer().getFrom().equals(self));
+                // check sample produced
+                CroupierSample cs = (CroupierSample) e.get(1);
+                assert (cs.getNodes().size() > 0);
+            }
+        }
+
+
+
     }
 
     @Test
-    public void testShuffleTimeout() {
-        neighbours.add(desc1);
-        neighbours.add(desc2);
-        croupier.handleJoin.handle(new CroupierJoin(neighbours));
+    public void testCycle() {
+        ScheduleTimeout st = new ScheduleTimeout(100);
+        CroupierShuffleCycle csc = new CroupierShuffleCycle(st);
+        croupier.handleCycle.handle(csc);
+        assert (croupier.publicView.isEmpty());
+        assert (croupier.privateView.isEmpty());
+
+        join();
+        popEvents();
+        croupier.handleCycle.handle(csc);
+        LinkedList<Event> e = pollEvent(1);
+        ShuffleMsg.Request r = (ShuffleMsg.Request) e.getFirst();
+        assert(r.getBuffer().getPublicDescriptors().size() > 0);
+        assert(r.getBuffer().getPrivateDescriptors().isEmpty());
     }
+
+    // TODO - shuffleRequest.Timeout
 }

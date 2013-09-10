@@ -1376,6 +1376,26 @@ public class EncodingDecodingTest {
             assert (false);
         }
     }
+    
+    @Test
+    public void tConnectionMsgPang() {
+        TimeoutId id = UUID.nextUUID();
+        TConnectionMsg.Pang msg = new TConnectionMsg.Pang(gSrc, gDest, id);
+        try {
+            ByteBuf buffer = msg.toByteArray();
+            opCodeCorrect(buffer, msg);
+            TConnectionMsg.Pang pang =
+                    TConnectionMsgFactory.Pang.fromBuffer(buffer);
+            compareNatMsgs(msg, pang);
+            assert(msg.getMsgTimeoutId().equals(id));
+        } catch (MessageDecodingException ex) {
+            Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
+            assert (false);
+        } catch (MessageEncodingException ex) {
+            Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
+            assert (false);
+        }
+    }
 
     private void compareNatMsgs(NatMsg a, NatMsg b) {
         assert (a.getTimeoutId().equals(b.getTimeoutId()));

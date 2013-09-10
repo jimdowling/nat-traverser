@@ -305,6 +305,11 @@ public class VodDescriptor implements Comparable<VodDescriptor>, Serializable {
         return result;
     }
 
+    /** 
+     * Two ViewEntries are equivalent if their VodAddresses are the same.
+     * @param obj
+     * @return 
+     */
     @Override
     public boolean equals(Object obj) {
         if (this == obj) {

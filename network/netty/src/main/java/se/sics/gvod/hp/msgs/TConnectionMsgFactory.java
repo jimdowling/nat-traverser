@@ -39,4 +39,20 @@ public class TConnectionMsgFactory {
             return new TConnectionMsg.Pong(vodSrc, vodDest, timeoutId);
         }
     }
+    public static class Pang extends DirectMsgNettyFactory.Oneway {
+
+        private Pang() {
+        }
+
+        public static TConnectionMsg.Pang fromBuffer(ByteBuf buffer)
+                throws MessageDecodingException {
+            return (TConnectionMsg.Pang) new TConnectionMsgFactory.Pang().decode(buffer);
+        }
+
+        @Override
+        protected TConnectionMsg.Pang process(ByteBuf buffer) throws MessageDecodingException {
+
+            return new TConnectionMsg.Pang(vodSrc, vodDest, timeoutId);
+        }
+    }
 }

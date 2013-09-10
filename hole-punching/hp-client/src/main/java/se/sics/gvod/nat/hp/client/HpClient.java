@@ -1327,6 +1327,7 @@ public class HpClient extends MsgRetryComponent {
                 bindFirst = true;
                 portToBeUsed = PortSelector.selectRandomPortOver50000();
             }
+            session.setPortInUse(portToBeUsed);
 
             if (bindFirst) {
                 logger.debug(compName + " Need to bind to port before GoMsg : " + portToBeUsed
@@ -1365,6 +1366,8 @@ public class HpClient extends MsgRetryComponent {
                         response.getMsgTimeoutId());
             } else if (response.getStatus() == PortBindResponse.Status.PORT_ALREADY_BOUND
                     && response.isFixedPort() == false) {
+                // If the port is already bound and the MappingPolicy is PD, then the port
+                // cannot be reused for a different network connection.
                 if (response.getRetries() > 0) {
                     int port = PortSelector.selectRandomPortOver50000();
                     Address a = new Address(self.getIp(), port, self.getId());
@@ -1374,10 +1377,14 @@ public class HpClient extends MsgRetryComponent {
                             response.getRetries() - 1, false, response.getMsgTimeoutId());
                     bindReq.setResponse(bindResp);
                     delegator.doTrigger(bindReq, natNetworkControl);
+                } else {
+                logger.warn(compName + "GoMsg failed. Already bound port {}, no retries left",
+                        response.getPort());                    
                 }
             } else {
                 // some unrecoverable failure.
-                logger.warn(compName + "GoMsg failed when trying to bind a port");
+                logger.warn(compName + "GoMsg failed when trying to bind a port " +
+                        response.getStatus());
             }
         }
     };

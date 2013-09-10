@@ -108,6 +108,57 @@ public class TConnectionMsg {
             return BaseMsgFrameDecoder.PONG;
         }
     }
+    
+    public final static class Pang extends DirectMsgNetty.Oneway {
+
+        static final long serialVersionUID = 1L;
+
+        private final TimeoutId msgTimeoutId;
+        @Override
+        public int getSize() {
+            return getHeaderSize() + 4;
+        }
+
+        public Pang(VodAddress src, VodAddress dest,
+                Transport protocol, TimeoutId msgTimeoutId) {
+            super(src, dest, protocol);
+            this.msgTimeoutId = msgTimeoutId;
+        }
+
+        public Pang(VodAddress src, VodAddress dest, TimeoutId msgTimeoutId) {
+            super(src, dest);
+            this.msgTimeoutId = msgTimeoutId;
+        }
+
+        private Pang(Pang msg, VodAddress src) {
+            super(src, msg.getVodDestination());
+            this.msgTimeoutId = msg.getMsgTimeoutId();
+        }
+
+        private Pang(VodAddress dest, Pang msg) {
+            super(msg.getVodSource(), dest);
+            this.msgTimeoutId = msg.getMsgTimeoutId();
+        }
+
+        public TimeoutId getMsgTimeoutId() {
+            return msgTimeoutId;
+        }
+
+        @Override
+        public RewriteableMsg copy() {
+            return new TConnectionMsg.Pang(vodSrc, vodDest, msgTimeoutId);
+        }
+
+        @Override
+        public ByteBuf toByteArray() throws MessageEncodingException {
+            return createChannelBufferWithHeader();
+        }
+
+        @Override
+        public byte getOpcode() {
+            return BaseMsgFrameDecoder.PANG;
+        }
+    }
 
     public static final class RequestRetryTimeout extends RewriteableRetryTimeout {
 
