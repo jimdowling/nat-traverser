@@ -94,7 +94,7 @@ public final class NtTesterMain extends ComponentDefinition {
     private static Integer pickIp;
     private static Integer numFail = 0, numSuccess = 0;
     private Set<VodAddress> alreadyConnected = new HashSet<VodAddress>();
-    private Map<TimeoutId,TimeoutId> pangTimeouts = new HashMap<TimeoutId,TimeoutId>();
+    private Map<Integer,TimeoutId> pangTimeouts = new HashMap<Integer,TimeoutId>();
 
     public static void main(String[] args) {
         
@@ -139,8 +139,14 @@ public final class NtTesterMain extends ComponentDefinition {
         }
     }
     public static class PangTimeout extends Timeout {
-        public PangTimeout(ScheduleTimeout st) {
+        private final int id;
+        public PangTimeout(ScheduleTimeout st, int id) {
             super(st);
+            this.id = id;
+        }
+
+        public int getId() {
+            return id;
         }
     }
 
@@ -287,17 +293,18 @@ public final class NtTesterMain extends ComponentDefinition {
         public void handle(TConnectionMsg.Ping ping) {
 
             logger.info("Received ping from "
-                    + ping.getSource() + " at " + ping.getDestination());
+                    + ping.getSource() + " at " + ping.getDestination() + " - " +
+                    ping.getTimeoutId());
             TConnectionMsg.Pong pong =
                     new TConnectionMsg.Pong(self.getAddress(),
                     ping.getVodSource(), ping.getTimeoutId());
             trigger(pong, natTraverser.getPositive(VodNetwork.class));
 
             ScheduleTimeout st = new ScheduleTimeout(10 * 1000);
-            PangTimeout pt = new PangTimeout(st);
+            PangTimeout pt = new PangTimeout(st, ping.getTimeoutId().getId());
             st.setTimeoutEvent(pt);
             trigger(st, timer.getPositive(Timer.class));
-            pangTimeouts.put(ping.getTimeoutId(), pt.getTimeoutId());
+            pangTimeouts.put(ping.getTimeoutId().getId(), pt.getTimeoutId());
         }
     };
     public Handler<TConnectionMsg.Pong> handlePong =
@@ -305,7 +312,7 @@ public final class NtTesterMain extends ComponentDefinition {
         @Override
         public void handle(TConnectionMsg.Pong pong) {
 
-            logger.info("pang recvd " + " from " + pong.getSource() + " - "  + pong.getTimeoutId());
+            logger.info("pong recvd" + " from " + pong.getSource() + " - "  + pong.getTimeoutId());
             numSuccess++;
             logger.info("Total Success/Failure ratio is: {}/{}", numSuccess, numFail);
             trigger(new CancelTimeout(pong.getTimeoutId()), timer.getPositive(Timer.class));
@@ -321,9 +328,11 @@ public final class NtTesterMain extends ComponentDefinition {
             new Handler<TConnectionMsg.Pang>() {
         @Override
         public void handle(TConnectionMsg.Pang pang) {
-            TimeoutId pt = pangTimeouts.remove(pang.getMsgTimeoutId());
+            TimeoutId pt = pangTimeouts.remove(pang.getMsgTimeoutId().getId());
+            assert(pt != null);
             trigger(new CancelTimeout(pt), timer.getPositive(Timer.class));
-            logger.info("pang recvd " + " from " + pang.getSource() + " - "  + pang.getMsgTimeoutId());
+            logger.info("pang recvd " + " from " + pang.getSource() 
+                    + " - "  + pang.getMsgTimeoutId());
             numSuccess++;
             logger.info("Total Success/Failure ratio is: {}/{}", numSuccess, numFail);
         }
@@ -349,14 +358,15 @@ public final class NtTesterMain extends ComponentDefinition {
     Handler<PangTimeout> handlePangTimeout = new Handler<PangTimeout>() {
         @Override
         public void handle(PangTimeout timeout) {
-            TimeoutId pt = null;
-            for (TimeoutId t : pangTimeouts.keySet()) {
+            Integer pt = null;
+            for (Integer t : pangTimeouts.keySet()) {
                 if (pangTimeouts.get(t).equals(timeout)) {
                     pt = t;
                 }
             }
             pangTimeouts.remove(pt);
-            logger.info("FAILURE: pang not recvd for TimeoutId: " + timeout.getTimeoutId());
+            logger.info("FAILURE: pang not recvd for PingtimeoutId {} with PangTimeoutId: " + pt,
+                    timeout.getId());
             numFail++;
             logger.info("Total Success/Failure ratio is: {}/{}", numSuccess, numFail);
         }

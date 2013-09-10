@@ -18,7 +18,7 @@ public abstract class RewriteableMsg extends Event implements Serializable,
      * Only serialize the 'id' field of the destination object
      */
     protected Address destination;
-    private transient Transport protocol;
+    protected transient Transport protocol;
     protected TimeoutId timeoutId = null;
 
     public RewriteableMsg(Address source, Address destination) {

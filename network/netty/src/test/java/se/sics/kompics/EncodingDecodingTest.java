@@ -31,6 +31,7 @@ import se.sics.gvod.common.hp.HPMechanism;
 import se.sics.gvod.common.hp.HPRole;
 import se.sics.gvod.common.msgs.ConnectMsg;
 import se.sics.gvod.common.msgs.ConnectMsgFactory;
+import se.sics.gvod.common.msgs.DirectMsgNetty;
 import se.sics.gvod.common.msgs.DirectMsgNettyFactory;
 import se.sics.gvod.common.msgs.DisconnectMsg;
 import se.sics.gvod.common.msgs.DisconnectMsgFactory;
@@ -504,7 +505,7 @@ public class EncodingDecodingTest {
             ByteBuf buffer = msg.toByteArray();
             opCodeCorrect(buffer, msg);
             GoMsg.Request res = GoMsgFactory.Request.fromBuffer(buffer);
-            compareNatMsgsNoTimeout(msg, res);
+            compareNatMsgs(msg, res);
         } catch (MessageDecodingException ex) {
             Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
             assert (false);
@@ -583,7 +584,7 @@ public class EncodingDecodingTest {
             opCodeCorrect(buffer, msg);
             HpFinishedMsg res =
                     HpFinishedMsgFactory.Request.fromBuffer(buffer);
-            compareNatMsgsNoTimeout(msg, res);
+            compareNatMsgs(msg, res);
         } catch (MessageDecodingException ex) {
             Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
             assert (false);
@@ -762,7 +763,7 @@ public class EncodingDecodingTest {
             opCodeCorrect(buffer, msg);
             Interleaved_PRC_ServersRequestForPredictionMsg.Request res =
                     Interleaved_PRC_ServersRequestForPredictionMsgFactory.Request.fromBuffer(buffer);
-            compareNatMsgsNoTimeout(msg, res);
+            compareNatMsgs(msg, res);
         } catch (MessageDecodingException ex) {
             Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
             assert (false);
@@ -821,7 +822,7 @@ public class EncodingDecodingTest {
             opCodeCorrect(buffer, msg);
             Interleaved_PRP_ServerRequestForAvailablePortsMsg.Request res =
                     Interleaved_PRP_ServerRequestForAvailablePortsMsgFactory.Request.fromBuffer(buffer);
-            compareNatMsgsNoTimeout(msg, res);
+            compareNatMsgs(msg, res);
         } catch (MessageDecodingException ex) {
             Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
             assert (false);
@@ -876,7 +877,7 @@ public class EncodingDecodingTest {
             opCodeCorrect(buffer, msg);
             PRC_ServerRequestForConsecutiveMsg.Request res =
                     PRC_ServerRequestForConsecutiveMsgFactory.Request.fromBuffer(buffer);
-            compareNatMsgsNoTimeout(msg, res);
+            compareNatMsgs(msg, res);
         } catch (MessageDecodingException ex) {
             Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
             assert (false);
@@ -935,7 +936,7 @@ public class EncodingDecodingTest {
             opCodeCorrect(buffer, msg);
             PRP_ServerRequestForAvailablePortsMsg.Request res =
                     PRP_ServerRequestForAvailablePortsMsgFactory.Request.fromBuffer(buffer);
-            compareNatMsgsNoTimeout(msg, res);
+            compareNatMsgs(msg, res);
         } catch (MessageDecodingException ex) {
             Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
             assert (false);
@@ -991,7 +992,7 @@ public class EncodingDecodingTest {
             opCodeCorrect(buffer, msg);
             SHP_InitiateSimpleHolePunchingMsg.Request res =
                     SHP_InitiateSimpleHolePunchingMsgFactory.Request.fromBuffer(buffer);
-            compareNatMsgsNoTimeout(msg, res);
+            compareNatMsgs(msg, res);
         } catch (MessageDecodingException ex) {
             Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
             assert (false);
@@ -1011,7 +1012,7 @@ public class EncodingDecodingTest {
             ByteBuf buffer = msg.toByteArray();
             opCodeCorrect(buffer, msg);
             SHP_OpenHoleMsg.Initiator res = SHP_OpenHoleMsgFactory.Initiator.fromBuffer(buffer);
-            compareNatMsgsNoTimeout(msg, res);
+            compareNatMsgs(msg, res);
         } catch (MessageDecodingException ex) {
             Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
             assert (false);
@@ -1398,15 +1399,11 @@ public class EncodingDecodingTest {
     }
 
     private void compareNatMsgs(NatMsg a, NatMsg b) {
-        assert (a.getTimeoutId().equals(b.getTimeoutId()));
-        compareNatMsgsNoTimeout(a, b);
-        // Note, we don't compare Address objects, as they have                                                                                                          
-        // their ip and port set by the NettyHandler object.                                                                                                             
-        // ip is null and port is 0 after the factory deserializes                                                                                                       
-        // objects. It is up to NettyHandler to set ip and port.                                                                                                         
-    }
-
-    private void compareNatMsgsNoTimeout(NatMsg a, NatMsg b) {
+        if (a instanceof DirectMsgNetty.Oneway == false &&
+                a instanceof RelayMsgNetty.Oneway == false &&
+                a instanceof DirectMsgNetty.SystemOneway == false) {
+            assert (a.getTimeoutId().equals(b.getTimeoutId()));
+        }
         assert (a.getVodSource().equals(b.getVodSource()));
         assert (a.getVodDestination().equals(b.getVodDestination()));
         // Note, we don't compare Address objects, as they have                                                                                                          
@@ -1414,4 +1411,5 @@ public class EncodingDecodingTest {
         // ip is null and port is 0 after the factory deserializes                                                                                                       
         // objects. It is up to NettyHandler to set ip and port.                                                                                                         
     }
+
 }

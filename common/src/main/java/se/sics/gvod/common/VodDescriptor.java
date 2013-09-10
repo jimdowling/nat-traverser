@@ -1,7 +1,6 @@
 package se.sics.gvod.common;
 
 import java.io.Serializable;
-import java.util.BitSet;
 import java.util.LinkedList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

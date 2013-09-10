@@ -3,6 +3,8 @@ package se.sics.gvod.hp.msgs;
 import io.netty.buffer.ByteBuf;
 import se.sics.gvod.common.msgs.DirectMsgNettyFactory;
 import se.sics.gvod.common.msgs.MessageDecodingException;
+import se.sics.gvod.net.util.UserTypesDecoderFactory;
+import se.sics.gvod.timer.TimeoutId;
 
 public class TConnectionMsgFactory {
 
@@ -52,7 +54,9 @@ public class TConnectionMsgFactory {
         @Override
         protected TConnectionMsg.Pang process(ByteBuf buffer) throws MessageDecodingException {
 
-            return new TConnectionMsg.Pang(vodSrc, vodDest, timeoutId);
+            TimeoutId msgTimeoutId = UserTypesDecoderFactory.readTimeoutId(buffer);
+
+            return new TConnectionMsg.Pang(vodSrc, vodDest, msgTimeoutId);
         }
     }
 }

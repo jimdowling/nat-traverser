@@ -9,6 +9,7 @@ import se.sics.gvod.net.VodAddress;
 import se.sics.gvod.net.msgs.RewriteableMsg;
 import se.sics.gvod.net.msgs.RewriteableRetryTimeout;
 import se.sics.gvod.net.msgs.ScheduleRetryTimeout;
+import se.sics.gvod.net.util.UserTypesEncoderFactory;
 import se.sics.gvod.timer.TimeoutId;
 
 /**
@@ -126,8 +127,7 @@ public class TConnectionMsg {
         }
 
         public Pang(VodAddress src, VodAddress dest, TimeoutId msgTimeoutId) {
-            super(src, dest);
-            this.msgTimeoutId = msgTimeoutId;
+            this(src, dest, Transport.UDP, msgTimeoutId);
         }
 
         private Pang(Pang msg, VodAddress src) {
@@ -146,12 +146,14 @@ public class TConnectionMsg {
 
         @Override
         public RewriteableMsg copy() {
-            return new TConnectionMsg.Pang(vodSrc, vodDest, msgTimeoutId);
+            return new TConnectionMsg.Pang(vodSrc, vodDest, protocol, msgTimeoutId);
         }
 
         @Override
         public ByteBuf toByteArray() throws MessageEncodingException {
-            return createChannelBufferWithHeader();
+            ByteBuf b = createChannelBufferWithHeader();
+            UserTypesEncoderFactory.writeTimeoutId(b, msgTimeoutId);
+            return b;
         }
 
         @Override
