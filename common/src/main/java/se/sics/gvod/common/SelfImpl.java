@@ -85,7 +85,7 @@ public class SelfImpl extends SelfBase
         if (getId() != other.getId()) {
             return false;
         }
-        if (overlayId != other.getOverlayId()) {
+        if (getOverlayId() != other.getOverlayId()) {
             return false;
         }
         return true;
@@ -93,7 +93,7 @@ public class SelfImpl extends SelfBase
 
     @Override
     public int hashCode() {
-        return (nodeId * 7 + overlayId * 3) / 10 + 13 ;
+        return (nodeId * 7 + getOverlayId() * 3) / 10 + 13 ;
     }
 
 }

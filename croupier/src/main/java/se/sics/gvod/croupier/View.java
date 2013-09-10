@@ -220,7 +220,10 @@ public class View {
 //-------------------------------------------------------------------	
     private boolean removeEntry(ViewEntry entry) {
         boolean res = entries.remove(entry);
-        d2e.remove(entry.getDescriptor().getVodAddress());
+        if (d2e.remove(entry.getDescriptor().getVodAddress()) == null 
+                && res == true) {
+            System.err.println("Croupier View corrupted.");
+        }
         checkSize();
         return res;
     }
