@@ -7,6 +7,7 @@ package se.sics.gvod.common;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import se.sics.gvod.address.Address;
@@ -32,6 +33,9 @@ public class SelfFactory {
      */
     private static ConcurrentHashMap<Integer, Nat> nats = new ConcurrentHashMap<Integer, Nat>();
 
+    private static AtomicInteger overlayId = new AtomicInteger();
+    
+    
     public static synchronized Set<Address> getParents(int nodeId) {
         Set<Address> myParents = new HashSet<Address>();
         if (parents.containsKey(nodeId)) {
@@ -89,5 +93,13 @@ public class SelfFactory {
         // return a reference, as the object should be immutable (with the 
         // exception of bindingTimeout that is anyways, not updated).
         return nats.get(nodeId);
+    }
+    
+    static void setOverlayId(int overlayId) {
+        SelfFactory.overlayId.set(overlayId);
+    }
+    
+    static int getOverlayId() {
+        return SelfFactory.overlayId.get();
     }
 }

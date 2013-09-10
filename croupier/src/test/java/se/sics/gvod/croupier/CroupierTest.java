@@ -141,4 +141,6 @@ public class CroupierTest extends VodRetryComponentTestCase {
         neighbours.add(desc2);
         croupier.handleJoin.handle(new CroupierJoin(neighbours));
     }
+
+
 }

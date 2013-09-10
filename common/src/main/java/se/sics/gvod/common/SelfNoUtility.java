@@ -37,32 +37,12 @@ public class SelfNoUtility extends SelfBase
      */
     @Override
     public VodAddress getAddress() {
-        return new VodAddress(new Address(ip, port, overlayId), 
-                overlayId, SelfFactory.getNat(nodeId)
+        return new VodAddress(new Address(ip, port, getOverlayId()), 
+                getOverlayId(), SelfFactory.getNat(nodeId)
                 );
 //                SelfFactory.getSelfAddress(port, nodeId, overlayId);
     }
 
-    @Override
-    public int getId() {
-        return nodeId;
-    }
-
-    @Override
-    public int getOverlayId() {
-        return overlayId;
-    }
-
-    @Override
-    public int getPort() {
-        return port;
-    }
-
-    @Override
-    public InetAddress getIp() {
-        return ip;
-    }
-    
     @Override
     public Nat getNat() {
         return SelfFactory.getNat(nodeId);

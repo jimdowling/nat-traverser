@@ -35,34 +35,9 @@ public class SelfImpl extends SelfBase
      */
     @Override
     public VodAddress getAddress() {
-        return new VodAddress(addr, overlayId, 
+        return new VodAddress(addr, getOverlayId(), 
                 SelfFactory.getNat(nodeId), SelfFactory.getParents(nodeId));
     }
-
-    @Override
-    public int getId() {
-        return nodeId;
-    }
-
-    @Override
-    public int getOverlayId() {
-        return overlayId;
-    }
-
-    @Override
-    public int getPort() {
-        return port;
-    }
-
-    public void setOverlayId(int overlayId) {
-        this.overlayId = overlayId;
-    }
-
-    @Override
-    public InetAddress getIp() {
-        return ip;
-    }
-    
 
     @Override
     public Nat getNat() {
@@ -131,7 +106,7 @@ public class SelfImpl extends SelfBase
         if (addr.getId() != other.getId()) {
             return false;
         }
-        if (overlayId != other.getOverlayId()) {
+        if (getOverlayId() != other.getOverlayId()) {
             return false;
         }
         return true;
@@ -139,7 +114,7 @@ public class SelfImpl extends SelfBase
 
     @Override
     public int hashCode() {
-        return (nodeId * 7 + overlayId * 3) / 10 + 13 ;
+        return (nodeId * 7 + getOverlayId() * 3) / 10 + 13 ;
     }
 
 }

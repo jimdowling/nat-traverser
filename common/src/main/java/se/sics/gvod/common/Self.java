@@ -34,6 +34,8 @@ public interface Self
     
     public int getOverlayId();
     
+    public void setOverlayId(int overlayId);
+    
     public int getPort();
     
     public InetAddress getIp();

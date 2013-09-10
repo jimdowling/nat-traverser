@@ -46,26 +46,6 @@ public class SelfNoParents extends SelfBase
     }
 
     @Override
-    public int getId() {
-        return nodeId;
-    }
-
-    @Override
-    public int getOverlayId() {
-        return overlayId;
-    }
-
-    @Override
-    public int getPort() {
-        return port;
-    }
-
-    @Override
-    public InetAddress getIp() {
-        return ip;
-    }
-    
-    @Override
     public Nat getNat() {
         return SelfFactory.getNat(nodeId);
     }

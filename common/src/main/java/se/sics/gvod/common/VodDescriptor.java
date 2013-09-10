@@ -32,7 +32,7 @@ public class VodDescriptor implements Comparable<VodDescriptor>, Serializable {
      * 2 bytes in length
      */
     private int uploadRate;
-    private long numberOfIndexEntries;
+    private final long numberOfIndexEntries;
     /**
      * Don't serialize. Sender side of data request. Determines number of
      * outstanding requests that can be in-flight.
@@ -81,7 +81,16 @@ public class VodDescriptor implements Comparable<VodDescriptor>, Serializable {
     public VodDescriptor(VodAddress vodAddress, int age,
             Utility utility, int refs, int uploadRate,
             LinkedList<Block> requestPipeline,
-            CommunicationWindow window, int pipeSize, int mtu) {
+            CommunicationWindow window, int pipeSize, 
+            int mtu) {
+        this(vodAddress,age, utility, refs, uploadRate, requestPipeline,
+                window, pipeSize, mtu, 0);
+    }
+    public VodDescriptor(VodAddress vodAddress, int age,
+            Utility utility, int refs, int uploadRate,
+            LinkedList<Block> requestPipeline,
+            CommunicationWindow window, int pipeSize, 
+            int mtu, long numberOfIndexEntries) {
         assert (vodAddress != null);
 //        assert (utility != null);
         this.vodAddress = vodAddress;
@@ -99,6 +108,7 @@ public class VodDescriptor implements Comparable<VodDescriptor>, Serializable {
         } else {
             this.mtu = mtu;
         }
+        this.numberOfIndexEntries = numberOfIndexEntries;
     }
 
     public VodDescriptor(VodAddress vodAddress) {
@@ -127,8 +137,7 @@ public class VodDescriptor implements Comparable<VodDescriptor>, Serializable {
                 utility, 0, 0, new LinkedList<Block>(),
                 new CommunicationWindow(VodConfig.LB_WINDOW_SIZE,
                         VodConfig.LB_MAX_WINDOW_SIZE),
-                VodConfig.LB_DEFAULT_PIPELINE_SIZE, mtu);
-        this.numberOfIndexEntries = numberOfIndexEntries;
+                VodConfig.LB_DEFAULT_PIPELINE_SIZE, mtu, numberOfIndexEntries);
 
     }
 

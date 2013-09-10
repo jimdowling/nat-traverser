@@ -18,7 +18,6 @@ public abstract class SelfBase implements Self {
 
     protected final InetAddress ip;
     protected final int nodeId;
-    protected int overlayId;
     protected final int port;
     protected final Address addr;
     
@@ -29,8 +28,8 @@ public abstract class SelfBase implements Self {
         this.ip = ip;
         this.port = port;
         this.nodeId = nodeId;
-        this.overlayId = overlayId;
         this.addr = new Address(ip, port, nodeId);
+        SelfFactory.setOverlayId(overlayId);
     }
     
     @Override
@@ -59,7 +58,33 @@ public abstract class SelfBase implements Self {
         return getNat().isOpen();
     }
 
-    public void setOverlayId(int overlayId) {
-        this.overlayId = overlayId;
+
+    @Override
+    public final int getOverlayId() {
+        return SelfFactory.getOverlayId();
     }
+    /**
+     * Sets the overlayId for this node (self).
+     * @param overlayId
+     */
+    @Override
+    public final void setOverlayId(int overlayId) {
+        SelfFactory.setOverlayId(overlayId);
+    }
+
+    @Override
+    public final InetAddress getIp() {
+       return ip;
+    }
+
+    @Override
+    public final int getId() {
+        return nodeId;
+    }
+    
+    @Override
+    public final int getPort() {
+        return port;
+    }
+    
 }

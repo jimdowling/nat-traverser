@@ -208,6 +208,12 @@ public abstract class VodComponentTestCase extends Assert implements ComponentDe
     }
 
     @Override
+    public void setOverlayId(int overlayId) {
+        SelfFactory.setOverlayId(overlayId);
+    }    
+    
+    
+    @Override
     public int getPort() {
         return self.getPort();
     }
@@ -246,25 +252,12 @@ public abstract class VodComponentTestCase extends Assert implements ComponentDe
     public void addParent(Address parent) {
         SelfFactory.addParent(self.getId(), parent);
     }
-//    @Override
-//    public void setIp(InetAddress ip) {
-//        this.selfAddress = ip;
-//    }
 
     @Override
     public void setNat(Nat nat) {
         this.self = new VodAddress(self.getPeerAddress(), self.getOverlayId(), nat);
     }
 
-//    @Override
-//    public int getAge() {
-//        return age;
-//    }
-//
-//    @Override
-//    public int incrementAndGetAge() {
-//        return ++age;
-//    }
     @Override
     public Self clone(int overlayId) {
         throw new UnsupportedOperationException("Not supported yet.");
@@ -322,4 +315,5 @@ public abstract class VodComponentTestCase extends Assert implements ComponentDe
     public boolean isUnitTest() {
         return true;
     }    
+    
 }
