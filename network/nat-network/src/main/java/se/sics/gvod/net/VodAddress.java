@@ -218,9 +218,10 @@ public class VodAddress implements Serializable, Comparable {
     public String getNatAsString() {
         // NatType:Mapping:Allocation:Filtering:AltAllocation
         // O:EI:R:EI:C
-        StringBuilder str = new StringBuilder();
-        str.append(getNatType().toString()).append(":").append(getMappingPolicy().toString()).append(":").append(getAllocationPolicy().toString()).append(":").append(getFilteringPolicy().toString()).append(":").append(getNatBindingTimeout());
-        return str.toString();
+//        StringBuilder str = new StringBuilder();
+//        str.append(getNatType().toString()).append(":").append(getMappingPolicy().toString()).append(":").append(getAllocationPolicy().toString()).append(":").append(getFilteringPolicy().toString()).append(":").append(getNatBindingTimeout());
+//        return str.toString();
+        return getNat().toString();
     }
 
 //    public static int parseNat(String nat) {

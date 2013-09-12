@@ -27,10 +27,10 @@ public class NatBean implements Serializable {
     private static final Logger logger = LoggerFactory.getLogger(NatBean.class);
     private AddressBean addressBean;
     private List<AddressBean> parentsBeanAddress;
-    private String natPolicy;
-    private boolean upnpSupported;
-    private int numTimesUnchanged;
-    private int numTimesSinceStunLastRun;
+    private String natPolicy="NAT_m(PD)_a(R)_m(PD)";
+    private boolean upnpSupported=false;
+    private int numTimesUnchanged=0;
+    private int numTimesSinceStunLastRun=0;
     
     public NatBean() {
         this.addressBean = new AddressBean();

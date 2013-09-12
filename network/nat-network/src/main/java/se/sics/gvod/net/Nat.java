@@ -18,67 +18,63 @@ public class Nat implements Serializable, Comparable {
 
     private static final long serialVersionUID = 453132554678L;
 
-/* For info on expected UDP Nat binding timeouts, see :
- * http://www.ietf.org/proceedings/78/slides/behave-8.pdf
- * From these slides, we measure UDP-2, but a NAT will refresh with UDP-1.
- * Therefore, we need to be conservative in setting the NAT binding timeout.
- */   
+    /* For info on expected UDP Nat binding timeouts, see :
+     * http://www.ietf.org/proceedings/78/slides/behave-8.pdf
+     * From these slides, we measure UDP-2, but a NAT will refresh with UDP-1.
+     * Therefore, we need to be conservative in setting the NAT binding timeout.
+     */
     public static final int DEFAULT_RULE_EXPIRATION_TIME = 30 * 1000;
     public static final int UPPER_RULE_EXPIRATION_TIME = 90 * 1000;
-
     public static final String[] NAT_COMBINATIONS = {
-            "NAT_EI_PC_EI", "NAT_EI_PC_HD", "NAT_EI_PC_PD",
-            "NAT_EI_PP_EI_AltPC", "NAT_EI_PP_HD", "NAT_EI_PP_PD",
-            "NAT_EI_RD_EI", "NAT_EI_RD_HD", "NAT_EI_RD_PD", 
-            "NAT_HD_PC_HD", "NAT_HD_PP_HD_AltPC", "NAT_HD_PP_HD_AltRD",
-            "NAT_HD_RD_HD", 
-            "NAT_PD_PC_EI", "NAT_PD_PC_PD",
-            "NAT_PD_RD_PD", "NAT_PD_PP_EI", "NAT_PD_PP_PD" 
-        };
+        "NAT_EI_PC_EI", "NAT_EI_PC_HD", "NAT_EI_PC_PD",
+        "NAT_EI_PP_EI_AltPC", "NAT_EI_PP_HD", "NAT_EI_PP_PD",
+        "NAT_EI_RD_EI", "NAT_EI_RD_HD", "NAT_EI_RD_PD",
+        "NAT_HD_PC_HD", "NAT_HD_PP_HD_AltPC", "NAT_HD_PP_HD_AltRD",
+        "NAT_HD_RD_HD",
+        "NAT_PD_PC_EI", "NAT_PD_PC_PD",
+        "NAT_PD_RD_PD", "NAT_PD_PP_EI", "NAT_PD_PP_PD"
+    };
 
     public static enum Type {
 
         OPEN("OP"), NAT("NAT"), UPNP("UPNP"), UDP_BLOCKED("UB");
-        
-                String code;
-        
+        String code;
+
         private Type(String code) {
             this.code = code;
         }
 
-        
         public static Type decode(String ap) {
-            
+
             for (Type mp : Type.values()) {
-                if (mp.code.equals(ap))
+                if (mp.code.equals(ap)) {
                     return mp;
+                }
             }
-            
+
             return null;
         }
-
     };
 
     public static enum MappingPolicy {
         // Ordering of policies is from least restrictive to most restrictive
 
-        OPEN("OP"), ENDPOINT_INDEPENDENT("EI"), 
+        OPEN("OP"), ENDPOINT_INDEPENDENT("EI"),
         HOST_DEPENDENT("HD"), PORT_DEPENDENT("PD");
-
         String code;
-        
+
         private MappingPolicy(String code) {
             this.code = code;
         }
 
-        
         public static MappingPolicy decode(String ap) {
-            
+
             for (MappingPolicy mp : MappingPolicy.values()) {
-                if (mp.code.equals(ap))
+                if (mp.code.equals(ap)) {
                     return mp;
+                }
             }
-            
+
             return null;
         }
     };
@@ -87,45 +83,42 @@ public class Nat implements Serializable, Comparable {
         // Ordering of policies is from least restrictive to most restrictive
 
         OPEN("OP"), PORT_PRESERVATION("PP"), PORT_CONTIGUITY("PC"), RANDOM("RD");
-
         String code;
-        
+
         private AllocationPolicy(String code) {
             this.code = code;
         }
 
-        
         public static AllocationPolicy decode(String ap) {
-            
+
             for (AllocationPolicy mp : AllocationPolicy.values()) {
-                if (mp.code.equals(ap))
+                if (mp.code.equals(ap)) {
                     return mp;
+                }
             }
-            
+
             return null;
         }
-        
     };
 
     public static enum AlternativePortAllocationPolicy {
         // Ordering of policies is from least restrictive to most restrictive
 
         PORT_CONTIGUITY("AltPC"), RANDOM("AltRD"), OPEN("AltOP");
-        
         String code;
-        
+
         private AlternativePortAllocationPolicy(String code) {
             this.code = code;
         }
 
-        
         public static AlternativePortAllocationPolicy decode(String ap) {
-            
+
             for (AlternativePortAllocationPolicy mp : AlternativePortAllocationPolicy.values()) {
-                if (mp.code.equals(ap))
+                if (mp.code.equals(ap)) {
                     return mp;
+                }
             }
-            
+
             return null;
         }
     }
@@ -134,36 +127,33 @@ public class Nat implements Serializable, Comparable {
         // Ordering of policies is from least restrictive to most restrictive
 
         OPEN("OP"), ENDPOINT_INDEPENDENT("EI"), HOST_DEPENDENT("HD"), PORT_DEPENDENT("PD");
-
         String code;
-        
+
         private FilteringPolicy(String code) {
             this.code = code;
         }
 
-        
         public static FilteringPolicy decode(String ap) {
-            
+
             for (FilteringPolicy mp : FilteringPolicy.values()) {
-                if (mp.code.equals(ap))
+                if (mp.code.equals(ap)) {
                     return mp;
+                }
             }
-            
+
             return null;
         }
-
     };
 
     public static enum BindingTimeoutCategory {
+
         LOW(Nat.DEFAULT_RULE_EXPIRATION_TIME), HIGH(Nat.UPPER_RULE_EXPIRATION_TIME);
-        
         int bindingTimeout;
-        
+
         private BindingTimeoutCategory(int timeout) {
             this.bindingTimeout = timeout;
         }
 
-        
         public static BindingTimeoutCategory create(long timeout) {
             if (timeout < LOW.bindingTimeout) {
                 return LOW;
@@ -174,10 +164,7 @@ public class Nat implements Serializable, Comparable {
         public int getBindingTimeout() {
             return bindingTimeout;
         }
-        
-    }    
-    
-    
+    }
     private final Type type;
     private final MappingPolicy mappingPolicy;
     private final AllocationPolicy allocationPolicy;
@@ -203,8 +190,7 @@ public class Nat implements Serializable, Comparable {
 
     public Nat(Type type, Address publicUPNPAddress,
             MappingPolicy mappingPolicy, AllocationPolicy allocationPolicy,
-            FilteringPolicy filteringPolicy
-            ) {
+            FilteringPolicy filteringPolicy) {
         this.type = type;
         if (type != Type.UPNP) {
             throw new IllegalStateException("Only use this constructor if your NAT is upnp");
@@ -239,7 +225,7 @@ public class Nat implements Serializable, Comparable {
         this.bindingTimeout = (udpNatBindingTimeout < BindingTimeoutCategory.LOW.getBindingTimeout())
                 ? BindingTimeoutCategory.LOW.getBindingTimeout() : udpNatBindingTimeout;
     }
-    
+
     public Address getPublicUPNPAddress() {
         return publicUPNPAddress;
     }
@@ -271,7 +257,7 @@ public class Nat implements Serializable, Comparable {
     public long getBindingTimeout() {
         return bindingTimeout;
     }
-    
+
     private boolean isEndpointIndependent() {
         if (filteringPolicy == null || mappingPolicy == null) {
             return false;
@@ -282,7 +268,7 @@ public class Nat implements Serializable, Comparable {
 
     public boolean isOpen() {
 //            TODO: || isEndpointIndependentFiltering() && isEndpointIndependentMapping()
-        if (type == Type.OPEN ) {
+        if (type == Type.OPEN) {
             return true;
         }
         return false;
@@ -297,12 +283,50 @@ public class Nat implements Serializable, Comparable {
 
     @Override
     public String toString() {
-        StringBuilder str = new StringBuilder();
-        str.append(type.toString()).append(":").append(getMappingPolicy().toString())
-                .append(":").append(getAllocationPolicy().toString())
-                .append(":").append(getFilteringPolicy().toString())
-                .append(":").append(bindingTimeout);
-        return str.toString();
+
+        StringBuilder msg = new StringBuilder();
+        if (type != Type.NAT) {
+            msg.append(type.toString());
+            return msg.toString();
+        } else {
+            if (type == Type.NAT) {
+                String mp;
+                if (mappingPolicy == MappingPolicy.ENDPOINT_INDEPENDENT) {
+                    mp = "m(EI)";
+                } else if (mappingPolicy == MappingPolicy.HOST_DEPENDENT) {
+                    mp = "m(HD)";
+                } else if (mappingPolicy == MappingPolicy.PORT_DEPENDENT) {
+                    mp = "m(PD)";
+                } else {
+                    mp = "m(??)";
+                }
+                String ap;
+                if (allocationPolicy == AllocationPolicy.PORT_PRESERVATION) {
+                    ap = "a(PP)";
+                } else if (allocationPolicy == AllocationPolicy.PORT_CONTIGUITY) {
+                    ap = "a(PC)";
+                } else if (allocationPolicy == AllocationPolicy.RANDOM) {
+                    ap = "a(RA)";
+                } else {
+                    ap = "a(??)";
+                }
+                String fp;
+                if (filteringPolicy == FilteringPolicy.ENDPOINT_INDEPENDENT) {
+                    fp = "f(EI)";
+                } else if (filteringPolicy == FilteringPolicy.HOST_DEPENDENT) {
+                    fp = "f(HD)";
+                } else if (filteringPolicy == FilteringPolicy.PORT_DEPENDENT) {
+                    fp = "f(PD)";
+                } else {
+                    fp = "f(??)";
+                }
+                msg.append(mp).append("_").append(ap).append("_").append(fp);
+            } else {
+                msg.append("OPEN");
+            }
+
+            return msg.toString();
+        }
     }
 
     @Override
@@ -346,42 +370,41 @@ public class Nat implements Serializable, Comparable {
 
         return 1;
     }
-    
+
     public static List<Nat> getAllNatCombinations() {
-        List<Nat> nats = new ArrayList<Nat> ();
-        
+        List<Nat> nats = new ArrayList<Nat>();
+
         for (String natType : NAT_COMBINATIONS) {
             nats.add(parseToNat(natType));
         }
-        
+
         return nats;
     }
 
     public static Nat parseToNat(String natType) {
         StringTokenizer stz = new StringTokenizer(natType, "_");
-            String token = stz.nextToken();
-            Nat.Type type = Nat.Type.decode(token);
-            Nat.MappingPolicy mappingPolicy = Nat.MappingPolicy.decode((String) stz.nextElement());
-            Nat.AllocationPolicy allocationPolicy = Nat.AllocationPolicy.decode((String) stz.nextElement());
-            Nat.FilteringPolicy filteringPolicy = Nat.FilteringPolicy.decode((String) stz.nextElement());
-            Nat.AlternativePortAllocationPolicy alternativePortAllocationPolicy = null;
-            if (stz.hasMoreElements()) {
-                alternativePortAllocationPolicy = Nat.AlternativePortAllocationPolicy.decode((String) stz.nextElement());
-            }
-            return new Nat(type, mappingPolicy, allocationPolicy, filteringPolicy, 
-                     0, 3000);
+        String token = stz.nextToken();
+        Nat.Type type = Nat.Type.decode(token);
+        Nat.MappingPolicy mappingPolicy = Nat.MappingPolicy.decode((String) stz.nextElement());
+        Nat.AllocationPolicy allocationPolicy = Nat.AllocationPolicy.decode((String) stz.nextElement());
+        Nat.FilteringPolicy filteringPolicy = Nat.FilteringPolicy.decode((String) stz.nextElement());
+        Nat.AlternativePortAllocationPolicy alternativePortAllocationPolicy = null;
+        if (stz.hasMoreElements()) {
+            alternativePortAllocationPolicy = Nat.AlternativePortAllocationPolicy.decode((String) stz.nextElement());
+        }
+        return new Nat(type, mappingPolicy, allocationPolicy, filteringPolicy,
+                0, 3000);
     }
-    
-    
+
     public void setBindingTimeout(long bindingTimeout) {
         this.bindingTimeout = (bindingTimeout < BindingTimeoutCategory.LOW.getBindingTimeout())
-                ? BindingTimeoutCategory.LOW.getBindingTimeout() : bindingTimeout;        
+                ? BindingTimeoutCategory.LOW.getBindingTimeout() : bindingTimeout;
     }
 
     /**
-     * A node that requires PRP-PRP or PRP-PRC or PRP (with PD filtering) will need to 
-     * allocate a new port for each new connection.
-     * Pre-allocated ports are sent to the zServer.
+     * A node that requires PRP-PRP or PRP-PRC or PRP (with PD filtering) will
+     * need to allocate a new port for each new connection. Pre-allocated ports
+     * are sent to the zServer.
      */
     public boolean preallocatePorts() {
         if (this.allocationPolicy == AllocationPolicy.PORT_PRESERVATION) {
@@ -393,13 +416,12 @@ public class Nat implements Serializable, Comparable {
     public boolean moreRestrictiveThan(MappingPolicy other) {
         return mappingPolicy.ordinal() > other.ordinal();
     }
-    
+
     public boolean moreRestrictiveThan(AllocationPolicy other) {
         return allocationPolicy.ordinal() > other.ordinal();
     }
+
     public boolean moreRestrictiveThan(FilteringPolicy other) {
         return filteringPolicy.ordinal() > other.ordinal();
     }
 }
-
-

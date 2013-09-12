@@ -304,25 +304,25 @@ public class NatTraverser extends MsgRetryComponent {
                     stunServers.add(new Address(a.getIp(), BaseCommandLineConfig.DEFAULT_STUN_PORT, a.getId()));
                 }
 
-                CachedNatType sc = VodConfig.getSavedNatType();
-                boolean runStun = true;
-                if (sc.getNatBean().getNumTimesUnchanged() > 2 && 
-                        sc.getNatBean().getNumTimesSinceStunLastRun() < 5) {
-                    if (!sc.getNatBean().isUpnpSupported()) {
-                        VodAddress va = sc.getNatBean().getVodAddress();
-                        self.setNat(va.getNat());
-                        if (!self.isOpen()) {
-                            for (Address p : va.getParents()) {
-                                self.addParent(p);
-                            }
-                        }
-                        runStun = false;
-                        List<Address> l = new ArrayList<Address>();
-                        l.addAll(init.getPublicNodes());
-                        sendGetNatTypeResponse(l);
-                    }
-                }
-                if (runStun) {
+//                CachedNatType sc = VodConfig.getSavedNatType();
+//                boolean runStun = true;
+//                if (sc.getNatBean().getNumTimesUnchanged() > 2 && 
+//                        sc.getNatBean().getNumTimesSinceStunLastRun() < 5) {
+//                    if (!sc.getNatBean().isUpnpSupported()) {
+//                        VodAddress va = sc.getNatBean().getVodAddress();
+//                        self.setNat(va.getNat());
+//                        if (!self.isOpen()) {
+//                            for (Address p : va.getParents()) {
+//                                self.addParent(p);
+//                            }
+//                        }
+//                        runStun = false;
+//                        List<Address> l = new ArrayList<Address>();
+//                        l.addAll(init.getPublicNodes());
+//                        sendGetNatTypeResponse(l);
+//                    }
+//                }
+//                if (runStun) {
                     delegator.doTrigger(new GetNatTypeRequest(stunServers,
                             0 /*timeout before starting stun*/,
                             init.getStunClientConfig().isMeasureNatBindingTimeout(),
@@ -330,7 +330,7 @@ public class NatTraverser extends MsgRetryComponent {
                             init.getStunClientConfig().getRtoRetries(),
                             init.getStunClientConfig().getRtoScale()),
                             stunClient.getPositive(StunPort.class));
-                }
+//                }
             }
 
             //initialize the hole punching client

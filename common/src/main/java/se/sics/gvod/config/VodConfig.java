@@ -482,8 +482,6 @@ public class VodConfig extends BaseCommandLineConfig {
         String oldNat = vab.getNatPolicy();
         vab.setNatPolicy(self.getNat().toString());
 
-//                self.getNat().toString());
-//        startupConfig.setNatBean(vab);
         if (wasStunRun) {
             vab.resetNumTimesSinceStunLastRun();
         } else {
@@ -498,11 +496,8 @@ public class VodConfig extends BaseCommandLineConfig {
 
         try {
             encoder = new XMLEncoder(
-                    //                    new GZIPOutputStream(
-                    new BufferedOutputStream(
-                    new FileOutputStream(STARTUP_CONFIG_FILE, false)) //                    )
+            new BufferedOutputStream(new FileOutputStream(STARTUP_CONFIG_FILE, false))
                     );
-
             encoder.writeObject(savedNatType);
             encoder.flush();
             isSaved = true;
@@ -526,6 +521,9 @@ public class VodConfig extends BaseCommandLineConfig {
     }
 
     public static CachedNatType getSavedNatType() {
+        if (savedNatType == null) {
+            savedNatType = new CachedNatType(new NatBean());
+        }
         return savedNatType;
     }
 
