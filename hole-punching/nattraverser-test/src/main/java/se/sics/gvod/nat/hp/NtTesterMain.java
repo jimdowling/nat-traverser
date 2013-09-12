@@ -100,11 +100,11 @@ public final class NtTesterMain extends ComponentDefinition {
         
         System.setProperty("java.net.preferIPv4Stack", "true");
         
-        // This initializes the Kompics runtime, and creates an instance of Root
         if (args.length < 3) {
-            logger.info("Usage: <prog> upnp id bindIp bootstrapNode [openServer] [destId destNatType]");
+            logger.info("Usage: <prog> upnp id bindIp bootstrapNode [openServer]");
             logger.info("       bindIp: 0=publicIp, 1=privateIp1, 2=privateIp2");
-            logger.info("e.g.  <prog> true 1 0 cloud7.sics.se false 2 NAT_EI_PP_PD");
+            logger.info("e.g.  <prog> true 111 0 cloud7.sics.se false");
+            logger.info("To run bootstrap server, run:  <prog> false 1 0 cloud7.sics.se true");            
             System.exit(0);
         }
         upnpEnabled = Boolean.parseBoolean(args[0]);
@@ -133,8 +133,8 @@ public final class NtTesterMain extends ComponentDefinition {
         Kompics.createAndStart(NtTesterMain.class, 3);
     }
 
-    public static class HolePunchTimeout extends Timeout {
-        public HolePunchTimeout(ScheduleTimeout st) {
+    public static class PingTimeout extends Timeout {
+        public PingTimeout(ScheduleTimeout st) {
             super(st);
         }
     }
@@ -185,8 +185,7 @@ public final class NtTesterMain extends ComponentDefinition {
         subscribe(handlePang, natTraverser.getPositive(VodNetwork.class));
         subscribe(handleNtPortBindResponse, network.getPositive(NatNetworkControl.class));
         subscribe(handleFault, natTraverser.getControl());    
-//        subscribe(handleNettyFault, network.getControl());
-        subscribe(handleHolePunchTimeout, timer.getPositive(Timer.class));
+        subscribe(handlePingTimeout, timer.getPositive(Timer.class));
         subscribe(handlePangTimeout, timer.getPositive(Timer.class));
         subscribe(handleCroupierSample, croupier.getPositive(PeerSamplePort.class));
 
@@ -346,9 +345,9 @@ public final class NtTesterMain extends ComponentDefinition {
             System.exit(-1);
         }
     };
-    Handler<HolePunchTimeout> handleHolePunchTimeout = new Handler<HolePunchTimeout>() {
+    Handler<PingTimeout> handlePingTimeout = new Handler<PingTimeout>() {
         @Override
-        public void handle(HolePunchTimeout msg) {
+        public void handle(PingTimeout msg) {
             logger.info("FAILURE: pong not recvd for TimeoutId: " + msg.getTimeoutId());
             numFail++;
             logger.info("Total Success/Failure ratio is: {}/{}", numSuccess, numFail);
@@ -377,14 +376,14 @@ public final class NtTesterMain extends ComponentDefinition {
             for (VodDescriptor vd : msg.getNodes()) {
                 VodAddress va = vd.getVodAddress();
                 if (alreadyConnected.contains(va) == false) {
-                    // try and send a msg to the new VodAddress if it is private and
-                    // has parents
+                    // send a msg to the new VodAddress if it is private, has parents
+                    // and I haven't tried to send a message to it before.
                     if (self.getId() != va.getId() && 
                             va.isOpen() == false && va.getParents().size() >= 1 &&
                             va.isHpPossible(self.getAddress())) 
                     {
                         ScheduleTimeout st = new ScheduleTimeout(10 * 1000);
-                        HolePunchTimeout hp = new HolePunchTimeout(st);
+                        PingTimeout hp = new PingTimeout(st);
                         st.setTimeoutEvent(hp);
                         trigger(new TConnectionMsg.Ping(self.getAddress(),
                                 va, hp.getTimeoutId()),
@@ -396,14 +395,6 @@ public final class NtTesterMain extends ComponentDefinition {
                     }
                 }
             }
-        }
-    };
-    Handler<Fault> handleNettyFault = new Handler<Fault>() {
-        @Override
-        public void handle(Fault msg) {
-            logger.error("Problem in Netty: {}", msg.getFault().getMessage());
-
-            System.exit(-1);
         }
     };
 }
