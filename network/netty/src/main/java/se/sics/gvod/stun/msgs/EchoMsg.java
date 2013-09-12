@@ -85,7 +85,11 @@ public class EchoMsg {
             super(src, dest, transactionId);
             this.testType = testType;
             this.tryId = tryId;
+            if (replyTo == null) {
+                throw new NullPointerException("Reply-to field cannot be null");
+            }
             this.replyTo = replyTo;
+            
         }
 
         public Address getReplyTo() {

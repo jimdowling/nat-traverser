@@ -81,7 +81,7 @@ public abstract class BaseCommandLineConfig {
 
         if (USER_HOME != null && kHome == null) {
             System.setProperty(PROP_GVOD_HOME, new File(USER_HOME + File.separator
-                    + ".kompics").getAbsolutePath());
+                    + ".config" + File.separator + "nattraverser").getAbsolutePath());
         } else if (USER_HOME == null && kHome == null) {
             throw new IllegalStateException(
                     "kompics.home and user.home environment variables not set.");
@@ -89,7 +89,7 @@ public abstract class BaseCommandLineConfig {
         GVOD_HOME = System.getProperty(PROP_GVOD_HOME);
 
         if (GVOD_HOME == null) {
-            GVOD_HOME = USER_HOME + File.separator + ".kompics";
+            GVOD_HOME = USER_HOME + File.separator + ".config" + File.separator + "nattraverser";
         }
 
         if (new File(BaseCommandLineConfig.GVOD_HOME).exists() == false) {

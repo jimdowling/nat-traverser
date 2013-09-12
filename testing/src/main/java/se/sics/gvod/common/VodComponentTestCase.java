@@ -327,4 +327,26 @@ public abstract class VodComponentTestCase extends Assert implements ComponentDe
     public boolean isUnitTest() {
         return true;
     }    
+    
+    @Override
+    public void setIp(InetAddress ip) {
+        SelfFactory.setIp(getId(), ip);
+    }
+
+    @Override
+    public boolean isUpnp() {
+        return false;
+    }
+
+    @Override
+    public void setUpnpIp(InetAddress ip) {
+        SelfFactory.setUpnpIp(getId(), ip);
+    }    
+
+    @Override
+    public void setUpnp(boolean enabled) {
+        ; // do nothing
+    }
+
+    
 }

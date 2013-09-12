@@ -83,6 +83,7 @@ import se.sics.gvod.common.hp.HolePunching;
 import se.sics.gvod.common.hp.HpFeasability;
 import se.sics.gvod.common.msgs.DirectMsgNetty;
 import se.sics.gvod.common.util.NatStr;
+import se.sics.gvod.common.util.CachedNatType;
 import se.sics.gvod.config.BaseCommandLineConfig;
 import se.sics.gvod.config.StunServerConfiguration;
 import se.sics.gvod.parentmaker.ParentMakerPort;
@@ -303,13 +304,33 @@ public class NatTraverser extends MsgRetryComponent {
                     stunServers.add(new Address(a.getIp(), BaseCommandLineConfig.DEFAULT_STUN_PORT, a.getId()));
                 }
 
-                delegator.doTrigger(new GetNatTypeRequest(stunServers,
-                        0 /*timeout before starting stun*/,
-                        init.getStunClientConfig().isMeasureNatBindingTimeout(),
-                        init.getStunClientConfig().getRto(),
-                        init.getStunClientConfig().getRtoRetries(),
-                        init.getStunClientConfig().getRtoScale()),
-                        stunClient.getPositive(StunPort.class));
+                CachedNatType sc = VodConfig.getSavedNatType();
+                boolean runStun = true;
+                if (sc.getNatBean().getNumTimesUnchanged() > 2 && 
+                        sc.getNatBean().getNumTimesSinceStunLastRun() < 5) {
+                    if (!sc.getNatBean().isUpnpSupported()) {
+                        VodAddress va = sc.getNatBean().getVodAddress();
+                        self.setNat(va.getNat());
+                        if (!self.isOpen()) {
+                            for (Address p : va.getParents()) {
+                                self.addParent(p);
+                            }
+                        }
+                        runStun = false;
+                        List<Address> l = new ArrayList<Address>();
+                        l.addAll(init.getPublicNodes());
+                        sendGetNatTypeResponse(l);
+                    }
+                }
+                if (runStun) {
+                    delegator.doTrigger(new GetNatTypeRequest(stunServers,
+                            0 /*timeout before starting stun*/,
+                            init.getStunClientConfig().isMeasureNatBindingTimeout(),
+                            init.getStunClientConfig().getRto(),
+                            init.getStunClientConfig().getRtoRetries(),
+                            init.getStunClientConfig().getRtoScale()),
+                            stunClient.getPositive(StunPort.class));
+                }
             }
 
             //initialize the hole punching client
@@ -451,7 +472,7 @@ public class NatTraverser extends MsgRetryComponent {
         @Override
         public void handle(ConnectionEstablishmentTimeout timeout) {
 
-            holePunchingFailed(false, timeout.getDestAddress().getId(), 
+            holePunchingFailed(false, timeout.getDestAddress().getId(),
                     OpenConnectionResponseType.HP_TIMEOUT,
                     null, timeout.getMsgTimeoutId());
         }
@@ -874,8 +895,8 @@ public class NatTraverser extends MsgRetryComponent {
         onGoingHP.remove(destId);
     }
 
-    public void holePunchingFailed(boolean cancelTimer, int destId, 
-            OpenConnectionResponseType flag, HPMechanism hpMechanism, 
+    public void holePunchingFailed(boolean cancelTimer, int destId,
+            OpenConnectionResponseType flag, HPMechanism hpMechanism,
             TimeoutId msgTimeoutId) {
         NatTraverser.HpProcess session = onGoingHP.get(destId);
         onGoingHP.remove(destId);
@@ -898,15 +919,15 @@ public class NatTraverser extends MsgRetryComponent {
             // request/response idiom?
             trigger(new HpFailed(msgTimeoutId, flag, destAddress), natTraverserPort);
         }
-        
+
 
         logger.info(compName + "HP Failed. "
-                    + "client/Remote client ID ({}/{}): " 
-                    + NatStr.pairAsStr(self.getNat(), destAddress.getNat())
-                    + " - "
-                    + msgTimeoutId,
-                    self.getId(), destId);
-        
+                + "client/Remote client ID ({}/{}): "
+                + NatStr.pairAsStr(self.getNat(), destAddress.getNat())
+                + " - "
+                + msgTimeoutId,
+                self.getId(), destId);
+
     }
 
     void printAllOpenedConnections() {
@@ -984,37 +1005,48 @@ public class NatTraverser extends MsgRetryComponent {
         }
 
     }
+
+    private void sendGetNatTypeResponse(List<Address> stunServers) {
+        stunTypeDetermined = true;
+        failedStunServers.clear();
+        // Only start RendezvousServer if we can run it on the default port
+        if (self.getNat().isOpen()) {
+            // start the server components, when we have some partner for the stun server
+            retryStartServerComponents();
+        } else if (self.isUpnp()) {
+            logger.info("UPnP is supported.");
+            if (parentMaker != null) {
+                trigger(new Stop(), parentMaker.getControl());
+            }
+        } else { // behind a NAT
+            parentMaker = create(ParentMaker.class);
+            // TODO - do i need a filter for timer msgs too?
+            connect(parentMaker.getNegative(Timer.class), timer);
+            connect(parentMaker.getNegative(VodNetwork.class), network, new MsgDestFilterOverlayId(VodConfig.SYSTEM_OVERLAY_ID));
+            connect(parentMaker.getNegative(NatNetworkControl.class), lowerNetControl);
+            delegator.doTrigger(
+                    new ParentMakerInit(self.clone(VodConfig.SYSTEM_OVERLAY_ID),
+                    parentMakerConfig), parentMaker.control());
+            List<VodAddress> bootstrappers = new ArrayList<VodAddress>();
+            for (Address va : stunServers) {
+                bootstrappers.add(ToVodAddr.hpServer(va));
+            }
+            delegator.doTrigger(new Join(bootstrappers),
+                    parentMaker.getPositive(ParentMakerPort.class));
+        }
+        cacheStunResults();
+    }
     private Handler<GetNatTypeResponse> handleGetNatTypeResponse = new Handler<GetNatTypeResponse>() {
         @Override
         public void handle(GetNatTypeResponse event) {
             logger.info(compName + " Nat type is " + event.getStatus() + " - " + event.getNat());
             self.setNat(event.getNat());
+            self.setUpnp(event.getNat().isUpnp());
+
             if (event.getStatus() == GetNatTypeResponse.Status.SUCCEED) {
-                stunTypeDetermined = true;
-                failedStunServers.clear();
-                // Only start RendezvousServer if we can run it on the default port
-                if (event.getNat().isOpen()) {
-                    // start the server components, when we have some partner for the stun server
-                    retryStartServerComponents();
-                } else if (event.getNat().isUpnp()) {
-                    logger.info("UPnP is supported.");
-                    if (parentMaker != null) {
-                        trigger(new Stop(), parentMaker.getControl());
-                    }
-                } else { // behind a NAT
-                    parentMaker = create(ParentMaker.class);
-                    // TODO - do i need a filter for timer msgs too?
-                    connect(parentMaker.getNegative(Timer.class), timer);
-                    connect(parentMaker.getNegative(VodNetwork.class), network, new MsgDestFilterOverlayId(VodConfig.SYSTEM_OVERLAY_ID));
-                    connect(parentMaker.getNegative(NatNetworkControl.class), lowerNetControl);
-                    delegator.doTrigger(
-                            new ParentMakerInit(self.clone(VodConfig.SYSTEM_OVERLAY_ID),
-                            parentMakerConfig), parentMaker.control());
-                    List<VodAddress> bootstrappers = new ArrayList<VodAddress>();
-                    bootstrappers.add(ToVodAddr.hpServer(event.getStunServer()));
-                    delegator.doTrigger(new Join(bootstrappers),
-                            parentMaker.getPositive(ParentMakerPort.class));
-                }
+                List<Address> l = new ArrayList<Address>();
+                l.add(event.getStunServer());
+                sendGetNatTypeResponse(l);
             } else {
                 retryStun(event.getStunServer());
             }
@@ -1022,6 +1054,17 @@ public class NatTraverser extends MsgRetryComponent {
             delegator.doTrigger(event, natTraverserPort);
         }
     };
+
+    private void cacheStunResults() {
+        CachedNatType sc = VodConfig.getSavedNatType();
+        VodAddress va = sc.getNatBean().getVodAddress();
+        boolean unchanged = false;
+        if (va.getPeerAddress().equals(self.getAddress().getPeerAddress())
+                && va.getNat().equals(self.getNat())) {
+            unchanged = true;
+        }
+        VodConfig.saveNatType(self, true, unchanged);
+    }
 
     private void retryStun(Address failedStunServer) {
         if (stunRetries > 0) {

@@ -170,6 +170,9 @@ import se.sics.gvod.net.VodAddress;
 
     public void setTry(int i, Address publicAddress) {
         Logger.debug("Set try " + i + " : " + publicAddress);
+        if (publicAddress == null) {
+            throw new NullPointerException("public address cannot be null");
+        }
         tries.put(i, publicAddress);
     }
 

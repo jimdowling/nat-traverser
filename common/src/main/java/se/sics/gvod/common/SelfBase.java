@@ -16,30 +16,27 @@ import se.sics.gvod.net.VodAddress;
  */
 public abstract class SelfBase implements Self {
 
-    protected final InetAddress ip;
     protected final int nodeId;
     protected final int overlayId;
     protected final int port;
-    protected final Address addr;
     
     public SelfBase(Nat nat, InetAddress ip, int port, int nodeId, int overlayId) {
         if (nat != null)  {
             SelfFactory.setNat(nodeId, nat);
         }
-        this.ip = ip;
         this.port = port;
         this.nodeId = nodeId;
         this.overlayId = overlayId;
-        this.addr = new Address(ip, port, nodeId);
+        setIp(ip);
     }
     
     @Override
-    public HPMechanism getHpMechanism(VodAddress dest) {
+    public final HPMechanism getHpMechanism(VodAddress dest) {
         return getAddress().getHpMechanism(dest);
     }
 
     @Override
-    public boolean isPacingReqd() {
+    public final boolean isPacingReqd() {
         Nat n = getNat();
         if (n == null) {
             return false;
@@ -55,8 +52,77 @@ public abstract class SelfBase implements Self {
     }
 
     @Override
-    public boolean isOpen() {
+    public final boolean isOpen() {
         return getNat().isOpen();
     }    
+
+    @Override
+    public final boolean isUpnp() {
+        return SelfFactory.isUpnpEnabled(getId());
+    }
+
+    @Override
+    public final void setUpnp(boolean enabled) {
+        SelfFactory.setUpnp(getId(), enabled);
+    }
+
     
+    
+    @Override
+    public final InetAddress getIp() {
+        return isUpnp() == true ? SelfFactory.getUpnpIp(getId()) 
+                : SelfFactory.getIp(getId());
+    }
+
+    protected Address getAddr() {
+        return new Address(getIp(), port, nodeId);
+    }
+    
+    /**
+     * Gets the self address with the current set of parents.
+     * @return 
+     */
+    @Override
+    public final VodAddress getAddress() {
+        return new VodAddress(getAddr(), overlayId, 
+                SelfFactory.getNat(nodeId), SelfFactory.getParents(nodeId));
+    }
+
+    @Override
+    public final int getId() {
+        return nodeId;
+    }
+
+    @Override
+    public final int getOverlayId() {
+        return overlayId;
+    }
+
+    @Override
+    public final int getPort() {
+        return port;
+    }
+    
+
+    @Override
+    public final Nat getNat() {
+        return SelfFactory.getNat(nodeId);
+    }
+
+    @Override
+    public final void setNat(Nat nat) {
+        assert(nat != null);
+        SelfFactory.setNat(nodeId, nat);
+    }
+
+    @Override
+    public final void setIp(InetAddress ip) {
+        SelfFactory.setIp(getId(), ip);
+    }
+    
+    @Override
+    public final void setUpnpIp(InetAddress ip) {
+        SelfFactory.setUpnpIp(getId(), ip);
+    }
+
 }

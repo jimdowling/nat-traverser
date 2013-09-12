@@ -37,6 +37,8 @@ public interface Self
     public int getPort();
     
     public InetAddress getIp();
+    
+    public void setIp(InetAddress ip);
 
     public Nat getNat();
     
@@ -52,6 +54,12 @@ public interface Self
 
     public boolean isOpen();
 
+    public boolean isUpnp();
+
+    public void setUpnp(boolean enabled);
+
+    public void setUpnpIp(InetAddress ip);
+    
     public boolean isPacingReqd();
     
     public HPMechanism getHpMechanism(VodAddress dest);

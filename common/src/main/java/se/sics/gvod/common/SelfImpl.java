@@ -29,47 +29,6 @@ public class SelfImpl extends SelfBase
         super(nat, ip, port, nodeId, overlayId);
     }
     
-    /**
-     * Gets the self address with the current set of parents.
-     * @return 
-     */
-    @Override
-    public VodAddress getAddress() {
-        return new VodAddress(addr, overlayId, 
-                SelfFactory.getNat(nodeId), SelfFactory.getParents(nodeId));
-    }
-
-    @Override
-    public int getId() {
-        return nodeId;
-    }
-
-    @Override
-    public int getOverlayId() {
-        return overlayId;
-    }
-
-    @Override
-    public int getPort() {
-        return port;
-    }
-
-    @Override
-    public InetAddress getIp() {
-        return ip;
-    }
-    
-
-    @Override
-    public Nat getNat() {
-        return SelfFactory.getNat(nodeId);
-    }
-
-    @Override
-    public void setNat(Nat nat) {
-        assert(nat != null);
-        SelfFactory.setNat(nodeId, nat);
-    }
     
     
     @Override
@@ -85,7 +44,8 @@ public class SelfImpl extends SelfBase
     @Override
     public VodDescriptor getDescriptor() {
         int age = 0;
-        return  new VodDescriptor(getAddress(), VodView.getPeerUtility(this), age, VodConfig.LB_MTU_MEASURED);
+        return  new VodDescriptor(getAddress(), VodView.getPeerUtility(this), 
+                age, VodConfig.LB_MTU_MEASURED);
     }
 
     @Override
@@ -105,7 +65,7 @@ public class SelfImpl extends SelfBase
 
     @Override
     public Self clone(int overlayId)  {
-        return new SelfImpl(this.getNat(), this.ip, this.port, this.nodeId, overlayId);
+        return new SelfImpl(this.getNat(), getIp(), this.port, this.nodeId, overlayId);
     }
     
 
@@ -121,10 +81,10 @@ public class SelfImpl extends SelfBase
             return false;
         }
         Self other = (Self) obj;
-        if (addr == null) {
+        if (getAddr() == null) {
             return false;
         } 
-        if (addr.getId() != other.getId()) {
+        if (getId() != other.getId()) {
             return false;
         }
         if (overlayId != other.getOverlayId()) {

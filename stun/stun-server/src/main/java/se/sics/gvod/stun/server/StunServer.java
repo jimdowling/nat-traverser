@@ -165,13 +165,13 @@ public final class StunServer extends MsgRetryComponent {
 //------------------------------------------------------------------------    
     Handler<EchoMsg.Request> handleEchoRequestMsg = new Handler<EchoMsg.Request>() {
         @Override
-        public void handle(EchoMsg.Request message) {
-            printMsgDetails(message);
+        public void handle(EchoMsg.Request msg) {
+            printMsgDetails(msg);
 
             // this server listens on both the ports i.e. Pa, and Pb.
             // if the echo is for Pa then reply using Pa, and if the echo is for
             // Pb then reply through Pb. request to any other port is simply dropped
-            int port = message.getDestination().getPort();
+            int port = msg.getDestination().getPort();
 
             VodAddress sourceAddress = null;
             if (port == VodConfig.DEFAULT_STUN_PORT) {
@@ -183,27 +183,27 @@ public final class StunServer extends MsgRetryComponent {
                 return;
             }
 
-            Address replyTo = message.getReplyTo();
-            if (message.getTestType() != EchoMsg.Test.HEARTBEAT) {
-                replyTo = message.getSource();
+            Address replyTo = msg.getReplyTo();
+            if (msg.getTestType() != EchoMsg.Test.HEARTBEAT) {
+                replyTo = msg.getSource();
             } else {
                 logger.debug("Received a Echo.HEARTBEAT msg");
             }
-            logger.debug("For {} . ReplyTo is " + replyTo, message.getTestType());
+            logger.debug("For {} . ReplyTo is " + replyTo, msg.getTestType());
 
             EchoMsg.Response responseMsg = new EchoMsg.Response(sourceAddress,
                     ToVodAddr.stunClient(replyTo),
-                    message.getSource(),
+                    msg.getSource(),
                     getPartnerAddresses(),
                     (int) config.getRto(),
-                    message.getTestType(),
-                    message.getTransactionId(),
-                    message.getTimeoutId(),
+                    msg.getTestType(),
+                    msg.getTransactionId(),
+                    msg.getTimeoutId(),
                     VodConfig.DEFAULT_STUN_PORT_2);
 
             // set the tryID in the response message
-            if (message.getTestType() == EchoMsg.Test.PING) {
-                responseMsg.setTryId(message.getTryId());
+            if (msg.getTestType() == EchoMsg.Test.PING) {
+                responseMsg.setTryId(msg.getTryId());
             }
 
             delegator.doTrigger(responseMsg, network);

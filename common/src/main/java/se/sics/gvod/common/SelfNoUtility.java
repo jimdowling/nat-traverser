@@ -31,50 +31,6 @@ public class SelfNoUtility extends SelfBase
         super(nat, ip, port, nodeId, overlayId);
     }
 
-    /**
-     * Gets the self address with the current set of parents.
-     * @return 
-     */
-    @Override
-    public VodAddress getAddress() {
-        return new VodAddress(new Address(ip, port, overlayId), 
-                overlayId, SelfFactory.getNat(nodeId)
-                );
-//                SelfFactory.getSelfAddress(port, nodeId, overlayId);
-    }
-
-    @Override
-    public int getId() {
-        return nodeId;
-    }
-
-    @Override
-    public int getOverlayId() {
-        return overlayId;
-    }
-
-    @Override
-    public int getPort() {
-        return port;
-    }
-
-    @Override
-    public InetAddress getIp() {
-        return ip;
-    }
-    
-    @Override
-    public Nat getNat() {
-        return SelfFactory.getNat(nodeId);
-    }
-
-    @Override
-    public void setNat(Nat nat) {
-        assert(nat != null);
-        SelfFactory.setNat(nodeId, nat);
-    }
-    
-    
     @Override
     public Utility getUtility() {
         throw new UnsupportedOperationException();
@@ -107,7 +63,7 @@ public class SelfNoUtility extends SelfBase
 
     @Override
     public Self clone(int overlayId)  {
-        return new SelfNoUtility(SelfFactory.getNat(nodeId), ip, port, nodeId, overlayId);
+        return new SelfNoUtility(SelfFactory.getNat(nodeId), getIp(), port, nodeId, overlayId);
     }    
     
 }

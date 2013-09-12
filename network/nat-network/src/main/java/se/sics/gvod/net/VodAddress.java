@@ -214,6 +214,7 @@ public class VodAddress implements Serializable, Comparable {
         return NatType.values()[ordinal];
     }
 
+    
     public String getNatAsString() {
         // NatType:Mapping:Allocation:Filtering:AltAllocation
         // O:EI:R:EI:C

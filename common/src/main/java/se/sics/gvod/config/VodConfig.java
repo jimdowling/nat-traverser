@@ -15,15 +15,19 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 import java.util.logging.Level;
 import org.apache.commons.cli.Option;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import se.sics.gvod.common.util.StartupConfig;
+import se.sics.gvod.common.util.CachedNatType;
 import se.sics.gvod.address.Address;
+import se.sics.gvod.common.Self;
+import se.sics.gvod.common.util.AddressBean;
 import static se.sics.gvod.config.BaseCommandLineConfig.baseInitialized;
-import se.sics.gvod.common.util.VodAddressBean;
+import se.sics.gvod.common.util.NatBean;
 
 /**
  *
@@ -60,7 +64,7 @@ public class VodConfig extends BaseCommandLineConfig {
     protected static String DEFAULT_TORRENT_DIR;
     protected static String DEFAULT_VIDEO_DIR;
     public static final int MAX_NUM_HASH_RESPONSE_PACKETS = 4;
-    protected static StartupConfig startupConfig;
+    protected static CachedNatType savedNatType;
     protected Option videoDirOption;
     protected Option playerOption;
     protected Option movieOption;
@@ -73,7 +77,6 @@ public class VodConfig extends BaseCommandLineConfig {
     protected Option seedOption;
     protected Option controlPortOption;
     protected Option bootstrapRefreshOption;
-    
     //Croupier parameters
     public static final int CROUPIER_SHUFFLE_PERIOD = 15 * 1000;
     public static final int CROUPIER_SHUFFLE_LENGTH = 15;
@@ -95,14 +98,13 @@ public class VodConfig extends BaseCommandLineConfig {
         }
     };
     public static final CroupierSelectionPolicy CROUPIER_SELECTION_POLICY = CroupierSelectionPolicy.HEALER;
-    
     //Stun parameters
     static int STUN_MIN_RTT = 250;
     static int STUN_RTO = 2500;
     static int STUN_RTO_RETRIES = 1;
     static double STUN_RTO_SCALE = 1.5d;
-    static int STUN_UPNP_TIMEOUT = 6*1000;
-    static int STUN_UPNP_DISCOVERY_TIMEOUT = 3*1000;
+    static int STUN_UPNP_TIMEOUT = 3 * 1000;
+    static int STUN_UPNP_DISCOVERY_TIMEOUT = 3 * 1000;
     static boolean STUN_UPNP_ENABLED = false;
     static boolean STUN_MEASURE_NAT_BINDING_TIMEOUT = false;
     public static final int STUN_PARTNER_HEARTBEAT_PERIOD = 30 * 1000;
@@ -111,7 +113,6 @@ public class VodConfig extends BaseCommandLineConfig {
     public static final int STUN_PARTNER_RTO = 1000;
     public static final long STUN_PARTNER_RTO_MULTIPLIER = 2;
     public static final int STUN_PARTNER_NUM_PARALLEL = 3;
-    
     //Parent Maker's params
     public static int PM_PARENT_RTO = DEFAULT_RTO;
     public static int PM_PARENT_UPDATE_PERIOD = 60 * 1000;
@@ -121,7 +122,6 @@ public class VodConfig extends BaseCommandLineConfig {
     public static int PM_CHILDREN_REMOVE_TIMEOUT = 0 * 1000;
     public static int PM_PARENT_TIMEOUT_DELAY = 4 * 1000;
     public static int PM_PARENT_REJECTED_CLEANUP_TIMEOUT = 300 * 1000;
-    
     // VOD's params
     public static final int BITTORRENT_SET_SIZE = 100;
     public static final int UPPER_SET_SIZE = 100;
@@ -159,15 +159,15 @@ public class VodConfig extends BaseCommandLineConfig {
     // NAT-TRAVERSER'S DEFAULTS
     public final static int NT_STUN_RETRIES = 5;
     public final static int NT_MAX_NUM_OPENED_CONNECTIONS = 5000;
-    public final static int DEFAULT_NT_CONNECTION_ESTABLISHMENT_TIMEOUT = 10*1000;
+    public final static int DEFAULT_NT_CONNECTION_ESTABLISHMENT_TIMEOUT = 10 * 1000;
     public final static int NT_SERVER_INIT_RETRY_PERIOD = 1000;
     public final static int NT_GARBAGE_COLLECT_STALE_CONNS_PERIOD = 10 * 1000;
     public final static int NT_STALE_RELAY_MSG_TIME = 60 * 1000;
     // HOLE-PUNCHING CLIENT DEFAULTS
-    public static int       HP_DELTA = 1;
+    public static int HP_DELTA = 1;
     public final static int HP_SCANNING_RETRIES = 5;
     // Timeout a hpSession if it hasn't been used for this period of time.
-    public final static int HP_SESSION_EXPIRATION = 55*1000;
+    public final static int HP_SESSION_EXPIRATION = 55 * 1000;
     // LEDBAT Defaults
     public static final int LB_MAX_PIPELINE_SIZE = 100;
     public static final int LB_DEFAULT_PIPELINE_SIZE = 15;
@@ -207,7 +207,7 @@ public class VodConfig extends BaseCommandLineConfig {
     public static long UPLOAD_BW_USAGE = 0;
 
     static {
-        STARTUP_CONFIG_FILE = BaseCommandLineConfig.GVOD_HOME + File.separator + "sconfig.xml";
+        STARTUP_CONFIG_FILE = BaseCommandLineConfig.GVOD_HOME + File.separator + "ntconfig.xml";
         DEFAULT_VIDEO_DIR = BaseCommandLineConfig.GVOD_HOME;
         DEFAULT_TORRENT_DIR = BaseCommandLineConfig.GVOD_HOME;
         random = new Random(System.currentTimeMillis());
@@ -234,16 +234,16 @@ public class VodConfig extends BaseCommandLineConfig {
             Object obj = decoder.readObject();
             if (obj == null) {
                 System.err.println("Configuration was null. Initializing new config.");
-                startupConfig = new StartupConfig(false, new VodAddressBean(), 0, 0);
+                savedNatType = new CachedNatType(new NatBean());
             } else {
-                startupConfig = (StartupConfig) obj;
+                savedNatType = (CachedNatType) obj;
             }
         } catch (FileNotFoundException e) {
             logger.warn("No configuration found: " + STARTUP_CONFIG_FILE);
-            startupConfig = new StartupConfig(false, new VodAddressBean(), 0, 0);
+            savedNatType = new CachedNatType(new NatBean());
         } catch (Throwable e) {
             logger.warn(e.toString());
-            startupConfig = new StartupConfig(false, new VodAddressBean(), 0, 0);
+            savedNatType = new CachedNatType(new NatBean());
         } finally {
             if (decoder != null) {
                 decoder.close();
@@ -468,12 +468,34 @@ public class VodConfig extends BaseCommandLineConfig {
 //        Address addr = new Address(serverIp, DEFAULT_BOOTSTRAP_ID);
     }
 
-    public static boolean saveConfiguration(VodAddressBean vodAddressBean, boolean upnp,
-            int numUnchanged, int numTimesSinceStunLastRun) {
+    public static boolean saveNatType(Self self, boolean wasStunRun,
+            boolean wasConfigUnchanged) {
         boolean isSaved;
         XMLEncoder encoder = null;
-        StartupConfig sConfig = new StartupConfig(upnp, vodAddressBean, ++numUnchanged,
-                ++numTimesSinceStunLastRun);
+        NatBean vab = savedNatType.getNatBean();
+        vab.setAddressBean(new AddressBean(self.getAddress().getPeerAddress()));
+        List<AddressBean> pb = new ArrayList<AddressBean>();
+        for (Address a : self.getParents()) {
+            pb.add(new AddressBean(a));
+        }
+        vab.setParentsBeanAddress(pb);
+        String oldNat = vab.getNatPolicy();
+        vab.setNatPolicy(self.getNat().toString());
+
+//                self.getNat().toString());
+//        startupConfig.setNatBean(vab);
+        if (wasStunRun) {
+            vab.resetNumTimesSinceStunLastRun();
+        } else {
+            vab.incNumTimesSinceStunLastRun();
+        }
+        if (wasConfigUnchanged) {
+            vab.incNumTimesUnchanged();
+        } else {
+            vab.resetNumTimesUnchanged();
+        }
+        vab.setUpnpSupported(self.isUpnp());
+
         try {
             encoder = new XMLEncoder(
                     //                    new GZIPOutputStream(
@@ -481,7 +503,7 @@ public class VodConfig extends BaseCommandLineConfig {
                     new FileOutputStream(STARTUP_CONFIG_FILE, false)) //                    )
                     );
 
-            encoder.writeObject(sConfig);
+            encoder.writeObject(savedNatType);
             encoder.flush();
             isSaved = true;
         } catch (FileNotFoundException e) {
@@ -498,13 +520,13 @@ public class VodConfig extends BaseCommandLineConfig {
         return isSaved;
     }
 
-    public static Boolean removeDiskCache() {
+    public static Boolean removeSavedNatType() {
         File sConfig = new File(STARTUP_CONFIG_FILE);
         return sConfig.delete();
     }
 
-    public static StartupConfig getStartupConfig() {
-        return startupConfig;
+    public static CachedNatType getSavedNatType() {
+        return savedNatType;
     }
 
     public static String getTorrentIndexFile() {

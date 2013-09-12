@@ -14,44 +14,91 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import se.sics.gvod.address.Address;
+import se.sics.gvod.config.VodConfig;
+import se.sics.gvod.net.Nat;
+import se.sics.gvod.net.VodAddress;
 
 /**
  *
  * @author jim
  */
-public class VodAddressBean implements Serializable {
+public class NatBean implements Serializable {
 
-    private static final Logger logger = LoggerFactory.getLogger(VodAddressBean.class);
+    private static final Logger logger = LoggerFactory.getLogger(NatBean.class);
     private AddressBean addressBean;
     private List<AddressBean> parentsBeanAddress;
-    private short natPolicy;
-
-    public VodAddressBean() {
+    private String natPolicy;
+    private boolean upnpSupported;
+    private int numTimesUnchanged;
+    private int numTimesSinceStunLastRun;
+    
+    public NatBean() {
         this.addressBean = new AddressBean();
         this.parentsBeanAddress = new ArrayList<AddressBean>();
-        this.natPolicy = 0;
     }
 
-    public VodAddressBean(Address address, Set<Address> parents, short natPolicy) {
+    public NatBean(Address address, Set<Address> parents, String natPolicy, 
+            int numTimesChanged, int numTimesSinceStunLastRun, boolean upnpSupported) {
         this.addressBean = new AddressBean(address.getId(), address.getIp().getHostAddress(), address.getPort());
         this.parentsBeanAddress = new ArrayList<AddressBean>();
         for (Address a : parents) {
             this.parentsBeanAddress.add(new AddressBean(a.getId(), a.getIp().getHostAddress(), a.getPort()));
         }
         this.natPolicy = natPolicy;
+        this.numTimesUnchanged = numTimesChanged;
+        this.numTimesSinceStunLastRun = numTimesSinceStunLastRun;
+        this.upnpSupported = upnpSupported;
     }
 
+    public int getNumTimesUnchanged() {
+        return numTimesUnchanged;
+    }
+
+    public int getNumTimesSinceStunLastRun() {
+        return numTimesSinceStunLastRun;
+    }
+
+    public boolean isUpnpSupported() {
+        return upnpSupported;
+    }
+
+    public void incNumTimesSinceStunLastRun() {
+        this.numTimesSinceStunLastRun++;
+    }
+    
+    public void resetNumTimesSinceStunLastRun() {
+        this.numTimesSinceStunLastRun = 0;
+    }
+
+    public void incNumTimesUnchanged() {
+        this.numTimesUnchanged++;
+    }
+    
+    public void resetNumTimesUnchanged() {
+        this.numTimesUnchanged=0;
+    }
+    
+    
+    public void setUpnpSupported(boolean upnpSupported) {
+        this.upnpSupported = upnpSupported;
+    }
+
+    public VodAddress getVodAddress() {
+        return new VodAddress(addressBean.getAddress(), VodConfig.SYSTEM_OVERLAY_ID,
+                Nat.parseToNat(natPolicy));
+    }
+    
     /**
      * @return the natPolicy
      */
-    public short getNatPolicy() {
+    public String getNatPolicy() {
         return natPolicy;
     }
 
     /**
      * @param natPolicy the natPolicy to set
      */
-    public void setNatPolicy(short natPolicy) {
+    public void setNatPolicy(String natPolicy) {
         this.natPolicy = natPolicy;
     }
 
@@ -107,4 +154,26 @@ public class VodAddressBean implements Serializable {
         }
         return parents;
     }
+    
+    @Override
+    public int hashCode() {
+        int hash = 5;
+        return hash + addressBean.getId();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final NatBean other = (NatBean) obj;
+        if (this.addressBean.getId() != other.addressBean.getId()) {
+            return false;
+        }
+        return true;
+    }
+    
 }

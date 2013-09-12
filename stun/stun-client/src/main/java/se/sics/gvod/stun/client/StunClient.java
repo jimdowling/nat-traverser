@@ -40,6 +40,7 @@ import se.sics.gvod.address.Address;
 import se.sics.gvod.common.RTTStore;
 import se.sics.gvod.common.RetryComponentDelegator;
 import se.sics.gvod.common.Self;
+import se.sics.gvod.common.SelfFactory;
 import se.sics.gvod.config.VodConfig;
 import se.sics.gvod.common.util.ToVodAddr;
 import se.sics.gvod.config.StunClientConfiguration;
@@ -206,7 +207,8 @@ public class StunClient extends MsgRetryComponent {
 
             sessionMap.clear();
             logger.trace(compName
-                    + " local address is " + self.getId() + "@" + self.getIp() + ":" + self.getPort()
+                    + " local address is " + self.getId() + "@" 
+                    + self.getIp() + ":" + self.getPort()
                     + " retry delay is " + config.getRto()
                     + " ruleExpirationMinWait " + config.getRuleExpirationMinWait()
                     + " ruleExpirationIncrement " + config.getRuleExpirationIncrement());
@@ -710,16 +712,16 @@ public class StunClient extends MsgRetryComponent {
     }
     Handler<EchoMsg.Response> handleEchoResponse = new Handler<EchoMsg.Response>() {
         @Override
-        public void handle(EchoMsg.Response event) {
-            printMsgDetails(event);
-            long transactionId = event.getTransactionId();
-            if (delegator.doCancelRetry(event.getTimeoutId())) {
+        public void handle(EchoMsg.Response msg) {
+            printMsgDetails(msg);
+            long transactionId = msg.getTransactionId();
+            if (delegator.doCancelRetry(msg.getTimeoutId())) {
                 logger.debug(compName + " EchoMsg.Response Recvd - timeoutId = "
-                        + event.getTimeoutId() + " tid: " + transactionId);
+                        + msg.getTimeoutId() + " tid: " + transactionId);
                 Session session = sessionMap.get(transactionId);
-                Address serverAddress = event.getSource();
+                Address serverAddress = msg.getSource();
 
-                if (event.getTestType() == EchoMsg.Test.UDP_BLOCKED) {
+                if (msg.getTestType() == EchoMsg.Test.UDP_BLOCKED) {
                     Long echoTs = echoTimestamps.get(serverAddress);
                     if (echoTs != null) {
                         logger.trace("RTT sample for " + serverAddress + " was {}/{}",
@@ -732,8 +734,8 @@ public class StunClient extends MsgRetryComponent {
                     session.setState(SessionState.MAPPING_ALLOCATION);
 
                     Stack<Address> partners = new Stack<Address>();
-                    partners.addAll(event.getPartners());
-                    int bestRto = event.getBestPartnerRto();
+                    partners.addAll(msg.getPartners());
+                    int bestRto = msg.getBestPartnerRto();
 
                     // if i have already contacted a node - then don't use it as 2nd server 
                     // because a binding has already been created for it in my NAT
@@ -754,19 +756,19 @@ public class StunClient extends MsgRetryComponent {
                     if (test1Finished) {
                         if (!test2HeldbackServers.contains(serverAddress)) {
                             test2HeldbackServers.add(serverAddress);
-                            test2HoldbackResponses.add(event);
+                            test2HoldbackResponses.add(msg);
                             logger.debug(compName + " server " + serverAddress + " was held back.");
                         }
                     } else {
                         test1Finished = true;
-                        startTest2(event);
+                        startTest2(msg);
                     }
 
-                } else if (event.getTestType() == EchoMsg.Test.PING) {
-                    int tryId = event.getTryId();
-                    session.setTry(tryId, event.getReplyPublicAddr());
+                } else if (msg.getTestType() == EchoMsg.Test.PING) {
+                    int tryId = msg.getTryId();
+                    session.setTry(tryId, msg.getReplyPublicAddr());
                     logger.debug(compName + " received Try-" + tryId + " from "
-                            + event.getReplyPublicAddr()
+                            + msg.getReplyPublicAddr()
                             //                            .getId()
                             + ". Total received tries: " + session.getTotalTryMessagesReceived()
                             + " tid: " + transactionId);
@@ -782,18 +784,18 @@ public class StunClient extends MsgRetryComponent {
                                     + " tid: " + transactionId);
                         }
                     }
-                } else if (event.getTestType() == EchoMsg.Test.HEARTBEAT) {
+                } else if (msg.getTestType() == EchoMsg.Test.HEARTBEAT) {
                     // receaived heart beat fromt ther server --> rule is still valid.
                     // request again for the heart beat
                     session.setRuleLifeTime(session.getRuleLifeTime()
                             + config.getRuleExpirationIncrement());
                     startHeartBeatRequestTimer(transactionId);
-                } else if (event.getTestType() == EchoMsg.Test.FAILED_NO_PARTNER) {
+                } else if (msg.getTestType() == EchoMsg.Test.FAILED_NO_PARTNER) {
                     sendResponse(session, GetNatTypeResponse.Status.SECOND_SERVER_FAILED);
                 }
             } else {
                 logger.debug(compName + "EchoMsg.Response rcvd late. Flag: "
-                        + event.getTestType().toString() + " tid: " + transactionId);
+                        + msg.getTestType().toString() + " tid: " + transactionId);
             }
         }
     };
@@ -1105,7 +1107,7 @@ public class StunClient extends MsgRetryComponent {
     ///////////////             UPNP Stuff              ////////////////////////
     ////////////////////////////////////////////////////////////////////////////
     private void startUpnp() {
-        ScheduleTimeout st = new ScheduleTimeout(3000);
+        ScheduleTimeout st = new ScheduleTimeout(config.getUpnpDiscoveryTimeout());
         StartUpnp t = new StartUpnp(st);
         st.setTimeoutEvent(t);
         trigger(st, timer);
@@ -1130,8 +1132,7 @@ public class StunClient extends MsgRetryComponent {
         ScheduleTimeout st = new ScheduleTimeout(config.getUpnpTimeout());
         UpnpTimeout timedOutUpnp = new UpnpTimeout(st, requestId);
         st.setTimeoutEvent(timedOutUpnp);
-        delegator
-                .doTrigger(new UpnpGetPublicIpRequest(requestId),
+        delegator.doTrigger(new UpnpGetPublicIpRequest(requestId),
                 upnp.getPositive(UpnpPort.class));
 
         MapPortRequest.Protocol upnpProtocol = MapPortRequest.Protocol.UDP;
@@ -1166,11 +1167,10 @@ public class StunClient extends MsgRetryComponent {
 
             // If there's no UPnP IGN, then this should return first.
             if (event.getExternalIp() == null) {
-
                 upnpTimedOut(event.getRequestId());
             } else {
                 logger.debug(compName + " Public IP of the IGN is: " + event.getExternalIp());
-                // MapPortResponse will be handled now
+                self.setUpnpIp(event.getExternalIp());
             }
         }
     };
@@ -1209,7 +1209,7 @@ public class StunClient extends MsgRetryComponent {
                             break;
                         }
                     }
-                    if (externalPort == 0) { // stun server ports returned
+                    if (externalPort == 0) { // mapping of stun server (3478) ports returned
                         boolean upnpStunStatus = mapPorts.size() == 2;
                         for (int p : mapPorts.keySet()) {
                             if (p != VodConfig.DEFAULT_STUN_PORT
@@ -1224,6 +1224,7 @@ public class StunClient extends MsgRetryComponent {
                             logger.warn(compName + "Shouldn't get here. UPnP port mapping response for port not handled by StunClient.");
                         }
                     } else { // external port mapped
+                        self.setUpnp(true);
                         upnpStun = true;
                         sendResponse(GetNatTypeResponse.Status.SUCCEED);
 

@@ -5,6 +5,11 @@
 package se.sics.gvod.common.util;
 
 import java.io.Serializable;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import se.sics.gvod.address.Address;
 
 /**
  *
@@ -26,6 +31,12 @@ public class AddressBean implements Serializable {
         this.id = id;
         this.hostAddress = hostAddress;
         this.port = port;
+    }
+    
+    public AddressBean(Address addr) {
+        this.id = addr.getId();
+        this.hostAddress = addr.getIp().getHostAddress();
+        this.port = addr.getPort();
     }
 
     /**
@@ -68,5 +79,18 @@ public class AddressBean implements Serializable {
      */
     public void setHostAddress(String hostAddress) {
         this.hostAddress = hostAddress;
+    }
+    
+    public Address getAddress() {
+        InetAddress ip=null;
+        try {
+            ip = InetAddress.getByName(getHostAddress());
+        } catch (UnknownHostException ex) {
+            // We don't need to propagate this exception up to the client, as it
+            // will just fail when comparing addresses
+            Logger.getLogger(AddressBean.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        return new Address(ip, getPort(), getId());
     }
 }

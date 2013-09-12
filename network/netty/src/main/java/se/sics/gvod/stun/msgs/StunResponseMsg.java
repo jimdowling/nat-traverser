@@ -17,11 +17,15 @@ public abstract class StunResponseMsg extends DirectMsgNetty.SystemResponse {
     public StunResponseMsg(VodAddress src, VodAddress dest, Address replyAddr,
             long transactionId, TimeoutId timeoutId) {
         super(src, dest, timeoutId);
+        if (replyAddr == null) {
+            throw new NullPointerException("Reply-addr cannot be null");
+        }
         this.replyAddr = replyAddr;
         this.transactionId = transactionId;
     }
 
     public Address getReplyPublicAddr() {
+        
         return replyAddr;
     }
 

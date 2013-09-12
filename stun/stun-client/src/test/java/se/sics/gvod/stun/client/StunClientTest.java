@@ -75,7 +75,7 @@ public class StunClientTest {
         public static StunClientTest testObj = null;
         private Address stunClientAddress;
         int clientPort;
-        int clientID;
+        static int clientID = 0;
         InetAddress natIP = null;
         int natID;
         private List<Address> serverS1Addresses = new ArrayList<Address>();
@@ -107,8 +107,7 @@ public class StunClientTest {
                 try {
                     InetAddress clientIp = InetAddress.getByName("192.168.0.1");
                     clientPort = 8081;
-                    clientID = 10;
-                    stunClientAddress = new Address(clientIp, clientPort, clientID);
+                    stunClientAddress = new Address(clientIp, clientPort, clientID++);
 
                     natID = 100;
                     natIP = InetAddress.getByName("192.168.0.2");;
@@ -119,14 +118,14 @@ public class StunClientTest {
                         String server1Ip = "192.168." + i + ".1";
                         InetAddress server1Addr = InetAddress.getByName(server1Ip);
                         int serverS1Port = 3478;
-                        int serverS1Id = Integer.valueOf(i + "1");
+                        int serverS1Id = Integer.valueOf(i + 100 + "1");
                         serverS1Addresses.add(new Address(server1Addr, serverS1Port, serverS1Id));
                         serverS1Components.add(create(StunServer.class));
 
                         String server2Ip = "192.168." + i + ".2";
                         InetAddress server2Addr = InetAddress.getByName(server2Ip);
                         int serverS2Port = 3478;
-                        int serverS2Id = Integer.valueOf(i + "2");
+                        int serverS2Id = Integer.valueOf(i + 100 + "2");
                         serverS2Addresses.add(new Address(server2Addr, serverS2Port, serverS2Id));
                         serverS2Components.add(create(StunServer.class));
                     }
@@ -188,7 +187,8 @@ public class StunClientTest {
                         VodAddress s1 = ToVodAddr.stunServer(serverS1Address);
                         altAddrs2.add(s1);
                         trigger(new StunServerInit(new SelfNoParents(s2), 
-                                altAddrs2, StunServerConfiguration.build()), serverS2Components.get(index).getControl());
+                                altAddrs2, StunServerConfiguration.build()), 
+                                serverS2Components.get(index).getControl());
 
                     }
                     VodAddress s1 = ToVodAddr.stunServer(serverS1Address);
@@ -384,6 +384,8 @@ public class StunClientTest {
                 Assert.fail();
             }
         } catch (Throwable e) {
+            logger.error(e.getMessage());
+            e.printStackTrace();
             StunClientTest.semaphore.release();
             Assert.fail(e.getMessage());
         } finally {

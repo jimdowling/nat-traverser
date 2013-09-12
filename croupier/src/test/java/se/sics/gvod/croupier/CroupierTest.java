@@ -4,6 +4,7 @@
  */
 package se.sics.gvod.croupier;
 
+import java.net.InetAddress;
 import se.sics.gvod.config.CroupierConfiguration;
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -152,5 +153,4 @@ public class CroupierTest extends VodRetryComponentTestCase {
         assert(r.getBuffer().getPrivateDescriptors().isEmpty());
     }
 
-    // TODO - shuffleRequest.Timeout
 }

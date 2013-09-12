@@ -297,50 +297,12 @@ public class Nat implements Serializable, Comparable {
 
     @Override
     public String toString() {
-
-        String msg = "";
-        if (type != Type.NAT) {
-            msg = "       " +  type.toString() + "      " ;
-            return msg;
-        } else {
-            if (type == Type.NAT) {
-                String mp;
-                if (mappingPolicy == MappingPolicy.ENDPOINT_INDEPENDENT) {
-                    mp = "m(EI)";
-                } else if (mappingPolicy == MappingPolicy.HOST_DEPENDENT) {
-                    mp = "m(HD)";
-                } else if (mappingPolicy == MappingPolicy.PORT_DEPENDENT) {
-                    mp = "m(PD)";
-                } else {
-                    mp = "m(??)";
-                }
-                String ap;
-                if (allocationPolicy == AllocationPolicy.PORT_PRESERVATION) {
-                    ap = "a(PP)";
-                } else if (allocationPolicy == AllocationPolicy.PORT_CONTIGUITY) {
-                    ap = "a(PC)";
-                } else if (allocationPolicy == AllocationPolicy.RANDOM) {
-                    ap = "a(RA)";
-                } else {
-                    ap = "a(??)";
-                }
-                String fp;
-                if (filteringPolicy == FilteringPolicy.ENDPOINT_INDEPENDENT) {
-                    fp = "f(EI)";
-                } else if (filteringPolicy == FilteringPolicy.HOST_DEPENDENT) {
-                    fp = "f(HD)";
-                } else if (filteringPolicy == FilteringPolicy.PORT_DEPENDENT) {
-                    fp = "f(PD)";
-                } else {
-                    fp = "f(??)";
-                } 
-                msg = mp + "_" + ap + "_" + fp;
-            } else {
-                msg = "OPEN";
-            }
-
-            return msg;
-        }
+        StringBuilder str = new StringBuilder();
+        str.append(type.toString()).append(":").append(getMappingPolicy().toString())
+                .append(":").append(getAllocationPolicy().toString())
+                .append(":").append(getFilteringPolicy().toString())
+                .append(":").append(bindingTimeout);
+        return str.toString();
     }
 
     @Override

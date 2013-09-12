@@ -12,6 +12,8 @@ import java.util.Set;
 import org.junit.Assert;
 import org.junit.Test;
 import se.sics.gvod.address.Address;
+import se.sics.gvod.common.Self;
+import se.sics.gvod.common.SelfNoUtility;
 import se.sics.gvod.config.VodConfig;
 import se.sics.gvod.net.VodAddress;
 import se.sics.gvod.net.Nat;
@@ -26,7 +28,7 @@ public class SaveConfigurationTest {
     public void testSaveConfiguration() {
         int numUnchanged = 0;
         int numStunSinceLastRun = 0;
-        boolean isUpnp = true;
+        boolean isUpnp = false;
 
         try {
             File f = new File(VodConfig.STARTUP_CONFIG_FILE);
@@ -36,7 +38,7 @@ public class SaveConfigurationTest {
             Set<Address> parents = new HashSet<Address>();
             parents.add(new Address(InetAddress.getByName("192.168.1.13"), 8888, 10));
             parents.add(new Address(InetAddress.getByName("192.168.1.15"), 9999, 3));
-            VodAddress selfVodAddress = new VodAddress(addr, 
+            VodAddress vodAddr = new VodAddress(addr, 
                     VodConfig.SYSTEM_OVERLAY_ID,
                     VodAddress.NatType.NAT, 
                     Nat.MappingPolicy.ENDPOINT_INDEPENDENT, 
@@ -45,23 +47,45 @@ public class SaveConfigurationTest {
                     Nat.DEFAULT_RULE_EXPIRATION_TIME, 1,
                     parents);
 
-            if (!VodConfig.saveConfiguration(new VodAddressBean(selfVodAddress.getPeerAddress(),
-                    selfVodAddress.getParents(), selfVodAddress.getNatPolicy()), isUpnp,
-                    numUnchanged, numStunSinceLastRun)) {
+            VodConfig.removeSavedNatType();
+            
+            VodConfig.init(new String[]{""});
+            
+            Self self = new SelfNoUtility(vodAddr);
+            for (Address a : parents) {
+                self.addParent(a);
+            }
+            
+            if (!VodConfig.saveNatType(self, true, true)) {
+                Assert.fail("Saving configuration failed.");
+            }            
+            
+            CachedNatType cachedNt = VodConfig.getSavedNatType();
+            NatBean nb = cachedNt.getNatBean();
+            Assert.assertEquals(addr, nb.getAddress());
+            Assert.assertEquals(vodAddr.getNatAsString(), nb.getNatPolicy());
+            Assert.assertEquals(numUnchanged + 1, nb.getNumTimesUnchanged());
+            Assert.assertEquals(0, nb.getNumTimesSinceStunLastRun());
+            Assert.assertEquals(isUpnp, nb.isUpnpSupported());
+            Assert.assertEquals(parents, nb.getParents());
+
+            self.setUpnp(true);
+            addr = new Address(InetAddress.getByName("192.168.1.1"), 8081, 7);
+            self.setUpnpIp(InetAddress.getByName("192.168.1.1"));
+            if (!VodConfig.saveNatType(self, false, true)) {
                 Assert.fail("Saving configuration failed.");
             }
 
-            VodConfig.init(new String[]{""});
+            cachedNt = VodConfig.getSavedNatType();
+            nb = cachedNt.getNatBean();
+            Assert.assertEquals(addr, nb.getAddress());
+            Assert.assertEquals(self.getAddress().getNatAsString(), nb.getNatPolicy());
+            Assert.assertEquals(numUnchanged + 2, nb.getNumTimesUnchanged());
+            Assert.assertEquals(1, nb.getNumTimesSinceStunLastRun());
+            Assert.assertEquals(true, nb.isUpnpSupported());
+            Assert.assertEquals(parents, nb.getParents());
             
             
-            StartupConfig config = VodConfig.getStartupConfig();
-//            Assert.assertEquals(addr, config.getVodAddressBean().getAddress());
-//            Assert.assertEquals(selfVodAddress.getNatPolicy(), config.getVodAddressBean().getNatPolicy());
-            Assert.assertEquals(numUnchanged + 1, config.getNumTimesSinceStunLastRun());
-            Assert.assertEquals(numStunSinceLastRun + 1, config.getNumTimesUnchanged());
-            Assert.assertEquals(isUpnp, config.isUpnpSupported());
-//            Assert.assertEquals(parents, config.getVodAddressBean().getParents());
-
         } catch (IOException ex) {
             System.err.println(ex.getMessage());
             Assert.fail(ex.getMessage());
