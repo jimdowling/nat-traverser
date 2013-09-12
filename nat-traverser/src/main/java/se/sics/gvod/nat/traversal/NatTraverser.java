@@ -1034,7 +1034,7 @@ public class NatTraverser extends MsgRetryComponent {
             delegator.doTrigger(new Join(bootstrappers),
                     parentMaker.getPositive(ParentMakerPort.class));
         }
-        cacheStunResults();
+//        cacheStunResults();
     }
     private Handler<GetNatTypeResponse> handleGetNatTypeResponse = new Handler<GetNatTypeResponse>() {
         @Override
