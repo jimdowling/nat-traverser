@@ -18,7 +18,7 @@ public abstract class SelfBase implements Self {
 
     protected final int nodeId;
     protected final int port;
-    protected final int overlayId;
+    protected int overlayId;
     
     public SelfBase(Nat nat, InetAddress ip, int port, int nodeId, int overlayId) {
         if (nat != null)  {
