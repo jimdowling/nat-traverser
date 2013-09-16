@@ -257,7 +257,7 @@ public final class NettyNetwork extends ComponentDefinition {
             }
 
             if (!(msg instanceof Encodable)) {
-                throw new Error("Netty can only serialize instances of Encodable. You need to"
+                throw new Error("Netty can only serialize instances of Encodable. You need to "
                         + "make this class implement Encodable: " + msg.getClass());
             }
 
