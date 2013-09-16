@@ -481,10 +481,6 @@ public class VodAddress implements Serializable, Comparable {
 //        return overlayId & 0x0000FFFF;
 //    }
 
-//    public void setOverlayId(int overlayId) {
-//        this.overlayId = overlayId;
-//    }
-
     //
     // partitioningType - 2 bits
     // partitionIdDepth - 4 bits
@@ -496,10 +492,6 @@ public class VodAddress implements Serializable, Comparable {
         return overlayId & 65535;
     }
 
-//    public int getPartitionIdLength() {
-//        return overlayId & 0x0000FFFF;
-//    }
-
     public int getPartitionId() {
         return (overlayId & 67043328) >>> 16;
     }
@@ -510,6 +502,6 @@ public class VodAddress implements Serializable, Comparable {
 
     public PartitioningType getPartitioningType() {
         return PartitioningType.values()[(overlayId & -1073741824) >>> 30];
-    }  
+    }
     
 }

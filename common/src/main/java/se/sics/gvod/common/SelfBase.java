@@ -94,6 +94,7 @@ public abstract class SelfBase implements Self {
         return overlayId;
     }
 
+
     @Override
     public final int getId() {
         return nodeId;

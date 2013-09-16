@@ -212,6 +212,7 @@ public abstract class VodComponentTestCase extends Assert implements ComponentDe
         return self.getOverlayId();
     }
 
+    
     @Override
     public int getPort() {
         return self.getPort();
