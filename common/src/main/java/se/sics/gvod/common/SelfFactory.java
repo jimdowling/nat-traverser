@@ -8,7 +8,7 @@ import java.net.InetAddress;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import se.sics.gvod.address.Address;
@@ -147,4 +147,5 @@ public class SelfFactory {
     static void setUpnp(int id, boolean enabled) {
         upnpsEnabled.put(id, enabled);
     }
+    
 }

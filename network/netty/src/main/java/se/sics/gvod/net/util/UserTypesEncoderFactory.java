@@ -7,8 +7,6 @@ package se.sics.gvod.net.util;
 import io.netty.buffer.ByteBuf;
 
 import java.io.UnsupportedEncodingException;
-import java.net.Inet4Address;
-import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.*;
@@ -165,8 +163,6 @@ public class UserTypesEncoderFactory {
         UserTypesEncoderFactory.writeUtility(buffer, nodeDescriptor.getUtility());
         UserTypesEncoderFactory.writeUnsignedintAsTwoBytes(buffer, nodeDescriptor.getMtu());
         buffer.writeLong(nodeDescriptor.getNumberOfIndexEntries());
-        buffer.writeInt(nodeDescriptor.getPartitionsNumber());
-        writeBooleanLinkedList(buffer, nodeDescriptor.getPartitionId());
     }
 
     public static void writeBooleanLinkedList(ByteBuf buffer, LinkedList<Boolean> list) throws MessageEncodingException {

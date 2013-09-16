@@ -21,6 +21,9 @@ import se.sics.gvod.net.Nat.BindingTimeoutCategory;
  * @author jdowling
  */
 public class VodAddress implements Serializable, Comparable {
+    public static enum PartitioningType {
+        NEVER_BEFORE, ONCE_BEFORE, MANY_BEFORE
+    }
 
     private static final int DEFAULT_DELTA_PC = 1;
     private static final long serialVersionUID = -7968846333L;
@@ -468,29 +471,37 @@ public class VodAddress implements Serializable, Comparable {
         this.transport = transport;
     }
 
-    public static int encodePartitionAndCategoryIdAsInt(int partitionId, int categoryId) {
-        if (partitionId >= Math.pow(2, 16) || partitionId < 0) {
-            throw new RuntimeException("Partition id cannot be in the interval (0, 65535)");
-        }
-        if (categoryId >= Math.pow(2, 16) || categoryId < 0) {
-            throw new RuntimeException("Category id cannot be in the interval (0, 65535)");
-        }
-
-        int val = categoryId << 16;
-        val = val | partitionId;
-
-        return val;
-    }
-
-    public int getCategoryId() {
-        int val = overlayId & 0xFFFF0000;
-        return val >>> 16;
-    }
+//
+//    public int getCategoryId() {
+//        int val = overlayId & 0xFFFF0000;
+//        return val >>> 16;
+//    }
 
 //    public int getPartitionIdLength() {
 //        return overlayId & 0x0000FFFF;
 //    }
-    public void setOverlayId(int overlayId) {
-        this.overlayId = overlayId;
+
+    //
+    // partitioningType - 2 bits
+    // partitionIdDepth - 4 bits
+    // partitionId - 10 bits
+    // categoryId - 16 bits
+    //
+
+    public int getCategoryId() {
+        return overlayId & 65535;
     }
+
+    public int getPartitionId() {
+        return (overlayId & 67043328) >>> 16;
+    }
+
+    public int getPartitionIdDepth() {
+        return (overlayId & 1006632960) >>> 26;
+    }
+
+    public PartitioningType getPartitioningType() {
+        return PartitioningType.values()[(overlayId & -1073741824) >>> 30];
+    }
+    
 }

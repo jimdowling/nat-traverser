@@ -9,7 +9,6 @@ import io.netty.buffer.ByteBuf;
 import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -289,11 +288,8 @@ public class UserTypesDecoderFactory {
         Utility utility = UserTypesDecoderFactory.readUtility(buffer);
         int mtu = UserTypesDecoderFactory.readUnsignedIntAsTwoBytes(buffer);
         long numberOfEntries = buffer.readLong();
-        int partitionsNumber = buffer.readInt();
 
-        LinkedList<Boolean> partitionId = readBooleanLinkedList(buffer);
-
-        return new VodDescriptor(addr, utility, age, mtu, numberOfEntries, partitionsNumber, partitionId);
+        return new VodDescriptor(addr, utility, age, mtu, numberOfEntries);
     }
 
     public static LinkedList<Boolean> readBooleanLinkedList(ByteBuf buffer) throws MessageDecodingException {

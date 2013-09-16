@@ -17,8 +17,8 @@ import se.sics.gvod.net.VodAddress;
 public abstract class SelfBase implements Self {
 
     protected final int nodeId;
-    protected final int overlayId;
     protected final int port;
+    protected int overlayId;
     
     public SelfBase(Nat nat, InetAddress ip, int port, int nodeId, int overlayId) {
         if (nat != null)  {
@@ -88,14 +88,16 @@ public abstract class SelfBase implements Self {
                 SelfFactory.getNat(nodeId), SelfFactory.getParents(nodeId));
     }
 
-    @Override
-    public final int getId() {
-        return nodeId;
-    }
 
     @Override
     public final int getOverlayId() {
         return overlayId;
+    }
+
+
+    @Override
+    public final int getId() {
+        return nodeId;
     }
 
     @Override
@@ -103,7 +105,6 @@ public abstract class SelfBase implements Self {
         return port;
     }
     
-
     @Override
     public final Nat getNat() {
         return SelfFactory.getNat(nodeId);

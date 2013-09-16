@@ -35,6 +35,34 @@ import se.sics.kompics.Positive;
 import se.sics.kompics.Stop;
 
 /**
+ * This class is a subclass of AutoSubscribeComponent that adds the ability to
+ * retry messages sent over the network port. Messages that will be retried are
+ * sent by calling the retry() method. Components that inherit from
+ * MsgRetryComponent also inherit a network and a timer port, so they shouldn't
+ * define a network or timer port locally.
+ *
+ * The API for sending retry msgs is different from standard kompics. First you
+ * define a message object, then a ScheduleRetry object, then a timer object.
+ * You send retry on the timer object. The timer object contains a reference to
+ * the msg object. If the message is retried up to the maximum number of
+ * attempts and a 'cancelRetry()' method has not been called for the timoutId
+ * (normally cancelRetry is called when a response msg is returned), then the
+ * timeout object is triggered on the handler for that timeout object defined on
+ * the subclass.
+ * 
+ * MsgRetryComponent allows us to run unit tests on components, but required
+ * introducing a new 'delegator' object on which all kompics operations are performed.
+ * Kompics' operations inherited from ComponentDefinition are now
+ * instead invoked on a 'delegator' object:
+ * 
+ * trigger(new SomeEvent(..), somePort);
+ * 
+ * becomes 
+ *
+ * delegator.doTrigger(new SomeEvent(..), somePort);
+ * 
+ * 
+ * See unit tests for concrete examples.
  *
  * @author jdowling
  */
@@ -189,8 +217,25 @@ public abstract class MsgRetryComponent extends AutoSubscribeComponent
     }
 
     /**
-     * The base class should call autosubscribe(). If it doesn't, then we have
-     * to also subscribe the timeoutHadler to the timer port.
+     * Subclasses typically have 2 constructors: 1. a no argument constructor
+     * that call the constructor below with 'null' as a parameter.
+     *
+     * 2. the actual constructor that calls this constructor on its superclass.
+     * The actual constructor normally calls autosubscribe() to subscribe the
+     * SubClass' handlers:
+     *
+     * public SubClass extends MsgRetryComponent{
+     *
+     *
+     * public SubClass() { 
+     *  this(null); 
+     * }
+     *
+     * public SubClass(RetryComponentDelegator delegator) {
+     * // don't forget to include 'this.' when calling the delegator.
+     *  this.delegator.doAutoSubscribe(); 
+     * 
+     * }
      *
      * @param delegator
      */
@@ -353,7 +398,6 @@ public abstract class MsgRetryComponent extends AutoSubscribeComponent
      * @return true if it finds and successfully cancels the timeout for the
      * msg, false otherwise.
      */
-//    protected boolean cancelRetry(Class<? extends RewriteableMsg> msgType, TimeoutId timeoutId) {
     protected boolean cancelRetry(TimeoutId timeoutId) {
         if (timeoutId == null) {
             throw new IllegalArgumentException("timeoutId was null when cancelling retry");
@@ -369,7 +413,7 @@ public abstract class MsgRetryComponent extends AutoSubscribeComponent
                 logger.trace("Cancelling timer failed: " + timeoutId.getId() + " . Couldn't find timeoutId.");
             }
         } else {
-            logger.debug("TimeoutId not used by this instance");
+            throw new IllegalStateException("TimeoutId not used by this instance");
         }
         return false;
     }
@@ -421,15 +465,14 @@ public abstract class MsgRetryComponent extends AutoSubscribeComponent
             } else if (retryData.getRetriesLeft() == 0) {
                 // if there's a client-supplied timeout, send it back to the client
                 if (retryData.getScheduleTimeout() != null) {
-//                    TimeoutId callbackTimeoutId = retryData.getScheduleTimeout().getTimeoutEvent().getTimeoutId();
                     TimeoutId callbackTimeoutId = retryData.getTimeoutId();
                     mapMessageRetry.put(callbackTimeoutId, retryData);
                     ScheduleTimeout st = retryData.getScheduleTimeout();
                     st.getTimeoutEvent().setTimeoutId(callbackTimeoutId);
                     trigger(st, timer);
-                    logger.info("Msg timeout: no retries left: "
+                    logger.debug("Msg timeout: no retries left: "
                             + retryData.getMessage().getClass().getName()
-                            +" src: " + msg.getSource()
+                            + " src: " + msg.getSource()
                             + " dest: " + msg.getDestination() + " "
                             + msg.getTimeoutId());
                 } else {
@@ -470,7 +513,6 @@ public abstract class MsgRetryComponent extends AutoSubscribeComponent
             throw new NullPointerException("Null event or null port when calling trigger.");
         }
         trigger(event, port);
-//        logger.trace(event.getClass().getCanonicalName());
     }
 
     @Override
