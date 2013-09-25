@@ -45,7 +45,7 @@ import se.sics.gvod.croupier.PeerSamplePort;
 import se.sics.gvod.croupier.events.CroupierInit;
 import se.sics.gvod.croupier.events.CroupierJoin;
 import se.sics.gvod.croupier.snapshot.CroupierStats;
-import se.sics.gvod.filters.MsgDestFilterIp;
+import se.sics.gvod.nat.hp.client.HpClient;
 import se.sics.gvod.nat.traversal.NatTraverserPort;
 import se.sics.gvod.timer.Timer;
 import se.sics.kompics.Component;
@@ -207,7 +207,7 @@ public final class NatTraverserSimulator extends ComponentDefinition {
             addr = new VodAddress(peerAddress, NT_PEER_OVERLAY_ID, nat);
             self = new SelfImpl(addr);
             privateAddress.put(id, self);
-            logger.info("Starting peer " + peerAddress + " nat ip" + natIp + " (Nat Type is) : " + nat);
+            logger.debug("Starting peer " + peerAddress + " nat ip" + natIp + " (Nat Type is) : " + nat);
         }
 
         int filterId = peerAddress.getId();
@@ -297,6 +297,10 @@ public final class NatTraverserSimulator extends ComponentDefinition {
             logger.info("Croupier Stats:");
             CroupierStats.report(VodConfig.SYSTEM_OVERLAY_ID);
             
+
+            logger.info("Hp Ping success/failure: {}/{} ", HpClient.pingSuccessCount.get(),
+                    HpClient.pingFailureCount);
+
             System.out.println("Success");
             for (String natType : successCount.keySet()) {
                 System.out.println("\t" + natType + "/" + successCount.get(natType));
@@ -319,8 +323,9 @@ public final class NatTraverserSimulator extends ComponentDefinition {
     
 //-------------------------------------------------------------------    
     Handler<ConnectionResult> handleConnectionResult = new Handler<ConnectionResult>() {
+        @Override
         public void handle(ConnectionResult event) {
-            logger.info(event.isRes() + ":: " + event.getSrc() + " ---> " + event.getDest());
+            logger.debug(event.isRes() + ":: " + event.getSrc() + " ---> " + event.getDest());
             String natPair = event.getNatPair();
             if (event.isRes()) {
                 Integer c = successCount.get(natPair);

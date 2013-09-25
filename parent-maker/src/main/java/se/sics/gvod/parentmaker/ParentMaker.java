@@ -204,7 +204,7 @@ public class ParentMaker extends MsgRetryComponent {
                 delegator.doTrigger(spt, timer);
                 periodicTimeoutId = spt.getTimeoutEvent().getTimeoutId();
             }
-            logger.info(compName + "started");
+            logger.debug(compName + "started");
         }
     };
     Handler<Join> handleJoin = new Handler<Join>() {
@@ -336,7 +336,7 @@ public class ParentMaker extends MsgRetryComponent {
         }
     }
 
-    private boolean isParent(Address node) {
+    private boolean isParent(VodAddress node) {
         return connections.containsKey(node);
     }
 
@@ -520,7 +520,7 @@ public class ParentMaker extends MsgRetryComponent {
                 } else if (event.getResponseType() == HpRegisterMsg.RegisterStatus.ACCEPT) {
                     addParentRtt(event);
                 } else if (event.getResponseType() == HpRegisterMsg.RegisterStatus.ALREADY_REGISTERED) {
-                    if (!isParent(event.getSource())) {
+                    if (!isParent(event.getVodSource())) {
                         addParentRtt(event);
                     }
                 } else {
@@ -555,7 +555,7 @@ public class ParentMaker extends MsgRetryComponent {
         TimeoutId id = event.getTimeoutId();
         Long startTime = requestStartTimes.remove(id);
         long rttValue = config.getRto();
-        RTT rtt = null;
+        RTT rtt;
         if (startTime != null) {
             logger.debug(compName + "Parent {} accepted client request", candidateParent);
             rttValue = System.currentTimeMillis() - startTime;
@@ -568,7 +568,7 @@ public class ParentMaker extends MsgRetryComponent {
                     event.getVodSource());
             rtt = RTTStore.getRtt(self.getId(), event.getVodSource());
             if (rtt == null) {
-                rtt = RTTStore.addSample(self.getId(), candidateParent, rttValue);;
+                rtt = RTTStore.addSample(self.getId(), candidateParent, rttValue);
             }
         }
 

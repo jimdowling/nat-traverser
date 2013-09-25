@@ -10,7 +10,7 @@
     <groupId>se.sics.simulator</groupId>
     <artifactId>simulator</artifactId>
     <version>1.0-SNAPSHOT</version>
-    <name>Simulators</name>
+    <name>NatTraverser Simulators</name>
     <url>http://maven.apache.org</url>
     
     <dependencies>

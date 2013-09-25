@@ -257,7 +257,7 @@ public class NatTraverser extends MsgRetryComponent {
             self = init.getSelf();
             compName = "NT(" + self.getId() + ") ";
 
-            logger.info(compName + " Starting  " + self.getAddress());
+            logger.debug(compName + " Starting  " + self.getAddress());
 
             natTraverserConfig = init.getNatTraverserConfig();
             hpClientConfig = init.getHpClientConfig();
@@ -389,10 +389,8 @@ public class NatTraverser extends MsgRetryComponent {
                     // start the hole punching process
                     msgList = new LinkedList<DirectMsg>();
                     pendingMsgs.put(remoteId, msgList);
-                    // create a session
                     // TODO - take heartbeat connection (true or false) from the msgs, instead of hard-coding.
-                    startHolePunchingProcess(msg.getVodDestination(), false, 0,
-                            msg.getTimeoutId());
+                    startHolePunchingProcess(msg.getVodDestination(), true, 0, msg.getTimeoutId());
                 }
                 msgList.add(msg);
             }
@@ -401,7 +399,7 @@ public class NatTraverser extends MsgRetryComponent {
     Handler<DirectMsgNetty.Request> handleUpperDirectMsgNettyRequest = new Handler<DirectMsgNetty.Request>() {
         @Override
         public void handle(DirectMsgNetty.Request msg) {
-            logger.debug("{} handleUpperMessageRequest "
+            logger.debug(compName + "{} handleUpperMessageRequest "
                     + "DEST (" + msg.getDestination()
                     + ") message class :" + msg.getClass().getName(), msg.getTimeoutId());
             sendDownDirectMsg(msg);
@@ -410,7 +408,7 @@ public class NatTraverser extends MsgRetryComponent {
     Handler<DirectMsgNetty.Response> handleUpperDirectMsgNettyResponse = new Handler<DirectMsgNetty.Response>() {
         @Override
         public void handle(DirectMsgNetty.Response msg) {
-            logger.debug("{} handleUpperMessageResponse "
+            logger.debug(compName + "{} handleUpperMessageResponse "
                     + "DEST(" + msg.getDestination().getId()
                     + ") message class :" + msg.getClass().getName(), msg.getTimeoutId());
             sendDownDirectMsg(msg);
@@ -445,7 +443,7 @@ public class NatTraverser extends MsgRetryComponent {
             OpenedConnection oc = new OpenedConnection(msg.getDestination().getPort(),
                     msg.getSource(), Nat.DEFAULT_RULE_EXPIRATION_TIME, false);
             openedConnections.put(msg.getSource().getId(), oc);
-            logger.info(compName + " Adding OpenedConnection to " + msg.getSource()
+            logger.debug(compName + " Adding OpenedConnection to " + msg.getSource()
                     + " from Local Port" + msg.getDestination().getPort());
         }
         delegator.doTrigger(msg, upperNet);
@@ -515,7 +513,7 @@ public class NatTraverser extends MsgRetryComponent {
     Handler<RelayMsgNetty.Request> handleRelayRequestDown = new Handler<RelayMsgNetty.Request>() {
         @Override
         public void handle(RelayMsgNetty.Request msg) {
-            logger.debug("{} handleRelayRequestDown (" + msg.getDestination().getId()
+            logger.debug(compName + "{} handleRelayRequestDown (" + msg.getDestination().getId()
                     + ") message class :" + msg.getClass().getName(), msg.getTimeoutId());
 
             if (msg.getVodDestination().isOpen()) {
@@ -555,12 +553,12 @@ public class NatTraverser extends MsgRetryComponent {
     Handler<RelayMsgNetty.Request> handleRelayRequestUp = new Handler<RelayMsgNetty.Request>() {
         @Override
         public void handle(RelayMsgNetty.Request msg) {
-            logger.debug("{} handleRelayRequestUp (" + msg.getDestination().getId()
+            logger.debug(compName + "{} handleRelayRequestUp (" + msg.getDestination().getId()
                     + ") message class :" + msg.getClass().getName(), msg.getTimeoutId());
 
             // If the destination is open, then it is the final destination
             if (self.getId() != msg.getRemoteId()) { // I am a parent
-                logger.debug("Relaying msg from {} to {}", self.getId(), msg.getRemoteId());
+                logger.debug(compName + "Relaying msg from {} to {}", self.getId(), msg.getRemoteId());
                 relayMsg(msg);
             } else { // I am the destination
                 int timeoutId = 0;
@@ -603,7 +601,7 @@ public class NatTraverser extends MsgRetryComponent {
     Handler<RelayMsgNetty.Response> handleRelayResponseUp = new Handler<RelayMsgNetty.Response>() {
         @Override
         public void handle(RelayMsgNetty.Response msg) {
-            logger.debug("{} handleRelayResponseUp (" + msg.getDestination().getId()
+            logger.debug(compName + "{} handleRelayResponseUp (" + msg.getDestination().getId()
                     + ") message class :" + msg.getClass().getName(), msg.getTimeoutId());
 
             if (msg.getClientId() != self.getId()) {
@@ -642,7 +640,7 @@ public class NatTraverser extends MsgRetryComponent {
                 msg.rewriteDestination(msg.getNextDest().getPeerAddress());
             }
 
-            logger.debug("{} ClientId({}) handleRelayResponseDown (" + msg.getDestination().getId()
+            logger.debug(compName + "{} ClientId({}) handleRelayResponseDown (" + msg.getDestination().getId()
                     + ") message class :" + msg.getClass().getName() + " - nextDest: "
                     + msg.getNextDest(),
                     msg.getTimeoutId(), msg.getClientId());
@@ -709,7 +707,7 @@ public class NatTraverser extends MsgRetryComponent {
     Handler<RelayMsgNetty.Oneway> handleRelayOnewayUp = new Handler<RelayMsgNetty.Oneway>() {
         @Override
         public void handle(RelayMsgNetty.Oneway msg) {
-            logger.debug("handleOneWayUp (" + msg.getDestination().getId() + ") message class :" + msg.getClass().getName());
+            logger.debug(compName + "handleOneWayUp (" + msg.getDestination().getId() + ") message class :" + msg.getClass().getName());
 
             if (msg.getRemoteId() != self.getId()) {
                 relayMsg(msg);
@@ -732,7 +730,7 @@ public class NatTraverser extends MsgRetryComponent {
     Handler<RelayMsgNetty.Oneway> handleRelayOnewayDown = new Handler<RelayMsgNetty.Oneway>() {
         @Override
         public void handle(RelayMsgNetty.Oneway msg) {
-            logger.debug("handleOneWayUp (" + msg.getDestination().getId()
+            logger.debug(compName + "handleOneWayUp (" + msg.getDestination().getId()
                     + ") message class :" + msg.getClass().getName());
             delegator.doMulticast(msg, msg.getVodDestination().getParents(), 1000, 0);
         }
@@ -840,7 +838,7 @@ public class NatTraverser extends MsgRetryComponent {
             msg.rewritePublicSource(newSourceAddress);
             msg.rewriteDestination(connection.getHoleOpened());
 
-            logger.debug("Sending {} from {} to " + msg.getDestination(), msg.getClass(), msg.getSource());
+            logger.debug(compName + "Sending {} from {} to " + msg.getDestination(), msg.getClass(), msg.getSource());
             //send the message on the network
             delegator.doTrigger(msg, network);
 
@@ -859,7 +857,8 @@ public class NatTraverser extends MsgRetryComponent {
         return false;
     }
 
-    public void startHolePunchingProcess(VodAddress destAddress, boolean keepConnectionOpenWithHeartbeat, int connRetries, TimeoutId msgTimeoutId) {
+    public void startHolePunchingProcess(VodAddress destAddress, 
+            boolean keepConnectionOpenWithHeartbeat, int connRetries, TimeoutId msgTimeoutId) {
         logger.debug(compName + "Starting hole punching for [" + self.getId() + ", " + destAddress.getId() + "]");
         // starting timer
         ScheduleTimeout st = new ScheduleTimeout(connectionEstablishmentWaitTime + 3000);
@@ -921,7 +920,7 @@ public class NatTraverser extends MsgRetryComponent {
         }
 
 
-        logger.info(compName + "HP Failed. "
+        logger.debug(compName + "HP Failed. "
                 + "client/Remote client ID ({}/{}): "
                 + NatStr.pairAsStr(self.getNat(), destAddress.getNat())
                 + " - "
@@ -936,12 +935,12 @@ public class NatTraverser extends MsgRetryComponent {
             str += key.toString() + " ";
         }
 
-        logger.debug(str);
+        logger.debug(compName + str);
     }
     Handler<GarbageCleanupTimeout> handleGarbageCleanupTimeout = new Handler<GarbageCleanupTimeout>() {
         @Override
         public void handle(GarbageCleanupTimeout timeout) {
-            // logger.debug(compName + "Connection Cleanup Timeout");
+             logger.trace(compName + "Connection Cleanup Timeout");
             if (openedConnections.size() > maxOpenedConnections) {
                 //TODO: Jim. Do you mean by oldestthe last connection to have been used?
                 // remove the oldest connections
@@ -1014,7 +1013,7 @@ public class NatTraverser extends MsgRetryComponent {
             // start the server components, when we have some partner for the stun server
             retryStartServerComponents();
         } else if (self.isUpnp()) {
-            logger.info("UPnP is supported.");
+            logger.info(compName + "UPnP is supported.");
             if (parentMaker != null) {
                 trigger(new Stop(), parentMaker.getControl());
             }

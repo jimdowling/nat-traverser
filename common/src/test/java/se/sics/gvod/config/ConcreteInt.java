@@ -8,15 +8,15 @@ package se.sics.gvod.config;
  *
  * @author jdowling
  */
-public class Concrete extends AbstractConfiguration<Concrete> {
+public class ConcreteInt extends AbstractConfiguration<ConcreteInt> {
 
     int val;
 
-    public Concrete() {
+    public ConcreteInt() {
         this(100);
     }
 
-    public Concrete(int val) {
+    public ConcreteInt(int val) {
         this.val = val;
     }
     
@@ -30,7 +30,7 @@ public class Concrete extends AbstractConfiguration<Concrete> {
 
     @Override
     public boolean equals(Object obj) {
-        Concrete c = (Concrete) obj;
+        ConcreteInt c = (ConcreteInt) obj;
         return c.getVal() == this.val;
     }
 }

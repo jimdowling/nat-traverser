@@ -93,7 +93,7 @@ public final class NtTesterMain extends ComponentDefinition {
     private static final int REPORT_SERVER_ID = 0;
     private static final int REPORT_SERVER_PORT = 3000;
     private static String server;
-    private static String reportServer;
+    private static InetAddress reportServer;
     private static boolean openServer = false;
     private static Integer pickIp;
     private static Integer numFail = 0, numSuccess = 0;
@@ -116,9 +116,11 @@ public final class NtTesterMain extends ComponentDefinition {
         pickIp = Integer.parseInt(args[2]);
         server = args[3];
         try {
-            Address s = new Address(InetAddress.getByName(server), VodConfig.DEFAULT_STUN_PORT,
+            InetAddress serverIp = InetAddress.getByName(server);
+            Address s = new Address(serverIp, VodConfig.DEFAULT_STUN_PORT,
                     SERVER_ID);
             servers.add(s);
+            reportServer = serverIp;
         } catch (UnknownHostException ex) {
             java.util.logging.Logger.getLogger(NtTesterMain.class.getName()).log(Level.SEVERE, null, ex);
             return;
@@ -231,6 +233,7 @@ public final class NtTesterMain extends ComponentDefinition {
             } else {
                 localIp = event.getBoundIp();
             }
+            reportServer = VodConfig.getBootstrapServer().getIp();
 
             if (localIp != null) {
                 logger.info("Found net i/f with ip address: " + localIp);
@@ -282,7 +285,7 @@ public final class NtTesterMain extends ComponentDefinition {
         public void handle(GetNatTypeResponse event) {
 
             logger.info("Nat type is: " + event.getNat());
-            report(reportServer, event.getNat().toString());
+            report(event.getNat().toString());
 
             List<VodDescriptor> svd = new ArrayList<VodDescriptor>();
             Address s = servers.iterator().next();
@@ -299,7 +302,7 @@ public final class NtTesterMain extends ComponentDefinition {
             logger.info("ping recvd from "
                     + ping.getSource() + " at " + ping.getDestination() + " - " +
                     ping.getTimeoutId());
-            report(reportServer, "ping recvd from " + ping.getSource() + " at " + ping.getDestination());
+            report("ping recvd from " + ping.getSource() + " at " + ping.getDestination());
 
             TConnectionMsg.Pong pong =
                     new TConnectionMsg.Pong(self.getAddress(),
@@ -319,7 +322,7 @@ public final class NtTesterMain extends ComponentDefinition {
         public void handle(TConnectionMsg.Pong pong) {
 
             logger.info("pong recvd from " + pong.getSource() + " - "  + pong.getTimeoutId());
-            report(reportServer, "pong recvd from " + pong.getSource() + " at " + pong.getDestination());
+            report("pong recvd from " + pong.getSource() + " at " + pong.getDestination());
             numSuccess++;
             logger.info("Total Success/Failure ratio is: {}/{}", numSuccess, numFail);
             trigger(new CancelTimeout(pong.getTimeoutId()), timer.getPositive(Timer.class));
@@ -340,7 +343,7 @@ public final class NtTesterMain extends ComponentDefinition {
             trigger(new CancelTimeout(pt), timer.getPositive(Timer.class));
             logger.info("pang recvd from " + pang.getSource() 
                     + " - "  + pang.getMsgTimeoutId());
-            report(reportServer, "pang recvd from " + pang.getSource() + " at " + pang.getDestination());
+            report("pang recvd from " + pang.getSource() + " at " + pang.getDestination());
             numSuccess++;
             logger.info("Total Success/Failure ratio is: {}/{}", numSuccess, numFail);
         }
@@ -407,13 +410,13 @@ public final class NtTesterMain extends ComponentDefinition {
         }
     };
     
-	private void report(String ip, String str) {
-    	try {
-    		Address reportServerAddress = new Address(InetAddress.getByName(reportServer), REPORT_SERVER_PORT, REPORT_SERVER_ID);
-    		SimpleMsg msg = new SimpleMsg(localAddress, reportServerAddress, Transport.TCP, str);
-    		trigger(msg, network.getPositive(VodNetwork.class));
-    	} catch(Exception e) {
-    		System.err.println("Cannot connect to the report server!");
-    	}
+	private void report(String str) {
+//    	try {
+//    		Address reportServerAddress = new Address(reportServer, REPORT_SERVER_PORT, REPORT_SERVER_ID);
+//    		SimpleMsg msg = new SimpleMsg(localAddress, reportServerAddress, Transport.TCP, str);
+//    		trigger(msg, network.getPositive(VodNetwork.class));
+//    	} catch(Exception e) {
+//    		System.err.println("Cannot connect to the report server!");
+//    	}
 	}
 }

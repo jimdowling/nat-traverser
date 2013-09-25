@@ -73,6 +73,7 @@ public final class NtPeer extends ComponentDefinition {
 
 //-------------------------------------------------------------------    
     private Handler<NtPeerInit> handleInit = new Handler<NtPeerInit>() {
+        @Override
         public void handle(NtPeerInit event) {
             self = event.getSelf();
         }
@@ -80,6 +81,7 @@ public final class NtPeer extends ComponentDefinition {
 
 //-------------------------------------------------------------------    
     private Handler<Connect> handleConnect = new Handler<Connect>() {
+        @Override
         public void handle(Connect event) {
             ScheduleTimeout st = new ScheduleTimeout(100 * 1000);
             HolePunch hp = new HolePunch(st, event.getDest(), NatStr.pairAsStr(self.getNat(), event.getDest().getNat()));
@@ -95,6 +97,7 @@ public final class NtPeer extends ComponentDefinition {
 
 //-------------------------------------------------------------------    
     Handler<HolePunch> handleHolePunch = new Handler<HolePunch>() {
+        @Override
         public void handle(HolePunch msg) {
             trigger(new ConnectionResult(self.getAddress(), msg.getDest(), msg.getNatPair(), false), ntsPort);
             activeMsgs.remove(msg.getTimeoutId());
@@ -103,8 +106,9 @@ public final class NtPeer extends ComponentDefinition {
 
 //-------------------------------------------------------------------    
     public Handler<TConnectionMsg.Ping> handlePing = new Handler<TConnectionMsg.Ping>() {
+        @Override
         public void handle(TConnectionMsg.Ping ping) {
-            logger.info("Received ping from " + ping.getSource());
+            logger.debug("Received ping from " + ping.getSource());
             TConnectionMsg.Pong pong = new TConnectionMsg.Pong(self.getAddress(), ping.getVodSource(), ping.getTimeoutId());
             trigger(pong, network);
         }
@@ -112,6 +116,7 @@ public final class NtPeer extends ComponentDefinition {
 
 //-------------------------------------------------------------------    
     public Handler<TConnectionMsg.Pong> handlePong = new Handler<TConnectionMsg.Pong>() {
+        @Override
         public void handle(TConnectionMsg.Pong pong) {
             logger.debug("pong recvd " + " from " + pong.getSource());
             trigger(new CancelTimeout(pong.getTimeoutId()), timer);
@@ -122,10 +127,11 @@ public final class NtPeer extends ComponentDefinition {
 
 //-------------------------------------------------------------------    
     private Handler<HpFailed> handleHpFailed = new Handler<HpFailed>() {
+        @Override
         public void handle(HpFailed event) {
             if (activeMsgs.containsKey(event.getMsgTimeoutId())) {
                 trigger(new CancelTimeout(event.getMsgTimeoutId()), timer);
-                logger.info("HP failed. " + event.getResponseType() + " - " 
+                logger.debug("HP failed. " + event.getResponseType() + " - " 
                         + NatStr.pairAsStr(self.getNat(), activeMsgs.get(event.getMsgTimeoutId())));
                 
                 VodAddress dest = event.getHpFailedDestNode();

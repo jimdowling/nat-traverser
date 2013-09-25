@@ -18,10 +18,10 @@ import org.junit.Test;
  *
  * @author jdowling
  */
-public class AbstractConfigurationTest {
+public class CompositeConfigurationTest {
     
     
-    public AbstractConfigurationTest() {
+    public CompositeConfigurationTest() {
     }
     
     @BeforeClass
@@ -37,7 +37,7 @@ public class AbstractConfigurationTest {
         try {
             VodConfig.init(new String[0]);
         } catch (IOException ex) {
-            Logger.getLogger(AbstractConfigurationTest.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(CompositeConfigurationTest.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
     
@@ -49,11 +49,11 @@ public class AbstractConfigurationTest {
      * Test of store method, of class AbstractConfiguration.
      */
     @Test
-    public void testStore() throws Exception {
-        ConcreteInt instance = new ConcreteInt(10);
-        File f = instance.store();
-        ConcreteInt loaded = (ConcreteInt) ConcreteInt.load(ConcreteInt.class);
-        assert(instance.equals(loaded));
+    public void testComposite() throws Exception {
+        CompositeConcrete cc = new CompositeConcrete();
+        cc.store();
+        CompositeConcrete loaded = (CompositeConcrete) CompositeConcrete.load(CompositeConcrete.class);
+        assert(cc.equals(loaded));
     }
 
 }

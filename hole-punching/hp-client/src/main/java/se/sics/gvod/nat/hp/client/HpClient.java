@@ -10,6 +10,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 import se.sics.kompics.Handler;
 import se.sics.gvod.address.Address;
 import org.slf4j.Logger;
@@ -119,6 +120,9 @@ import se.sics.gvod.timer.UUID;
  */
 public class HpClient extends MsgRetryComponent {
 
+    public static AtomicInteger pingSuccessCount = new AtomicInteger();
+    public static AtomicInteger pingFailureCount = new AtomicInteger();
+    
     private final Logger logger = LoggerFactory.getLogger(HpClient.class);
     private Negative<HpClientPort> hpClientPort = negative(HpClientPort.class);
     private Positive<NatNetworkControl> natNetworkControl = positive(NatNetworkControl.class);
@@ -212,9 +216,6 @@ public class HpClient extends MsgRetryComponent {
                 boolean scanningEnabled,
                 long sessionStartTime,
                 TimeoutId msgTimeoutId) {
-//            if (zServers == null || zServers.isEmpty()) {
-//                throw new NullPointerException(compName + "ZServers were null or empty.");
-//            }
             this.zServers = zServers;
             this.remoteClientID = remoteClientID;
             this.openConnectionRequest = openConnectionRequest;
@@ -374,20 +375,6 @@ public class HpClient extends MsgRetryComponent {
             return "(id:" + remoteClientID + "), (port:" + portInUse + "), (hole:"
                     + ((remoteOpenedHole == null) ? "null" : remoteOpenedHole.getPeerAddress())
                     + ")";
-        }
-    }
-
-    public static class DeleteSessionTimeout extends Timeout {
-
-        private final int remoteId;
-
-        public DeleteSessionTimeout(ScheduleTimeout st, int remoteId) {
-            super(st);
-            this.remoteId = remoteId;
-        }
-
-        public int getRemoteId() {
-            return remoteId;
         }
     }
 
@@ -750,7 +737,7 @@ public class HpClient extends MsgRetryComponent {
             logger.debug(compName + " Open Hole message response is recvd Flag: "
                     + response.getResponseType()
                     + " zServer ID (" + response.getSource().getId() + ")");
-            
+
             if (response.getResponseType() != SHP_OpenHoleMsg.ResponseType.OK) {
                 HpSession session = hpSessions.get(dummyAddr.getId());
                 if (session == null) {
@@ -783,9 +770,9 @@ public class HpClient extends MsgRetryComponent {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     private void printSessions() {
         Set<Integer> keys = openedConnections.keySet();
-        logger.info(compName + "Session keys: ");
+        logger.debug(compName + "Session keys: ");
         for (Integer k : keys) {
-            logger.info(compName + "(" + k + ")");
+            logger.debug(compName + "(" + k + ")");
         }
     }
 
@@ -823,87 +810,63 @@ public class HpClient extends MsgRetryComponent {
 
             if (openedConnections.containsKey(remoteId) == true) {
                 logger.debug(compName + " Hole Punched connection already established with " + remoteId);
+                // do not return here, as client might have missed an earlier HpResponseMsg 
             }
 
             HpSession session = hpSessions.get(remoteId);
             if (session == null) {
                 Set<Address> zServers = new HashSet<Address>();
                 if (!request.getVodSource().isOpen()) {
-                    for (Address p :request.getVodSource().getParents()) {
+                    for (Address p : request.getVodSource().getParents()) {
                         zServers.add(p);
                     }
                 } else {
                     zServers.add(request.getSource());
                 }
-                session = new HpSession(remoteId, zServers, null, 
-                        config.getScanRetries(), config.isScanningEnabled()
-                        , System.currentTimeMillis()
-                        , request.getMsgTimeoutId());
+                session = new HpSession(remoteId, zServers, null,
+                        config.getScanRetries(), config.isScanningEnabled(), System.currentTimeMillis(), request.getMsgTimeoutId());
             }
-//            if (session != null) {
-                // Remove the session after 30 seconds.
-                logger.debug(compName + "Removing session key in 30s.");
-                ScheduleTimeout scheduleTimeout = new ScheduleTimeout(30 * 1000);
-                DeleteSessionTimeout dst =
-                        new DeleteSessionTimeout(scheduleTimeout, remoteId);
-                scheduleTimeout.setTimeoutEvent(dst);
-                delegator.doTrigger(scheduleTimeout, timer);
-                //                int port = (session.getPortInUse() == 0) ? request.getVodDestination().getPort()
+            //                int port = (session.getPortInUse() == 0) ? request.getVodDestination().getPort()
 //                        : self.getPort();
-                int srcPort = request.getVodDestination().getPort();
+            int srcPort = request.getVodDestination().getPort();
 
-                // sending the response to the remote client
-                Address srcAddress = new Address(self.getIp(), srcPort, self.getId());
-                VodAddress sourceAddress = new VodAddress(srcAddress, self.getOverlayId(),
-                        self.getNat(), self.getParents());
-                logger.debug(compName + "sending back response to ("
-                        + request.getVodSource() + ") - " + request.getMsgTimeoutId() + " : "
-                        + request.getTimeoutId());
-                HolePunchingMsg.Response hpResponse = new HolePunchingMsg.Response(sourceAddress,
-                        request.getVodSource(),
-                        request.getMsgTimeoutId());
-                ScheduleRetryTimeout st = new ScheduleRetryTimeout(config.getRto(),
-                        config.getRtoRetries(), config.getRtoScale());
-                HolePunchingMsg.ResponseRetryTimeout hrrt = new HolePunchingMsg.ResponseRetryTimeout(st, hpResponse);
-                delegator.doRetry(hrrt);
+            // sending the response to the remote client
+            Address srcAddress = new Address(self.getIp(), srcPort, self.getId());
+            VodAddress sourceAddress = new VodAddress(srcAddress, self.getOverlayId(),
+                    self.getNat(), self.getParents());
+            logger.debug(compName + "sending back response to ("
+                    + request.getVodSource() + ") - " + request.getMsgTimeoutId() + " : "
+                    + request.getTimeoutId());
+            HolePunchingMsg.Response hpResponse = new HolePunchingMsg.Response(sourceAddress,
+                    request.getVodSource(),
+                    request.getMsgTimeoutId());
+            ScheduleRetryTimeout st = new ScheduleRetryTimeout(config.getRto(),
+                    config.getRtoRetries(), config.getRtoScale());
+            HolePunchingMsg.ResponseRetryTimeout hrrt = new HolePunchingMsg.ResponseRetryTimeout(st, hpResponse);
+            delegator.doRetry(hrrt);
 
-                // if the connection is not already opened, then send response
-                if (!openedConnections.containsKey(remoteId)) {
-
-                    OpenConnectionRequest req = session.getOpenConnectionRequest();
-                    boolean heartbeatConnection =
-                            (req == null) ? false : req.isKeepConnectionOpenWithHeartbeat();
-
-                    // Save the connection
-                    OpenedConnection openedConnection = new OpenedConnection(
-                            srcPort,
-                            request.getSource(),
-                            request.getVodSource().getNatBindingTimeout(),
-                            heartbeatConnection);
-
-                    openedConnections.put(remoteId, openedConnection);
-
-                    if (req != null) {
-                        logger.debug(compName + "sending response to the outer component from hp-ack-ack. remote client id ("
-                                + request.getClientId() + ")");
-                        sendOpenConnectionResponseMessage(req,
-                                request.getVodSource(),
-                                OpenConnectionResponseType.OK,
-                                session.getHolePunchingMechanism(),
-                                request.getMsgTimeoutId());
-                        HPStats stats = hpStats.get(session.getHolePunchingMechanism());
-                        if (stats != null) {
-                            stats.incrementSuccessCounter();
-                        }
-                    } else {
-                        // no need to send response to the upper component
-                        logger.debug(compName + "no need to send HpMsg.Request response to the upper component");
+            // if the connection is not already opened, then send response to NatTraverser component
+            if (!openedConnections.containsKey(remoteId)) {
+                OpenConnectionRequest req = session.getOpenConnectionRequest();
+                addOrUpdateOpenedConnectionNoSession(request.getSource(), srcPort);
+                if (req != null) {
+                    logger.debug(compName + "sending response to the outer component from hp-ack-ack. remote client id ("
+                            + request.getClientId() + ")");
+                    sendOpenConnectionResponseMessage(req,
+                            request.getVodSource(),
+                            OpenConnectionResponseType.OK,
+                            session.getHolePunchingMechanism(),
+                            request.getMsgTimeoutId());
+                    HPStats stats = hpStats.get(session.getHolePunchingMechanism());
+                    if (stats != null) {
+                        stats.incrementSuccessCounter();
                     }
+                } else {
+                    // no need to send response to the upper component
+                    logger.debug(compName + "no need to send HpMsg.Request response to the upper component");
                 }
-//            } else {
-//                logger.warn(compName + "ERROR: I did not request this Session. Session key not found " + remoteId
-//                        + " - " + request.getMsgTimeoutId());
-//            }
+            }
+            hpSessions.remove(session.getRemoteClientId());
         }
     };
     Handler<HolePunchingMsg.Response> handleHolePunchingMsgResponse = new Handler<HolePunchingMsg.Response>() {
@@ -915,9 +878,13 @@ public class HpClient extends MsgRetryComponent {
             // don't check the getTimeoutId() - as this has the responseTimeoutId, not the requestTimeoutId
             if (delegator.doCancelRetry(response.getTimeoutId())) {
                 // if response is recvd --> hole punching was successful
-                logger.info(compName + "Hole punching response message is recvd. From Client "
+                logger.debug(compName + "Hole punching response message is recvd. From Client "
                         + response.getSource() + " - id: " + response.getMsgTimeoutId());
                 int remoteId = response.getSource().getId();
+
+                if (openedConnections.contains(remoteId)) {
+                    return;
+                }
                 HpSession session = hpSessions.get(remoteId);
                 if (session != null) {
                     session.setHpOngoing(false);
@@ -931,16 +898,18 @@ public class HpClient extends MsgRetryComponent {
                         // it has Nat.MappingPolicy.PORT_DEPENDENT. In this case, if the initiator
                         // has Nat.FilteringPolicy.PORT_DEPENDENT, it will reject the response.
                         // So, use the original openedHole to send the msg.
+                        if (session.getRemoteOpenedHole().equals(openedHole) == false) {
+                            logger.info(compName + " ! openedHole {} <-> source of the msg {} ",
+                                    openedHole, response.getVodSource());
+                        }
                         openedHole = session.getRemoteOpenedHole();
-                        logger.info(compName + " New openedHole {} <-> source of the msg {} ",
-                                openedHole, response.getVodSource());
                     }
 
                     if (!openedConnections.containsKey(remoteId)) {
                         if (session.getPortInUse() == 0) {
                             session.setPortInUse(response.getVodDestination().getPort());
                         }
-                        addOpenedConnection(openedHole, session.getZServers().iterator().next(), session);
+                        addOpenedConnection(openedHole, session);
                         logger.debug(compName + "Hole session registered f(" + self.getId() + ","
                                 + remoteId + ") - received msg at " + response.getDestination());
                     } else {
@@ -954,7 +923,7 @@ public class HpClient extends MsgRetryComponent {
                             response.getTimeoutId(),
                             response.getMsgTimeoutId());
                     delegator.doTrigger(ack, network);
-                    logger.info(compName + " sending HolePunchingMsg.ResponseAck to "
+                    logger.debug(compName + " sending HolePunchingMsg.ResponseAck to "
                             + response.getSource().getId());
 
                     // send response to upper component
@@ -974,12 +943,10 @@ public class HpClient extends MsgRetryComponent {
                         // no need to send response to the upper component
                         logger.debug(compName + "no need to send HpMsg.Response response to the upper component");
                     }
-                    // remove the hp session.
-//                    hpSessions.remove(remoteId);
                     logger.debug(compName + "Hole punching is successful for " + remoteId
                             + " Removing its key.");
                 } else {
-                    logger.error(compName + "ERROR: Session not found. Where the hell is my session from "
+                    logger.debug(compName + "Session not found. Where the hell is my session from "
                             + remoteId);
                     printSessions();
                 }
@@ -987,15 +954,14 @@ public class HpClient extends MsgRetryComponent {
         }
     };
 
-    private void addOpenedConnection(VodAddress openedHole, Address zServer, HpSession session) {
+    private void addOpenedConnection(VodAddress openedHole, HpSession session) {
         OpenedConnection openedConnection;
         int natBindingTimeout = (int) Math.min(self.getNat().getBindingTimeout(),
                 openedHole.getNatBindingTimeout());
-        SendHeartbeatTimeout sht = null;
         if (session.isHeartbeatConnection()) {
             // TODO - do all removeOpenedConnections cancel the Timeout for this Heartbeat code??
             ScheduleTimeout st = new ScheduleTimeout(natBindingTimeout - 5);
-            sht = new SendHeartbeatTimeout(st, openedHole.getId());
+            SendHeartbeatTimeout sht = new SendHeartbeatTimeout(st, openedHole.getId());
             st.setTimeoutEvent(sht);
             trigger(st, timer);
         }
@@ -1006,24 +972,26 @@ public class HpClient extends MsgRetryComponent {
                 session.isHeartbeatConnection());
 
         openedConnections.put(openedHole.getId(), openedConnection);
+        hpSessions.remove(session.getRemoteClientId());
     }
     Handler<HpKeepAliveMsg.Ping> handleHpKeepAliveMsgPing =
             new Handler<HpKeepAliveMsg.Ping>() {
         @Override
         public void handle(HpKeepAliveMsg.Ping msg) {
+            logger.trace(compName + "Received heartbeat from: " + msg.getSource());
             HpKeepAliveMsg.Pong reply = new HpKeepAliveMsg.Pong(self.getAddress(), msg.getVodSource(),
                     msg.getTimeoutId());
             trigger(reply, network);
-            updateOrAddOpenedConnection(msg.getSource(), msg.getDestination().getPort());
+            addOrUpdateOpenedConnectionNoSession(msg.getSource(), msg.getDestination().getPort());
         }
     };
 
-    private void updateOrAddOpenedConnection(Address remote, int srcPort) {
+    private void addOrUpdateOpenedConnectionNoSession(Address remote, int srcPort) {
         OpenedConnection oc = openedConnections.get(remote.getId());
         if (oc == null) {
-            logger.info(compName + "Couldn'd find, but now adding, an OpenedConnection to: " + remote.getId());
+            logger.debug(compName + "Couldn'd find, but now adding, an OpenedConnection to: " + remote.getId());
             OpenedConnection newOc = new OpenedConnection(srcPort, remote,
-                    (int) self.getNat().getBindingTimeout(), false);
+                    (int) self.getNat().getBindingTimeout(), true);
             openedConnections.put(remote.getId(), newOc);
         } else {
             oc.setLastUsed(System.currentTimeMillis());
@@ -1035,19 +1003,24 @@ public class HpClient extends MsgRetryComponent {
         public void handle(HpKeepAliveMsg.Pong msg) {
             int remoteId = msg.getSource().getId();
             OpenedConnection oc = openedConnections.get(remoteId);
-            if (oc == null) {
-                logger.warn(compName + "Couldn'd find connection to heartbeat to: " + remoteId);
-            } else {
-                VodAddress openedHole = ToVodAddr.hpServer(oc.getHoleOpened());
-                ScheduleTimeout st = new ScheduleTimeout(Math.min(
-                        self.getNat().getBindingTimeout(),
-                        openedHole.getNatBindingTimeout()) - 5);
-                SendHeartbeatTimeout sht = new SendHeartbeatTimeout(st, remoteId);
-                st.setTimeoutEvent(sht);
-                trigger(st, timer);
-            }
+//            if (oc == null) {
+//                logger.warn(compName + "Couldn'd find connection to heartbeat to: " + remoteId);
+//            } else {
+//                VodAddress openedHole = ToVodAddr.hpServer(oc.getHoleOpened());
+//                logger.trace(compName + "Received heartbeat pong from : " + msg.getSource());
+//                logger.trace(compName + "Received heartbeat pong openedHole {}/{}",
+//                        openedHole, oc.getHoleOpened());
+//                
+//                ScheduleTimeout st = new ScheduleTimeout(Math.min(
+//                        self.getNat().getBindingTimeout(),
+//                        openedHole.getNatBindingTimeout()) - 5);
+//                SendHeartbeatTimeout sht = new SendHeartbeatTimeout(st, remoteId);
+//                st.setTimeoutEvent(sht);
+//                trigger(st, timer);
+//            }
             // update or add an openedConnection
-            updateOrAddOpenedConnection(msg.getSource(), msg.getDestination().getPort());
+            addOrUpdateOpenedConnectionNoSession(msg.getSource(), msg.getDestination().getPort());
+            pingSuccessCount.incrementAndGet();
         }
     };
     Handler<SendHeartbeatTimeout> handleSendHeartbeatTimeout =
@@ -1060,8 +1033,11 @@ public class HpClient extends MsgRetryComponent {
                 logger.error(compName + "Couldn'd find connection to heartbeat to: " + remoteId);
             } else {
                 VodAddress openedHole = ToVodAddr.hpServer(oc.getHoleOpened());
+                VodAddress src = new VodAddress(
+                        new Address(self.getIp(), oc.getPortInUse(), self.getId()), 
+                        self.getOverlayId(), self.getNat());
                 HpKeepAliveMsg.Ping pingMsg = new HpKeepAliveMsg.Ping(
-                        self.getAddress(), openedHole);
+                        src, openedHole);
                 long hbTime = Math.min(self.getNat().getBindingTimeout(), openedHole.getNatBindingTimeout());
                 long safetyMargin = hbTime / 10;
                 // set the timeout for 1/10 seconds less than the minimum NAT binding time 
@@ -1069,6 +1045,9 @@ public class HpClient extends MsgRetryComponent {
                 ScheduleRetryTimeout srt = new ScheduleRetryTimeout(hbTime - safetyMargin, 2, 0.066);
                 HeartbeatTimeout hbt = new HeartbeatTimeout(srt, pingMsg);
                 delegator.doRetry(hbt);
+                logger.info(compName + "Sending to heartbeat from " + self.getAddress()
+                        + "=>" + src.getPort() + " to : {}",
+                        openedHole);
             }
         }
     };
@@ -1076,11 +1055,11 @@ public class HpClient extends MsgRetryComponent {
             new Handler<HeartbeatTimeout>() {
         @Override
         public void handle(HeartbeatTimeout event) {
-            TimeoutId id = event.getTimeoutId();
             int remoteId = event.getMsg().getDestination().getId();
             openedConnections.remove(remoteId);
-            logger.debug(compName + " heartbeat timed out to private node. "
+            logger.warn(compName + " heartbeat timed out to private node. "
                     + "Removing openedConnection to " + event.getMsg().getDestination());
+            pingFailureCount.incrementAndGet();
         }
     };
     Handler<HolePunchingMsg.RequestRetryTimeout> handleHolePunchingRequestTimeout =
@@ -1136,13 +1115,9 @@ public class HpClient extends MsgRetryComponent {
                                     session.getHolePunchingMechanism(),
                                     requestMsg.getMsgTimeoutId());
                         }
-                        // terminate session
-                        // TODO: Jim - when we get a duplicate connection request, this
-                        // gives us a problem. Remove session using timer later?
-//                                hpSessions.remove(remoteId);
                     }
                 } else {
-                    logger.error(compName + " ERROR: session not found. session key "
+                    logger.debug(compName + " ERROR: session not found. session key "
                             + remoteId);
                 }
             }
@@ -1166,7 +1141,6 @@ public class HpClient extends MsgRetryComponent {
 
                 session.setHpOngoing(false);
                 if (!openedConnections.containsKey(remoteId)) {
-                    VodAddress zServer = ToVodAddr.hpServer(session.getZServers().iterator().next());
                     if (session.getPortInUse() == 0) {
                         session.setPortInUse(msg.getDestination().getPort());
                     }
@@ -1176,8 +1150,9 @@ public class HpClient extends MsgRetryComponent {
                             == Nat.FilteringPolicy.PORT_DEPENDENT) {
                         openedHole = session.getRemoteOpenedHole();
                     }
-                    addOpenedConnection(openedHole, zServer.getPeerAddress(), session);
-                    logger.info(compName + "Local port :" + session.getPortInUse()
+                    addOrUpdateOpenedConnectionNoSession(openedHole.getPeerAddress(),
+                            session.getPortInUse());
+                    logger.debug(compName + "Local port :" + session.getPortInUse()
                             + " for communicating with " + msg.getDestination());
                 } else {
                     openedConnections.get(remoteId).setLastUsed(System.currentTimeMillis());
@@ -1227,7 +1202,7 @@ public class HpClient extends MsgRetryComponent {
 
             int remoteId = request.getRemoteId();
             logger.debug(compName + "Hole Punching Client Recvd GO Message. remote client is "
-                    + remoteId 
+                    + remoteId
                     + " zServer ID (" + request.getSource().getId()
                     + ")  Mechanism: " + request.getHolePunchingMechanism()
                     + " Role: " + request.getHolePunchingRole());
@@ -1256,7 +1231,7 @@ public class HpClient extends MsgRetryComponent {
                         request.getMsgTimeoutId());
                 // put the session in the map
                 hpSessions.put(remoteId, session);
-                logger.info(compName + " Putting session after GoMsg. Remote-id: " + remoteId);
+                logger.debug(compName + " Putting session after GoMsg. Remote-id: " + remoteId);
             }
 
             session.setHolePunchingMechanism(request.getHolePunchingMechanism());
@@ -1271,7 +1246,7 @@ public class HpClient extends MsgRetryComponent {
             // 30 seconds, and has the same hole, then don't re-run hole-punching
 //            if (oc != null && oc.getLastUsed() > Nat.DEFAULT_RULE_EXPIRATION_TIME //                    && oc.getHoleOpened().equals(request.getOpenedHole())
 //                    ) {
-//                logger.info(compName+"Duplicate hole-punching request. Hole-punching already"
+//                logger.debug(compName+"Duplicate hole-punching request. Hole-punching already"
 //                        + "completed.");
 //                int port = (request.get_PRP_PRP_InterleavedPort() == 0) ?
 //                        request.getDestination().getPort() :
@@ -1378,13 +1353,13 @@ public class HpClient extends MsgRetryComponent {
                     bindReq.setResponse(bindResp);
                     delegator.doTrigger(bindReq, natNetworkControl);
                 } else {
-                logger.warn(compName + "GoMsg failed. Already bound port {}, no retries left",
-                        response.getPort());                    
+                    logger.warn(compName + "GoMsg failed. Already bound port {}, no retries left",
+                            response.getPort());
                 }
             } else {
                 // some unrecoverable failure.
-                logger.warn(compName + "GoMsg failed when trying to bind a port " +
-                        response.getStatus());
+                logger.warn(compName + "GoMsg failed when trying to bind a port "
+                        + response.getStatus());
             }
         }
     };
@@ -1452,7 +1427,8 @@ public class HpClient extends MsgRetryComponent {
             }
             for (Integer key : toBeDeleted) {
                 HpSession session = hpSessions.remove(key);
-                logger.info(compName + " GC: hp session time expired. deleting the session " + key + " mechanism: " + session.getHolePunchingMechanism());
+                logger.info(compName + " GC: hp session time expired. deleting the session " + key + " mechanism: " + session.getHolePunchingMechanism() 
+                        + " from " + session.getPortInUse() + "=>" + session.getRemoteOpenedHole());
             }
 
             // Then openConnections
@@ -1466,8 +1442,9 @@ public class HpClient extends MsgRetryComponent {
             }
             for (OpenedConnection oc : toDeleteOc) {
                 openedConnections.remove(oc.getHoleOpened().getId());
-                logger.info(compName + " Deleting opened connection: "
-                        + oc.getHoleOpened());
+                logger.info(compName + " Deleting opened connection: {}"
+                        + self.getId() + "/" + oc.getHoleOpened(),
+                        oc.getPortInUse() + "=>");
 
             }
 
@@ -2138,15 +2115,6 @@ public class HpClient extends MsgRetryComponent {
                         sendOpenConnectionResponseMessage(session,
                                 OpenConnectionResponseType.RENDEZVOUS_SERVER_FAILED);
                     }
-
-//                    // send hpFinished (Fail) msg to zServer
-//                    sendHpFinishedMsgMsgTozServer(self,
-//                            response.getGVodSource(),
-//                            session.getRemoteClientId()/*other client id*/,
-//                            false/*hp failed*/);
-//                    // Clean up
-//                    // 1) clean the hole punching sessions map
-//                    hpSessions.remove(remoteId);
                 } else {
                     // TODO update the session about the state
                 }
@@ -2178,45 +2146,6 @@ public class HpClient extends MsgRetryComponent {
             logger.warn(compName + "Cannot send OpenConnectionResponse with null request");
         }
     }
-//    private void sendHpFinishedMsgTozServer(Self self, VodAddress zServerAddress,
-//            int remoteId, boolean isHPSuccessful) {
-//        HpFinishedMsg hpFinishedMsg = new HpFinishedMsg(
-//                self.getAddress(), zServerAddress, remoteId,
-//                isHPSuccessful);
-//        delegator.doTrigger(hpFinishedMsg, network);
-//    }
-//    private void sendDummyMessagesToTestScanning(int numberOfMsgs) {
-//        System.out.println(compName + "sendDummyMessagesToTestScanning. " + numberOfMsgs + " COMMENT THIS FUNCTION IF NOT TESTING ");
-//        for (int i = 0; i < numberOfMsgs; i++) {
-//            Random rand = new Random(VodConfig.getSeed());
-//
-//            int sourceRandomPort = rand.nextInt(65000);
-//            int destinationRandomPort = rand.nextInt(65000);
-//            int randomDestinationId = 10000 + rand.nextInt(2000);
-//
-//
-//            Address newRandom = new Address(self.getIp(), sourceRandomPort, self.getId());
-//            VodAddress selfRandom = new VodAddress(newRandom, self.getOverlayId(),
-//                    self.getNat(), self.getParents());
-//
-//            Address newRandomId = new Address(self.getIp(), destinationRandomPort, randomDestinationId);
-//            VodAddress selfRandomId = new VodAddress(newRandomId, self.getOverlayId(),
-//                    self.getNat(), self.getParents());
-//
-//            HolePunchingMsg.Request msg = new HolePunchingMsg.Request(
-//                    selfRandom, selfRandomId, randomDestinationId);
-//            delegator.doTrigger(msg, network);
-//        }
-//    }
-    Handler<DeleteSessionTimeout> handleDeleteSessionTimeout = new Handler<DeleteSessionTimeout>() {
-        @Override
-        public void handle(DeleteSessionTimeout event) {
-            if (hpSessions.remove(event.getRemoteId()) == null) {
-                logger.warn(compName + "Tried to delete a non-existant session to "
-                        + event.getRemoteId());
-            }
-        }
-    };
 
     private Set<Address> addrAsSet(Address addr) {
         Set<Address> addrs = new HashSet<Address>();
