@@ -142,19 +142,17 @@ public class HpClientUnitTest extends VodRetryComponentTestCase {
                 new HolePunchingMsg.Request(privAddrs.get(0), getAddress(), 
                         pubAddrs.get(0).getId(), UUID.nextUUID()));
         assert (hpClient.openedConnections.size() == 1);
-        events = pollEvent(3);
-        assertSequence(events, HpClient.DeleteSessionTimeout.class, 
+        events = pollEvent(2);
+        assertSequence(events, 
                 HolePunchingMsg.Response.class
                 , OpenConnectionResponse.class);
-        HolePunchingMsg.Response r = (HolePunchingMsg.Response) events.get(1);
+        HolePunchingMsg.Response r = (HolePunchingMsg.Response) events.get(0);
         hpClient.handleHolePunchingResponseAck.handle(
                 new HolePunchingMsg.ResponseAck(privAddrs.get(0), getAddress(), 
                 r.getTimeoutId(), UUID.nextUUID()));
         assert (hpClient.openedConnections.size() == 1);
 
-        events = pollEvent(1);
-        assertSequence(events, OpenConnectionResponse.class);
-        OpenConnectionResponse ocr = (OpenConnectionResponse) events.get(0);
+        OpenConnectionResponse ocr = (OpenConnectionResponse) events.get(1);
         assert(ocr.getResponseType() == OpenConnectionResponseType.OK);
 
         Integer k = privAddrs.get(0).getId();

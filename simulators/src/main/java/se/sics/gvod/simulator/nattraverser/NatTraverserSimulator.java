@@ -300,6 +300,8 @@ public final class NatTraverserSimulator extends ComponentDefinition {
 
             logger.info("Hp Ping success/failure: {}/{} ", HpClient.pingSuccessCount.get(),
                     HpClient.pingFailureCount);
+            
+            logger.info("Hp No heartbeats: {}", HpClient.nonPingedConnections);
 
             System.out.println("Success");
             for (String natType : successCount.keySet()) {

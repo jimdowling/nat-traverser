@@ -1622,7 +1622,6 @@ public class RendezvousServer extends MsgRetryComponent {
                             client_B_RegRecord.getClient().getParents());
                     session.set_Interleaved_PRP_Port(client_B_ID, prpPort);
                 } catch (NoPortsException ex) {
-                    java.util.logging.Logger.getLogger(RendezvousServer.class.getName()).log(Level.SEVERE, null, ex);
                     newPorts = true;
                 }
 
