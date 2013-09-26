@@ -144,9 +144,6 @@ public class HpClient extends MsgRetryComponent {
      */
     EnumMap<HPMechanism, HPStats> hpStats =
             new EnumMap<HPMechanism, HPStats>(HPMechanism.class);
-
-    
-
     HashMap<Integer, Address> parents = new HashMap<Integer, Address>();
 
     /*
@@ -894,11 +891,7 @@ public class HpClient extends MsgRetryComponent {
         int natBindingTimeout = (int) Math.min(self.getNat().getBindingTimeout(),
                 openedHole.getNatBindingTimeout());
         if (session.isHeartbeatConnection()) {
-            // TODO - do all removeOpenedConnections cancel the Timeout for this Heartbeat code??
-            ScheduleTimeout st = new ScheduleTimeout(natBindingTimeout - 5);
-            SendHeartbeatTimeout sht = new SendHeartbeatTimeout(st, openedHole.getId());
-            st.setTimeoutEvent(sht);
-            trigger(st, timer);
+            scheduleHeartbeat(openedHole.getId());
         } else {
             nonPingedConnections.incrementAndGet();
         }
@@ -911,6 +904,7 @@ public class HpClient extends MsgRetryComponent {
         openedConnections.put(openedHole.getId(), openedConnection);
         hpSessions.remove(session.getRemoteClientId());
     }
+
     private void addOrUpdateOpenedConnectionNoSession(Address remote, int srcPort) {
         OpenedConnection oc = openedConnections.get(remote.getId());
         if (oc == null) {
@@ -933,33 +927,46 @@ public class HpClient extends MsgRetryComponent {
             addOrUpdateOpenedConnectionNoSession(msg.getSource(), msg.getDestination().getPort());
         }
     };
-
     Handler<HpKeepAliveMsg.Pong> handleHpKeepAliveMsgPong =
             new Handler<HpKeepAliveMsg.Pong>() {
         @Override
         public void handle(HpKeepAliveMsg.Pong msg) {
             int remoteId = msg.getSource().getId();
             OpenedConnection oc = openedConnections.get(remoteId);
-//            if (oc == null) {
-//                logger.warn(compName + "Couldn'd find connection to heartbeat to: " + remoteId);
-//            } else {
-//                VodAddress openedHole = ToVodAddr.hpServer(oc.getHoleOpened());
-//                logger.trace(compName + "Received heartbeat pong from : " + msg.getSource());
-//                logger.trace(compName + "Received heartbeat pong openedHole {}/{}",
-//                        openedHole, oc.getHoleOpened());
-//                
-//                ScheduleTimeout st = new ScheduleTimeout(Math.min(
-//                        self.getNat().getBindingTimeout(),
-//                        openedHole.getNatBindingTimeout()) - 5);
-//                SendHeartbeatTimeout sht = new SendHeartbeatTimeout(st, remoteId);
-//                st.setTimeoutEvent(sht);
-//                trigger(st, timer);
-//            }
-            // update or add an openedConnection
-            addOrUpdateOpenedConnectionNoSession(msg.getSource(), msg.getDestination().getPort());
-            pingSuccessCount.incrementAndGet();
+            if (delegator.doCancelRetry(msg.getTimeoutId())) {
+                if (oc == null) {
+                    logger.warn(compName + "Couldn't find connection to heartbeat to: " + remoteId);
+                } else {
+                    scheduleHeartbeat(oc.getHoleOpened().getId());
+                }
+                // update or add an openedConnection
+                addOrUpdateOpenedConnectionNoSession(msg.getSource(), msg.getDestination().getPort());
+                pingSuccessCount.incrementAndGet();
+            }
         }
     };
+
+    private void scheduleHeartbeat(int remoteId) {
+        ScheduleTimeout st = new ScheduleTimeout(self.getNat().getBindingTimeout() - 5000);
+        SendHeartbeatTimeout sht = new SendHeartbeatTimeout(st, remoteId);
+        st.setTimeoutEvent(sht);
+        trigger(st, timer);
+    }
+    
+    private void sendHeartbeat(OpenedConnection oc) {
+        VodAddress openedHole = ToVodAddr.hpServer(oc.getHoleOpened());
+        VodAddress src = new VodAddress(
+                new Address(self.getIp(), oc.getPortInUse(), self.getId()),
+                self.getOverlayId(), self.getNat());
+        HpKeepAliveMsg.Ping pingMsg = new HpKeepAliveMsg.Ping(
+                src, openedHole);
+        ScheduleRetryTimeout srt = new ScheduleRetryTimeout(2000, 3, 0.5);
+        HeartbeatTimeout hbt = new HeartbeatTimeout(srt, pingMsg);
+        delegator.doRetry(hbt);
+        logger.trace(compName + "Sending heartbeat from " + self.getAddress()
+                + "=>" + src.getPort() + " to : {} with timeout=" + 2000,
+                openedHole);
+    }
     Handler<SendHeartbeatTimeout> handleSendHeartbeatTimeout =
             new Handler<SendHeartbeatTimeout>() {
         @Override
@@ -969,22 +976,7 @@ public class HpClient extends MsgRetryComponent {
             if (oc == null) {
                 logger.error(compName + "Couldn'd find connection to heartbeat to: " + remoteId);
             } else {
-                VodAddress openedHole = ToVodAddr.hpServer(oc.getHoleOpened());
-                VodAddress src = new VodAddress(
-                        new Address(self.getIp(), oc.getPortInUse(), self.getId()),
-                        self.getOverlayId(), self.getNat());
-                HpKeepAliveMsg.Ping pingMsg = new HpKeepAliveMsg.Ping(
-                        src, openedHole);
-                long hbTime = Math.min(self.getNat().getBindingTimeout(), openedHole.getNatBindingTimeout());
-                long safetyMargin = hbTime / 10;
-                // set the timeout for 1/10 seconds less than the minimum NAT binding time 
-                // Retry 2 times, and 
-                ScheduleRetryTimeout srt = new ScheduleRetryTimeout(hbTime - safetyMargin, 2, 0.066);
-                HeartbeatTimeout hbt = new HeartbeatTimeout(srt, pingMsg);
-                delegator.doRetry(hbt);
-                logger.info(compName + "Sending to heartbeat from " + self.getAddress()
-                        + "=>" + src.getPort() + " to : {}",
-                        openedHole);
+                sendHeartbeat(oc);
             }
         }
     };
@@ -1949,13 +1941,11 @@ public class HpClient extends MsgRetryComponent {
 //
 //                             HANDLERS FOR INTERLEAVED PRP PRP
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    
-
     private HpSession interleavedPrpRequest(int remoteId,
             Address parent) {
         HpSession session = hpSessions.get(remoteId);
         parents.put(remoteId, parent);
-        
+
         PortAllocRequest allocReq = new PortAllocRequest(self.getIp(), self.getId(), 1,
                 Transport.UDP); //freePortCount
         InterleavedPRP_PortResponse allocResp =
