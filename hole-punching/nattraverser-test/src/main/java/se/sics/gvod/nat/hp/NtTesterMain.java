@@ -141,19 +141,31 @@ public final class NtTesterMain extends ComponentDefinition {
     }
 
     public static class PingTimeout extends Timeout {
+        private final VodAddress dest;
 
-        public PingTimeout(ScheduleTimeout st) {
+        public PingTimeout(ScheduleTimeout st, VodAddress dest) {
             super(st);
+            this.dest = dest;
+        }
+
+        public VodAddress getDest() {
+            return dest;
         }
     }
 
     public static class PangTimeout extends Timeout {
 
         private final int id;
+        private final VodAddress dest;
 
-        public PangTimeout(ScheduleTimeout st, int id) {
+        public PangTimeout(ScheduleTimeout st, int id, VodAddress dest) {
             super(st);
             this.id = id;
+            this.dest = dest;
+        }
+
+        public VodAddress getDest() {
+            return dest;
         }
 
         public int getId() {
@@ -315,7 +327,8 @@ public final class NtTesterMain extends ComponentDefinition {
             trigger(pong, natTraverser.getPositive(VodNetwork.class));
 
             ScheduleTimeout st = new ScheduleTimeout(10 * 1000);
-            PangTimeout pt = new PangTimeout(st, ping.getTimeoutId().getId());
+            PangTimeout pt = new PangTimeout(st, ping.getTimeoutId().getId(), 
+                    ping.getVodSource());
             st.setTimeoutEvent(pt);
             trigger(st, timer.getPositive(Timer.class));
             pangTimeouts.put(ping.getTimeoutId().getId(), pt.getTimeoutId());
@@ -328,8 +341,6 @@ public final class NtTesterMain extends ComponentDefinition {
 
             logger.info("pong recvd from " + pong.getSource() + " - " + pong.getTimeoutId());
             numSuccess++;
-//            report("pong recvd from " + pong.getVodSource() + " at " + pong.getVodDestination()
-//                    + "Success: " + numSuccess + "/" + numFail);
             report(pong.getDestination().getPort(), 
                     pong.getVodSource(), true, "Outgoing Nat Traversed");
             
@@ -362,6 +373,7 @@ public final class NtTesterMain extends ComponentDefinition {
         public void handle(Fault ex) {
 
             logger.debug(ex.getFault().toString());
+            report(0, self.getAddress(), false, ex.toString());
             System.exit(-1);
         }
     };
@@ -371,8 +383,7 @@ public final class NtTesterMain extends ComponentDefinition {
             logger.info("FAILURE: pong not recvd for TimeoutId: " + msg.getTimeoutId());
             numFail++;
             logger.info("Total Success/Failure ratio is: {}/{}", numSuccess, numFail);
-//            report("pingTimeout from " + msg.getVodSource() + " at " + msg.getVodDestination()
-//                    + "Success: " + numSuccess + "/" + numFail);
+            report(0, msg.getDest(), false, "Nat Traversal Ping Timeout");
         }
     };
     Handler<PangTimeout> handlePangTimeout = new Handler<PangTimeout>() {
@@ -389,31 +400,30 @@ public final class NtTesterMain extends ComponentDefinition {
                     timeout.getId());
             numFail++;
             logger.info("Total Success/Failure ratio is: {}/{}", numSuccess, numFail);
-//            report("Pang timeout from " + timeout.getVodSource() + " at " + pong.getVodDestination()
-//                    + "Success: " + numSuccess + "/" + numFail);            
+            report(0, timeout.getDest(), false, "Nat Traversal Pang Timeout");
         }
     };
     Handler<CroupierSample> handleCroupierSample = new Handler<CroupierSample>() {
         @Override
         public void handle(CroupierSample msg) {
-            for (VodDescriptor vd : msg.getNodes()) {
-                VodAddress va = vd.getVodAddress();
-                if (alreadyConnected.contains(va) == false) {
+            for (VodDescriptor sample : msg.getNodes()) {
+                VodAddress dest = sample.getVodAddress();
+                if (alreadyConnected.contains(dest) == false) {
                     // send a msg to the new VodAddress if it is private, has parents
                     // and I haven't tried to send a message to it before.
-                    if (self.getId() != va.getId()
-                            && va.isOpen() == false && va.getParents().size() >= 1
-                            && va.isHpPossible(self.getAddress())) {
+                    if (self.getId() != dest.getId()
+                            && dest.isOpen() == false && dest.getParents().size() >= 1
+                            && dest.isHpPossible(self.getAddress())) {
                         ScheduleTimeout st = new ScheduleTimeout(10 * 1000);
-                        PingTimeout hp = new PingTimeout(st);
+                        PingTimeout hp = new PingTimeout(st, dest);
                         st.setTimeoutEvent(hp);
                         trigger(new TConnectionMsg.Ping(self.getAddress(),
-                                va, hp.getTimeoutId()),
+                                dest, hp.getTimeoutId()),
                                 natTraverser.getPositive(VodNetwork.class));
                         trigger(st, timer.getPositive(Timer.class));
-                        alreadyConnected.add(va);
+                        alreadyConnected.add(dest);
                         logger.info("sending ping with TimeoutId {} to {} ",
-                                hp.getTimeoutId(), va);
+                                hp.getTimeoutId(), dest);
                     }
                 }
             }
