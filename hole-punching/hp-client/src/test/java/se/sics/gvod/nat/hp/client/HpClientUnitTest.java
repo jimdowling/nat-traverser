@@ -140,7 +140,7 @@ public class HpClientUnitTest extends VodRetryComponentTestCase {
 
         hpClient.handleHolePunchingMsgRequest.handle(
                 new HolePunchingMsg.Request(privAddrs.get(0), getAddress(), 
-                        pubAddrs.get(0).getId(), UUID.nextUUID()));
+                        UUID.nextUUID()));
         assert (hpClient.openedConnections.size() == 1);
         events = pollEvent(2);
         assertSequence(events, 

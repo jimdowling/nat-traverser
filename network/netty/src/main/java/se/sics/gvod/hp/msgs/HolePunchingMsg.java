@@ -19,22 +19,14 @@ public class HolePunchingMsg {
 
         static final long serialVersionUID = 654322451L;
 
-        private final int zServerId;
-        
         public Request(VodAddress src, VodAddress dest,
-                int zServerId, TimeoutId msgTimeoutId) {
+                TimeoutId msgTimeoutId) {
             super(src, dest, dest.getId(), msgTimeoutId);
-            this.zServerId = zServerId;
         }
 
         private Request(Request msg, VodAddress src) {
             super(src, msg.getVodDestination(), msg.getRemoteClientId(),
                     msg.getMsgTimeoutId());
-            this.zServerId = msg.getzServerId();
-        }
-
-        public int getzServerId() {
-            return zServerId;
         }
 
         @Override
@@ -52,14 +44,13 @@ public class HolePunchingMsg {
         @Override
         public ByteBuf toByteArray() throws MessageEncodingException {
         	ByteBuf buffer = createChannelBufferWithHeader();
-            buffer.writeInt(zServerId);
             return buffer;
         }
 
         @Override
         public RewriteableMsg copy() {
             HolePunchingMsg.Request copy = new HolePunchingMsg.Request(vodSrc, vodDest,
-                    zServerId, msgTimeoutId);
+                    msgTimeoutId);
             copy.setTimeoutId(timeoutId);
             return copy;
         }

@@ -34,6 +34,7 @@ import io.netty.channel.udt.UdtChannel;
 import io.netty.channel.udt.nio.NioUdtProvider;
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.GenericFutureListener;
+import java.net.Inet4Address;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import se.sics.gvod.address.Address;
@@ -111,7 +112,6 @@ public final class NettyNetwork extends ComponentDefinition {
     private static LinkedList<Integer> lastHourRead = new LinkedList<Integer>();
     private int bwSampleCounter = 0;
 
-    private boolean bindAllNetworkIfs;
 
     private class ByteCounterTimeout extends Timeout {
 
@@ -147,7 +147,6 @@ public final class NettyNetwork extends ComponentDefinition {
         public void handle(NettyInit init) {
             rand = new Random(init.getSeed());
             maxPacketSize = init.getMTU();
-            bindAllNetworkIfs = init.isBindAllNetworkIfs();
             if (maxPacketSize <= 0) {
                 throw new IllegalArgumentException(
                         "Netty problem: max Packet Size must be set to greater than zero.");
@@ -284,7 +283,8 @@ public final class NettyNetwork extends ComponentDefinition {
             PortBindResponse response = msg.getResponse();
 
             try {
-                if (bindPort(msg.getIp(), msg.getPort(), msg.getTransport())) {
+                if (bindPort(msg.getIp(), msg.getPort(), msg.getTransport(),
+                        msg.isBindAllNetworkIfs())) {
                     response.setStatus(PortBindResponse.Status.SUCCESS);
                 } else {
                     response.setStatus(PortBindResponse.Status.FAIL);
@@ -318,7 +318,8 @@ public final class NettyNetwork extends ComponentDefinition {
                     // Allocate a port in the 50,000+ range.
                     randPort = 50000 + rand.nextInt(65535 - 50000);
                 } while (setPorts.contains(randPort));
-                if (bindPort(msg.getIp(), randPort, msg.getTransport()) == true) {
+                if (bindPort(msg.getIp(), randPort, msg.getTransport(), 
+                        true) == true) {
                     addedPorts.add(randPort);
                 }
             }
@@ -394,7 +395,8 @@ public final class NettyNetwork extends ComponentDefinition {
      * @return true if listening was started
      * @throws ChannelException in case binding failed
      */
-    private boolean bindPort(InetAddress addr, int port, Transport protocol) {
+    private boolean bindPort(InetAddress addr, int port, Transport protocol, 
+            boolean bindAllNetworkIfs) {
         switch (protocol) {
             case TCP:
                 return bindTcpPort(addr, port, bindAllNetworkIfs);
@@ -449,10 +451,13 @@ public final class NettyNetwork extends ComponentDefinition {
         try {
             DatagramChannel c;
             if (bindAllNetworkIfs) {
-                c = (DatagramChannel) bootstrap.bind(new InetSocketAddress(port)).sync().channel();
+                c = (DatagramChannel) bootstrap.bind(
+//                        new InetSocketAddress(port)
+                        port
+                        ).sync().channel();
             } else {
-                c = (DatagramChannel) bootstrap.bind(new InetSocketAddress(addr, port)).sync()
-                        .channel();
+                c = (DatagramChannel) bootstrap.bind(
+                        new InetSocketAddress(addr, port)).sync().channel();
             }
 
             addLocalSocket(new InetSocketAddress(addr, port), c);

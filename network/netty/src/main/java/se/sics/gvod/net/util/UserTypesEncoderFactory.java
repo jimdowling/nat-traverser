@@ -21,6 +21,7 @@ import se.sics.gvod.common.UtilityLS;
 import se.sics.gvod.common.UtilityVod;
 import se.sics.gvod.common.VodDescriptor;
 import se.sics.gvod.common.msgs.MessageEncodingException;
+import se.sics.gvod.common.msgs.NatReportMsg;
 import se.sics.gvod.config.VodConfig;
 import se.sics.gvod.net.Nat;
 import se.sics.gvod.net.VodAddress;
@@ -68,6 +69,31 @@ public class UserTypesEncoderFactory {
 
     ;
 
+    
+    public static void writeNatReports(ByteBuf buffer,
+            List<NatReportMsg.NatReport> natReports)
+            throws MessageEncodingException {
+        if (natReports == null) {
+            UserTypesEncoderFactory.writeUnsignedintAsOneByte(buffer, 0);
+            return;
+        }
+        UserTypesEncoderFactory.writeUnsignedintAsOneByte(buffer, natReports.size());
+        for (NatReportMsg.NatReport report : natReports) {
+            writeNatReport(buffer, report);
+        }
+    }
+
+    public static void writeNatReport(ByteBuf buffer, NatReportMsg.NatReport natReport) 
+            throws MessageEncodingException
+    {
+        UserTypesEncoderFactory.writeUnsignedintAsTwoBytes(buffer, natReport.getPortUsed());
+        UserTypesEncoderFactory.writeVodAddress(buffer, natReport.getTarget());
+        UserTypesEncoderFactory.writeBoolean(buffer, natReport.isSuccess());
+        UserTypesEncoderFactory.writeStringLength256(buffer, natReport.getMsg());
+        
+    }   
+    
+    
     public static void writeUnsignedintAsOneByte(ByteBuf buffer, int value) throws MessageEncodingException {
         if ((value >= Math.pow(2, 8)) || (value < 0)) {
             throw new MessageEncodingException("Integer value < 0 or " + value + " is larger than 2^15");
@@ -257,6 +283,18 @@ public class UserTypesEncoderFactory {
         }
     }
 
+    public static void writeInetAddress(ByteBuf buffer, InetAddress ip)
+            throws MessageEncodingException 
+    {
+        byte[] bytes = ip.getAddress();
+        buffer.writeBytes(bytes);
+        // sometimes you get Ipv6 addresses. Shouldn't happen, unless some uses
+        // InetAddress.getLocalHost() to generate an IP address.
+        if (bytes.length != 4) {
+            throw new MessageEncodingException("Saw an IP v6 ip address: " + ip);
+        }
+    }
+    
     public static void writeAddress(ByteBuf buffer, Address addr)
             throws MessageEncodingException {
         byte[] bytes;
@@ -271,7 +309,6 @@ public class UserTypesEncoderFactory {
                 throw new MessageEncodingException(("Could not create localhost IP addr to marshall null Address"));
             }
         } else {
-            // TODO - this cannot be a 
             InetAddress ip = addr.getIp();
             bytes = ip.getAddress();
             port = addr.getPort();
@@ -280,7 +317,6 @@ public class UserTypesEncoderFactory {
         // sometimes you get Ipv6 addresses. Shouldn't happen, unless some uses
         // InetAddress.getLocalHost() to generate an IP address.
         if (bytes.length != 4) {
-            System.err.println("IP Address encoding - IPV6 address seen: " + addr);
             throw new MessageEncodingException("Saw an IP v6 ip address: " + addr);
         }
         

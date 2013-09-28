@@ -291,6 +291,7 @@ public final class NatTraverserSimulator extends ComponentDefinition {
 
 //-------------------------------------------------------------------    
     Handler<StopCollectData> handleStopCollectData = new Handler<StopCollectData>() {
+        @Override
         public void handle(StopCollectData event) {
             int totalSuccess=0;
             int totalFail=0;
@@ -298,11 +299,17 @@ public final class NatTraverserSimulator extends ComponentDefinition {
             CroupierStats.report(VodConfig.SYSTEM_OVERLAY_ID);
             
 
+            logger.info("Port bind errors: {}", HpClient.portBoundFailure);
+            
             logger.info("Hp Ping success/failure: {}/{} ", HpClient.pingSuccessCount.get(),
                     HpClient.pingFailureCount);
             
             logger.info("Hp No heartbeats: {}", HpClient.nonPingedConnections);
 
+            for (String str : HpClient.failedPings.keySet()) {
+                logger.info(str + " = " + HpClient.failedPings.get(str));
+            }
+            
             System.out.println("Success");
             for (String natType : successCount.keySet()) {
                 System.out.println("\t" + natType + "/" + successCount.get(natType));

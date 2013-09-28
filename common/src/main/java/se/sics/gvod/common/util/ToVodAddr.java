@@ -49,6 +49,11 @@ public class ToVodAddr {
         return new VodAddress(new Address(addr.getIp(), addr.getPort(),
                 addr.getId()), VodConfig.SYSTEM_OVERLAY_ID);
     }
+    
+    public static VodAddress bootstrap(Address addr) {
+        return new VodAddress(new Address(addr.getIp(), addr.getPort(),
+                addr.getId()), VodConfig.DEFAULT_BOOTSTRAP_ID);
+    }
 
     public static VodAddress overlay(Address addr, int overlayId) {
         return new VodAddress(new Address(addr.getIp(), addr.getPort(),

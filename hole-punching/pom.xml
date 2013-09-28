@@ -19,6 +19,7 @@
     <module>nattraverser-test</module>
     <module>nat-common</module>
     <module>nat-emulator</module>
+    <module>reportserver</module>
   </modules>
 
     <repositories>

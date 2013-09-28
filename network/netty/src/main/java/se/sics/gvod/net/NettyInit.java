@@ -30,35 +30,29 @@ import se.sics.kompics.Init;
 public final class NettyInit extends Init {
 
     private final int seed;
-    private final boolean bindAllNetworkIfs;
     private final int maxPacketSize;
     private final Class<? extends MsgFrameDecoder> msgDecoderClass;
     private final boolean enableBandwidthStats;
     
     public NettyInit(int seed, boolean bindAllNetworkIfs, 
             Class<? extends MsgFrameDecoder> msgDecoderClass) {
-        this(seed, bindAllNetworkIfs, BaseCommandLineConfig.DEFAULT_MTU, msgDecoderClass);
+        this(seed, BaseCommandLineConfig.DEFAULT_MTU, msgDecoderClass);
     }
 
-    public NettyInit(int seed, boolean bindAllNetworkIfs, int mtu,
+    public NettyInit(int seed, int mtu,
             Class<? extends MsgFrameDecoder> msgDecoderClass) {
-        this(seed, bindAllNetworkIfs, mtu,
-                msgDecoderClass, false);
+        this(seed, mtu, msgDecoderClass, false);
     }
 
-    public NettyInit(int seed, boolean bindAllNetworkIfs, int mtu, Class<? extends MsgFrameDecoder> msgDecoderClass, 
+    public NettyInit(int seed, int mtu, Class<? extends MsgFrameDecoder> msgDecoderClass, 
             boolean enableBandwidthStats) {
         super();
         this.seed = seed;
-        this.bindAllNetworkIfs = bindAllNetworkIfs;
         this.maxPacketSize = mtu;
         this.msgDecoderClass = msgDecoderClass;
         this.enableBandwidthStats = enableBandwidthStats;
     }
 
-    public boolean isBindAllNetworkIfs() {
-        return bindAllNetworkIfs;
-    }
 
     public boolean isEnableBandwidthStats() {
         return enableBandwidthStats;

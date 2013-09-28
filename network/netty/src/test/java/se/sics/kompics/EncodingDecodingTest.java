@@ -38,6 +38,8 @@ import se.sics.gvod.common.msgs.DisconnectMsgFactory;
 import se.sics.gvod.common.msgs.Encodable;
 import se.sics.gvod.common.msgs.MessageDecodingException;
 import se.sics.gvod.common.msgs.MessageEncodingException;
+import se.sics.gvod.common.msgs.NatReportMsg;
+import se.sics.gvod.common.msgs.NatReportMsgFactory;
 import se.sics.gvod.common.msgs.RelayMsgNetty;
 import se.sics.gvod.config.BaseCommandLineConfig;
 import se.sics.gvod.config.VodConfig;
@@ -517,8 +519,7 @@ public class EncodingDecodingTest {
 
     @Test
     public void HolePunchingMsg() {
-        HolePunchingMsg.Request msg = new HolePunchingMsg.Request(gSrc, gDest, remoteClientId,
-                UUID.nextUUID());
+        HolePunchingMsg.Request msg = new HolePunchingMsg.Request(gSrc, gDest, UUID.nextUUID());
         msg.setTimeoutId(UUID.nextUUID());
         try {
             ByteBuf buffer = msg.toByteArray();
@@ -1398,6 +1399,31 @@ public class EncodingDecodingTest {
         }
     }
 
+    @Test
+    public void natReportMsgTest() {
+        List<NatReportMsg.NatReport> natReports = new ArrayList<NatReportMsg.NatReport>();
+        natReports.add(new NatReportMsg.NatReport(1234, gDest, true, "hi there"));
+        natReports.add(new NatReportMsg.NatReport(12346,gDest, true, "hi there awtastas asdfsdf"));
+        NatReportMsg msg = new NatReportMsg(gSrc, gSrc, natReports);
+        try {
+            ByteBuf buffer = msg.toByteArray();
+            opCodeCorrect(buffer, msg);
+            NatReportMsg res =
+                    NatReportMsgFactory.fromBuffer(buffer);
+            compareNatMsgs(msg, res);
+            assert(msg.getNatReports().size() == res.getNatReports().size());
+        } catch (MessageDecodingException ex) {
+            Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
+            assert (false);
+        } catch (MessageEncodingException ex) {
+            Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
+            assert (false);
+        }
+    }
+    
+    
+    
+    
     private void compareNatMsgs(NatMsg a, NatMsg b) {
         if (a instanceof DirectMsgNetty.Oneway == false &&
                 a instanceof RelayMsgNetty.Oneway == false &&

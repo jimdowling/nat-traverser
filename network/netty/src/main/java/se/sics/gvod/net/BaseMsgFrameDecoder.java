@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import se.sics.gvod.common.msgs.ConnectMsgFactory;
 import se.sics.gvod.common.msgs.DisconnectMsgFactory;
 import se.sics.gvod.common.msgs.MessageDecodingException;
+import se.sics.gvod.common.msgs.NatReportMsgFactory;
 import se.sics.gvod.croupier.msgs.ShuffleMsgFactory;
 import se.sics.gvod.gradient.msgs.GradientSearchMsgFactory;
 import se.sics.gvod.gradient.msgs.SetsExchangeMsgFactory;
@@ -65,6 +66,8 @@ public class BaseMsgFrameDecoder extends MsgFrameDecoder {
     public static final byte RELAY_REQUEST         = 0x18;
     public static final byte RELAY_RESPONSE        = 0x19;
     public static final byte RELAY_ONEWAY          = 0x1a;
+    // Monitor MSGS
+    public static final byte NAT_MONITOR_REPORT            = 0x1b;
     //GRADIENT MSGS
     public static final byte TARGET_UTILITY_PROBE_REQUEST  = 0x20;
     public static final byte TARGET_UTILITY_PROBE_RESPONSE = 0x21;
@@ -268,6 +271,9 @@ public class BaseMsgFrameDecoder extends MsgFrameDecoder {
                 return ShuffleMsgFactory.Request.fromBuffer(buffer);
             case SHUFFLE_RESPONSE:
                 return ShuffleMsgFactory.Response.fromBuffer(buffer);
+            // MONITOR MSGS
+            case NAT_MONITOR_REPORT:
+                return NatReportMsgFactory.fromBuffer(buffer);
                 // TEST MSGS
             case PING:
                 return TConnectionMsgFactory.Ping.fromBuffer(buffer);

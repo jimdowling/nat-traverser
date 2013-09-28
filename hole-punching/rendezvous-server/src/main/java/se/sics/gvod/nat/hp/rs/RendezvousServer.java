@@ -415,11 +415,10 @@ public class RendezvousServer extends MsgRetryComponent {
             logger.debug(compName + " " + client + " RE-REGISTERING on Z: " + printChildren());
             // add the new prp ports to the already registered ports...
             Set<Integer> ports = clientData.getPrpPorts();
-            if (prpPorts != null) {
-                ports.addAll(prpPorts);
-            }
+            ports.addAll(prpPorts);
             alreadyRegistered = true;
         }
+        // TODO - is it ok to add me as a parent for the temporary client record client?
         client.addParent(self.getAddress().getPeerAddress());
 
         return alreadyRegistered;
@@ -628,7 +627,7 @@ public class RendezvousServer extends MsgRetryComponent {
                 logger.trace(compName + " Received Ping to from: " + record.getClient().getPeerAddress());
                 record.setClient(ping.getVodSource());
                 record.setLastHeardFrom(System.currentTimeMillis());
-                
+
                 // send back pong
                 ParentKeepAliveMsg.Pong pong = new ParentKeepAliveMsg.Pong(
                         self.getAddress(), ping.getVodSource(),
@@ -657,11 +656,7 @@ public class RendezvousServer extends MsgRetryComponent {
                 HPRole myRole = HPRole.PRP_INITIATOR;
                 HPRole yourRole = HPRole.PRP_RESPONDER;
                 registerClientRecord(request.getVodSource(), request.getClientId(),
-                        1 /*
-                         * delta
-                         */, 500 /*
-                         * rtt
-                         */, request.getSetOfAvailablePorts(), true);
+                        1 , 500 , request.getSetOfAvailablePorts(), true);
 
                 if (session == null) {
                     // create a new session
@@ -695,9 +690,7 @@ public class RendezvousServer extends MsgRetryComponent {
 
                 // selecting an available port
                 int selectedPort = selectAvailablePortForPRP(
-                        request.getSource().getIp()/*
-                         * natIp
-                         */, request.getSetOfAvailablePorts());
+                        request.getSetOfAvailablePorts());
 
                 // making remote client dummy public address
                 RegisteredClientRecord responderClient = registeredClients.get(request.getRemoteClientId());
@@ -715,13 +708,13 @@ public class RendezvousServer extends MsgRetryComponent {
                     bindFirst = true;
                     // ask for more ports from child
                     PRP_PreallocatedPortsMsg.Request r =
-                            new PRP_PreallocatedPortsMsg.Request(self.getAddress(), 
+                            new PRP_PreallocatedPortsMsg.Request(self.getAddress(),
                             responderClient.getClient(),
                             UUID.nextUUID());
                     ScheduleRetryTimeout st = new ScheduleRetryTimeout(3000, 1, 2d);
                     PRP_PreallocatedPortsMsg.RequestRetryTimeout t =
                             new PRP_PreallocatedPortsMsg.RequestRetryTimeout(st, r);
-                    delegator.doRetry(t); 
+                    delegator.doRetry(t);
                 }
                 PRP_ConnectMsg.Response responseMsg =
                         new PRP_ConnectMsg.Response(self.getAddress(),
@@ -730,7 +723,7 @@ public class RendezvousServer extends MsgRetryComponent {
                         PRP_ConnectMsg.ResponseType.OK,
                         request.getRemoteClientId(),
                         remoteClientDummyPublicAddress,
-                        selectedPort, bindFirst, 
+                        selectedPort, bindFirst,
                         request.getMsgTimeoutId());
                 delegator.doTrigger(responseMsg, network);
 
@@ -772,6 +765,18 @@ public class RendezvousServer extends MsgRetryComponent {
     /**
      * This handler is where the client has PRP, and has allocated a port
      * locally and now wants to connect to another PRP or PRC node.
+     * 
+     * This ZServer should give out the first port supplied by the initiatingClient
+     * to the remoteClient. The zServer may also have a pre-allocated port from the
+     * remoteClient that it immediately returns to the initiatingClient. If the
+     * zServer doesn't have a pre-allocated port for the initiatingClient, it picks
+     * a random port (50000+) and hopes that the initiatingClient is not already using
+     * it. It then tells the remoteClient to use that when connecting, and it tells
+     * the remoteClient to bind to it and try and connect to the initiatingClient with
+     * it. The port may already be bound at the remoteClient, in which case it should
+     * bind a new port, and tell the zServer to tell the initiatingClient to use the
+     * new port.
+     * 
      */
     Handler<Interleaved_PRP_ConnectMsg.Request> handle_Interleaved_PRP_ConnectRequest = new Handler<Interleaved_PRP_ConnectMsg.Request>() {
         /**
@@ -832,8 +837,7 @@ public class RendezvousServer extends MsgRetryComponent {
                                     request.getRemoteClientId(),
                                     request.getMsgTimeoutId());
                         }
-                        clientInterleavedPort = selectAvailablePortForPRP(request.getSource().getIp(),
-                                ports);
+                        clientInterleavedPort = selectAvailablePortForPRP(ports);
                         session.set_Interleaved_PRP_Port(request.getClientId(), clientInterleavedPort);
 
                         logger.debug(compName + "Session id(port) are: "
@@ -1007,7 +1011,6 @@ public class RendezvousServer extends MsgRetryComponent {
                 dest, timeoutId, response, remoteId, msgTimeoutId);
         delegator.doTrigger(responseMsg, network);
     }
-
     Handler<PRC_OpenHoleMsg.Request> handle_PRC_OpenHoleMsg =
             new Handler<PRC_OpenHoleMsg.Request>() {
         @Override
@@ -1374,21 +1377,11 @@ public class RendezvousServer extends MsgRetryComponent {
         return port;
     }
 
-    private int selectAvailablePortForPRP(InetAddress natIp,
-            Set<Integer> setOfAvailablePortsSentByClient) {
-//        if (!allocatedPorts.containsKey(natIp/* ip of the nat*/)) {
-//            Set<Integer> portsInUse = new HashSet<Integer>();
-//            allocatedPorts.put(natIp, portsInUse);
-//        } // finding a port that is not in use
-//        Set<Integer> portsInUse = allocatedPorts.get(natIp);
-//
+    private int selectAvailablePortForPRP(Set<Integer> setOfAvailablePortsSentByClient) {
         int selectedPort = 0;
         for (int availablePort : setOfAvailablePortsSentByClient) {
-//            if (!portsInUse.contains(availablePort)) {
             selectedPort = availablePort;
             break;
-
-//            }
         }
         return selectedPort;
     }
@@ -1664,7 +1657,7 @@ public class RendezvousServer extends MsgRetryComponent {
     }
 
     private void printMsg(HpMsg.Hp msg) {
-        logger.trace(compName + msg.getClass().getCanonicalName() + " from " 
+        logger.trace(compName + msg.getClass().getCanonicalName() + " from "
                 + msg.getClientId() + " to " + msg.getRemoteClientId() + " - "
                 + msg.getMsgTimeoutId());
     }
@@ -1702,6 +1695,18 @@ public class RendezvousServer extends MsgRetryComponent {
             }
         }
     };
+    
+    Handler<HpKeepAliveMsg.Ping> handleHpKeepAliveMsgPing =
+            new Handler<HpKeepAliveMsg.Ping>() {
+        @Override
+        public void handle(HpKeepAliveMsg.Ping msg) {
+            logger.trace(compName + "Received heartbeat from: " + msg.getSource());
+            HpKeepAliveMsg.Pong reply = new HpKeepAliveMsg.Pong(self.getAddress(), msg.getVodSource(),
+                    msg.getTimeoutId());
+            trigger(reply, network);
+        }
+    };
+    
 
     @Override
     public void stop(Stop stop) {

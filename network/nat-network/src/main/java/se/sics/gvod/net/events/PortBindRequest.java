@@ -13,8 +13,14 @@ public class PortBindRequest extends DoubleDispatchRequestId<PortBindResponse> {
     private final InetAddress ip;
     private final int port;
     private final Transport transport;
-
+    private final boolean bindAllNetworkIfs;
+    
     public PortBindRequest(Address address, Transport transport) {
+        this(address, transport, true);
+    }
+    
+    public PortBindRequest(Address address, Transport transport, 
+            boolean bindAllNetworkIfs) {
         super(address.getId());
         assert (address.getIp() != null);
         assert (address.getPort() != 0);
@@ -22,8 +28,13 @@ public class PortBindRequest extends DoubleDispatchRequestId<PortBindResponse> {
         this.ip = address.getIp();
         this.port = address.getPort();
         this.transport = transport;
+        this.bindAllNetworkIfs = bindAllNetworkIfs;
     }
 
+    public boolean isBindAllNetworkIfs() {
+        return bindAllNetworkIfs;
+    }
+    
     public InetAddress getIp() {
         return ip;
     }

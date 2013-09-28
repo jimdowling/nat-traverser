@@ -140,7 +140,8 @@ public class ViewEntry {
 
     @Override
     public String toString() {
-        return descriptor.toString();
+        return descriptor.toString() + ": addedAt(" + addedAt
+                + "): sentAt:(" + sentAt +")";
     }
 
 }

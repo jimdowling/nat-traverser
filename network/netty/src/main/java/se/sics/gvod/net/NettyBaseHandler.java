@@ -56,6 +56,12 @@ public abstract class NettyBaseHandler<I> extends SimpleChannelInboundHandler<I>
 
     protected RewriteableMsg updateAddress(RewriteableMsg msg, ChannelHandlerContext ctx, InetSocketAddress remoteAddress) 
     throws Exception {
+        if (remoteAddress.getAddress() instanceof Inet4Address == false) {
+            throw new IllegalArgumentException("You are using ipv6 network addresses. "
+                    + "They should be ipv4 network addresses");
+        }
+        
+        
         InetAddress ip = (Inet4Address) remoteAddress.getAddress();
         
         if (ip == null) {
@@ -83,6 +89,9 @@ public abstract class NettyBaseHandler<I> extends SimpleChannelInboundHandler<I>
              Channel c = ctx.channel();
              SocketAddress s = c.localAddress();
              InetSocketAddress i = (InetSocketAddress) s;
+             if (i.getAddress() instanceof Inet4Address == false ) {
+                 throw new IllegalStateException("ipv6 addresses not supported - should be ipv4");
+             }
             return (Inet4Address) i.getAddress();
 	}
 

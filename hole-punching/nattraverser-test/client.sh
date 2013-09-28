@@ -13,6 +13,8 @@ if [ $# -eq 0 ]  ; then
    help_exit
 fi
 
+rm /tmp/nattraverser.log
+
 echo "Client ID is $1"
 
 java -jar deploy/hp.jar false $1 0 cloud7.sics.se false $@

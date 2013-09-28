@@ -19,9 +19,7 @@ public class HolePunchingMsgFactory {
 
         @Override
         protected HolePunchingMsg.Request process(ByteBuf buffer) throws MessageDecodingException {
-            int zServerId = buffer.readInt();
-            return new HolePunchingMsg.Request(vodSrc, vodDest, zServerId,
-                    msgTimeoutId);
+            return new HolePunchingMsg.Request(vodSrc, vodDest, msgTimeoutId);
         }
     }
 

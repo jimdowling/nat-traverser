@@ -20,6 +20,7 @@ import se.sics.gvod.common.Utility;
 import se.sics.gvod.common.UtilityVod;
 import se.sics.gvod.common.VodDescriptor;
 import se.sics.gvod.common.msgs.MessageDecodingException;
+import se.sics.gvod.common.msgs.NatReportMsg;
 import se.sics.gvod.net.Nat;
 import se.sics.gvod.net.VodAddress;
 import se.sics.gvod.timer.NoTimeoutId;
@@ -32,6 +33,25 @@ import se.sics.gvod.timer.UUID;
  */
 public class UserTypesDecoderFactory {
 
+    public static List<NatReportMsg.NatReport> readListNatReports(ByteBuf buffer)
+            throws MessageDecodingException {
+        int len = UserTypesDecoderFactory.readUnsignedIntAsOneByte(buffer);
+        List<NatReportMsg.NatReport> reports = new ArrayList<NatReportMsg.NatReport>();
+        for (int i = 0; i < len; i++) {
+            reports.add(readNatReport(buffer));
+        }
+        return reports;
+    }
+
+    public static NatReportMsg.NatReport readNatReport(ByteBuf buffer) throws MessageDecodingException {
+        int portUsed = UserTypesDecoderFactory.readUnsignedIntAsTwoBytes(buffer);
+        VodAddress target = UserTypesDecoderFactory.readVodAddress(buffer);
+        boolean success = UserTypesDecoderFactory.readBoolean(buffer);
+        String msg = UserTypesDecoderFactory.readStringLength256(buffer);
+        return new NatReportMsg.NatReport(portUsed, target, success, msg);
+    }
+    
+    
     public static int readUnsignedIntAsOneByte(ByteBuf buffer) {
         byte value = buffer.readByte();
         return value & 0xFF;
@@ -58,6 +78,8 @@ public class UserTypesDecoderFactory {
         throw new MessageDecodingException("the in parameter not equal nor to 1, nor 0");
     }
 
+    
+    
     public static Address readAddress(ByteBuf buffer) throws MessageDecodingException {
         InetAddress ip;
         ip = readInetAddress(buffer);

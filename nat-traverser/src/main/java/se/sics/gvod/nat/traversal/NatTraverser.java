@@ -79,8 +79,6 @@ import se.sics.gvod.timer.SchedulePeriodicTimeout;
 import se.sics.gvod.timer.ScheduleTimeout;
 import se.sics.gvod.timer.Timeout;
 import se.sics.gvod.common.hp.HPSessionKey;
-import se.sics.gvod.common.hp.HolePunching;
-import se.sics.gvod.common.hp.HpFeasability;
 import se.sics.gvod.common.msgs.DirectMsgNetty;
 import se.sics.gvod.common.util.NatStr;
 import se.sics.gvod.common.util.CachedNatType;

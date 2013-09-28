@@ -38,10 +38,13 @@ import se.sics.gvod.common.RTTStore;
 import se.sics.gvod.common.RTTStore.RTT;
 import se.sics.gvod.common.RetryComponentDelegator;
 import se.sics.gvod.common.Self;
+import se.sics.gvod.common.VodDescriptor;
 import se.sics.gvod.common.evts.Join;
 import se.sics.gvod.config.VodConfig;
 import se.sics.gvod.common.util.ToVodAddr;
 import se.sics.gvod.config.ParentMakerConfiguration;
+import se.sics.gvod.croupier.PeerSamplePort;
+import se.sics.gvod.croupier.events.CroupierSample;
 import se.sics.gvod.croupier.snapshot.Stats;
 import se.sics.gvod.croupier.snapshot.CroupierStats;
 import se.sics.gvod.hp.msgs.HpRegisterMsg;
@@ -72,14 +75,17 @@ import se.sics.kompics.Positive;
 public class ParentMaker extends MsgRetryComponent {
 
     private static Logger logger = LoggerFactory.getLogger(ParentMaker.class);
-    private Negative<ParentMakerPort> parentMakerPort = negative(ParentMakerPort.class);
+    private Negative<ParentMakerPort> port = negative(ParentMakerPort.class);
     private Positive<NatNetworkControl> natNetworkControl = positive(NatNetworkControl.class);
+    private Positive<PeerSamplePort> croupierPort = positive(PeerSamplePort.class);
+    
     Self self;
     private String compName;
     Map<VodAddress, Connection> connections = new HashMap<VodAddress, Connection>();
     Map<Address, Long> rejections = new HashMap<Address, Long>();
     private Map<TimeoutId, Long> requestStartTimes = new HashMap<TimeoutId, Long>();
     private Set<Integer> outstandingParentRequests = new HashSet<Integer>();
+    private Set<VodAddress> croupierSamples = new HashSet<VodAddress>();
     private ParentMakerConfiguration config;
     private long needParentsRoundTimeout, fullParentsRoundTimeout = 60 * 1000;
     private TimeoutId periodicTimeoutId;
@@ -221,12 +227,15 @@ public class ParentMaker extends MsgRetryComponent {
         public void handle(ParentMakerCycle e) {
 
             // Print out list of parents periodically
-            if (count % 3 == 0) {
-                logger.debug(compName + getParentsAsStr());
+            if (count % 5 == 0) {
+                logger.info(compName + getParentsAsStr());
             }
             
             List<RTT> currentRtts = getCurrentRtts();
-
+            Set<VodAddress> currentParents = new HashSet<VodAddress>();
+            for (RTT r : currentRtts) {
+                currentParents.add(r.getAddress());
+            }
             if (count++ > 5 && self.getParents().isEmpty()) {
                 Stats pi = CroupierStats.instance(self.clone(VodConfig.SYSTEM_OVERLAY_ID));
                 if (pi == null) {
@@ -240,8 +249,6 @@ public class ParentMaker extends MsgRetryComponent {
                             rejections.keySet()).size());
                 }
             } 
-            
-
 
             List<RTT> betterRtts;
             if (currentRtts.size() < config.getParentSize()) {
@@ -264,12 +271,18 @@ public class ParentMaker extends MsgRetryComponent {
             }
             Iterator<RTT> iter = allRtts.iterator();
             for (int i = 0; i < (config.getParentSize() - currentRtts.size()); i++) {
+                RTT min;
                 if (!iter.hasNext()) {
                     logger.debug(compName + " no RTT samples available");
-                    removeRejections(config.getParentSize());
-                    break;
+                    croupierSamples.removeAll(currentParents);
+                    if (croupierSamples.isEmpty()) {
+                        removeRejections(config.getParentSize());
+                        break;
+                    }
+                    min = new RTT(croupierSamples.iterator().next(), VodConfig.DEFAULT_RTO);
+                } else {
+                     min = iter.next();
                 }
-                RTT min = iter.next();
                 if (min.getAddress().isOpen() == false) {
                     logger.error("Trying to add a NAT node as a parent!");
                     throw new IllegalStateException("Error with nat parent");
@@ -284,7 +297,6 @@ public class ParentMaker extends MsgRetryComponent {
                         allocReq.setResponse(allocResp);
                         delegator.doTrigger(allocReq, natNetworkControl);
                     } else {
-
                         // if i have no connections, bid for the parent's slot with RTO as '0'
                         long normalizedRtt =
                                 (connections.isEmpty() && !outstandingBids) ? 0 : min.getRTO();
@@ -724,6 +736,20 @@ public class ParentMaker extends MsgRetryComponent {
             }
         }
     };
+    
+    
+    Handler<CroupierSample> handleCroupierSample = new Handler<CroupierSample>() {
+
+        @Override
+        public void handle(CroupierSample event) {
+            List<VodDescriptor> newNodes = new ArrayList<VodDescriptor>();
+            for (VodDescriptor d : event.getNodes()) {
+                // create a copy of the VodDescriptors with the current node's overlayId
+//                newNodes.add(d.clone(self.getOverlayId()));
+            }
+        }
+    };
+    
 
     @Override
     public void stop(Stop stop) {

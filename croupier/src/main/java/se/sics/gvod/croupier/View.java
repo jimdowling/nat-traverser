@@ -47,6 +47,7 @@ public class View {
     public void incrementDescriptorAges() {
         for (ViewEntry entry : entries) {
             entry.getDescriptor().incrementAndGetAge();
+            System.out.println("Croupier(" + self.getId() + "): " + entry);
         }
     }
 
