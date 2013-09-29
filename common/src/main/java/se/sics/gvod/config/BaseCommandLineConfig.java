@@ -146,8 +146,7 @@ public abstract class BaseCommandLineConfig {
     public static final int DEFAULT_WEB_REQUEST_TIMEOUT_MS = 30 * 1000;
     public static final int DEFAULT_WEB_THREADS = 2;
     public static final int DEFAULT_SEED = 123;
-//            new Random(System.currentTimeMillis()).nextInt();
-    protected static final int DEFAULT_NUM_WORKERS = 4;
+    protected static final int DEFAULT_NUM_WORKERS = 2;
     protected static final String VAL_ADDRESS = "address";
     protected static final String VAL_NUMBER = "number";
     protected static final String VAL_PERIOD_SECS = "seconds";
@@ -423,7 +422,7 @@ public abstract class BaseCommandLineConfig {
 
     public static void setIp(InetAddress nodeIp) {
         baseInitialized();
-        ip = nodeIp;
+        singleton.ip = nodeIp;
     }
 
     public static int getNodeId() {
@@ -461,6 +460,17 @@ public abstract class BaseCommandLineConfig {
         return singleton.compositeConfig.getInt(PROP_SEED, DEFAULT_SEED);
     }
 
+    public static int getBootstrapServerPort() {
+        baseInitialized();
+        return singleton.compositeConfig.getInt(PROP_BOOTSTRAP_PORT,
+                DEFAULT_BOOTSTRAP_PORT);
+    }
+    
+    public static void setBoostrapServerIp(InetAddress ip) {
+        baseInitialized();
+        singleton.compositeConfig.setProperty(PROP_BOOTSTRAP_IP, ip.getHostAddress());
+    }    
+    
     public static Address getBootstrapServer() {
         baseInitialized();
         String addr = singleton.compositeConfig.getString(PROP_BOOTSTRAP_IP,

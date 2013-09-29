@@ -4,10 +4,12 @@
  */
 package se.sics.gvod.nat.hp.client;
 
+import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -61,9 +63,12 @@ import se.sics.gvod.net.msgs.ScheduleRetryTimeout;
 import se.sics.gvod.timer.TimeoutId;
 import se.sics.gvod.common.hp.HolePunching;
 import se.sics.gvod.common.hp.HpFeasability;
+import se.sics.gvod.common.msgs.NatReportMsg;
 import se.sics.gvod.config.HpClientConfiguration;
+import se.sics.gvod.config.VodConfig;
 import se.sics.gvod.nat.hp.client.events.PRP_DummyMsgPortResponse;
 import se.sics.gvod.net.Transport;
+import se.sics.gvod.net.VodNetwork;
 import se.sics.gvod.timer.SchedulePeriodicTimeout;
 import se.sics.gvod.timer.ScheduleTimeout;
 import se.sics.gvod.timer.Timeout;
@@ -124,10 +129,8 @@ public class HpClient extends MsgRetryComponent {
     public static AtomicInteger pingSuccessCount = new AtomicInteger();
     public static AtomicInteger pingFailureCount = new AtomicInteger();
     public static AtomicInteger nonPingedConnections = new AtomicInteger();
-    public static ConcurrentHashMap<String,Integer> failedPings = 
-            new ConcurrentHashMap<String,Integer>();
-    
-    
+    public static ConcurrentHashMap<String, Integer> failedPings =
+            new ConcurrentHashMap<String, Integer>();
     private final Logger logger = LoggerFactory.getLogger(HpClient.class);
     private Negative<HpClientPort> hpClientPort = negative(HpClientPort.class);
     private Positive<NatNetworkControl> natNetworkControl = positive(NatNetworkControl.class);
@@ -942,6 +945,9 @@ public class HpClient extends MsgRetryComponent {
                     logger.warn(compName + "Couldn't find connection to heartbeat to: " + remoteId);
                 } else {
                     scheduleHeartbeat(oc.getHoleOpened().getId());
+                    oc.incNumSuccessfulPings();
+                    report(msg.getDestination().getPort(), msg.getVodSource(), 
+                            true, "OpenedConnection Pong Received: " + oc.getNumSuccessfulPings());
                 }
                 // update or add an openedConnection
                 addOrUpdateOpenedConnectionNoSession(msg.getSource(), msg.getDestination().getPort());
@@ -956,7 +962,7 @@ public class HpClient extends MsgRetryComponent {
         st.setTimeoutEvent(sht);
         trigger(st, timer);
     }
-    
+
     private void sendHeartbeat(OpenedConnection oc) {
         VodAddress openedHole = ToVodAddr.hpServer(oc.getHoleOpened());
         VodAddress src = new VodAddress(
@@ -991,8 +997,8 @@ public class HpClient extends MsgRetryComponent {
             int remoteId = event.getMsg().getDestination().getId();
             OpenedConnection oc = openedConnections.remove(remoteId);
             logger.warn(compName + " heartbeat timed out to private node. "
-                    + "Removing openedConnection to " + event.getMsg().getDestination() + 
-                    " numLeft = " + openedConnections.size());
+                    + "Removing openedConnection to " + event.getMsg().getDestination()
+                    + " numLeft = " + openedConnections.size());
             pingFailureCount.incrementAndGet();
             HpKeepAliveMsg.Ping msg = (HpKeepAliveMsg.Ping) event.getMsg();
             String str = self.getNat() + " - " + msg.getVodDestination().getNatAsString();
@@ -1002,6 +1008,8 @@ public class HpClient extends MsgRetryComponent {
             }
             i++;
             failedPings.put(str, i);
+            report(msg.getDestination().getPort(), msg.getVodSource(), 
+                            false, "OpenedConnection Pong Failed: " + oc.getNumSuccessfulPings());            
         }
     };
     Handler<HolePunchingMsg.RequestRetryTimeout> handleHolePunchingRequestTimeout =
@@ -1278,7 +1286,7 @@ public class HpClient extends MsgRetryComponent {
                         response.getMsgTimeoutId());
             } else if (response.getStatus() == PortBindResponse.Status.PORT_ALREADY_BOUND
                     && response.isFixedPort() == false) {
-                    portBoundFailure.incrementAndGet();
+                portBoundFailure.incrementAndGet();
                 // If the port is already bound and the MappingPolicy is PD, then the port
                 // cannot be reused for a different network connection.
                 if (response.getRetries() > 0) {
@@ -1302,7 +1310,7 @@ public class HpClient extends MsgRetryComponent {
         }
     };
 
-    private void prepareAndSendHPMessage(int srcPort, Integer remoteClientId, 
+    private void prepareAndSendHPMessage(int srcPort, Integer remoteClientId,
             TimeoutId msgTimeoutId) {
         // sanity check
         assert (srcPort >= 1024 && srcPort <= 65535);
@@ -2079,10 +2087,13 @@ public class HpClient extends MsgRetryComponent {
         }
     }
 
-    private Set<Address> addrAsSet(Address addr) {
-        Set<Address> addrs = new HashSet<Address>();
-        addrs.add(addr);
-        return addrs;
+    private void report(int portUsed, VodAddress target, boolean success, String str) {
+        NatReportMsg.NatReport nr = new NatReportMsg.NatReport(portUsed, target, success, str);
+        List<NatReportMsg.NatReport> nrs = new ArrayList<NatReportMsg.NatReport>();
+        nrs.add(nr);
+        VodAddress dest = ToVodAddr.bootstrap(VodConfig.getBootstrapServer());
+        NatReportMsg msg = new NatReportMsg(self.getAddress(), dest, nrs);
+        trigger(msg, network);
     }
 
     @Override

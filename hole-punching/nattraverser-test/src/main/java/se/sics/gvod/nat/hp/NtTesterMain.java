@@ -141,6 +141,7 @@ public final class NtTesterMain extends ComponentDefinition {
     }
 
     public static class PingTimeout extends Timeout {
+
         private final VodAddress dest;
 
         public PingTimeout(ScheduleTimeout st, VodAddress dest) {
@@ -299,8 +300,8 @@ public final class NtTesterMain extends ComponentDefinition {
         public void handle(GetNatTypeResponse event) {
 
             logger.info("Nat type is: " + event.getNat());
-            report(self.getPort(), self.getAddress(), 
-                    event.getStatus() == GetNatTypeResponse.Status.SUCCEED, 
+            report(self.getPort(), self.getAddress(),
+                    event.getStatus() == GetNatTypeResponse.Status.SUCCEED,
                     "Stun completed");
             List<VodDescriptor> svd = new ArrayList<VodDescriptor>();
             Address s = servers.iterator().next();
@@ -319,7 +320,7 @@ public final class NtTesterMain extends ComponentDefinition {
                     + ping.getTimeoutId());
 //            report("ping recvd from " + ping.getVodSource() + " at " + ping.getVodDestination()
 //                    + "Success: " + numSuccess + "/" + numFail);
-            report(ping.getDestination().getPort(), ping.getVodSource(), 
+            report(ping.getDestination().getPort(), ping.getVodSource(),
                     true, "Incoming Nat Traversed");
             TConnectionMsg.Pong pong =
                     new TConnectionMsg.Pong(self.getAddress(),
@@ -327,7 +328,7 @@ public final class NtTesterMain extends ComponentDefinition {
             trigger(pong, natTraverser.getPositive(VodNetwork.class));
 
             ScheduleTimeout st = new ScheduleTimeout(10 * 1000);
-            PangTimeout pt = new PangTimeout(st, ping.getTimeoutId().getId(), 
+            PangTimeout pt = new PangTimeout(st, ping.getTimeoutId().getId(),
                     ping.getVodSource());
             st.setTimeoutEvent(pt);
             trigger(st, timer.getPositive(Timer.class));
@@ -341,9 +342,9 @@ public final class NtTesterMain extends ComponentDefinition {
 
             logger.info("pong recvd from " + pong.getSource() + " - " + pong.getTimeoutId());
             numSuccess++;
-            report(pong.getDestination().getPort(), 
+            report(pong.getDestination().getPort(),
                     pong.getVodSource(), true, "Outgoing Nat Traversed");
-            
+
             logger.info("Total Success/Failure ratio is: {}/{}", numSuccess, numFail);
             trigger(new CancelTimeout(pong.getTimeoutId()), timer.getPositive(Timer.class));
 
@@ -360,9 +361,7 @@ public final class NtTesterMain extends ComponentDefinition {
             TimeoutId pt = pangTimeouts.remove(pang.getMsgTimeoutId().getId());
             assert (pt != null);
             trigger(new CancelTimeout(pt), timer.getPositive(Timer.class));
-            logger.info("pang recvd from " + pang.getSource()
-                    + " - " + pang.getMsgTimeoutId());
-            report(pang.getDestination().getPort(), pang.getVodSource(), true, "Pang Recvd");
+            logger.info("pang recvd from " + pang.getSource() + " - " + pang.getMsgTimeoutId());
             numSuccess++;
             logger.info("Total Success/Failure ratio is: {}/{}", numSuccess, numFail);
         }
@@ -431,15 +430,11 @@ public final class NtTesterMain extends ComponentDefinition {
     };
 
     private void report(int portUsed, VodAddress target, boolean success, String str) {
-        try {
-            NatReportMsg.NatReport nr = new NatReportMsg.NatReport(portUsed, target, success, str);
-            List<NatReportMsg.NatReport> nrs = new ArrayList<NatReportMsg.NatReport>();
-            nrs.add(nr);
-            VodAddress dest = ToVodAddr.bootstrap(VodConfig.getBootstrapServer());
-            NatReportMsg msg = new NatReportMsg(self.getAddress(), dest, nrs);
-            trigger(msg, network.getPositive(VodNetwork.class));
-        } catch (Exception e) {
-            System.err.println("Cannot connect to the report server!");
-        }
+        NatReportMsg.NatReport nr = new NatReportMsg.NatReport(portUsed, target, success, str);
+        List<NatReportMsg.NatReport> nrs = new ArrayList<NatReportMsg.NatReport>();
+        nrs.add(nr);
+        VodAddress dest = ToVodAddr.bootstrap(VodConfig.getBootstrapServer());
+        NatReportMsg msg = new NatReportMsg(self.getAddress(), dest, nrs);
+        trigger(msg, network.getPositive(VodNetwork.class));
     }
 }

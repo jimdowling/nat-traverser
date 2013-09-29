@@ -15,12 +15,14 @@ public class OpenedConnection {
     final Address holeOpened;
     final int portInUse;
     long lastUsed;
+    short numSuccessfulPings;
     final int natBindingTimeout;
     final boolean heartbeat;
 
     /**
-     * 
-     * @param portInUseLocally the port used by the client to send to this openedConnection
+     *
+     * @param portInUseLocally the port used by the client to send to this
+     * openedConnection
      * @param holeOpened
      * @param natBindingTimeout
      * @param heartbeat
@@ -34,6 +36,7 @@ public class OpenedConnection {
         this.lastUsed = System.currentTimeMillis();
         this.natBindingTimeout = natBindingTimeout;
         this.heartbeat = heartbeat;
+        this.numSuccessfulPings = 0;
     }
 
     public int getNatBindingTimeout() {
@@ -50,6 +53,14 @@ public class OpenedConnection {
 
     public void setLastUsed(long lastUsed) {
         this.lastUsed = lastUsed;
+    }
+
+    public void incNumSuccessfulPings() {
+        this.numSuccessfulPings++;
+    }
+
+    public short getNumSuccessfulPings() {
+        return numSuccessfulPings;
     }
 
     public int getPortInUse() {
