@@ -928,7 +928,7 @@ public class HpClient extends MsgRetryComponent {
             new Handler<HpKeepAliveMsg.Ping>() {
         @Override
         public void handle(HpKeepAliveMsg.Ping msg) {
-            logger.trace(compName + "Received heartbeat from: " + msg.getSource());
+            logger.debug(compName + "Received ping from: " + msg.getSource());
             HpKeepAliveMsg.Pong reply = new HpKeepAliveMsg.Pong(self.getAddress(), msg.getVodSource(),
                     msg.getTimeoutId());
             trigger(reply, network);
@@ -941,6 +941,7 @@ public class HpClient extends MsgRetryComponent {
             int remoteId = msg.getSource().getId();
             OpenedConnection oc = openedConnections.get(remoteId);
             if (delegator.doCancelRetry(msg.getTimeoutId())) {
+                logger.debug(compName + "Received pong from: " + msg.getSource());
                 if (oc == null) {
                     logger.warn(compName + "Couldn't find connection to heartbeat to: " + remoteId);
                 } else {

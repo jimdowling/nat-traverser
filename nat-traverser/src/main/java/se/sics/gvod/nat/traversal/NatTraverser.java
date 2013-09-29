@@ -218,7 +218,6 @@ public class NatTraverser extends MsgRetryComponent {
         this.delegator.doSubscribe(handleDeleteOpenConnection, natTraverserPort);
         this.delegator.doSubscribe(handleStartServices, natTraverserPort);
         this.delegator.doSubscribe(handleConnectionEstablishmentTimeout, timer);
-        this.delegator.doSubscribe(handleGarbageCleanupTimeout, timer);
 
         this.delegator.doSubscribe(handleUpperDirectMsgNettyRequest, upperNet);
         this.delegator.doSubscribe(handleUpperDirectMsgNettyResponse, upperNet);
