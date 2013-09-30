@@ -285,7 +285,7 @@ public final class NtTesterMain extends ComponentDefinition {
 
 
             if (localIp != null) {
-                logger.info("Found net i/f with ip address: " + localIp);
+                logger.info("Using net i/f with ip address: " + localIp);
 
                 localAddress = new Address(localIp, VodConfig.getPort(), myId);
                 trigger(new NettyInit(VodConfig.getSeed(), true,
