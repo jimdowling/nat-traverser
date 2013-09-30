@@ -1,6 +1,5 @@
 #!/bin/bash
 
-set -e
 function help_exit {
     echo ""
     echo "Usage: $0 MY_ID]"
