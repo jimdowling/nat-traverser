@@ -10,6 +10,7 @@ import java.util.Set;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import se.sics.gvod.timer.TimeoutId;
 import java.util.logging.Level;
 
@@ -101,27 +102,37 @@ public final class NtTesterMain extends ComponentDefinition {
     private static Integer numFail = 0, numSuccess = 0;
     private Set<VodAddress> alreadyConnected = new HashSet<VodAddress>();
     private Map<Integer, TimeoutId> pangTimeouts = new HashMap<Integer, TimeoutId>();
+    private Map<Integer, Long> startTimers = new HashMap<Integer, Long>();
 
     public static void main(String[] args) {
 
         System.setProperty("java.net.preferIPv4Stack", "true");
 
         if (args.length < 3) {
-            logger.info("Usage: <prog> upnp id bindIp bootstrapNode [openServer] [natGateway]");
-            logger.info("       bindIp: 0=publicIp, 1=privateIp1, 2=privateIp2");
-            logger.info("e.g.  <prog> true 111 0 cloud6.sics.se cloud6.sics.se false");
-            logger.info("To run bootstrap server:  <prog> false 1 0 cloud6.sics.se true");
-            logger.info("To run a nat-emulated node:  <prog> false 1 0 cloud6.sics.se false m(EI)_a(PP)_f(PD)");
-            System.exit(0);
+
+            if (args.length == 1 && (args[0].compareToIgnoreCase("-help") == 0
+                    || args[0].compareToIgnoreCase("-h") == 0))  {
+                logger.info("Usage: <prog> upnp id bindIp bootstrapNode [openServer] [natGateway]");
+                logger.info("       bindIp: 0=publicIp, 1=privateIp1, 2=privateIp2");
+                logger.info("e.g.  <prog> true 111 0 cloud6.sics.se cloud6.sics.se false");
+                logger.info("To run bootstrap server:  <prog> false 1 0 cloud6.sics.se true");
+                logger.info("To run a nat-emulated node:  <prog> false 1 0 cloud6.sics.se false m(EI)_a(PP)_f(PD)");
+                System.exit(0);
+            }
+            upnpEnabled = false;
+            Random r = new Random(System.currentTimeMillis());
+            myId = r.nextInt();
+            pickIp = 0;
+            server = "cloud6.sics.se";
+        } else {
+            upnpEnabled = Boolean.parseBoolean(args[0]);
+            myId = Integer.parseInt(args[1]);
+            pickIp = Integer.parseInt(args[2]);
+            server = args[3];
         }
-        upnpEnabled = Boolean.parseBoolean(args[0]);
-        myId = Integer.parseInt(args[1]);
-        pickIp = Integer.parseInt(args[2]);
-        server = args[3];
         try {
             InetAddress serverIp = InetAddress.getByName(server);
-            Address s = new Address(serverIp, VodConfig.DEFAULT_STUN_PORT,
-                    SERVER_ID);
+            Address s = new Address(serverIp, VodConfig.DEFAULT_STUN_PORT, SERVER_ID);
             servers.add(s);
         } catch (UnknownHostException ex) {
             java.util.logging.Logger.getLogger(NtTesterMain.class.getName()).log(Level.SEVERE, null, ex);
@@ -319,6 +330,7 @@ public final class NtTesterMain extends ComponentDefinition {
             trigger(new CroupierInit(self,
                     CroupierConfiguration.build()),
                     croupier.getControl());
+            startTimers.put(self.getId(), System.currentTimeMillis());
         }
     };
     private Handler<GetNatTypeResponse> handleGetNatTypeResponse =
@@ -329,6 +341,7 @@ public final class NtTesterMain extends ComponentDefinition {
             logger.info("Nat type is: " + event.getNat());
             report(self.getPort(), self.getAddress(),
                     event.getStatus() == GetNatTypeResponse.Status.SUCCEED,
+                    System.currentTimeMillis() - startTimers.get(self.getId()),
                     "Stun completed");
             List<VodDescriptor> svd = new ArrayList<VodDescriptor>();
             Address s = servers.iterator().next();
@@ -348,7 +361,9 @@ public final class NtTesterMain extends ComponentDefinition {
 //            report("ping recvd from " + ping.getVodSource() + " at " + ping.getVodDestination()
 //                    + "Success: " + numSuccess + "/" + numFail);
             report(ping.getDestination().getPort(), ping.getVodSource(),
-                    true, "Incoming Nat Traversed");
+                    true,
+                    0,
+                    "Incoming Nat Traversed");
             TConnectionMsg.Pong pong =
                     new TConnectionMsg.Pong(self.getAddress(),
                     ping.getVodSource(), ping.getTimeoutId());
@@ -367,10 +382,14 @@ public final class NtTesterMain extends ComponentDefinition {
         @Override
         public void handle(TConnectionMsg.Pong pong) {
 
-            logger.info("pong recvd from " + pong.getSource() + " - " + pong.getTimeoutId());
+            long timeTaken = System.currentTimeMillis() - (startTimers.get(pong.getSource().getId()));
+            logger.info("pong recvd from " + pong.getSource() + " - " + pong.getTimeoutId()
+                    + " time taken: " + timeTaken);
             numSuccess++;
             report(pong.getDestination().getPort(),
-                    pong.getVodSource(), true, "Outgoing Nat Traversed");
+                    pong.getVodSource(), true,
+                    timeTaken,
+                    "Outgoing Nat Traversed");
 
             logger.info("Total Success/Failure ratio is: {}/{}", numSuccess, numFail);
             trigger(new CancelTimeout(pong.getTimeoutId()), timer.getPositive(Timer.class));
@@ -399,7 +418,7 @@ public final class NtTesterMain extends ComponentDefinition {
         public void handle(Fault ex) {
 
             logger.debug(ex.getFault().toString());
-            report(0, self.getAddress(), false, ex.toString());
+            report(0, self.getAddress(), false, 0, ex.toString());
             System.exit(-1);
         }
     };
@@ -409,7 +428,7 @@ public final class NtTesterMain extends ComponentDefinition {
             logger.info("FAILURE: pong not recvd for TimeoutId: " + msg.getTimeoutId());
             numFail++;
             logger.info("Total Success/Failure ratio is: {}/{}", numSuccess, numFail);
-            report(0, msg.getDest(), false, "Nat Traversal Ping Timeout");
+            report(0, msg.getDest(), false, 0, "Nat Traversal Ping Timeout");
         }
     };
     Handler<PangTimeout> handlePangTimeout = new Handler<PangTimeout>() {
@@ -426,7 +445,7 @@ public final class NtTesterMain extends ComponentDefinition {
                     timeout.getId());
             numFail++;
             logger.info("Total Success/Failure ratio is: {}/{}", numSuccess, numFail);
-            report(0, timeout.getDest(), false, "Nat Traversal Pang Timeout");
+            report(0, timeout.getDest(), false, 0, "Nat Traversal Pang Timeout");
         }
     };
     Handler<CroupierSample> handleCroupierSample = new Handler<CroupierSample>() {
@@ -450,14 +469,17 @@ public final class NtTesterMain extends ComponentDefinition {
                         alreadyConnected.add(dest);
                         logger.info("sending ping with TimeoutId {} to {} ",
                                 hp.getTimeoutId(), dest);
+                        startTimers.put(dest.getId(), System.currentTimeMillis());
                     }
                 }
             }
         }
     };
 
-    private void report(int portUsed, VodAddress target, boolean success, String str) {
-        NatReportMsg.NatReport nr = new NatReportMsg.NatReport(portUsed, target, success, str);
+    private void report(int portUsed, VodAddress target, boolean success, long timeTaken,
+            String str) {
+        NatReportMsg.NatReport nr =
+                new NatReportMsg.NatReport(portUsed, target, success, timeTaken, str);
         List<NatReportMsg.NatReport> nrs = new ArrayList<NatReportMsg.NatReport>();
         nrs.add(nr);
         VodAddress dest = ToVodAddr.bootstrap(VodConfig.getBootstrapServer());

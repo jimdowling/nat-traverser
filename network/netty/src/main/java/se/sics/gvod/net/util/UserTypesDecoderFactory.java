@@ -47,8 +47,9 @@ public class UserTypesDecoderFactory {
         int portUsed = UserTypesDecoderFactory.readUnsignedIntAsTwoBytes(buffer);
         VodAddress target = UserTypesDecoderFactory.readVodAddress(buffer);
         boolean success = UserTypesDecoderFactory.readBoolean(buffer);
+        long timeTaken = buffer.readLong();
         String msg = UserTypesDecoderFactory.readStringLength256(buffer);
-        return new NatReportMsg.NatReport(portUsed, target, success, msg);
+        return new NatReportMsg.NatReport(portUsed, target, success, timeTaken, msg);
     }
     
     

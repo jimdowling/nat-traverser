@@ -20,12 +20,14 @@ public class NatReportMsg extends DirectMsgNetty.Oneway {
         private final int portUsed;
         private final VodAddress target;
         private final boolean success;
+        private final long timeTaken;
         private final String msg;
 
-        public NatReport(int portUsed, VodAddress target, boolean success, String msg) {
+        public NatReport(int portUsed, VodAddress target, boolean success, long timeTaken, String msg) {
             this.portUsed = portUsed;
             this.target = target;
             this.success = success;
+            this.timeTaken = timeTaken;
             this.msg = msg;
         }
 
@@ -41,6 +43,10 @@ public class NatReportMsg extends DirectMsgNetty.Oneway {
             return target;
         }
 
+        public long getTimeTaken() {
+            return timeTaken;
+        }
+        
         public boolean isSuccess() {
             return success;
         }
@@ -61,7 +67,7 @@ public class NatReportMsg extends DirectMsgNetty.Oneway {
 
     @Override
     public int getSize() {
-        return this.natReports.size() *  50;
+        return this.natReports.size() *  58;
     }
 
     @Override

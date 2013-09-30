@@ -89,6 +89,7 @@ public class UserTypesEncoderFactory {
         UserTypesEncoderFactory.writeUnsignedintAsTwoBytes(buffer, natReport.getPortUsed());
         UserTypesEncoderFactory.writeVodAddress(buffer, natReport.getTarget());
         UserTypesEncoderFactory.writeBoolean(buffer, natReport.isSuccess());
+        buffer.writeLong(natReport.getTimeTaken());
         UserTypesEncoderFactory.writeStringLength256(buffer, natReport.getMsg());
         
     }   

@@ -1402,8 +1402,8 @@ public class EncodingDecodingTest {
     @Test
     public void natReportMsgTest() {
         List<NatReportMsg.NatReport> natReports = new ArrayList<NatReportMsg.NatReport>();
-        natReports.add(new NatReportMsg.NatReport(1234, gDest, true, "hi there"));
-        natReports.add(new NatReportMsg.NatReport(12346,gDest, true, "hi there awtastas asdfsdf"));
+        natReports.add(new NatReportMsg.NatReport(1234, gDest, true, 11111, "hi there"));
+        natReports.add(new NatReportMsg.NatReport(12346,gDest, true, 0,"hi there awtastas asdfsdf"));
         NatReportMsg msg = new NatReportMsg(gSrc, gSrc, natReports);
         try {
             ByteBuf buffer = msg.toByteArray();

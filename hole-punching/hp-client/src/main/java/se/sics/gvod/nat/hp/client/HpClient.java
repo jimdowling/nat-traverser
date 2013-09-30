@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -154,6 +155,12 @@ public class HpClient extends MsgRetryComponent {
             new EnumMap<HPMechanism, HPStats>(HPMechanism.class);
     HashMap<Integer, Address> parents = new HashMap<Integer, Address>();
 
+    
+    /*
+     * Measure time taken by heartbeat msgs.
+     */
+    private Map<Integer, Long> startTimers = new HashMap<Integer, Long>();
+    
     /*
      * this is only for debugging. all out puts from this component will have
      * its name prepeneded to it. when multiple client are running at the same
@@ -940,6 +947,9 @@ public class HpClient extends MsgRetryComponent {
         public void handle(HpKeepAliveMsg.Pong msg) {
             int remoteId = msg.getSource().getId();
             OpenedConnection oc = openedConnections.get(remoteId);
+            Long startTime = startTimers.remove(remoteId);
+            startTime = startTime == null ? 0 : startTime;
+            long timeTaken = System.currentTimeMillis() - startTime;
             if (delegator.doCancelRetry(msg.getTimeoutId())) {
                 logger.debug(compName + "Received pong from: " + msg.getSource());
                 if (oc == null) {
@@ -948,7 +958,8 @@ public class HpClient extends MsgRetryComponent {
                     scheduleHeartbeat(oc.getHoleOpened().getId());
                     oc.incNumSuccessfulPings();
                     report(msg.getDestination().getPort(), msg.getVodSource(), 
-                            true, "OpenedConnection Pong Received: " + oc.getNumSuccessfulPings());
+                            true, timeTaken, 
+                            "OpenedConnection Pong Received: " + oc.getNumSuccessfulPings());
                 }
                 // update or add an openedConnection
                 addOrUpdateOpenedConnectionNoSession(msg.getSource(), msg.getDestination().getPort());
@@ -977,6 +988,7 @@ public class HpClient extends MsgRetryComponent {
         logger.trace(compName + "Sending heartbeat from " + self.getAddress()
                 + "=>" + src.getPort() + " to : {} with timeout=" + 2000,
                 openedHole);
+        startTimers.put(openedHole.getId(), System.currentTimeMillis());
     }
     Handler<SendHeartbeatTimeout> handleSendHeartbeatTimeout =
             new Handler<SendHeartbeatTimeout>() {
@@ -1009,8 +1021,11 @@ public class HpClient extends MsgRetryComponent {
             }
             i++;
             failedPings.put(str, i);
+
+            startTimers.remove(remoteId);
             report(msg.getDestination().getPort(), msg.getVodSource(), 
-                            false, "OpenedConnection Pong Failed: " + oc.getNumSuccessfulPings());            
+                            false, 0,
+                            "OpenedConnection Pong Failed: " + oc.getNumSuccessfulPings());            
         }
     };
     Handler<HolePunchingMsg.RequestRetryTimeout> handleHolePunchingRequestTimeout =
@@ -2088,8 +2103,10 @@ public class HpClient extends MsgRetryComponent {
         }
     }
 
-    private void report(int portUsed, VodAddress target, boolean success, String str) {
-        NatReportMsg.NatReport nr = new NatReportMsg.NatReport(portUsed, target, success, str);
+    private void report(int portUsed, VodAddress target, boolean success, long timeTaken,
+            String str) {
+        NatReportMsg.NatReport nr = new NatReportMsg.NatReport(portUsed, target, success, 
+                timeTaken, str);
         List<NatReportMsg.NatReport> nrs = new ArrayList<NatReportMsg.NatReport>();
         nrs.add(nr);
         VodAddress dest = ToVodAddr.bootstrap(VodConfig.getBootstrapServer());
