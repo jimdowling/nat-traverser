@@ -33,7 +33,6 @@ import se.sics.gvod.common.SelfImpl;
 import se.sics.gvod.common.UtilityVod;
 import se.sics.gvod.common.VodDescriptor;
 import se.sics.gvod.common.msgs.NatReportMsg;
-import se.sics.gvod.common.msgs.SimpleMsg;
 import se.sics.gvod.common.util.ToVodAddr;
 import se.sics.gvod.config.CroupierConfiguration;
 import se.sics.gvod.config.VodConfig;
@@ -58,7 +57,10 @@ import se.sics.gvod.croupier.PeerSamplePort;
 import se.sics.gvod.croupier.events.CroupierInit;
 import se.sics.gvod.croupier.events.CroupierJoin;
 import se.sics.gvod.croupier.events.CroupierSample;
+import se.sics.gvod.nat.emu.DistributedNatGatewayEmulator;
+import se.sics.gvod.nat.emu.events.DistributedNatGatewayEmulatorInit;
 import se.sics.gvod.net.BaseMsgFrameDecoder;
+import se.sics.gvod.net.Nat;
 import se.sics.gvod.net.Transport;
 import se.sics.gvod.net.events.PortBindRequest;
 import se.sics.gvod.net.events.PortBindResponse;
@@ -83,6 +85,7 @@ public final class NtTesterMain extends ComponentDefinition {
     private final Component network;
     private final Component resolveIp;
     private final Component natTraverser;
+    private Component natGateway;
     private final Component croupier;
     final NatTraverserConfiguration ntConfig;
     final RendezvousServerConfiguration rendezvousServerConfig;
@@ -91,10 +94,8 @@ public final class NtTesterMain extends ComponentDefinition {
     private static boolean upnpEnabled;
     private static int myId;
     private static final int SERVER_ID = 1;
-    private static final int REPORT_SERVER_ID = 0;
-    private static final int REPORT_SERVER_PORT = 3000;
     private static String server;
-    private static InetAddress reportServer;
+    private static Nat natType;
     private static boolean openServer = false;
     private static Integer pickIp;
     private static Integer numFail = 0, numSuccess = 0;
@@ -106,10 +107,11 @@ public final class NtTesterMain extends ComponentDefinition {
         System.setProperty("java.net.preferIPv4Stack", "true");
 
         if (args.length < 3) {
-            logger.info("Usage: <prog> upnp id bindIp bootstrapNode [openServer]");
+            logger.info("Usage: <prog> upnp id bindIp bootstrapNode [openServer] [natGateway]");
             logger.info("       bindIp: 0=publicIp, 1=privateIp1, 2=privateIp2");
-            logger.info("e.g.  <prog> true 111 0 cloud7.sics.se cloud7.sics.se false");
-            logger.info("To run bootstrap server, run:  <prog> false 1 0 cloud7.sics.se cloud7.sics.se true");
+            logger.info("e.g.  <prog> true 111 0 cloud6.sics.se cloud6.sics.se false");
+            logger.info("To run bootstrap server:  <prog> false 1 0 cloud6.sics.se true");
+            logger.info("To run a nat-emulated node:  <prog> false 1 0 cloud6.sics.se false m(EI)_a(PP)_f(PD)");
             System.exit(0);
         }
         upnpEnabled = Boolean.parseBoolean(args[0]);
@@ -121,13 +123,21 @@ public final class NtTesterMain extends ComponentDefinition {
             Address s = new Address(serverIp, VodConfig.DEFAULT_STUN_PORT,
                     SERVER_ID);
             servers.add(s);
-            reportServer = serverIp;
         } catch (UnknownHostException ex) {
             java.util.logging.Logger.getLogger(NtTesterMain.class.getName()).log(Level.SEVERE, null, ex);
             return;
         }
         if (args.length > 4) {
             openServer = Boolean.parseBoolean(args[4]);
+        }
+        if (args.length > 5 && args[5].compareTo(" ") != 0) {
+            natType = Nat.parseToNat(args[5]);
+            if (natType != null) {
+                openServer = true;
+            } else {
+                System.err.println("Invalid nat type: " + args[5]);
+                System.err.println("Example Nat format:  m(EI)_a(PP)_f(PD)");
+            }
         }
 
         System.setProperty("java.net.preferIPv4Stack", "true");
@@ -196,11 +206,22 @@ public final class NtTesterMain extends ComponentDefinition {
         connect(croupier.getNegative(Timer.class), timer.getPositive(Timer.class));
         connect(croupier.getNegative(VodNetwork.class), natTraverser.getPositive(VodNetwork.class));
 
-        connect(natTraverser.getNegative(Timer.class), timer.getPositive(Timer.class));
-        connect(natTraverser.getNegative(VodNetwork.class), network.getPositive(VodNetwork.class));
-        connect(natTraverser.getNegative(NatNetworkControl.class), network.getPositive(NatNetworkControl.class));
-        connect(resolveIp.getNegative(Timer.class), timer.getPositive(Timer.class));
+        if (natType == null) {
+            connect(natTraverser.getNegative(Timer.class), timer.getPositive(Timer.class));
+            connect(natTraverser.getNegative(VodNetwork.class), network.getPositive(VodNetwork.class));
+            connect(natTraverser.getNegative(NatNetworkControl.class), network.getPositive(NatNetworkControl.class));
+        } else {
+            natGateway = create(DistributedNatGatewayEmulator.class);
+            connect(natGateway.getNegative(Timer.class), timer.getPositive(Timer.class));
+            connect(natGateway.getNegative(VodNetwork.class), network.getPositive(VodNetwork.class));
+            connect(natGateway.getNegative(NatNetworkControl.class), network.getPositive(NatNetworkControl.class));
 
+            connect(natTraverser.getNegative(Timer.class), timer.getPositive(Timer.class));
+            connect(natTraverser.getNegative(VodNetwork.class), natGateway.getPositive(VodNetwork.class));
+            connect(natTraverser.getNegative(NatNetworkControl.class), natGateway.getPositive(NatNetworkControl.class));
+        }
+
+        connect(resolveIp.getNegative(Timer.class), timer.getPositive(Timer.class));
 
         subscribe(handleStart, control);
         subscribe(handleGetNatTypeResponse, natTraverser.getPositive(NatTraverserPort.class));
@@ -250,7 +271,7 @@ public final class NtTesterMain extends ComponentDefinition {
             } else {
                 localIp = event.getBoundIp();
             }
-            reportServer = VodConfig.getBootstrapServer().getIp();
+
 
             if (localIp != null) {
                 logger.info("Found net i/f with ip address: " + localIp);
@@ -265,6 +286,12 @@ public final class NtTesterMain extends ComponentDefinition {
 
                 self = new SelfImpl(null, localAddress.getIp(), localAddress.getPort(),
                         localAddress.getId(), OVERLAY_ID);
+
+                if (natType != null) {
+                    trigger(new DistributedNatGatewayEmulatorInit(natType, localIp,
+                            2000, 65535), natGateway.getControl());
+                    self.setNat(natType);
+                }
 
             } else {
                 logger.error("Couldnt find a network interface that is up");
@@ -436,5 +463,6 @@ public final class NtTesterMain extends ComponentDefinition {
         VodAddress dest = ToVodAddr.bootstrap(VodConfig.getBootstrapServer());
         NatReportMsg msg = new NatReportMsg(self.getAddress(), dest, nrs);
         trigger(msg, network.getPositive(VodNetwork.class));
+        logger.info("Reporting nat type msg to " + dest);
     }
 }

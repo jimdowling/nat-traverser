@@ -17,5 +17,8 @@ rm /tmp/nattraverser.log
 
 echo "Client ID is $1"
 
-java -jar deploy/hp.jar false $1 0 cloud7.sics.se false $@
+ID=$1
 
+shift
+
+java -jar deploy/hp.jar false $ID 0 cloud5.sics.se false $@

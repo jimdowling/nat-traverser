@@ -29,6 +29,10 @@ import se.sics.kompics.*;
 /**
  * DistributedNatGatewayEmulator doesn't rewrite the clientId in messages. Can
  * be used on planetlab.
+ * 
+ * Normally NatTraverser has its Network, NatNetworkControl, Timer ports bound to this components.
+ * bind NatNetworkControl to this component for PortBind, PortAllocation
+ * events.
  *
  * @author jdowling
  */

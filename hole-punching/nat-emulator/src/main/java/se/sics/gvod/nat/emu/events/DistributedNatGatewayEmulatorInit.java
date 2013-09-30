@@ -25,6 +25,13 @@ public class DistributedNatGatewayEmulatorInit extends Init {
     private final int endPortRange;
     private final boolean enableUpnp;
 
+    /**
+     * 
+     * @param nat type of nat
+     * @param natIp ip-addr of the NatGateway
+     * @param startPortRange lower bound for ports allocated by the Nat
+     * @param endPortRange upper bound for ports allocated by the Nat
+     */
     public DistributedNatGatewayEmulatorInit(Nat nat, InetAddress natIp, int startPortRange,
             int endPortRange) {
         assert(natIp != null);

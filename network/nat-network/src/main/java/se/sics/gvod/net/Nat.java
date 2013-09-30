@@ -391,7 +391,14 @@ public class Nat implements Serializable, Comparable {
         Nat.AlternativePortAllocationPolicy alternativePortAllocationPolicy = null;
         if (stz.hasMoreElements()) {
             alternativePortAllocationPolicy = Nat.AlternativePortAllocationPolicy.decode((String) stz.nextElement());
+            if (alternativePortAllocationPolicy == null) {
+                return null;
+            }
         }
+        if (type == null || mappingPolicy == null || allocationPolicy == null || filteringPolicy == null) {
+            return null;
+        }
+        
         return new Nat(type, mappingPolicy, allocationPolicy, filteringPolicy,
                 0, 3000);
     }

@@ -134,12 +134,12 @@ public abstract class BaseCommandLineConfig {
     public static final int DEFAULT_PORT = 58022;
     public static final int DEFAULT_STUN_PORT = 3478;
     public static final int DEFAULT_STUN_PORT_2 = 3479;
-    public static final String DEFAULT_BOOTSTRAP_IP = "cloud7.sics.se";
+    public static final String DEFAULT_BOOTSTRAP_IP = "cloud6.sics.se";
     public static final int DEFAULT_BOOTSTRAP_PORT = 8011;
     public static final int DEFAULT_BOOTSTRAP_ID = Integer.MAX_VALUE;
     public static final int DEFAULT_STUN_ID = 1;
     public static final int DEFAULT_RENDEZVOUS_ID = 0;
-    public static final String DEFAULT_MONITOR_IP = "cloud7.sics.se";
+    public static final String DEFAULT_MONITOR_IP = "cloud6.sics.se";
     public static final int DEFAULT_MONITOR_PORT = 8020;
     public static final int DEFAULT_MONITOR_ID = Integer.MAX_VALUE - 1;
     public static final int DEFAULT_MEDIA_PORT = 58026;
