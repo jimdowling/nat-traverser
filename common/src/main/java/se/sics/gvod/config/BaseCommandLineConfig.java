@@ -136,12 +136,12 @@ public abstract class BaseCommandLineConfig {
     public static final int DEFAULT_STUN_PORT_2 = 3479;
     public static final String DEFAULT_BOOTSTRAP_IP = "cloud6.sics.se";
     public static final int DEFAULT_BOOTSTRAP_PORT = 8011;
-    public static final int DEFAULT_BOOTSTRAP_ID = Integer.MAX_VALUE;
-    public static final int DEFAULT_STUN_ID = 1;
-    public static final int DEFAULT_RENDEZVOUS_ID = 0;
+//    public static final int DEFAULT_BOOTSTRAP_ID = Integer.MAX_VALUE;
+//    public static final int DEFAULT_STUN_ID = 1;
+//    public static final int DEFAULT_RENDEZVOUS_ID = 0;
     public static final String DEFAULT_MONITOR_IP = "cloud6.sics.se";
     public static final int DEFAULT_MONITOR_PORT = 8020;
-    public static final int DEFAULT_MONITOR_ID = Integer.MAX_VALUE - 1;
+//    public static final int DEFAULT_MONITOR_ID = Integer.MAX_VALUE - 1;
     public static final int DEFAULT_MEDIA_PORT = 58026;
     public static final int DEFAULT_WEB_REQUEST_TIMEOUT_MS = 30 * 1000;
     public static final int DEFAULT_WEB_THREADS = 2;
@@ -410,10 +410,10 @@ public abstract class BaseCommandLineConfig {
      *
      * @return id of monitor server for concrete overlay
      */
-    protected int getMonitorId() {
-        // Override in subclass
-        return DEFAULT_MONITOR_ID;
-    }
+//    protected int getMonitorId() {
+//        // Override in subclass
+//        return SYSTEM_OVERLAY_ID;
+//    }
 
     public static InetAddress getIp() {
         baseInitialized();
@@ -477,7 +477,7 @@ public abstract class BaseCommandLineConfig {
                 DEFAULT_BOOTSTRAP_IP);
         int bootPort = singleton.compositeConfig.getInt(PROP_BOOTSTRAP_PORT,
                 DEFAULT_BOOTSTRAP_PORT);
-        int bootId = DEFAULT_BOOTSTRAP_ID;
+        int bootId = VodConfig.SYSTEM_OVERLAY_ID;
         InetAddress ip;
         try {
             ip = InetAddress.getByName(addr);
@@ -494,7 +494,7 @@ public abstract class BaseCommandLineConfig {
                 DEFAULT_MONITOR_IP);
         int monitorPort = singleton.compositeConfig.getInt(PROP_MONITOR_PORT,
                 DEFAULT_MONITOR_PORT);
-        int id = DEFAULT_MONITOR_ID;
+        int id = VodConfig.SYSTEM_OVERLAY_ID;
         try {
             InetAddress ip = InetAddress.getByName(addr);
             return new Address(ip, monitorPort, id);

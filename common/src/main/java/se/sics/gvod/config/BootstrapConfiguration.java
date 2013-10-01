@@ -91,7 +91,7 @@ public final class BootstrapConfiguration
 
     public VodAddress getBootstrapServerVodAddress() {
         return new VodAddress(getBootstrapServerAddress(),
-                BaseCommandLineConfig.DEFAULT_BOOTSTRAP_ID);
+                VodConfig.SYSTEM_OVERLAY_ID);
     }
 
     public long getClientRetryPeriod() {

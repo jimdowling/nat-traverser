@@ -52,7 +52,8 @@ public class ToVodAddr {
     
     public static VodAddress bootstrap(Address addr) {
         return new VodAddress(new Address(addr.getIp(), addr.getPort(),
-                addr.getId()), VodConfig.DEFAULT_BOOTSTRAP_ID);
+                addr.getId()), VodConfig.SYSTEM_OVERLAY_ID);
+//                VodConfig.DEFAULT_BOOTSTRAP_ID);
     }
 
     public static VodAddress overlay(Address addr, int overlayId) {
