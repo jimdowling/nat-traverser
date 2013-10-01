@@ -10,12 +10,10 @@ import se.sics.gvod.common.hp.HPRole;
 import se.sics.gvod.common.hp.HPMechanism;
 import se.sics.gvod.common.hp.HpFeasability;
 import se.sics.gvod.common.hp.HPSessionKey;
-import java.net.InetAddress;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.logging.Level;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import se.sics.gvod.address.Address;
@@ -89,7 +87,7 @@ public class RendezvousServer extends MsgRetryComponent {
         // when the registration expires. expiration time is directly dependent on
         // nat rule timeout value, which is different for different nats. This variable
         // is set to ruleexpiration timeout value recvd from the nat
-        long expirationTime;
+        long timeBeforeExpiration;
         // for port-contiguity, port prediction
         final int delta;
         // used when a new RegisterClient request is received, whether to accept the
@@ -103,16 +101,14 @@ public class RendezvousServer extends MsgRetryComponent {
         private final Set<Integer> prpPorts;
 
         public RegisteredClientRecord(VodAddress clientPublicAddress,
-                long timeStamp, long expirationTime, int delta, long rtt,
-                Set<Integer> prpPorts,
-                boolean tempRecord) {
+                long rtt, Set<Integer> prpPorts, boolean tempRecord) {
             if (clientPublicAddress == null) {
                 throw new NullPointerException("Registered client address cannot be null");
             }
             this.client = clientPublicAddress;
-            this.lastHeardFromTimestamp = timeStamp;
-            this.expirationTime = expirationTime;
-            this.delta = delta;
+            this.lastHeardFromTimestamp = System.currentTimeMillis();
+            this.timeBeforeExpiration = clientPublicAddress.getNatBindingTimeout();
+            this.delta = clientPublicAddress.getNat().getDelta();
             this.rtt = rtt;
             this.prpPorts = (prpPorts == null) ? new HashSet<Integer>() : prpPorts;
             this.tempRecord = tempRecord;
@@ -182,11 +178,11 @@ public class RendezvousServer extends MsgRetryComponent {
         }
 
         public long getExpirationTime() {
-            return expirationTime;
+            return timeBeforeExpiration;
         }
 
         public void setExpirationTime(long expirationTime) {
-            this.expirationTime = expirationTime;
+            this.timeBeforeExpiration = expirationTime;
         }
 
         public long getLastHeardFrom() {
@@ -200,7 +196,7 @@ public class RendezvousServer extends MsgRetryComponent {
         @Override
         public String toString() {
             return " Pub Addr: " + client
-                    + " Exp Time:" + expirationTime
+                    + " Exp Time:" + timeBeforeExpiration
                     + " TS: " + lastHeardFromTimestamp
                     + " Delta: " + delta
                     + " rtt: " + rtt;
@@ -274,7 +270,8 @@ public class RendezvousServer extends MsgRetryComponent {
 
             if (currentSize < config.getNumChildren()) {
                 RTTStore.addSample(self.getId(), peer, rtt);
-                boolean alreadyRegistered = registerClientRecord(peer, request.getSource().getId(), request.getDelta(), rtt,
+                boolean alreadyRegistered = registerClientRecord(peer, 
+                        request.getSource().getId(), rtt,
                         request.getPrpPorts(), false);
                 if (alreadyRegistered) {
                     sendRegisterResponse(peer, timeoutId, HpRegisterMsg.RegisterStatus.ALREADY_REGISTERED,
@@ -295,7 +292,7 @@ public class RendezvousServer extends MsgRetryComponent {
                         delegator.doTrigger(new HpUnregisterMsg.Request(self.getAddress(),
                                 worstChild, 0, HpRegisterMsg.RegisterStatus.BETTER_CHILD),
                                 network);
-                        registerClientRecord(peer, request.getSource().getId(), request.getDelta(), rtt,
+                        registerClientRecord(peer, request.getSource().getId(), rtt,
                                 request.getPrpPorts(), false);
                         sendRegisterResponse(peer, timeoutId, HpRegisterMsg.RegisterStatus.ACCEPT,
                                 request.getPrpPorts());
@@ -391,7 +388,7 @@ public class RendezvousServer extends MsgRetryComponent {
      * @param delta
      * @param rtt
      */
-    private boolean registerClientRecord(VodAddress client, int clientId, int delta, long rtt,
+    private boolean registerClientRecord(VodAddress client, int clientId, long rtt,
             Set<Integer> prpPorts, boolean tempRecord) {
         boolean alreadyRegistered = false;
         if (prpPorts == null) {
@@ -400,8 +397,7 @@ public class RendezvousServer extends MsgRetryComponent {
         if (registeredClients.containsKey(clientId) != true) {
 
             RegisteredClientRecord clientData = new RegisteredClientRecord(
-                    client, System.currentTimeMillis(), client.getNatBindingTimeout(),
-                    delta, rtt, prpPorts, tempRecord);
+                    client, rtt, prpPorts, tempRecord);
             registeredClients.put(clientId, clientData);
             logger.debug(compName + " " + client + " REGISTERING on Z: " + printChildren());
         } else {
@@ -439,7 +435,7 @@ public class RendezvousServer extends MsgRetryComponent {
             int client_B_ID = request.getRemoteClientId();
 
 
-            registerClientRecord(src, client_A_ID, request.getDelta(), request.getRtt(),
+            registerClientRecord(src, client_A_ID, request.getRtt(),
                     null, true);
 
 
@@ -656,7 +652,7 @@ public class RendezvousServer extends MsgRetryComponent {
                 HPRole myRole = HPRole.PRP_INITIATOR;
                 HPRole yourRole = HPRole.PRP_RESPONDER;
                 registerClientRecord(request.getVodSource(), request.getClientId(),
-                        1 , 500 , request.getSetOfAvailablePorts(), true);
+                        500 , request.getSetOfAvailablePorts(), true);
 
                 if (session == null) {
                     // create a new session
@@ -864,12 +860,7 @@ public class RendezvousServer extends MsgRetryComponent {
                 }
 
                 registerClientRecord(request.getVodSource(), request.getClientId(),
-                        1 /*
-                         * delta
-                         */, 1500 /*
-                         * rtt
-                         */, request.getSetOfAvailablePorts(),
-                        true);
+                         1500, request.getSetOfAvailablePorts(), true);
 
                 // selecting an available port - if there was already an existing session
                 // then use the old PRP port from that session - not one of the newly supplied ones.

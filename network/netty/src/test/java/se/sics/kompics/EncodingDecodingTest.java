@@ -634,7 +634,7 @@ public class EncodingDecodingTest {
 
     @Test
     public void HpRegisterMsg() {
-        HpRegisterMsg.Request msg = new HpRegisterMsg.Request(gSrc, gDest, 1, 100l);
+        HpRegisterMsg.Request msg = new HpRegisterMsg.Request(gSrc, gDest, 100l);
         msg.setTimeoutId(UUID.nextUUID());
         try {
             ByteBuf buffer = msg.toByteArray();

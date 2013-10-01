@@ -24,10 +24,9 @@ public class HpRegisterMsgFactory {
 
         @Override
         protected HpRegisterMsg.Request process(ByteBuf buffer) throws MessageDecodingException {
-            int delta = UserTypesDecoderFactory.readUnsignedIntAsOneByte(buffer);
             long rtt = (long) UserTypesDecoderFactory.readUnsignedIntAsTwoBytes(buffer);
             Set<Integer> prpPorts = UserTypesDecoderFactory.readSetUnsignedTwoByteInts(buffer);
-            return new HpRegisterMsg.Request(vodSrc, vodDest, delta, rtt, prpPorts);
+            return new HpRegisterMsg.Request(vodSrc, vodDest, rtt, prpPorts);
         }
     }
 

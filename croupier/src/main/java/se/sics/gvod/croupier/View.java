@@ -264,7 +264,8 @@ public class View {
             entry.getDescriptor().getVodAddress().getPeerAddress().setPort(VodConfig.DEFAULT_PORT);
         }
 
-        if (!entries.contains(entry)) {
+        // don't add yourself
+        if (!entries.contains(entry) && entry.getDescriptor().getId() != self.getId()) {
             entries.add(entry);
             d2e.put(entry.getDescriptor().getVodAddress(), entry);
             checkSize();

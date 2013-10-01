@@ -505,7 +505,7 @@ public class ParentMaker extends MsgRetryComponent {
         }
 
         HpRegisterMsg.Request request = new HpRegisterMsg.Request(self.getAddress(),
-                hpServer, self.getAddress().getDelta(), rtt, prpPorts);
+                hpServer, rtt, prpPorts);
         outstandingBids = true;
         ScheduleRetryTimeout st = new ScheduleRetryTimeout(config.getRto(),
                 config.getRtoRetries(), config.getRtoScale());

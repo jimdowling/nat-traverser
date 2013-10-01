@@ -256,7 +256,9 @@ public final class NtTesterMain extends ComponentDefinition {
                         resolveIp.getPositive(ResolveIpPort.class));
             } else {
                 trigger(new GetIpRequest(false, EnumSet.of(
-                        GetIpRequest.NetworkInterfacesMask.IGNORE_LOOPBACK, GetIpRequest.NetworkInterfacesMask.IGNORE_TEN_DOT_PRIVATE //                        ,GetIpRequest.NetworkInterfacesMask.IGNORE_PRIVATE
+                        GetIpRequest.NetworkInterfacesMask.IGNORE_LOOPBACK
+//                        , GetIpRequest.NetworkInterfacesMask.IGNORE_TEN_DOT_PRIVATE 
+                        //,GetIpRequest.NetworkInterfacesMask.IGNORE_PRIVATE
                         )),
                         resolveIp.getPositive(ResolveIpPort.class));
 

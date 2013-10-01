@@ -659,7 +659,7 @@ public class NatTraverser extends MsgRetryComponent {
         } else if (msg instanceof RelayMsgNetty.Request) {
             nextDestId = msg.getRemoteId();
         } else {
-            //if (msg instanceof RelayMsgNetty.Response) {
+            // msg instanceof RelayMsgNetty.Response
             nextDestId = msg.getClientId();
         }
 
@@ -674,7 +674,7 @@ public class NatTraverser extends MsgRetryComponent {
             // can be sent to the client
             if (!registeredClients.containsKey(msg.getSource().getId())) {
                 RegisteredClientRecord tempClient = new RegisteredClientRecord(msg.getVodSource(),
-                        System.currentTimeMillis(), Nat.DEFAULT_RULE_EXPIRATION_TIME, 0, 5000, null, true);
+                        5000, null, true);
                 registeredClients.put(msg.getSource().getId(), tempClient);
             } else {
                 RegisteredClientRecord client = registeredClients.get(msg.getSource().getId());

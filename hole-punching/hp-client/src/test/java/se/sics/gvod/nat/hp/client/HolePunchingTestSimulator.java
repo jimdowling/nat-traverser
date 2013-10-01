@@ -741,14 +741,10 @@ public class HolePunchingTestSimulator
         };
 
         public void registerClientA() {
-//            RegisterWithRendezvousServerRequest registerRequest =
-//                    new RegisterWithRendezvousServerRequest(z1, 1, 200);
-//                    new RegisterWithRendezvousServerRequest(nat_,A, serverS1Address/*address of zServer*/);
 
             Self me = new SelfNoUtility(ToVodAddr.stunClient(stunClient_A_Address));
             HpRegisterMsg.Request registerRequest = new HpRegisterMsg.Request(
-                    me.getAddress(),
-                    z1, 1, 100);
+                    me.getAddress(),z1, 100);
             trigger(registerRequest, natComp_A.getPositive(VodNetwork.class));
         }
         public Handler<HpRegisterMsg.Response> handleRegisterWithRendezvousServerResponse_A =
@@ -797,8 +793,7 @@ public class HolePunchingTestSimulator
         public void registerClientB() {
             Self me = new SelfNoUtility(ToVodAddr.stunClient(stunClient_B_Address));
             HpRegisterMsg.Request registerRequest = new HpRegisterMsg.Request(
-                    me.getAddress(),
-                    z1, 1, 100);
+                    me.getAddress(), z1, 100);
             trigger(registerRequest, natComp_B.getPositive(VodNetwork.class));
         }
         public Handler<HpRegisterMsg.Response> handleRegisterWithRendezvousServerResponse_B =

@@ -877,7 +877,7 @@ public class HolePunchingTest
 
         public void registerClientA() {
             HpRegisterMsg.Request registerRequest =
-                    new HpRegisterMsg.Request(a, z1, 1, 200);
+                    new HpRegisterMsg.Request(a, z1, 200);
             trigger(registerRequest, natComp_A.getPositive(VodNetwork.class));
         }
         public Handler<HpRegisterMsg.Response> handleHpRegisterMsgResponse_A =
@@ -917,7 +917,7 @@ public class HolePunchingTest
 
         public void registerClientB() {
             HpRegisterMsg.Request registerRequest =
-                    new HpRegisterMsg.Request(b, z1, 1, 200);
+                    new HpRegisterMsg.Request(b, z1, 200);
             trigger(registerRequest,
                     natComp_B.getPositive(VodNetwork.class));
         }

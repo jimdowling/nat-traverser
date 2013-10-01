@@ -24,24 +24,21 @@ public class HpRegisterMsg {
     public static final class Request extends DirectMsgNetty.SystemRequest {
 
         static final long serialVersionUID = 62456664L;
-        private final int delta;
         private final long rtt;
         private final Set<Integer> prpPorts;
 
-        public Request(VodAddress src, VodAddress dest, int delta, long rtt) {
-            this(src, dest, delta, rtt, null);
+        public Request(VodAddress src, VodAddress dest, long rtt) {
+            this(src, dest, rtt, null);
         }
-        public Request(VodAddress src, VodAddress dest, int delta, long rtt,
+        public Request(VodAddress src, VodAddress dest, long rtt,
                 Set<Integer> prpPorts) {
             super(src, dest);
-            this.delta = delta;
             this.rtt = rtt;
             this.prpPorts = (prpPorts == null) ? new HashSet<Integer>() : prpPorts;
         }
 
-        public Request(Request msg, VodAddress src, int delta, long rtt) {
+        public Request(Request msg, VodAddress src, long rtt) {
             super(src, msg.getVodDestination());
-            this.delta = delta;
             this.rtt = rtt;
             this.prpPorts = msg.getPrpPorts();
         }
@@ -52,10 +49,6 @@ public class HpRegisterMsg {
 
         public long getRtt() {
             return rtt;
-        }
-
-        public int getDelta() {
-            return delta;
         }
 
         @Override
@@ -75,7 +68,6 @@ public class HpRegisterMsg {
         @Override
         public ByteBuf toByteArray() throws MessageEncodingException {
         	ByteBuf buffer = createChannelBufferWithHeader();
-            UserTypesEncoderFactory.writeUnsignedintAsOneByte(buffer, delta);
             UserTypesEncoderFactory.writeUnsignedintAsTwoBytes(buffer, (int) rtt);
             UserTypesEncoderFactory.writeSetUnsignedTwoByteInts(buffer, prpPorts);
             return buffer;
@@ -85,7 +77,7 @@ public class HpRegisterMsg {
         @Override
         public RewriteableMsg copy() {
             HpRegisterMsg.Request copy = 
-                    new HpRegisterMsg.Request(this, vodSrc, delta, rtt);
+                    new HpRegisterMsg.Request(this, vodSrc, rtt);
             copy.setTimeoutId(timeoutId);
             return copy;
         }

@@ -95,7 +95,7 @@ public class RendezvousServerUnitTest extends VodRetryComponentTestCase {
     private HpRegisterMsg.Response addPrivateChild(VodAddress client,
             HpRegisterMsg.RegisterStatus expectedStatus, long rtt, Set<Integer> prpPorts) {
         HpRegisterMsg.Request req = new HpRegisterMsg.Request(client, getAddress(),
-                1, rtt, prpPorts);
+                rtt, prpPorts);
         zServer.handleHpRegisterRequest.handle(req);
         LinkedList<Event> events = pollEvent(1);
         assertSequence(events, HpRegisterMsg.Response.class);
@@ -120,7 +120,7 @@ public class RendezvousServerUnitTest extends VodRetryComponentTestCase {
 
         // kick out worst child, and accept this request
         VodAddress src2 = privAddrs.get(2);
-        HpRegisterMsg.Request req2 = new HpRegisterMsg.Request(src2, getAddress(), 1, 500);
+        HpRegisterMsg.Request req2 = new HpRegisterMsg.Request(src2, getAddress(), 500);
         zServer.handleHpRegisterRequest.handle(req2);
         LinkedList<Event> events = pollEvent(2);
         assertSequence(events, HpUnregisterMsg.Request.class, HpRegisterMsg.Response.class);
