@@ -4,12 +4,10 @@
  */
 package se.sics.gvod.nat.hp.client;
 
-import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -26,7 +24,6 @@ import se.sics.gvod.common.util.ToVodAddr;
 import se.sics.gvod.hp.msgs.HolePunchingMsg;
 import se.sics.kompics.Negative;
 import se.sics.kompics.Positive;
-import se.sics.kompics.Request;
 import se.sics.gvod.net.NatNetworkControl;
 import se.sics.gvod.net.Nat;
 import se.sics.gvod.nat.hp.client.events.OpenConnectionRequest;
@@ -64,12 +61,10 @@ import se.sics.gvod.net.msgs.ScheduleRetryTimeout;
 import se.sics.gvod.timer.TimeoutId;
 import se.sics.gvod.common.hp.HolePunching;
 import se.sics.gvod.common.hp.HpFeasability;
-import se.sics.gvod.common.msgs.NatReportMsg;
 import se.sics.gvod.config.HpClientConfiguration;
-import se.sics.gvod.config.VodConfig;
 import se.sics.gvod.nat.hp.client.events.PRP_DummyMsgPortResponse;
 import se.sics.gvod.net.Transport;
-import se.sics.gvod.net.VodNetwork;
+import se.sics.gvod.net.util.NatReporter;
 import se.sics.gvod.timer.SchedulePeriodicTimeout;
 import se.sics.gvod.timer.ScheduleTimeout;
 import se.sics.gvod.timer.Timeout;
@@ -154,13 +149,10 @@ public class HpClient extends MsgRetryComponent {
     EnumMap<HPMechanism, HPStats> hpStats =
             new EnumMap<HPMechanism, HPStats>(HPMechanism.class);
     HashMap<Integer, Address> parents = new HashMap<Integer, Address>();
-
-    
     /*
      * Measure time taken by heartbeat msgs.
      */
     private Map<Integer, Long> startTimers = new HashMap<Integer, Long>();
-    
     /*
      * this is only for debugging. all out puts from this component will have
      * its name prepeneded to it. when multiple client are running at the same
@@ -957,8 +949,9 @@ public class HpClient extends MsgRetryComponent {
                 } else {
                     scheduleHeartbeat(oc.getHoleOpened().getId());
                     oc.incNumSuccessfulPings();
-                    report(msg.getDestination().getPort(), msg.getVodSource(), 
-                            true, timeTaken, 
+                    NatReporter.report(delegator, network, self.getAddress(),
+                            msg.getDestination().getPort(), msg.getVodSource(),
+                            true, timeTaken,
                             "OpenedConnection Pong Received: " + oc.getNumSuccessfulPings());
                 }
                 // update or add an openedConnection
@@ -1023,9 +1016,10 @@ public class HpClient extends MsgRetryComponent {
             failedPings.put(str, i);
 
             startTimers.remove(remoteId);
-            report(msg.getDestination().getPort(), msg.getVodSource(), 
-                            false, 0,
-                            "OpenedConnection Pong Failed: " + oc.getNumSuccessfulPings());            
+            NatReporter.report(delegator, network, self.getAddress(),
+                    msg.getDestination().getPort(), msg.getVodSource(),
+                    false, 0,
+                    "OpenedConnection Pong Failed: " + oc.getNumSuccessfulPings());
         }
     };
     Handler<HolePunchingMsg.RequestRetryTimeout> handleHolePunchingRequestTimeout =
@@ -2101,17 +2095,6 @@ public class HpClient extends MsgRetryComponent {
         } else {
             logger.warn(compName + "Cannot send OpenConnectionResponse with null request");
         }
-    }
-
-    private void report(int portUsed, VodAddress target, boolean success, long timeTaken,
-            String str) {
-        NatReportMsg.NatReport nr = new NatReportMsg.NatReport(portUsed, target, success, 
-                timeTaken, str);
-        List<NatReportMsg.NatReport> nrs = new ArrayList<NatReportMsg.NatReport>();
-        nrs.add(nr);
-        VodAddress dest = ToVodAddr.bootstrap(VodConfig.getBootstrapServer());
-        NatReportMsg msg = new NatReportMsg(self.getAddress(), dest, nrs);
-        trigger(msg, network);
     }
 
     @Override

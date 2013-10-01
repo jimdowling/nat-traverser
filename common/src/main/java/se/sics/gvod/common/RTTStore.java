@@ -341,7 +341,6 @@ public class RTTStore {
         if (!publicRtts.containsKey(nodeId)) {
             return null;
         }
-
         ConcurrentHashMap<Address, RTT> m = publicRtts.get(nodeId);
 
         Address peerAddress = address.getPeerAddress();
@@ -352,6 +351,18 @@ public class RTTStore {
         }
     }
 
+    
+    public static boolean containsPublicSample(int nodeId, VodAddress address) {
+        if (address.isOpen()) {
+            if (!publicRtts.containsKey(nodeId)) {
+                return false;
+            }
+            ConcurrentHashMap<Address, RTT> m = publicRtts.get(nodeId);
+            return m.containsKey(address.getPeerAddress());
+        }
+        return false;
+    }
+    
     public static List<RTT> getOnAvgBest(int nodeId, int numNodes) {
         return getOnAvgBest(nodeId, numNodes, new HashSet<Address>());
     }

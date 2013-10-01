@@ -109,9 +109,9 @@ public class Croupier extends MsgRetryComponent {
     private VodAddress selectPeerToShuffleWith() {
         VodAddress node = null;
         if (!publicView.isEmpty()) {
-            node = publicView.selectPeerToShuffleWith(config.getPolicy());
+            node = publicView.selectPeerToShuffleWith(config.getPolicy(), true, 0.75d);
         } else if (!privateView.isEmpty()) {
-            node = privateView.selectPeerToShuffleWith(config.getPolicy());
+            node = privateView.selectPeerToShuffleWith(config.getPolicy(), true, 0.85d);
         }
         return node;
     }
@@ -143,14 +143,14 @@ public class Croupier extends MsgRetryComponent {
         }
 
         List<VodDescriptor> publicDescriptors =
-                publicView.selectToSendAtActive(shuffleSize, node);
+                publicView.selectToSendAtInitiator(shuffleSize, node);
 
         if (self.isOpen()) {
             publicDescriptors.add(self.getDescriptor());
         }
 
         List<VodDescriptor> privateDescriptors =
-                privateView.selectToSendAtActive(shuffleSize, node);
+                privateView.selectToSendAtInitiator(shuffleSize, node);
 
         if (!self.isOpen()) {
             privateDescriptors.add(self.getDescriptor());
@@ -192,7 +192,7 @@ public class Croupier extends MsgRetryComponent {
 
             if (peer != null) {
                 if (!peer.isOpen()) {
-                    logger.info(compName + "Didn't pick a public node for shuffling. Public Size {}",
+                    logger.debug(compName + "Didn't pick a public node for shuffling. Public Size {}",
                             publicView.getAll().size());
                 }
 
@@ -224,9 +224,9 @@ public class Croupier extends MsgRetryComponent {
             DescriptorBuffer recBuffer = msg.getBuffer();
             List<VodDescriptor> recPublicDescs = recBuffer.getPublicDescriptors();
             List<VodDescriptor> recPrivateDescs = recBuffer.getPublicDescriptors();
-            List<VodDescriptor> toSendPublicDescs = publicView.selectToSendAtPassive(
+            List<VodDescriptor> toSendPublicDescs = publicView.selectToSendAtReceiver(
                     recPublicDescs.size(), srcAddress);
-            List<VodDescriptor> toSendPrivateDescs = privateView.selectToSendAtPassive(
+            List<VodDescriptor> toSendPrivateDescs = privateView.selectToSendAtReceiver(
                     recPrivateDescs.size(), srcAddress);
 
             DescriptorBuffer toSendBuffer =
@@ -291,7 +291,16 @@ public class Croupier extends MsgRetryComponent {
                 publicView.selectToKeep(srcDesc.getVodAddress(), recPublicDescs);
                 privateView.selectToKeep(srcDesc.getVodAddress(), recPrivateDescs);
 
-
+                // If I don't have a RTT for new public descriptors, add one to the RTTStore
+                // with a default RTO for the descriptor.
+                for (VodDescriptor vd : recPublicDescs) {
+                    if (!RTTStore.containsPublicSample(self.getId(), vd.getVodAddress())) {
+                        RTTStore.addSample(self.getId(), vd.getVodAddress(), 
+                                config.getRto());
+                    }
+                }
+                
+                // send the new samples to other components
                 publishSample();
             }
         }

@@ -40,6 +40,7 @@ import se.sics.gvod.common.RetryComponentDelegator;
 import se.sics.gvod.common.Self;
 import se.sics.gvod.common.VodDescriptor;
 import se.sics.gvod.common.evts.Join;
+import se.sics.gvod.common.msgs.NatReportMsg;
 import se.sics.gvod.config.VodConfig;
 import se.sics.gvod.common.util.ToVodAddr;
 import se.sics.gvod.config.ParentMakerConfiguration;
@@ -60,6 +61,7 @@ import se.sics.gvod.net.VodAddress;
 import se.sics.gvod.net.events.PortAllocRequest;
 import se.sics.gvod.net.events.PortDeleteRequest;
 import se.sics.gvod.net.msgs.ScheduleRetryTimeout;
+import se.sics.gvod.net.util.NatReporter;
 import se.sics.gvod.parentmaker.evts.PrpDeletePortsResponse;
 import se.sics.gvod.parentmaker.evts.PrpMorePortsResponse;
 import se.sics.gvod.parentmaker.evts.PrpPortsResponse;
@@ -78,7 +80,6 @@ public class ParentMaker extends MsgRetryComponent {
     private Negative<ParentMakerPort> port = negative(ParentMakerPort.class);
     private Positive<NatNetworkControl> natNetworkControl = positive(NatNetworkControl.class);
     private Positive<PeerSamplePort> croupierPort = positive(PeerSamplePort.class);
-    
     Self self;
     private String compName;
     Map<VodAddress, Connection> connections = new HashMap<VodAddress, Connection>();
@@ -228,9 +229,9 @@ public class ParentMaker extends MsgRetryComponent {
 
             // Print out list of parents periodically
             if (count % 5 == 0) {
-                logger.info(compName + getParentsAsStr());
+                logger.debug(compName + getParentsAsStr());
             }
-            
+
             List<RTT> currentRtts = getCurrentRtts();
             Set<VodAddress> currentParents = new HashSet<VodAddress>();
             for (RTT r : currentRtts) {
@@ -248,7 +249,7 @@ public class ParentMaker extends MsgRetryComponent {
                             config.getParentSize(),
                             rejections.keySet()).size());
                 }
-            } 
+            }
 
             List<RTT> betterRtts;
             if (currentRtts.size() < config.getParentSize()) {
@@ -281,7 +282,7 @@ public class ParentMaker extends MsgRetryComponent {
                     }
                     min = new RTT(croupierSamples.iterator().next(), VodConfig.DEFAULT_RTO);
                 } else {
-                     min = iter.next();
+                    min = iter.next();
                 }
                 if (min.getAddress().isOpen() == false) {
                     logger.error("Trying to add a NAT node as a parent!");
@@ -366,11 +367,16 @@ public class ParentMaker extends MsgRetryComponent {
             connections.put(parent, connection);
             self.addParent(parent.getPeerAddress());
             logger.debug(compName + "updated parents: " + getParentsAsStr());
+
+            NatReporter.report(delegator, network, self.getAddress(),
+                    self.getPort(), parent,
+                    true, 0,
+                    "New Parent Added with numPorts: " + prpPorts.size());
         } else {
             Connection c = connections.get(parent);
             c.setLastReceivedPong(System.currentTimeMillis());
             c.setRtt(rtt);
-            logger.info(compName + "Re-adding an existing parent: " + parent.toString());
+            logger.debug(compName + "Re-adding an existing parent: " + parent.toString());
         }
     }
 
@@ -397,6 +403,10 @@ public class ParentMaker extends MsgRetryComponent {
                 pdr.setResponse(new PrpDeletePortsResponse(pdr, null));
                 delegator.doTrigger(pdr, natNetworkControl);
             }
+            NatReporter.report(delegator, network, self.getAddress(),
+                    self.getPort(), parent,
+                    true, 0,
+                    "Parent removed with numPorts deleted: " + c.getPrpPorts().size());
 
         } else {
             logger.warn(compName + "Tried to remove non-existant parent: " + parent.getId());
@@ -478,21 +488,21 @@ public class ParentMaker extends MsgRetryComponent {
             logger.debug(compName + " trying to re-add the parent: " + hpServer);
             return;
         }
-        
-        if (outstandingParentRequests.contains(hpServer.getId())){
+
+        if (outstandingParentRequests.contains(hpServer.getId())) {
             logger.trace(compName + " connection request already ongoing for the parent: " + hpServer);
             return;
         }
-        
+
         if (hpServer.getId() == self.getId()) {
             logger.debug(compName + " trying to add myself as a parent.");
             return;
         }
-        if (hpServer.getPort() == VodConfig.DEFAULT_STUN_PORT || 
-                hpServer.getPort() == VodConfig.DEFAULT_STUN_PORT_2) {
+        if (hpServer.getPort() == VodConfig.DEFAULT_STUN_PORT
+                || hpServer.getPort() == VodConfig.DEFAULT_STUN_PORT_2) {
             logger.debug(compName + " tried to send a parent request to a Stun Server");
             hpServer = ToVodAddr.hpServer(hpServer.getPeerAddress());
-        } 
+        }
 
         HpRegisterMsg.Request request = new HpRegisterMsg.Request(self.getAddress(),
                 hpServer, self.getAddress().getDelta(), rtt, prpPorts);
@@ -509,7 +519,7 @@ public class ParentMaker extends MsgRetryComponent {
     Handler<HpRegisterMsg.Response> handleHpRegisterMsgResponse = new Handler<HpRegisterMsg.Response>() {
         @Override
         public void handle(HpRegisterMsg.Response event) {
-            
+
             outstandingParentRequests.remove(event.getSource().getId());
             // discard duplicate responses or late responses - unless I don't have any parents
             if (delegator.doCancelRetry(event.getTimeoutId()) || connections.isEmpty()) {
@@ -607,9 +617,9 @@ public class ParentMaker extends MsgRetryComponent {
             new Handler<HpRegisterMsg.RequestRetryTimeout>() {
         @Override
         public void handle(HpRegisterMsg.RequestRetryTimeout event) {
-            
-            outstandingParentRequests.remove(event.getRequest().getDestination().getId());            
-            
+
+            outstandingParentRequests.remove(event.getRequest().getDestination().getId());
+
             if (delegator.doCancelRetry(event.getTimeoutId())) {
                 CroupierStats.instance(self.clone(VodConfig.SYSTEM_OVERLAY_ID)).parentChangeEvent(event.getRequest().getDestination(),
                         RegisterStatus.PARENT_REQUEST_FAILED);
@@ -632,10 +642,10 @@ public class ParentMaker extends MsgRetryComponent {
         @Override
         public void handle(HpUnregisterMsg.Response event) {
             if (delegator.doCancelRetry(event.getTimeoutId())) {
-                logger.info(compName + "Successfully unregistered from {}",
+                logger.debug(compName + "Successfully unregistered from {}",
                         event.getSource().getId());
             } else {
-                logger.info(compName + "Unsuccessful unregister from {}",
+                logger.debug(compName + "Unsuccessful unregister from {}",
                         event.getSource().getId());
             }
         }
@@ -644,12 +654,12 @@ public class ParentMaker extends MsgRetryComponent {
             new Handler<HpUnregisterMsg.Request>() {
         @Override
         public void handle(HpUnregisterMsg.Request event) {
-            logger.info(compName + "Parent {} telling me to unregister: {}",
+            logger.debug(compName + "Parent {} telling me to unregister: {}",
                     event.getVodSource().getId(), event.getStatus());
             CroupierStats.instance(self.clone(VodConfig.SYSTEM_OVERLAY_ID)).parentChangeEvent(event.getSource(),
                     HpRegisterMsg.RegisterStatus.BETTER_CHILD);
             removeParent(event.getVodSource(), false, false);
-            logger.info(compName + getParentsAsStr());
+            logger.debug(compName + getParentsAsStr());
         }
     };
 
@@ -736,10 +746,7 @@ public class ParentMaker extends MsgRetryComponent {
             }
         }
     };
-    
-    
     Handler<CroupierSample> handleCroupierSample = new Handler<CroupierSample>() {
-
         @Override
         public void handle(CroupierSample event) {
             List<VodDescriptor> newNodes = new ArrayList<VodDescriptor>();
@@ -749,7 +756,6 @@ public class ParentMaker extends MsgRetryComponent {
             }
         }
     };
-    
 
     @Override
     public void stop(Stop stop) {

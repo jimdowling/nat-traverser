@@ -20,6 +20,7 @@ public class View {
     private List<ViewEntry> entries;
     private HashMap<VodAddress, ViewEntry> d2e;
     private final Random random;
+    
     private Comparator<ViewEntry> comparatorByAge = new Comparator<ViewEntry>() {
         @Override
         public int compare(ViewEntry o1, ViewEntry o2) {
@@ -47,34 +48,90 @@ public class View {
     public void incrementDescriptorAges() {
         for (ViewEntry entry : entries) {
             entry.getDescriptor().incrementAndGetAge();
-            System.out.println("Croupier(" + self.getId() + "): " + entry);
+//            System.out.println("Croupier(" + self.getId() + "): " + entry);
         }
     }
 
 //-------------------------------------------------------------------	
     public VodAddress selectPeerToShuffleWith(VodConfig.CroupierSelectionPolicy policy) {
+        return selectPeerToShuffleWith(policy, false, 0.0d);
+    }
+    
+    public VodAddress selectPeerToShuffleWith(VodConfig.CroupierSelectionPolicy policy,
+            boolean softmax, double temperature) {
         if (entries.isEmpty()) {
             return null;
         }
-        ViewEntry oldestEntry = null;
-        if (policy == VodConfig.CroupierSelectionPolicy.TAIL) {
-            oldestEntry = Collections.max(entries, comparatorByAge);
-        } else if (policy == VodConfig.CroupierSelectionPolicy.HEALER) {
-            oldestEntry = Collections.max(entries, comparatorByAge);
-        } else if (policy == VodConfig.CroupierSelectionPolicy.RANDOM) {
-            oldestEntry = entries.get(random.nextInt(entries.size()));
+
+        ViewEntry selectedEntry = null;
+
+        if (!softmax || policy == VodConfig.CroupierSelectionPolicy.RANDOM) {
+            if (policy == VodConfig.CroupierSelectionPolicy.TAIL) {
+                selectedEntry = Collections.max(entries, comparatorByAge);
+            } else if (policy == VodConfig.CroupierSelectionPolicy.HEALER) {
+                selectedEntry = Collections.max(entries, comparatorByAge);
+            } else if (policy == VodConfig.CroupierSelectionPolicy.RANDOM) {
+                selectedEntry = entries.get(random.nextInt(entries.size()));
+            } else {
+                throw new IllegalArgumentException("Invalid Croupier policy selected:" +
+                        policy);
+            } 
+        
+        } else {
+
+            List<ViewEntry> tempEntries =
+                    new ArrayList<ViewEntry>(entries);
+            if (policy == VodConfig.CroupierSelectionPolicy.TAIL) {
+                Collections.sort(tempEntries, comparatorByAge);
+            } else if (policy == VodConfig.CroupierSelectionPolicy.HEALER) {
+                Collections.sort(tempEntries, comparatorByAge);
+            } else {
+                throw new IllegalArgumentException("Invalid Croupier policy selected:" +
+                        policy);
+            }            
+
+            double rnd = random.nextDouble();
+            double total = 0.0d;
+            double[] values = new double[tempEntries.size()];
+            int j = tempEntries.size() + 1;
+            for (int i = 0; i < tempEntries.size(); i++) {
+                // get inverse of values - lowest have highest value.
+                double val = j;
+                j--;
+                values[i] = Math.exp(val / temperature);
+                total += values[i];
+            }
+
+            boolean found = false;
+            for (int i = 0; i < values.length; i++) {
+                if (i != 0) {
+                    values[i] += values[i - 1];
+                }
+                // normalise the probability
+                double normalisedReward = values[i] / total;
+                if (normalisedReward >= rnd) {
+                    selectedEntry = tempEntries.get(i);
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                selectedEntry = tempEntries.get(tempEntries.size() - 1);
+            }
         }
+
         // TODO - by not removing a reference to the node I am shuffling with, we
         // break the 'batched random walk' (Cyclon) behaviour. But it's more important
         // to keep the graph connected.
         if (entries.size() >= size) {
-            removeEntry(oldestEntry);
+            removeEntry(selectedEntry);
         }
-        return oldestEntry.getDescriptor().getVodAddress();
+
+        return selectedEntry.getDescriptor().getVodAddress();
     }
 
 //-------------------------------------------------------------------	
-    public List<VodDescriptor> selectToSendAtActive(int count, VodAddress destinationPeer) {
+    public List<VodDescriptor> selectToSendAtInitiator(int count, VodAddress destinationPeer) {
         List<ViewEntry> randomEntries = generateRandomSample(count);
         List<VodDescriptor> descriptors = new ArrayList<VodDescriptor>();
         for (ViewEntry cacheEntry : randomEntries) {
@@ -85,7 +142,7 @@ public class View {
     }
 
 //-------------------------------------------------------------------	
-    public List<VodDescriptor> selectToSendAtPassive(int count, VodAddress destinationPeer) {
+    public List<VodDescriptor> selectToSendAtReceiver(int count, VodAddress destinationPeer) {
         List<ViewEntry> randomEntries = generateRandomSample(count);
         List<VodDescriptor> descriptors = new ArrayList<VodDescriptor>();
         for (ViewEntry cacheEntry : randomEntries) {
@@ -125,7 +182,7 @@ public class View {
                     // we keep the lowest age descriptor
                     removeEntry(entry);
                     addEntry(new ViewEntry(descriptor));
-                }                     
+                }
                 continue;
 
             }
@@ -221,7 +278,7 @@ public class View {
 //-------------------------------------------------------------------	
     private boolean removeEntry(ViewEntry entry) {
         boolean res = entries.remove(entry);
-        if (d2e.remove(entry.getDescriptor().getVodAddress()) == null 
+        if (d2e.remove(entry.getDescriptor().getVodAddress()) == null
                 && res == true) {
             System.err.println("Croupier View corrupted.");
         }
@@ -247,7 +304,7 @@ public class View {
             sb.append(" \n IndexEntries: \n");
             for (VodAddress d : d2e.keySet()) {
                 sb.append(d.toString()).append(", ");
-            }            
+            }
             System.err.println(sb.toString());
             throw new RuntimeException("WHD " + entries.size() + " <> " + d2e.size());
         }

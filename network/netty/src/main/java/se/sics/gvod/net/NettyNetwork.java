@@ -461,7 +461,7 @@ public final class NettyNetwork extends ComponentDefinition {
             }
 
             addLocalSocket(new InetSocketAddress(addr, port), c);
-            logger.info("Successfully bound to ip:port {}:{}", addr, port);
+            logger.debug("Successfully bound to ip:port {}:{}", addr, port);
         } catch (InterruptedException e) {
             logger.warn("Problem when trying to bind to {}:{}", addr.getHostAddress(), port);
             trigger(new Fault(e.getCause()), control);
@@ -503,7 +503,7 @@ public final class NettyNetwork extends ComponentDefinition {
                 bootstrap.bind(new InetSocketAddress(addr, port)).sync();
             }
 
-            logger.info("Successfully bound to ip:port {}:{}", addr, port);
+            logger.debug("Successfully bound to ip:port {}:{}", addr, port);
         } catch (InterruptedException e) {
             logger.warn("Problem when trying to bind to {}:{}", addr.getHostAddress(), port);
             trigger(new Fault(e.getCause()), control);
@@ -551,7 +551,7 @@ public final class NettyNetwork extends ComponentDefinition {
                 bootstrap.bind(new InetSocketAddress(addr, port)).sync();
             }
 
-            logger.info("Successfully bound to ip:port {}:{}", addr, port);
+            logger.debug("Successfully bound to ip:port {}:{}", addr, port);
         } catch (InterruptedException e) {
             logger.warn("Problem when trying to bind to {}:{}", addr.getHostAddress(), port);
             trigger(new Fault(e.getCause()), control);
@@ -592,7 +592,7 @@ public final class NettyNetwork extends ComponentDefinition {
         try {
             SocketChannel c = (SocketChannel) bootstrap.connect(remote, local).sync().channel();
             addLocalSocket(remote, c);
-            logger.info("Successfully connected to ip:port {}", remote.toString());
+            logger.debug("Successfully connected to ip:port {}", remote.toString());
         } catch (InterruptedException e) {
             logger.warn("Problem when trying to connect to {}", remote);
             trigger(new Fault(e.getCause()), control);
@@ -632,7 +632,7 @@ public final class NettyNetwork extends ComponentDefinition {
         try {
             UdtChannel c = (UdtChannel) bootstrap.connect(remote, local).sync().channel();
             addLocalSocket(remote, c);
-            logger.info("Successfully connected to ip:port {}", remote.toString());
+            logger.debug("Successfully connected to ip:port {}", remote.toString());
         } catch (InterruptedException e) {
             logger.warn("Problem when trying to connect to {}", remote.toString());
             trigger(new Fault(e.getCause()), control);
