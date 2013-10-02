@@ -12,13 +12,13 @@ import java.net.SocketAddress;
 /**
  * @author Steffen Grohsschmiedt
  */
-public class NettyMessageHandler extends NettyBaseHandler<DatagramPacket> {
+public class NettyMsgHandler extends NettyBaseHandler<DatagramPacket> {
 
-    private static final Logger logger = LoggerFactory.getLogger(NettyMessageHandler.class);
+    private static final Logger logger = LoggerFactory.getLogger(NettyMsgHandler.class);
 
     private final MsgFrameDecoder decoder;
 
-    public NettyMessageHandler(NettyNetwork component, Transport protocol, Class<? extends MsgFrameDecoder> msgDecoderClass) {
+    public NettyMsgHandler(NettyNetwork component, Transport protocol, Class<? extends MsgFrameDecoder> msgDecoderClass) {
         super(component, protocol);
 
         try {
@@ -36,9 +36,15 @@ public class NettyMessageHandler extends NettyBaseHandler<DatagramPacket> {
         // the channel object, but only in the MessageEvent object.
         SocketAddress remoteAddress = msg.sender();
 
+        logger.trace("Msg received at port {} from {} of type " + rewrittenMsg.getClass(), 
+                getPort(ctx),
+                remoteAddress);
+        
         if (remoteAddress instanceof InetSocketAddress) {
             updateAddress(rewrittenMsg, ctx, (InetSocketAddress) remoteAddress);
             getComponent().deliverMessage(rewrittenMsg);
+        } else {
+            logger.debug("Remote address not an internet socket: " + remoteAddress);
         }
     }
 }

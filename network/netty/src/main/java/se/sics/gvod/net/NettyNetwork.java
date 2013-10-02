@@ -427,7 +427,7 @@ public final class NettyNetwork extends ComponentDefinition {
         EventLoopGroup group = new NioEventLoopGroup();
         Bootstrap bootstrap = new Bootstrap();
         bootstrap.group(group).channel(NioDatagramChannel.class)
-                .handler(new NettyMessageHandler(component, Transport.UDP, msgDecoderClass));
+                .handler(new NettyMsgHandler(component, Transport.UDP, msgDecoderClass));
 
         // Allow packets as large as up to 1600 bytes (default is 768).
         // You could increase or decrease this value to avoid truncated packets
@@ -809,7 +809,7 @@ public final class NettyNetwork extends ComponentDefinition {
         }
         try {
             logger.trace("Sending " + msg.getClass().getCanonicalName() + " from {} to {} ",
-                    msg.getSource().getId(), msg.getDestination().getId());
+                    msg.getSource(), msg.getDestination());
             channel.writeAndFlush(new DatagramPacket(((Encodable) msg).toByteArray(), dest));
             totalWrittenBytes += msg.getSize();
         } catch (Exception ex) {

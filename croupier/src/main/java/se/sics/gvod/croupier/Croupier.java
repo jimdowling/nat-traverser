@@ -210,9 +210,9 @@ public class Croupier extends MsgRetryComponent {
     Handler<ShuffleMsg.Request> handleShuffleRequest = new Handler<ShuffleMsg.Request>() {
         @Override
         public void handle(ShuffleMsg.Request msg) {
-            logger.debug(compName + "SHUFFLE_REQ recvd by {} from {} with id" + msg.getTimeoutId(),
-                    msg.getVodDestination().getId(),
-                    msg.getDesc().getVodAddress().getId());
+            logger.debug(compName + "shuffle_req recvd by {} from {} with timeoutId: " + msg.getTimeoutId(),
+                    msg.getVodDestination(),
+                    msg.getDesc().getVodAddress());
 
             if (msg.getVodSource().getId() == self.getId()) {
                 logger.warn("Tried to shuffle with myself");
@@ -238,7 +238,7 @@ public class Croupier extends MsgRetryComponent {
             logger.trace(compName + "SHUFFLE_REQ from {}. r={} public + {} private s={} public + {} private", new Object[]{srcAddress.getId(),
                 recPublicDescs.size(), recPrivateDescs.size(), toSendPublicDescs.size(), toSendPrivateDescs.size()});
 
-            logger.debug(compName + " Next dest is: " + msg.getNextDest());
+            logger.trace(compName + " Next dest is: " + msg.getNextDest());
             
             ShuffleMsg.Response response = new ShuffleMsg.Response(self.getAddress(),
                     msg.getVodSource(), msg.getClientId(), msg.getRemoteId(),
@@ -259,13 +259,12 @@ public class Croupier extends MsgRetryComponent {
     Handler<ShuffleMsg.Response> handleShuffleResponse = new Handler<ShuffleMsg.Response>() {
         @Override
         public void handle(ShuffleMsg.Response event) {
-            logger.trace(compName + "SHUFFLE_RES from {} with ID {}", event.getVodSource().getId(),
+            logger.trace(compName + "shuffle_res from {} with ID {}", event.getVodSource().getId(),
                     event.getTimeoutId());
             if (delegator.doCancelRetry(event.getTimeoutId())) {
 
-
                 if (self.getAddress() == null) {
-                    logger.warn(compName + "SELF is null, not handling Shuffle Response");
+                    logger.warn(compName + "self is null, not handling Shuffle Response");
                     return;
                 }
 
@@ -311,8 +310,8 @@ public class Croupier extends MsgRetryComponent {
     Handler<ShuffleMsg.RequestTimeout> handleShuffleTimeout = new Handler<ShuffleMsg.RequestTimeout>() {
         @Override
         public void handle(ShuffleMsg.RequestTimeout event) {
-            logger.warn(compName + "SHUFFLE TIMED OUT " + event.getPeer().getId()
-                    + " RS=" + getAll().size()
+            logger.warn(compName + "Shuffle timed out to: " + event.getPeer()
+                    + " PublicSize=" + getAll().size()
                     + " Nat=" + event.getPeer().getNatAsString());
             CroupierStats.instance(self).incShuffleTimeout();
             shuffleTimes.remove(event.getTimeoutId().getId());

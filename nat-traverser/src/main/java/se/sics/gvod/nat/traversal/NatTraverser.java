@@ -320,13 +320,13 @@ public class NatTraverser extends MsgRetryComponent {
 //                    }
 //                }
 //                if (runStun) {
-                    delegator.doTrigger(new GetNatTypeRequest(stunServers,
-                            0 /*timeout before starting stun*/,
-                            init.getStunClientConfig().isMeasureNatBindingTimeout(),
-                            init.getStunClientConfig().getRto(),
-                            init.getStunClientConfig().getRtoRetries(),
-                            init.getStunClientConfig().getRtoScale()),
-                            stunClient.getPositive(StunPort.class));
+                delegator.doTrigger(new GetNatTypeRequest(stunServers,
+                        0 /*timeout before starting stun*/,
+                        init.getStunClientConfig().isMeasureNatBindingTimeout(),
+                        init.getStunClientConfig().getRto(),
+                        init.getStunClientConfig().getRtoRetries(),
+                        init.getStunClientConfig().getRtoScale()),
+                        stunClient.getPositive(StunPort.class));
 //                }
             }
 
@@ -510,15 +510,14 @@ public class NatTraverser extends MsgRetryComponent {
     Handler<RelayMsgNetty.Request> handleRelayRequestDown = new Handler<RelayMsgNetty.Request>() {
         @Override
         public void handle(RelayMsgNetty.Request msg) {
-            logger.debug(compName + "{} handleRelayRequestDown (" + msg.getDestination().getId()
-                    + ") message class :" + msg.getClass().getName(), msg.getTimeoutId());
+            logger.debug(compName + "{} handleRelayRequestDown ( " + msg.getDestination()
+                    + " ) message class :" + msg.getClass().getName() + " src: " +
+                    msg.getSource(), msg.getTimeoutId());
 
             if (msg.getVodDestination().isOpen()) {
                 delegator.doTrigger(msg, network);
                 TimeoutId id = msg.getTimeoutId();
-                if (id.isSupported()) {
-                    outstandingTimestamps.put(msg.getTimeoutId().getId(), System.currentTimeMillis());
-                }
+                outstandingTimestamps.put(msg.getTimeoutId().getId(), System.currentTimeMillis());
             } else {
                 if (!sendMsgUsingConnection(msg, msg.getRemoteId())) {
                     // No open connection to dest. 
@@ -854,7 +853,7 @@ public class NatTraverser extends MsgRetryComponent {
         return false;
     }
 
-    public void startHolePunchingProcess(VodAddress destAddress, 
+    public void startHolePunchingProcess(VodAddress destAddress,
             boolean keepConnectionOpenWithHeartbeat, int connRetries, TimeoutId msgTimeoutId) {
         logger.debug(compName + "Starting hole punching for [" + self.getId() + ", " + destAddress.getId() + "]");
         // starting timer
@@ -937,7 +936,7 @@ public class NatTraverser extends MsgRetryComponent {
     Handler<GarbageCleanupTimeout> handleGarbageCleanupTimeout = new Handler<GarbageCleanupTimeout>() {
         @Override
         public void handle(GarbageCleanupTimeout timeout) {
-             logger.trace(compName + "Connection Cleanup Timeout");
+            logger.trace(compName + "Connection Cleanup Timeout");
             if (openedConnections.size() > maxOpenedConnections) {
                 //TODO: Jim. Do you mean by oldestthe last connection to have been used?
                 // remove the oldest connections

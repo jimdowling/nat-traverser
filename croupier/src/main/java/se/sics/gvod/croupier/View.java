@@ -52,11 +52,6 @@ public class View {
         }
     }
 
-//-------------------------------------------------------------------	
-    public VodAddress selectPeerToShuffleWith(VodConfig.CroupierSelectionPolicy policy) {
-        return selectPeerToShuffleWith(policy, false, 0.0d);
-    }
-    
     public VodAddress selectPeerToShuffleWith(VodConfig.CroupierSelectionPolicy policy,
             boolean softmax, double temperature) {
         if (entries.isEmpty()) {

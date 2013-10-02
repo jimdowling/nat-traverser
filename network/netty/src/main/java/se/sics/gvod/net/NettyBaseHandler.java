@@ -14,65 +14,68 @@ import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 
 /**
- * Superclass providing the basic operations for our handlers.
- * Subclasses should handle received messages.
+ * Superclass providing the basic operations for our handlers. Subclasses should
+ * handle received messages.
  *
  * @author Steffen Grohsschmiedt
  */
 public abstract class NettyBaseHandler<I> extends SimpleChannelInboundHandler<I> {
 
-	private static final Logger logger = LoggerFactory.getLogger(NettyStreamHandler.class);
-	private final NettyNetwork component;
+    private static final Logger logger = LoggerFactory.getLogger(NettyBaseHandler.class);
+    private final NettyNetwork component;
     private final Transport protocol;
 
-	public NettyBaseHandler(NettyNetwork component, Transport protocol) {
-		this.component = component;
+    public NettyBaseHandler(NettyNetwork component, Transport protocol) {
+        this.component = component;
         this.protocol = protocol;
-	}
-
-	@Override
-	public void channelActive(ChannelHandlerContext ctx) {
-		logger.trace("Channel connected.");
-	}
+    }
 
     @Override
-	public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-		Channel channel = ctx.channel();
-		SocketAddress address = channel.remoteAddress();
-		InetSocketAddress inetAddress = null;
+    public void channelActive(ChannelHandlerContext ctx) {
+        logger.trace("Channel connected.");
+    }
 
-		if (address != null && address instanceof InetSocketAddress) {
-			inetAddress = (InetSocketAddress) address;
-			component.networkException(new NetworkException(inetAddress, getProtocol()));
-		}
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
+        Channel channel = ctx.channel();
+        SocketAddress address = channel.remoteAddress();
+        InetSocketAddress inetAddress = null;
 
-		component.exceptionCaught(ctx, cause);
-		logger.error(cause.getMessage());
-	}
+        if (address != null && address instanceof InetSocketAddress) {
+            inetAddress = (InetSocketAddress) address;
+            component.networkException(new NetworkException(inetAddress, getProtocol()));
+        }
 
-	protected Transport getProtocol() {
+        component.exceptionCaught(ctx, cause);
+        logger.error(cause.getMessage());
+    }
+
+    protected Transport getProtocol() {
         return protocol;
     }
 
-    protected RewriteableMsg updateAddress(RewriteableMsg msg, ChannelHandlerContext ctx, InetSocketAddress remoteAddress) 
-    throws Exception {
+    protected RewriteableMsg updateAddress(RewriteableMsg msg, ChannelHandlerContext ctx, InetSocketAddress remoteAddress)
+            throws Exception {
+        logger.debug("updating address of " + msg.getClass() + " src " + msg.getSource().getId()
+                + " dest: " + msg.getDestination());
         if (remoteAddress.getAddress() instanceof Inet4Address == false) {
             throw new IllegalArgumentException("You are using ipv6 network addresses. "
                     + "They should be ipv4 network addresses");
         }
-        
-        
         InetAddress ip = (Inet4Address) remoteAddress.getAddress();
-        
+
         if (ip == null) {
             throw new NullPointerException("NettyBaseHandler: IpAddress was NULL");
         }
-        
+
         msg.getSource().setIp(ip);
         msg.getSource().setPort(remoteAddress.getPort());
 
         msg.getDestination().setIp(getAddress(ctx));
         msg.getDestination().setPort(getPort(ctx));
+
+        logger.debug("updated address of " + msg.getClass() + " src " + msg.getSource() + " dest: "
+                + msg.getDestination());
 
         // TODO - for UPNP, the port on which the data is sent from the NAT
         // may not be the same as the mapped port - see
@@ -85,21 +88,21 @@ public abstract class NettyBaseHandler<I> extends SimpleChannelInboundHandler<I>
     }
 
     // Should return an IPv4 address
-	protected InetAddress getAddress(ChannelHandlerContext ctx) {
-             Channel c = ctx.channel();
-             SocketAddress s = c.localAddress();
-             InetSocketAddress i = (InetSocketAddress) s;
-             if (i.getAddress() instanceof Inet4Address == false ) {
-                 throw new IllegalStateException("ipv6 addresses not supported - should be ipv4");
-             }
-            return (Inet4Address) i.getAddress();
-	}
+    protected InetAddress getAddress(ChannelHandlerContext ctx) {
+        Channel c = ctx.channel();
+        SocketAddress s = c.localAddress();
+        InetSocketAddress i = (InetSocketAddress) s;
+        if (i.getAddress() instanceof Inet4Address == false) {
+            throw new IllegalStateException("ipv6 addresses not supported - should be ipv4");
+        }
+        return (Inet4Address) i.getAddress();
+    }
 
-	protected int getPort(ChannelHandlerContext ctx) {
-		return ((InetSocketAddress)ctx.channel().localAddress()).getPort();
-	}
+    protected int getPort(ChannelHandlerContext ctx) {
+        return ((InetSocketAddress) ctx.channel().localAddress()).getPort();
+    }
 
-	protected NettyNetwork getComponent() {
-		return component;
-	}
+    protected NettyNetwork getComponent() {
+        return component;
+    }
 }
