@@ -8,7 +8,8 @@ import se.sics.gvod.net.msgs.RewriteableMsg;
 import se.sics.kompics.ChannelFilter;
 
 /**
- *
+ * Filters msgs on the Positive side of the Port.
+ * 
  * @author Jim Dowling<jdowling@sics.se>
  */
 public final class MsgDestFilterNodeId extends ChannelFilter<RewriteableMsg, Integer> {

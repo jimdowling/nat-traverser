@@ -58,6 +58,7 @@ import se.sics.gvod.croupier.PeerSamplePort;
 import se.sics.gvod.croupier.events.CroupierInit;
 import se.sics.gvod.croupier.events.CroupierJoin;
 import se.sics.gvod.croupier.events.CroupierSample;
+import se.sics.gvod.filters.MsgDestFilterNodeId;
 import se.sics.gvod.nat.emu.DistributedNatGatewayEmulator;
 import se.sics.gvod.nat.emu.events.DistributedNatGatewayEmulatorInit;
 import se.sics.gvod.net.BaseMsgFrameDecoder;
@@ -231,7 +232,9 @@ public final class NtTesterMain extends ComponentDefinition {
 
         if (natType == null) {
             connect(natTraverser.getNegative(Timer.class), timer.getPositive(Timer.class));
-            connect(natTraverser.getNegative(VodNetwork.class), network.getPositive(VodNetwork.class));
+            connect(natTraverser.getNegative(VodNetwork.class), network.getPositive(VodNetwork.class)
+                    ,new MsgDestFilterNodeId(myId)
+                    );
             connect(natTraverser.getNegative(NatNetworkControl.class), network.getPositive(NatNetworkControl.class));
         } else {
             natGateway = create(DistributedNatGatewayEmulator.class);
@@ -240,7 +243,9 @@ public final class NtTesterMain extends ComponentDefinition {
             connect(natGateway.getNegative(NatNetworkControl.class), network.getPositive(NatNetworkControl.class));
 
             connect(natTraverser.getNegative(Timer.class), timer.getPositive(Timer.class));
-            connect(natTraverser.getNegative(VodNetwork.class), natGateway.getPositive(VodNetwork.class));
+            connect(natTraverser.getNegative(VodNetwork.class), natGateway.getPositive(VodNetwork.class)
+                    ,new MsgDestFilterNodeId(myId)                    
+                    );
             connect(natTraverser.getNegative(NatNetworkControl.class), natGateway.getPositive(NatNetworkControl.class));
         }
 
