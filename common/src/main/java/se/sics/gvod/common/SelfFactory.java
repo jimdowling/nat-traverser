@@ -8,7 +8,6 @@ import java.net.InetAddress;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import se.sics.gvod.address.Address;
@@ -117,18 +116,18 @@ public class SelfFactory {
         return ip;
     }
     
-    static synchronized void setIp(int id, InetAddress ip) {
+    static void setIp(int id, InetAddress ip) {
         assert(ip != null);
         ips.put(id, ip);
     }
         
-    static synchronized InetAddress getUpnpIp(int id) {
+    static InetAddress getUpnpIp(int id) {
         InetAddress ip = upnpIps.get(id);
         assert(ip != null);
         return ip;
     }
     
-    static synchronized void setUpnpIp(int id, InetAddress ip) {
+    static void setUpnpIp(int id, InetAddress ip) {
         assert(ip != null);
         upnpIps.put(id, ip);
     }

@@ -35,29 +35,22 @@ public class GetIpRequest extends Request {
      * @param periodicCheckNetworkInterfaces
      */
     public GetIpRequest(boolean periodicCheckNetworkInterfaces) {
-        this.periodicCheckNetworkInterfaces = periodicCheckNetworkInterfaces;
-        this.upnpMappedPort = 0;
-        this.protocol = Protocol.NONE_SPECIFIED;
-        this.ignoreMask = EnumSet.of(NetworkInterfacesMask.IGNORE_LOOPBACK);
+        this(periodicCheckNetworkInterfaces, EnumSet.of(NetworkInterfacesMask.IGNORE_LOOPBACK));
     }
 
     public GetIpRequest(boolean periodicCheckNetworkInterfaces,
             EnumSet<NetworkInterfacesMask> ignoreNetInterfaces) {
-        this.periodicCheckNetworkInterfaces = periodicCheckNetworkInterfaces;
-        this.ignoreMask = ignoreNetInterfaces;
-        this.upnpMappedPort = 0;
-        this.protocol = Protocol.NONE_SPECIFIED;
+        this(periodicCheckNetworkInterfaces, 0, Protocol.NONE_SPECIFIED,
+                ignoreNetInterfaces);
     }
 
     public GetIpRequest(boolean periodicCheckNetworkInterfaces, int upnpMapPort,
-            Protocol protocol,
-            EnumSet<NetworkInterfacesMask> ignoreNetInterfaces) {
+            Protocol protocol, EnumSet<NetworkInterfacesMask> ignoreNetInterfaces) {
         this.periodicCheckNetworkInterfaces = periodicCheckNetworkInterfaces;
         this.upnpMappedPort = upnpMapPort;
         this.protocol = protocol;
         this.ignoreMask = EnumSet.of(NetworkInterfacesMask.IGNORE_LOOPBACK);
     }
-
 
     public boolean isFilterTenDotIps() {
         return ignoreMask.contains(NetworkInterfacesMask.IGNORE_TEN_DOT_PRIVATE);

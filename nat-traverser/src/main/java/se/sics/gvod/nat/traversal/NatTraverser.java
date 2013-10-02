@@ -549,12 +549,14 @@ public class NatTraverser extends MsgRetryComponent {
     Handler<RelayMsgNetty.Request> handleRelayRequestUp = new Handler<RelayMsgNetty.Request>() {
         @Override
         public void handle(RelayMsgNetty.Request msg) {
-            logger.debug(compName + "{} handleRelayRequestUp (" + msg.getDestination().getId()
-                    + ") message class :" + msg.getClass().getName(), msg.getTimeoutId());
+            logger.debug(compName + "{} handleRelayRequestUp (" + msg.getRemoteId()
+                    + ") Dest: " + msg.getDestination()
+                    + " message class :" + msg.getClass().getName(), msg.getTimeoutId());
 
             // If the destination is open, then it is the final destination
-            if (self.getId() != msg.getRemoteId()) { // I am a parent
-                logger.debug(compName + "Relaying msg from {} to {}", self.getId(), msg.getRemoteId());
+            if (self.getId() != msg.getRemoteId()) { // I am a potentially a parent
+                logger.debug(compName + "Relaying msg from {} to {}", self.getId(), 
+                        msg.getRemoteId());
                 relayMsg(msg);
             } else { // I am the destination
                 int timeoutId = 0;
@@ -689,7 +691,7 @@ public class NatTraverser extends MsgRetryComponent {
             delegator.doTrigger(msg, network);
 
         } else {
-            logger.warn(compName + " Not relaying msg. {} not a parent for {} . Self "
+            logger.warn(compName + " Not relaying msg as {} not a parent for {} . Self "
                     + self.getAddress()
                     + ", clientId: " + msg.getClientId()
                     + ", remoteId: " + msg.getRemoteId()

@@ -112,7 +112,6 @@ public final class NettyNetwork extends ComponentDefinition {
     private static LinkedList<Integer> lastHourRead = new LinkedList<Integer>();
     private int bwSampleCounter = 0;
 
-
     private class ByteCounterTimeout extends Timeout {
 
         public ByteCounterTimeout(SchedulePeriodicTimeout spt) {
@@ -215,7 +214,6 @@ public final class NettyNetwork extends ComponentDefinition {
         }
         return count;
     }
-
     /**
      * Close all connections.
      */
@@ -251,6 +249,8 @@ public final class NettyNetwork extends ComponentDefinition {
             if (msg.getDestination().getIp().equals(msg.getSource().getIp())
                     && msg.getDestination().getPort() == msg.getSource().getPort()) {
                 // deliver locally
+                logger.trace("Delivering locally " + msg.getClass().getCanonicalName() + " from {} to {} ",
+                        msg.getSource(), msg.getDestination());
                 trigger(msg, net);
                 return;
             }
@@ -318,7 +318,7 @@ public final class NettyNetwork extends ComponentDefinition {
                     // Allocate a port in the 50,000+ range.
                     randPort = 50000 + rand.nextInt(65535 - 50000);
                 } while (setPorts.contains(randPort));
-                if (bindPort(msg.getIp(), randPort, msg.getTransport(), 
+                if (bindPort(msg.getIp(), randPort, msg.getTransport(),
                         true) == true) {
                     addedPorts.add(randPort);
                 }
@@ -395,7 +395,7 @@ public final class NettyNetwork extends ComponentDefinition {
      * @return true if listening was started
      * @throws ChannelException in case binding failed
      */
-    private boolean bindPort(InetAddress addr, int port, Transport protocol, 
+    private boolean bindPort(InetAddress addr, int port, Transport protocol,
             boolean bindAllNetworkIfs) {
         switch (protocol) {
             case TCP:
@@ -452,9 +452,8 @@ public final class NettyNetwork extends ComponentDefinition {
             DatagramChannel c;
             if (bindAllNetworkIfs) {
                 c = (DatagramChannel) bootstrap.bind(
-//                        new InetSocketAddress(port)
-                        port
-                        ).sync().channel();
+                        //                        new InetSocketAddress(port)
+                        port).sync().channel();
             } else {
                 c = (DatagramChannel) bootstrap.bind(
                         new InetSocketAddress(addr, port)).sync().channel();
@@ -714,7 +713,8 @@ public final class NettyNetwork extends ComponentDefinition {
     }
 
     /**
-     * Remove a channel from the local connections and triggers the given response at the netControl port.
+     * Remove a channel from the local connections and triggers the given
+     * response at the netControl port.
      *
      * @param addr the address of the channel to be removed
      * @param protocol the protocol of the channel to be removed
@@ -821,7 +821,7 @@ public final class NettyNetwork extends ComponentDefinition {
     }
 
     /**
-     * Send a message to using TCP. Connects to a server on  demand.
+     * Send a message to using TCP. Connects to a server on demand.
      *
      * @param msg the message to be sent
      * @throws ChannelException in case of connection problems
@@ -857,7 +857,7 @@ public final class NettyNetwork extends ComponentDefinition {
     }
 
     /**
-     * Send a message to using UDT. Connects to a server on  demand.
+     * Send a message to using UDT. Connects to a server on demand.
      *
      * @param msg the message to be sent
      * @throws ChannelException in case of connection problems
@@ -926,7 +926,8 @@ public final class NettyNetwork extends ComponentDefinition {
     }
 
     /**
-     * Remove a connection after it was lost or closed remotely and inform the upper components.
+     * Remove a connection after it was lost or closed remotely and inform the
+     * upper components.
      *
      * @param ctx the channel handler context
      * @param protocol the protocol

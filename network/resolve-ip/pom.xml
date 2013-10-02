@@ -24,7 +24,11 @@
             <artifactId>nat-network</artifactId>
             <version>${project.version}</version>
         </dependency>
-
+        <dependency>
+            <groupId>se.sics.common</groupId>
+            <artifactId>common</artifactId>
+            <version>${project.version}</version>
+        </dependency>
     </dependencies>
 
     <repositories>

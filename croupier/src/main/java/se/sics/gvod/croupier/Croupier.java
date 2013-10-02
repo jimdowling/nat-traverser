@@ -141,24 +141,23 @@ public class Croupier extends MsgRetryComponent {
         if (node == null) {
             return;
         }
+        if (node.getId() == self.getId()) {
+            throw new IllegalStateException(" Sending shuffle to myself");
+        }
 
         List<VodDescriptor> publicDescriptors =
                 publicView.selectToSendAtInitiator(shuffleSize, node);
-
-        if (self.isOpen()) {
-            publicDescriptors.add(self.getDescriptor());
-        }
-
         List<VodDescriptor> privateDescriptors =
                 privateView.selectToSendAtInitiator(shuffleSize, node);
 
-        if (!self.isOpen()) {
+        if (self.isOpen()) {
+            publicDescriptors.add(self.getDescriptor());
+        } else {
             privateDescriptors.add(self.getDescriptor());
         }
 
         DescriptorBuffer buffer = new DescriptorBuffer(self.getAddress(),
                 publicDescriptors, privateDescriptors);
-
 
         ScheduleRetryTimeout st =
                 new ScheduleRetryTimeout(config.getRto(),
@@ -168,16 +167,15 @@ public class Croupier extends MsgRetryComponent {
         ShuffleMsg.RequestTimeout retryRequest = new ShuffleMsg.RequestTimeout(st, request);
         TimeoutId id = delegator.doRetry(retryRequest);
 
-
         shuffleTimes.put(id.getId(), System.currentTimeMillis());
-        logger.debug(compName + "SHUFFLE SENT from {} to {} . Id=" + id, self.getId(), node);
+        logger.debug(compName + "shuffle sent from {} to {} . Id=" + id, self.getId(), node);
     }
     Handler<CroupierShuffleCycle> handleCycle = new Handler<CroupierShuffleCycle>() {
         @Override
         public void handle(CroupierShuffleCycle event) {
             logger.trace(compName + "shuffle: Pub({})/Priv({})", publicView.size(),
                     privateView.size());
-            
+
             // If I don't have any references to any public nodes, use RTT to see if I can
             // find any
             if (publicView.isEmpty()) {
@@ -239,7 +237,7 @@ public class Croupier extends MsgRetryComponent {
                 recPublicDescs.size(), recPrivateDescs.size(), toSendPublicDescs.size(), toSendPrivateDescs.size()});
 
             logger.trace(compName + " Next dest is: " + msg.getNextDest());
-            
+
             ShuffleMsg.Response response = new ShuffleMsg.Response(self.getAddress(),
                     msg.getVodSource(), msg.getClientId(), msg.getRemoteId(),
                     msg.getNextDest(), msg.getTimeoutId(), RelayMsgNetty.Status.OK,
@@ -273,7 +271,7 @@ public class Croupier extends MsgRetryComponent {
                 Long timeStarted = shuffleTimes.remove(event.getTimeoutId().getId());
                 if (timeStarted != null) {
                     RTTStore.addSample(self.getId(), event.getVodSource(),
-                        System.currentTimeMillis() - timeStarted);
+                            System.currentTimeMillis() - timeStarted);
                 } else {
                     logger.warn(compName + "Timestarted was null when trying to add a RTT sample");
                 }
@@ -294,11 +292,11 @@ public class Croupier extends MsgRetryComponent {
                 // with a default RTO for the descriptor.
                 for (VodDescriptor vd : recPublicDescs) {
                     if (!RTTStore.containsPublicSample(self.getId(), vd.getVodAddress())) {
-                        RTTStore.addSample(self.getId(), vd.getVodAddress(), 
+                        RTTStore.addSample(self.getId(), vd.getVodAddress(),
                                 config.getRto());
                     }
                 }
-                
+
                 // send the new samples to other components
                 publishSample();
             }
@@ -340,13 +338,13 @@ public class Croupier extends MsgRetryComponent {
         if (!nodes.isEmpty()) {
             delegator.doTrigger(new CroupierSample(nodes), peerSamplePort);
         }
-        
+
         StringBuilder sb = new StringBuilder("Neighbours: { ");
         for (VodDescriptor d : nodes) {
             sb.append(d.getVodAddress().getId()).append(", ");
         }
         sb.append("}");
-        
+
         logger.trace(compName + sb);
     }
 

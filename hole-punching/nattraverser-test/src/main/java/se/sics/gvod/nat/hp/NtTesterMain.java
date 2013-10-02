@@ -94,15 +94,25 @@ public final class NtTesterMain extends ComponentDefinition {
     static Set<Address> servers = new HashSet<Address>();
     private static boolean upnpEnabled;
     private static int myId;
-    private static final int SERVER_ID = 1;
+    private static int serverId;
     private static String server;
     private static Nat natType;
+    private static InetAddress localIp = null;
     private static boolean openServer = false;
     private static Integer pickIp;
     private static Integer numFail = 0, numSuccess = 0;
     private Set<VodAddress> alreadyConnected = new HashSet<VodAddress>();
     private Map<Integer, TimeoutId> pangTimeouts = new HashMap<Integer, TimeoutId>();
     private Map<Integer, Long> startTimers = new HashMap<Integer, Long>();
+
+    public static void exit() {
+        logger.info("Usage: <prog> upnp id bindIp bootstrapNodeId@bootstrapNodeIp [openServer] [natGateway]");
+        logger.info("       bindIp: 0=publicIp, 1=privateIp1, 2=privateIp2");
+        logger.info("e.g.  <prog> true 111 0 1@cloud4.sics.se false");
+        logger.info("To run bootstrap server:  <prog> false 1 0 1@cloud4.sics.se true");
+        logger.info("To run a nat-emulated node:  <prog> false 1 0 1@cloud4.sics.se false m(EI)_a(PP)_f(PD)");
+        System.exit(0);
+    }
 
     public static void main(String[] args) {
 
@@ -111,28 +121,30 @@ public final class NtTesterMain extends ComponentDefinition {
         if (args.length < 3) {
 
             if (args.length == 1 && (args[0].compareToIgnoreCase("-help") == 0
-                    || args[0].compareToIgnoreCase("-h") == 0))  {
-                logger.info("Usage: <prog> upnp id bindIp bootstrapNode [openServer] [natGateway]");
-                logger.info("       bindIp: 0=publicIp, 1=privateIp1, 2=privateIp2");
-                logger.info("e.g.  <prog> true 111 0 cloud6.sics.se cloud6.sics.se false");
-                logger.info("To run bootstrap server:  <prog> false 1 0 cloud6.sics.se true");
-                logger.info("To run a nat-emulated node:  <prog> false 1 0 cloud6.sics.se false m(EI)_a(PP)_f(PD)");
-                System.exit(0);
+                    || args[0].compareToIgnoreCase("-h") == 0)) {
             }
             upnpEnabled = false;
             Random r = new Random(System.currentTimeMillis());
             myId = r.nextInt();
             pickIp = 0;
-            server = "cloud6.sics.se";
+            server = "cloud4.sics.se";
+            serverId = 4;
         } else {
             upnpEnabled = Boolean.parseBoolean(args[0]);
             myId = Integer.parseInt(args[1]);
             pickIp = Integer.parseInt(args[2]);
-            server = args[3];
+            String serverStr = args[3];
+            int idx = serverStr.lastIndexOf("@");
+            if (idx == -1) {
+                logger.info("bootstrapNodeId@bootstrapNodeIp format incorrect.");
+                exit();
+            }
+            server = serverStr.substring(idx+1);
+            serverId = Integer.parseInt(serverStr.substring(0, idx));
         }
         try {
             InetAddress serverIp = InetAddress.getByName(server);
-            Address s = new Address(serverIp, VodConfig.DEFAULT_STUN_PORT, SERVER_ID);
+            Address s = new Address(serverIp, VodConfig.DEFAULT_STUN_PORT, serverId);
             servers.add(s);
         } catch (UnknownHostException ex) {
             java.util.logging.Logger.getLogger(NtTesterMain.class.getName()).log(Level.SEVERE, null, ex);
@@ -256,8 +268,7 @@ public final class NtTesterMain extends ComponentDefinition {
                         resolveIp.getPositive(ResolveIpPort.class));
             } else {
                 trigger(new GetIpRequest(false, EnumSet.of(
-                        GetIpRequest.NetworkInterfacesMask.IGNORE_LOOPBACK
-//                        , GetIpRequest.NetworkInterfacesMask.IGNORE_TEN_DOT_PRIVATE 
+                        GetIpRequest.NetworkInterfacesMask.IGNORE_LOOPBACK //                        , GetIpRequest.NetworkInterfacesMask.IGNORE_TEN_DOT_PRIVATE 
                         //,GetIpRequest.NetworkInterfacesMask.IGNORE_PRIVATE
                         )),
                         resolveIp.getPositive(ResolveIpPort.class));
@@ -274,7 +285,6 @@ public final class NtTesterMain extends ComponentDefinition {
                 logger.info(a.getAddr().toString());
             }
 
-            InetAddress localIp = null;
             if (pickIp > 0) {
                 localIp = event.getTenDotIpAddress(pickIp);
                 if (localIp == null) {
@@ -297,15 +307,6 @@ public final class NtTesterMain extends ComponentDefinition {
                 PortBindResponse pbr1 = new NtPortBindResponse(pb1);
                 trigger(pb1, network.getPositive(NatNetworkControl.class));
 
-                self = new SelfImpl(null, localAddress.getIp(), localAddress.getPort(),
-                        localAddress.getId(), OVERLAY_ID);
-
-                if (natType != null) {
-                    trigger(new DistributedNatGatewayEmulatorInit(natType, localIp,
-                            2000, 65535), natGateway.getControl());
-                    self.setNat(natType);
-                }
-
             } else {
                 logger.error("Couldnt find a network interface that is up");
                 System.exit(-1);
@@ -316,6 +317,23 @@ public final class NtTesterMain extends ComponentDefinition {
             new Handler<NtPortBindResponse>() {
         @Override
         public void handle(NtPortBindResponse event) {
+
+            if (event.getStatus() != NtPortBindResponse.Status.SUCCESS) {
+                logger.error("Couldn't bind to port: " + event.getPort() + " - "
+                        + event.getStatus());
+                Kompics.shutdown();
+                System.exit(-1);
+            }
+            self = new SelfImpl(null, localIp, event.getPort(),
+                    localAddress.getId(), OVERLAY_ID);
+
+            if (natType != null) {
+                trigger(new DistributedNatGatewayEmulatorInit(natType, localIp,
+                        2000, 65535), natGateway.getControl());
+                self.setNat(natType);
+            }
+
+
             trigger(new NatTraverserInit(self.clone(VodConfig.SYSTEM_OVERLAY_ID),
                     servers, VodConfig.getSeed(),
                     NatTraverserConfiguration.build(),
@@ -329,7 +347,8 @@ public final class NtTesterMain extends ComponentDefinition {
                     ParentMakerConfiguration.build(),
                     openServer),
                     natTraverser.getControl());
-            trigger(new CroupierInit(self,
+
+            trigger(new CroupierInit(self.clone(VodConfig.SYSTEM_OVERLAY_ID),
                     CroupierConfiguration.build()),
                     croupier.getControl());
             startTimers.put(self.getId(), System.currentTimeMillis());

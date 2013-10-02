@@ -8,6 +8,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
+import org.slf4j.Logger;
 import se.sics.gvod.common.Self;
 import se.sics.gvod.common.VodDescriptor;
 import se.sics.gvod.config.VodConfig;
@@ -260,7 +261,11 @@ public class View {
         }
 
         // don't add yourself
-        if (!entries.contains(entry) && entry.getDescriptor().getId() != self.getId()) {
+        if (entry.getDescriptor().getId() == self.getId()) {
+            return;
+        }
+        
+        if (!entries.contains(entry)) {
             entries.add(entry);
             d2e.put(entry.getDescriptor().getVodAddress(), entry);
             checkSize();
