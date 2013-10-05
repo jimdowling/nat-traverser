@@ -16,7 +16,9 @@ import se.sics.gvod.net.msgs.RelayMsg;
 import se.sics.gvod.net.msgs.RewriteableRetryTimeout;
 import se.sics.gvod.net.msgs.ScheduleRetryTimeout;
 import se.sics.gvod.net.util.UserTypesEncoderFactory;
+import se.sics.gvod.timer.NoTimeoutId;
 import se.sics.gvod.timer.TimeoutId;
+import se.sics.gvod.timer.UnsetTimeoutId;
 
 /**
  *
@@ -27,19 +29,11 @@ public class RelayMsgNetty {
     static abstract class Base
             extends RelayMsg.Base implements Encodable {
 
-        public Base(VodAddress source, VodAddress destination, int clientId, int remoteId) {
-            this(source, destination, clientId, remoteId, destination, null);
-        }
-
         public Base(VodAddress source, VodAddress destination, int clientId, int remoteId
                 , TimeoutId timeoutId) {
             this(source, destination, clientId, remoteId, null, timeoutId);
         }
 
-        public Base(VodAddress source, VodAddress destination, int clientId, int remoteId
-                , VodAddress nextDest) {
-            this(source, destination, clientId, remoteId, nextDest, null);
-        }
 
         public Base(VodAddress source, VodAddress destination, int clientId, int remoteId, 
                 VodAddress nextDest, TimeoutId timeoutId) {
@@ -107,7 +101,7 @@ public class RelayMsgNetty {
 
 
         public Request(VodAddress source, VodAddress destination, int clientId, int remoteId) {
-            this(source, destination, clientId, remoteId, null);
+            this(source, destination, clientId, remoteId, new UnsetTimeoutId());
         }
 
         public Request(VodAddress source, VodAddress destination, int clientId, int remoteId
@@ -199,12 +193,12 @@ public class RelayMsgNetty {
     public abstract static class Oneway extends Base {
 
         public Oneway(VodAddress source, VodAddress destination, int clientId, int remoteId) {
-            super(source, destination, clientId, remoteId, destination);
+            super(source, destination, clientId, remoteId, destination, new NoTimeoutId());
         }
 
         Oneway(VodAddress source, VodAddress destination, int clientId, int remoteId,
                 VodAddress nextDest) {
-            super(source, destination, clientId, remoteId, nextDest);
+            super(source, destination, clientId, remoteId, nextDest, new NoTimeoutId());
         }
 
         @Override

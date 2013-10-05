@@ -17,11 +17,13 @@ import se.sics.gvod.common.SelfFactory;
 import se.sics.gvod.config.VodConfig;
 import se.sics.gvod.common.util.ToVodAddr;
 import se.sics.gvod.hp.msgs.HpRegisterMsg;
+import se.sics.gvod.net.Transport;
 import se.sics.gvod.net.VodAddress;
 import se.sics.gvod.net.VodAddress.NatType;
 import se.sics.gvod.net.msgs.RewriteableMsg;
 import se.sics.gvod.network.model.common.NetworkModel;
 import se.sics.gvod.network.model.king.KingLatencyMap;
+import se.sics.gvod.timer.NoTimeoutId;
 
 /**
  *
@@ -54,7 +56,7 @@ public final class CroupierStats {
         private static final long serialVersionUID = 5713578865207697848L;
         
         public DummyMessage(Address src, Address dest) {
-            super(src, dest);
+            super(src, dest, Transport.UDP, new NoTimeoutId());
         }
         
         @Override

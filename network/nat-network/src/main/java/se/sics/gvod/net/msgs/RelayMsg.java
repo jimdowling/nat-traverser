@@ -26,18 +26,10 @@ public class RelayMsg {
         protected final int clientId;
         protected final int remoteId;
 
-        public Base(VodAddress source, VodAddress destination, int clientId, int remoteId) {
-            this(source, destination, clientId, remoteId, destination, null);
-        }
 
         public Base(VodAddress source, VodAddress destination, int clientId, int remoteId, 
                 TimeoutId timeoutId) {
             this(source, destination, clientId, remoteId,  null, timeoutId);
-        }
-
-        public Base(VodAddress source, VodAddress destination, int clientId, int remoteId, 
-                VodAddress nextDest) {
-            this(source, destination, clientId, remoteId, nextDest, null);
         }
 
         public Base(VodAddress source, VodAddress destination, int clientId, int remoteId

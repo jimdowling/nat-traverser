@@ -42,6 +42,7 @@ import se.sics.gvod.parentmaker.ParentMakerInit;
 import se.sics.gvod.stun.client.StunClient;
 import se.sics.gvod.config.StunServerConfiguration;
 import se.sics.gvod.hp.msgs.TConnectionMsg;
+import se.sics.gvod.net.Transport;
 import se.sics.gvod.stun.client.StunPort;
 import se.sics.gvod.stun.client.events.GetNatTypeRequest;
 import se.sics.gvod.stun.client.events.GetNatTypeResponse;
@@ -690,7 +691,7 @@ public class HolePunchingTest
             private TimeoutId id;
 
             public TestMessage(Address src, Address dest, TimeoutId id) {
-                super(src, dest);
+                super(src, dest, Transport.UDP, new NoTimeoutId());
                 this.id = id;
             }
 

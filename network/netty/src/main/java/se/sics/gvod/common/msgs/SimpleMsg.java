@@ -9,6 +9,7 @@ import io.netty.buffer.Unpooled;
 import se.sics.gvod.address.Address;
 import se.sics.gvod.net.Transport;
 import se.sics.gvod.net.msgs.RewriteableMsg;
+import se.sics.gvod.timer.NoTimeoutId;
 
 public class SimpleMsg extends RewriteableMsg implements Encodable {
 
@@ -16,7 +17,7 @@ public class SimpleMsg extends RewriteableMsg implements Encodable {
     String msg;
 
     public SimpleMsg(Address source, Address destination, Transport protocol, String msg) {
-        super(source, destination, protocol);
+        super(source, destination, protocol, new NoTimeoutId());
         this.source = source;
         this.destination = destination;
         this.msg = new String(msg + "\n");

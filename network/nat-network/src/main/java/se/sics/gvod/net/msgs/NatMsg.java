@@ -19,10 +19,6 @@ public abstract class NatMsg extends RewriteableMsg {
     protected VodAddress vodSrc;
     protected VodAddress vodDest;
 
-    protected NatMsg(VodAddress source, VodAddress destination) {
-        this(source, destination, null);
-    }
-
     protected NatMsg(VodAddress source, VodAddress destination,
             TimeoutId timeoutId) {
         this(source, destination, Transport.UDP, timeoutId);

@@ -21,13 +21,13 @@ public abstract class RewriteableMsg extends Event implements Serializable,
     protected transient Transport protocol;
     protected TimeoutId timeoutId = null;
 
-    public RewriteableMsg(Address source, Address destination) {
-        this(source, destination, Transport.UDP);
-    }
-
-    public RewriteableMsg(Address source, Address destination, Transport protocol) {
-        this(source, destination, protocol, null);
-    }
+//    public RewriteableMsg(Address source, Address destination) {
+//        this(source, destination, Transport.UDP);
+//    }
+//
+//    public RewriteableMsg(Address source, Address destination, Transport protocol) {
+//        this(source, destination, protocol, null);
+//    }
 
     public RewriteableMsg(Address source, Address destination, Transport protocol,
             TimeoutId timeoutId) {

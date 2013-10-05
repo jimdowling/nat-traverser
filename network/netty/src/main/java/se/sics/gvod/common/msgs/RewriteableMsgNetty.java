@@ -9,6 +9,7 @@ import io.netty.buffer.Unpooled;
 import se.sics.gvod.address.Address;
 import se.sics.gvod.net.Transport;
 import se.sics.gvod.net.msgs.RewriteableMsg;
+import se.sics.gvod.timer.NoTimeoutId;
 import se.sics.gvod.timer.TimeoutId;
 
 /**
@@ -21,7 +22,7 @@ public abstract class RewriteableMsgNetty extends RewriteableMsg
     private static final long serialVersionUID = 7778885542850L;
 
     protected RewriteableMsgNetty(Address source, Address destination) {
-        super(source, destination, Transport.UDP);
+        super(source, destination, Transport.UDP, new NoTimeoutId());
     }
 
     protected RewriteableMsgNetty(Address source, Address destination, Transport protocol,

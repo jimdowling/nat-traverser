@@ -11,7 +11,9 @@ import se.sics.gvod.net.Transport;
 import se.sics.gvod.net.VodAddress;
 import se.sics.gvod.net.msgs.DirectMsg;
 import se.sics.gvod.net.util.UserTypesEncoderFactory;
+import se.sics.gvod.timer.NoTimeoutId;
 import se.sics.gvod.timer.TimeoutId;
+import se.sics.gvod.timer.UnsetTimeoutId;
 
 /**
  *
@@ -23,16 +25,6 @@ public class DirectMsgNetty {
 
         private static final long serialVersionUID = 75484442850L;
 
-        /**
-         * This constructor should only be used by msgs that do not set a
-         * TimeoutId.
-         *
-         * @param source
-         * @param destination
-         */
-        protected Base(VodAddress source, VodAddress destination) {
-            this(source, destination, null);
-        }
 
         /**
          * This constructor should be used by msgs that do set a TimeoutId. If
@@ -102,7 +94,7 @@ public class DirectMsgNetty {
     public static abstract class Request extends Base {
 
         protected Request(VodAddress source, VodAddress destination) {
-            this(source, destination, null);
+            this(source, destination, new UnsetTimeoutId());
         }
 
         protected Request(VodAddress source, VodAddress destination, TimeoutId timeoutId) {
@@ -118,7 +110,7 @@ public class DirectMsgNetty {
     public static abstract class Response extends Base {
 
         protected Response(VodAddress source, VodAddress destination) {
-            this(source, destination, null);
+            this(source, destination, new UnsetTimeoutId());
         }
 
         protected Response(VodAddress source, VodAddress destination, TimeoutId timeoutId) {
@@ -139,7 +131,7 @@ public class DirectMsgNetty {
 
         protected Oneway(VodAddress source, VodAddress destination,
                 Transport transport) {
-            super(source, destination, transport, null);
+            super(source, destination, transport, new NoTimeoutId());
         }
 
         @Override
@@ -152,7 +144,7 @@ public class DirectMsgNetty {
     public static abstract class SystemRequest extends Base {
 
         protected SystemRequest(VodAddress source, VodAddress destination) {
-            this(source, destination, null);
+            this(source, destination, new UnsetTimeoutId());
         }
 
         protected SystemRequest(VodAddress source, VodAddress destination, TimeoutId timeoutId) {
@@ -168,7 +160,7 @@ public class DirectMsgNetty {
     public static abstract class SystemResponse extends Base {
 
         protected SystemResponse(VodAddress source, VodAddress destination) {
-            this(source, destination, null);
+            this(source, destination, new UnsetTimeoutId());
         }
 
         protected SystemResponse(VodAddress source, VodAddress destination, TimeoutId timeoutId) {
@@ -189,7 +181,7 @@ public class DirectMsgNetty {
 
         protected SystemOneway(VodAddress source, VodAddress destination,
                 Transport transport) {
-            super(source, destination, transport, null);
+            super(source, destination, transport, new NoTimeoutId());
         }
 
         @Override
