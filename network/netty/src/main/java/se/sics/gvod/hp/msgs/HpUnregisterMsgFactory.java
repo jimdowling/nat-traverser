@@ -13,7 +13,6 @@ public class HpUnregisterMsgFactory {
         }
 
         public static HpUnregisterMsg.Request fromBuffer(ByteBuf buffer)
-                
                 throws MessageDecodingException {
             return (HpUnregisterMsg.Request)
                     new HpUnregisterMsgFactory.Request().decode(buffer);

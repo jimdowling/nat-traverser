@@ -50,12 +50,8 @@ public class HpUnregisterMsg {
         @Override
         public int getSize() {
             return getHeaderSize()
-                    + 8 /*
-                     * delay
-                     */
-                    + 1 /*
-                     * status
-                     */;
+                    + 16
+                    + 1;
         }
 
         @Override
@@ -65,7 +61,7 @@ public class HpUnregisterMsg {
 
         @Override
         public ByteBuf toByteArray() throws MessageEncodingException {
-        	ByteBuf buffer = createChannelBufferWithHeader();
+            ByteBuf buffer = createChannelBufferWithHeader();
             buffer.writeInt(delay);
             UserTypesEncoderFactory.writeUnsignedintAsOneByte(buffer, status.ordinal());
             return buffer;
@@ -115,7 +111,7 @@ public class HpUnregisterMsg {
 
         @Override
         public ByteBuf toByteArray() throws MessageEncodingException {
-        	ByteBuf buffer = createChannelBufferWithHeader();
+            ByteBuf buffer = createChannelBufferWithHeader();
             UserTypesEncoderFactory.writeUnsignedintAsOneByte(buffer,
                     status.ordinal());
             return buffer;

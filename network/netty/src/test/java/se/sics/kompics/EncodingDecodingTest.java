@@ -695,6 +695,8 @@ public class EncodingDecodingTest {
             opCodeCorrect(buffer, msg);
             HpUnregisterMsg.Request res = HpUnregisterMsgFactory.Request.fromBuffer(buffer);
             compareNatMsgs(msg, res);
+            assert(msg.getDelay() == res.getDelay());
+            assert(msg.getStatus() == res.getStatus());
         } catch (MessageDecodingException ex) {
             Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
             assert (false);

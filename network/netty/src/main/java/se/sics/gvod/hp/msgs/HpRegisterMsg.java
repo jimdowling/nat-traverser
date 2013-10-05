@@ -16,7 +16,7 @@ import se.sics.gvod.net.util.UserTypesEncoderFactory;
 import se.sics.gvod.timer.TimeoutId;
 
 /**
- * 
+ *
  * @author salman, jim
  */
 public class HpRegisterMsg {
@@ -30,6 +30,7 @@ public class HpRegisterMsg {
         public Request(VodAddress src, VodAddress dest, long rtt) {
             this(src, dest, rtt, null);
         }
+
         public Request(VodAddress src, VodAddress dest, long rtt,
                 Set<Integer> prpPorts) {
             super(src, dest);
@@ -56,8 +57,7 @@ public class HpRegisterMsg {
             return getHeaderSize()
                     + 1 /*delta */
                     + 2 /* rtt */
-                    + 1 + (prpPorts == null ? 0 : prpPorts.size()*4) /* prpPorts */
-                    ;
+                    + 1 + (prpPorts == null ? 0 : prpPorts.size() * 4) /* prpPorts */;
         }
 
         @Override
@@ -67,7 +67,7 @@ public class HpRegisterMsg {
 
         @Override
         public ByteBuf toByteArray() throws MessageEncodingException {
-        	ByteBuf buffer = createChannelBufferWithHeader();
+            ByteBuf buffer = createChannelBufferWithHeader();
             UserTypesEncoderFactory.writeUnsignedintAsTwoBytes(buffer, (int) rtt);
             UserTypesEncoderFactory.writeSetUnsignedTwoByteInts(buffer, prpPorts);
             return buffer;
@@ -76,7 +76,7 @@ public class HpRegisterMsg {
 
         @Override
         public RewriteableMsg copy() {
-            HpRegisterMsg.Request copy = 
+            HpRegisterMsg.Request copy =
                     new HpRegisterMsg.Request(this, vodSrc, rtt);
             copy.setTimeoutId(timeoutId);
             return copy;
@@ -105,7 +105,7 @@ public class HpRegisterMsg {
         public Set<Integer> getPrpPorts() {
             return prpPorts;
         }
-        
+
         public RegisterStatus getResponseType() {
             return responseType;
         }
@@ -114,8 +114,7 @@ public class HpRegisterMsg {
         public int getSize() {
             return getHeaderSize()
                     + 1
-                    + 1 + prpPorts.size()*4 
-                    ;
+                    + 1 + prpPorts.size() * 4;
         }
 
         @Override
@@ -125,7 +124,7 @@ public class HpRegisterMsg {
 
         @Override
         public ByteBuf toByteArray() throws MessageEncodingException {
-        	ByteBuf buffer = createChannelBufferWithHeader();
+            ByteBuf buffer = createChannelBufferWithHeader();
             UserTypesEncoderFactory.writeUnsignedintAsOneByte(buffer, responseType.ordinal());
             UserTypesEncoderFactory.writeSetUnsignedTwoByteInts(buffer, prpPorts);
             return buffer;
@@ -143,7 +142,7 @@ public class HpRegisterMsg {
         public RequestRetryTimeout(ScheduleRetryTimeout st, HpRegisterMsg.Request requestMsg) {
             super(st, requestMsg);
         }
-        
+
         public HpRegisterMsg.Request getRequest() {
             return (HpRegisterMsg.Request) getMsg();
         }
