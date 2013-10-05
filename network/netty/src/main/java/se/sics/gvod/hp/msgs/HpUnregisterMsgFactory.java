@@ -14,8 +14,7 @@ public class HpUnregisterMsgFactory {
 
         public static HpUnregisterMsg.Request fromBuffer(ByteBuf buffer)
                 throws MessageDecodingException {
-            return (HpUnregisterMsg.Request)
-                    new HpUnregisterMsgFactory.Request().decode(buffer);
+            return (HpUnregisterMsg.Request) new HpUnregisterMsgFactory.Request().decode(buffer);
         }
 
         @Override
@@ -33,21 +32,17 @@ public class HpUnregisterMsgFactory {
         }
 
         public static HpUnregisterMsg.Response fromBuffer(ByteBuf buffer)
-                
                 throws MessageDecodingException {
-            return (HpUnregisterMsg.Response)
-                    new HpUnregisterMsgFactory.Response().decode(buffer);
+            return (HpUnregisterMsg.Response) new HpUnregisterMsgFactory.Response().decode(buffer);
         }
 
         @Override
         protected HpUnregisterMsg.Response process(ByteBuf buffer) throws MessageDecodingException {
-
             int status = UserTypesDecoderFactory.readUnsignedIntAsOneByte(buffer);
             HpUnregisterMsg.Response.Status statusType =
                     HpUnregisterMsg.Response.Status.values()[status];
             return new HpUnregisterMsg.Response(vodSrc, vodDest,
                     statusType, timeoutId);
         }
-
     }
 }

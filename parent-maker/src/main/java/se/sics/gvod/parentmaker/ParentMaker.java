@@ -559,7 +559,7 @@ public class ParentMaker extends MsgRetryComponent {
                 // send unregister request to parent, as I don't want it as my parent.
                 HpUnregisterMsg.Request req = new HpUnregisterMsg.Request(self.getAddress(),
                         event.getVodSource(), 0, HpRegisterMsg.RegisterStatus.PARENT_REQUEST_FAILED);
-                delegator.doTrigger(req, network);
+                delegator.doRetry(req, config.getRto(), config.getRtoRetries());
                 if (self.getNat().preallocatePorts()) {
                     PortDeleteRequest pdr = new PortDeleteRequest(self.getId(), event.getPrpPorts());
                     pdr.setResponse(new PrpDeletePortsResponse(pdr, null));
