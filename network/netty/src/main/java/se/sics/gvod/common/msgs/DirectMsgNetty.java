@@ -66,7 +66,7 @@ public class DirectMsgNetty {
                     + 4 // destId
                     + (hasTimeout() ? 4 : 0) // timeoutId
                     + 1 /*natPolicy src*/
-                    + (UserTypesEncoderFactory.ADDRESS_LEN * VodConfig.PM_PARENT_SIZE)
+                    + (UserTypesEncoderFactory.ADDRESS_LEN * VodConfig.PM_NUM_PARENTS)
                     + 1 /*natPolicy dest*/
                     + (4 * 2) /* overlayId of client and server */;
         }

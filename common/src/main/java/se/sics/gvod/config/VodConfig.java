@@ -114,11 +114,13 @@ public class VodConfig extends BaseCommandLineConfig {
     public static final long STUN_PARTNER_RTO_MULTIPLIER = 2;
     public static final int STUN_PARTNER_NUM_PARALLEL = 3;
     //Parent Maker's params
-    public static int PM_PARENT_RTO = DEFAULT_RTO;
+    public static int PM_PARENT_RTO = 1 * 1000;
+    public static double PM_PING_RTO_SCALE = 1.0d;
+    public static int PM_PING_RTO_RETRIES = 10;
     public static int PM_PARENT_UPDATE_PERIOD = 60 * 1000;
-    public static int PM_PARENT_SIZE = 3;
+    public static int PM_NUM_PARENTS = 3;
     public static int PM_PARENT_KEEP_RTT_TOLERANCE = 20;
-    public static int PM_CHILDREN_SIZE = 1000;
+    public static int PM_NUM_CHILDREN = 100;
     public static int PM_CHILDREN_REMOVE_TIMEOUT = 0 * 1000;
     public static int PM_PARENT_TIMEOUT_DELAY = 4 * 1000;
     public static int PM_PARENT_REJECTED_CLEANUP_TIMEOUT = 300 * 1000;

@@ -757,7 +757,7 @@ public class HolePunchingTest
                         .setRto(1000)
                         .setRtoScale(1.5d)
                         .setKeepParentRttRange(1000)
-                        .setParentSize(1)
+                        .setNumParents(1)
                 ), parentA.getControl());
                 trigger(new HpClientInit(self,
                         openedConnections_A,
@@ -822,7 +822,7 @@ public class HolePunchingTest
                         .setRto(1000)
                         .setRtoScale(1.5d)
                         .setKeepParentRttRange(1000)
-                        .setParentSize(1)                        
+                        .setNumParents(1)                        
                 ), parentB.getControl());
 
 

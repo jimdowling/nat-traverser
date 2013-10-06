@@ -52,7 +52,7 @@ public class GradientSearchMsg {
                     + /*ttl size*/ 1 
                     + 24 /* guess at utility size */
                     + UserTypesEncoderFactory.VOD_ADDRESS_LEN_NO_PARENTS
-                    + VodConfig.PM_PARENT_SIZE * UserTypesEncoderFactory.ADDRESS_LEN
+                    + VodConfig.PM_NUM_PARENTS * UserTypesEncoderFactory.ADDRESS_LEN
                     ;
         }
 

@@ -7,9 +7,9 @@ public final class ParentMakerConfiguration
      * Fields cannot be private. Package protected, ok.
      */
     // number of parents per child
-    int parentSize;
+    int numParents;
     // Max number of children per parent
-    int childSize;
+    int numChildren;
     
     // How often a child tries to update its parents
     int parentUpdatePeriod;
@@ -39,17 +39,18 @@ public final class ParentMakerConfiguration
      */
     public ParentMakerConfiguration() {
         this(   
-                VodConfig.PM_PARENT_SIZE, 
-                VodConfig.PM_CHILDREN_SIZE, 
+                VodConfig.PM_NUM_PARENTS, 
+                VodConfig.PM_NUM_CHILDREN, 
                 VodConfig.PM_PARENT_UPDATE_PERIOD, 
                 VodConfig.PM_CHILDREN_REMOVE_TIMEOUT, 
                 VodConfig.PM_PARENT_KEEP_RTT_TOLERANCE,
                 VodConfig.DEFAULT_RTO_RETRIES, 
                 VodConfig.PM_PARENT_RTO, 
                 VodConfig.DEFAULT_RTO_SCALE,
-                VodConfig.DEFAULT_RTO_RETRIES, 
-                15*1000, 
-                .5);
+                VodConfig.PM_PING_RTO_RETRIES, 
+                VodConfig.PM_PARENT_RTO,
+                VodConfig.PM_PING_RTO_SCALE
+                );
     }
     
     /** 
@@ -61,8 +62,8 @@ public final class ParentMakerConfiguration
             int rtoRetries, int rto, double rtoScale,
             int numPingRetries, int pingRto, double pingRtoScale
             ) {
-        this.parentSize = parentSize;
-        this.childSize = childSize;
+        this.numParents = parentSize;
+        this.numChildren = childSize;
         this.parentUpdatePeriod = parentUpdatePeriod;
         this.childRemoveTimeout = removeChildTimeout;
         this.keepParentRttRange = keepParentRttRange;
@@ -94,12 +95,12 @@ public final class ParentMakerConfiguration
         return keepParentRttRange;
     }
 
-    public int getParentSize() {
-        return this.parentSize;
+    public int getNumParents() {
+        return this.numParents;
     }
 
-    public int getChildSize() {
-        return this.childSize;
+    public int getNumChildren() {
+        return this.numChildren;
     }
 
     public int getParentUpdatePeriod() {
@@ -115,8 +116,8 @@ public final class ParentMakerConfiguration
         return this;
     }
 
-    public ParentMakerConfiguration setChildSize(int childSize) {
-        this.childSize = childSize;
+    public ParentMakerConfiguration setNumChildren(int numChildren) {
+        this.numChildren = numChildren;
         return this;
     }
 
@@ -125,8 +126,8 @@ public final class ParentMakerConfiguration
         return this;
     }
 
-    public ParentMakerConfiguration setParentSize(int parentSize) {
-        this.parentSize = parentSize;
+    public ParentMakerConfiguration setNumParents(int numParents) {
+        this.numParents = numParents;
         return this;
     }
 

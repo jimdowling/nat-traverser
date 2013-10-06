@@ -202,7 +202,7 @@ public class ParentMaker extends MsgRetryComponent {
             self = init.getSelf();
             compName = "PM(" + self.getId() + ") ";
             config = init.getConfig();
-            VodConfig.PM_PARENT_SIZE = config.getParentSize();
+            VodConfig.PM_NUM_PARENTS = config.getNumParents();
             if (!self.isOpen()) {
                 needParentsRoundTimeout = init.getConfig().getParentUpdatePeriod();
                 ScheduleTimeout spt = new ScheduleTimeout(0);
@@ -245,14 +245,14 @@ public class ParentMaker extends MsgRetryComponent {
                             + pi
                             + " rejected: " + rejections.keySet().size()
                             + " num better rtts " + RTTStore.getOnAvgBest(self.getId(),
-                            config.getParentSize(),
+                            config.getNumParents(),
                             rejections.keySet()).size());
                 }
             }
 
             List<RTT> betterRtts;
-            if (currentRtts.size() < config.getParentSize()) {
-                betterRtts = RTTStore.getOnAvgBest(self.getId(), config.getParentSize(),
+            if (currentRtts.size() < config.getNumParents()) {
+                betterRtts = RTTStore.getOnAvgBest(self.getId(), config.getNumParents(),
                         rejections.keySet());
                 if (betterRtts.isEmpty()) {
                     logger.warn(compName + "No better RTTS availabile ");
@@ -270,13 +270,13 @@ public class ParentMaker extends MsgRetryComponent {
                 Collections.sort(allRtts, RTT.Order.ByRto);
             }
             Iterator<RTT> iter = allRtts.iterator();
-            for (int i = 0; i < (config.getParentSize() - currentRtts.size()); i++) {
+            for (int i = 0; i < (config.getNumParents() - currentRtts.size()); i++) {
                 RTT min;
                 if (!iter.hasNext()) {
                     logger.debug(compName + " no new RTT samples available");
                     croupierSamples.removeAll(currentParents);
                     if (croupierSamples.isEmpty()) {
-                        removeRejections(config.getParentSize());
+                        removeRejections(config.getNumParents());
                         break;
                     }
                     min = new RTT(croupierSamples.iterator().next(), VodConfig.DEFAULT_RTO);
@@ -319,7 +319,7 @@ public class ParentMaker extends MsgRetryComponent {
             }
 
             long nextRound = needParentsRoundTimeout;
-            if (config.getParentSize() == VodConfig.PM_PARENT_SIZE) {
+            if (config.getNumParents() == VodConfig.PM_NUM_PARENTS) {
                 nextRound = fullParentsRoundTimeout;
             }
 
@@ -580,7 +580,7 @@ public class ParentMaker extends MsgRetryComponent {
         VodAddress candidateParent = event.getVodSource();
 
         // TODO check if already added, as then I should not start another timer
-        if (connections.size() < config.getParentSize()) {
+        if (connections.size() < config.getNumParents()) {
             addParent(candidateParent, event.getPrpPorts());
         } else {
             List<RTT> currentRtts = getCurrentRtts();
