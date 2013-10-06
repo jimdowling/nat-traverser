@@ -356,8 +356,8 @@ public class ParentMaker extends MsgRetryComponent {
         if (!connections.containsKey(parent)) {
             // Ping my parents 5 seconds before the NAT binding will timeout
             SchedulePeriodicTimeout spt = new SchedulePeriodicTimeout(
-                    self.getNat().getBindingTimeout() - 5000,
-                    self.getNat().getBindingTimeout() - 5000);
+                    self.getNat().getBindingTimeout() - 7000,
+                    self.getNat().getBindingTimeout() - 7000);
             KeepBindingOpenTimeout pt = new KeepBindingOpenTimeout(spt, parent);
             spt.setTimeoutEvent(pt);
             TimeoutId timeoutId = pt.getTimeoutId();

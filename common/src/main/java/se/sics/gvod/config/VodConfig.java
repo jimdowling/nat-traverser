@@ -115,7 +115,7 @@ public class VodConfig extends BaseCommandLineConfig {
     public static final int STUN_PARTNER_NUM_PARALLEL = 3;
     //Parent Maker's params
     public static int PM_PARENT_RTO = 1 * 1000;
-    public static double PM_PING_RTO_SCALE = 1.0d;
+    public static double PM_PING_RTO_SCALE = 0.9d;
     public static int PM_PING_RTO_RETRIES = 10;
     public static int PM_PARENT_UPDATE_PERIOD = 60 * 1000;
     public static int PM_NUM_PARENTS = 3;
