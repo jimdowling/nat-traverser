@@ -111,7 +111,7 @@ public final class NtTesterMain extends ComponentDefinition {
         logger.info("       bindIp: 0=publicIp, 1=privateIp1, 2=privateIp2");
         logger.info("e.g.  <prog> true 111 0 1@cloud4.sics.se false");
         logger.info("To run bootstrap server:  <prog> false 1 0 1@cloud4.sics.se true");
-        logger.info("To run a nat-emulated node:  <prog> false 1 0 1@cloud4.sics.se false m(EI)_a(PP)_f(PD)");
+        logger.info("To run a nat-emulated node:  <prog> false 1 0 1@cloud4.sics.se false NAT_EI_PP_PD");
         System.exit(0);
     }
 
@@ -156,11 +156,10 @@ public final class NtTesterMain extends ComponentDefinition {
         }
         if (args.length > 5 && args[5].compareTo(" ") != 0) {
             natType = Nat.parseToNat(args[5]);
-            if (natType != null) {
-                openServer = true;
-            } else {
+            if (natType == null) {
                 System.err.println("Invalid nat type: " + args[5]);
                 System.err.println("Example Nat format:  m(EI)_a(PP)_f(PD)");
+                System.exit(-6);
             }
         }
 
@@ -446,7 +445,7 @@ public final class NtTesterMain extends ComponentDefinition {
         public void handle(Fault ex) {
 
             logger.debug(ex.getFault().toString());
-            report(0, self.getAddress(), false, 0, ex.toString());
+            report(0, self.getAddress(), false, 0, ex.getFault().getMessage());
             System.exit(-1);
         }
     };
