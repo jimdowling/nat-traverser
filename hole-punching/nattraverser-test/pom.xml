@@ -87,7 +87,7 @@
                 <executions>
                     <execution>
                         <configuration>
-                            <mainClass>se.sics.nat.hp.clientmain.HpNatTraverserMain</mainClass>
+                            <mainClass>se.sics.gvod.nat.hp.NtTesterMain</mainClass>
                         </configuration>
                     </execution>                
                 </executions>

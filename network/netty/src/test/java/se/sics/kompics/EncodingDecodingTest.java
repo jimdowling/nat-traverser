@@ -140,7 +140,7 @@ public class EncodingDecodingTest {
     public static void setUpClass() throws Exception {
         InetAddress self = InetAddress.getByName("127.0.0.1");
         src = new Address(self, 58027, 123);
-        dest = new Address(self, 65535, 123);
+        dest = new Address(self, 65535, 13445);
         inetSrc = new InetSocketAddress(self, 58027);
         inetDest = new InetSocketAddress(self, 65535);
         gSrc = new VodAddress(src, VodConfig.SYSTEM_OVERLAY_ID);
@@ -952,10 +952,13 @@ public class EncodingDecodingTest {
 
     @Test
     public void RelayRequestMsg() {
+        // Have to set timeoutId of Request msgs
         ConnectMsg.Request req = new ConnectMsg.Request(gSrc, gSrc, utility, true, age);
+        TimeoutId timeoutId = UUID.nextUUID();
+        req.setTimeoutId(timeoutId);
         RelayRequestMsg.ClientToServer msg = new RelayRequestMsg.ClientToServer(gSrc, gDest, remoteClientId,
                 req);
-        msg.setTimeoutId(UUID.nextUUID());
+        msg.setTimeoutId(timeoutId);
         try {
             ByteBuf buffer = msg.toByteArray();
             opCodeCorrect(buffer, msg);

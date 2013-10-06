@@ -37,7 +37,7 @@ public class ParentKeepAliveMsgFactory {
         @Override
         protected ParentKeepAliveMsg.Pong process(ByteBuf buffer) throws MessageDecodingException {
 
-            return new ParentKeepAliveMsg.Pong(vodSrc, vodSrc, timeoutId);
+            return new ParentKeepAliveMsg.Pong(vodSrc, vodDest, timeoutId);
         }
 
     }

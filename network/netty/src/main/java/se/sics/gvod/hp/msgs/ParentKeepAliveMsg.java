@@ -12,7 +12,7 @@ import se.sics.gvod.timer.TimeoutId;
 
 /**
  * 
- * @author salman
+ * @author jim
  */
 public class ParentKeepAliveMsg {
 

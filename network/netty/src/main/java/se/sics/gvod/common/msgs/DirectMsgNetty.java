@@ -91,6 +91,18 @@ public class DirectMsgNetty {
         public abstract int getSize();
     }
 
+    /**
+     * timeoutId *must* be set for request objects. The normal way to do this is to
+     * use MsgRetryComponent's doRetry() method to send the Request msg.
+     * 
+     * If you relay one of these msgs, you have to set the TimeoutId explicitly,
+     * e.g., by taking the timeoutId returned from doRetry() and setting it on
+     * the msg:
+     * 
+     * TimeoutId id = delgator.doRetry(relayMsgTimeout, 1, 1000d);
+     * msg.setTimeoutId(id);
+     * 
+     */
     public static abstract class Request extends Base {
 
         protected Request(VodAddress source, VodAddress destination) {
@@ -107,6 +119,9 @@ public class DirectMsgNetty {
         }
     }
     
+    /**
+     * Response objects must set TimeoutId in their constructors.
+     */
     public static abstract class Response extends Base {
 
         protected Response(VodAddress source, VodAddress destination) {
@@ -123,6 +138,9 @@ public class DirectMsgNetty {
         }
     }
     
+    /**
+     * TimeoutId must not be set for Oneway objects.
+     */
     public static abstract class Oneway extends Base {
 
         protected Oneway(VodAddress source, VodAddress destination) {
@@ -141,6 +159,18 @@ public class DirectMsgNetty {
     
     }
 
+    /**
+     * timeoutId *must* be set for request objects. The normal way to do this is to
+     * use MsgRetryComponent's doRetry() method to send the Request msg.
+     * 
+     * If you relay one of these msgs, you have to set the TimeoutId explicitly,
+     * e.g., by taking the timeoutId returned from doRetry() and setting it on
+     * the msg:
+     * 
+     * TimeoutId id = delgator.doRetry(relayMsgTimeout, 1, 1000d);
+     * msg.setTimeoutId(id);
+     * 
+     */
     public static abstract class SystemRequest extends Base {
 
         protected SystemRequest(VodAddress source, VodAddress destination) {
@@ -157,6 +187,9 @@ public class DirectMsgNetty {
         }
     }
     
+    /**
+     * Response objects must set TimeoutId in their constructors.
+     */
     public static abstract class SystemResponse extends Base {
 
         protected SystemResponse(VodAddress source, VodAddress destination) {
@@ -172,7 +205,10 @@ public class DirectMsgNetty {
             super(source, destination, transport, timeoutId);
         }
     }
-    
+
+    /**
+     * TimeoutId must not be set for Oneway objects.
+     */
     public static abstract class SystemOneway extends Base {
 
         protected SystemOneway(VodAddress source, VodAddress destination) {

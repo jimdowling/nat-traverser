@@ -37,7 +37,7 @@ public class HpKeepAliveMsgFactory {
         @Override
         protected HpKeepAliveMsg.Pong process(ByteBuf buffer) throws MessageDecodingException {
 
-            return new HpKeepAliveMsg.Pong(vodSrc, vodSrc, timeoutId);
+            return new HpKeepAliveMsg.Pong(vodSrc, vodDest, timeoutId);
         }
 
     }

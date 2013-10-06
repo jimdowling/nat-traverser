@@ -516,6 +516,7 @@ public abstract class MsgRetryComponent extends AutoSubscribeComponent
         }
         if (event instanceof DirectMsgNetty.Request || 
                 event instanceof RelayMsgNetty.Request) {
+            logger.error("calling doTrigger - should call doRetry: " + event.getClass());
             throw new IllegalStateException("Request msgs should not call doTrigger(). "
                     + " They should call doRetry().");
         }

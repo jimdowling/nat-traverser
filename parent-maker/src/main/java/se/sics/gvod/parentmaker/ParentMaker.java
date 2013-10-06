@@ -40,7 +40,6 @@ import se.sics.gvod.common.RetryComponentDelegator;
 import se.sics.gvod.common.Self;
 import se.sics.gvod.common.VodDescriptor;
 import se.sics.gvod.common.evts.Join;
-import se.sics.gvod.common.msgs.NatReportMsg;
 import se.sics.gvod.config.VodConfig;
 import se.sics.gvod.common.util.ToVodAddr;
 import se.sics.gvod.config.ParentMakerConfiguration;
@@ -274,7 +273,7 @@ public class ParentMaker extends MsgRetryComponent {
             for (int i = 0; i < (config.getParentSize() - currentRtts.size()); i++) {
                 RTT min;
                 if (!iter.hasNext()) {
-                    logger.debug(compName + " no RTT samples available");
+                    logger.debug(compName + " no new RTT samples available");
                     croupierSamples.removeAll(currentParents);
                     if (croupierSamples.isEmpty()) {
                         removeRejections(config.getParentSize());
@@ -353,7 +352,7 @@ public class ParentMaker extends MsgRetryComponent {
         return connections.containsKey(node);
     }
 
-    private void addParent(VodAddress parent, RTT rtt, Set<Integer> prpPorts) {
+    private void addParent(VodAddress parent, Set<Integer> prpPorts) {
         if (!connections.containsKey(parent)) {
             // Ping my parents 5 seconds before the NAT binding will timeout
             SchedulePeriodicTimeout spt = new SchedulePeriodicTimeout(
@@ -363,10 +362,12 @@ public class ParentMaker extends MsgRetryComponent {
             spt.setTimeoutEvent(pt);
             TimeoutId timeoutId = pt.getTimeoutId();
             delegator.doTrigger(spt, timer);
-            Connection connection = new Connection(System.currentTimeMillis(), rtt, timeoutId, prpPorts);
+            Connection connection = new Connection(System.currentTimeMillis(), 
+                    RTTStore.getRtt(self.getId(), parent),
+                    timeoutId, prpPorts);
             connections.put(parent, connection);
             self.addParent(parent.getPeerAddress());
-            logger.debug(compName + "updated parents: " + getParentsAsStr());
+            logger.info(compName + "added new parent. Now: " + getParentsAsStr());
 
             NatReporter.report(delegator, network, self.getAddress(),
                     self.getPort(), parent,
@@ -375,7 +376,7 @@ public class ParentMaker extends MsgRetryComponent {
         } else {
             Connection c = connections.get(parent);
             c.setLastReceivedPong(System.currentTimeMillis());
-            c.setRtt(rtt);
+            c.setRtt(RTTStore.getRtt(self.getId(), parent));
             logger.debug(compName + "Re-adding an existing parent: " + parent.toString());
         }
     }
@@ -407,7 +408,7 @@ public class ParentMaker extends MsgRetryComponent {
                     self.getPort(), parent,
                     true, 0,
                     "Parent removed with numPorts deleted: " + c.getPrpPorts().size());
-
+            logger.info(compName + "removing parent. Now: " + getParentsAsStr());
         } else {
             logger.warn(compName + "Tried to remove non-existant parent: " + parent.getId());
             logger.warn(compName + "Existing parents: " + getParentsAsStr());
@@ -428,7 +429,8 @@ public class ParentMaker extends MsgRetryComponent {
                 long now = System.currentTimeMillis();
                 c.setLastSentPing(now);
                 VodAddress parentVodAddr = event.getParent();
-                ParentKeepAliveMsg.Ping ping = new ParentKeepAliveMsg.Ping(self.getAddress(), parentVodAddr);
+                ParentKeepAliveMsg.Ping ping = new ParentKeepAliveMsg.Ping(self.getAddress(), 
+                        parentVodAddr);
                 ScheduleRetryTimeout st =
                         new ScheduleRetryTimeout(config.getPingRto(),
                         config.getPingRetries(), config.getPingRtoScale());
@@ -495,7 +497,7 @@ public class ParentMaker extends MsgRetryComponent {
         }
 
         if (hpServer.getId() == self.getId()) {
-            logger.debug(compName + " trying to add myself as a parent.");
+            logger.info(compName + " trying to add myself as a parent.");
             return;
         }
         if (hpServer.getPort() == VodConfig.DEFAULT_STUN_PORT
@@ -529,6 +531,8 @@ public class ParentMaker extends MsgRetryComponent {
                 Address peer = event.getSource();
                 TimeoutId id = event.getTimeoutId();
                 Long startTime = requestStartTimes.remove(id);
+                long rtt = System.currentTimeMillis() - startTime;
+                RTTStore.addSample(self.getId(), event.getVodSource(), rtt);
                 if (event.getResponseType() == HpRegisterMsg.RegisterStatus.REJECT) {
                     rejections.put(peer, System.currentTimeMillis());
                     logger.debug(compName + "Parent {} rejected client request",
@@ -540,10 +544,10 @@ public class ParentMaker extends MsgRetryComponent {
                         trigger(dReq, natNetworkControl);
                     }
                 } else if (event.getResponseType() == HpRegisterMsg.RegisterStatus.ACCEPT) {
-                    addParentRtt(event);
+                    addParentRtt(event, rtt);
                 } else if (event.getResponseType() == HpRegisterMsg.RegisterStatus.ALREADY_REGISTERED) {
                     if (!isParent(event.getVodSource())) {
-                        addParentRtt(event);
+                        addParentRtt(event, rtt);
                     }
                 } else {
                     logger.warn(compName + "Parent {} client request failed due to "
@@ -572,44 +576,24 @@ public class ParentMaker extends MsgRetryComponent {
         }
     };
 
-    private void addParentRtt(HpRegisterMsg.Response event) {
+    private void addParentRtt(HpRegisterMsg.Response event, long rtt) {
         VodAddress candidateParent = event.getVodSource();
-        TimeoutId id = event.getTimeoutId();
-        Long startTime = requestStartTimes.remove(id);
-        long rttValue = config.getRto();
-        RTT rtt;
-        if (startTime != null) {
-            logger.debug(compName + "Parent {} accepted client request", candidateParent);
-            rttValue = System.currentTimeMillis() - startTime;
-            rtt = RTTStore.addSample(self.getId(), candidateParent, rttValue);
-
-        } else {
-            // Probably ALREADY_ACCEPT. Try and get the RTT and if you can't add one with a default RTT.
-            logger.trace("Couldn't find startTime at {} from {} for: "
-                    + event.getTimeoutId(), self.getAddress(),
-                    event.getVodSource());
-            rtt = RTTStore.getRtt(self.getId(), event.getVodSource());
-            if (rtt == null) {
-                rtt = RTTStore.addSample(self.getId(), candidateParent, rttValue);
-            }
-        }
-
 
         // TODO check if already added, as then I should not start another timer
         if (connections.size() < config.getParentSize()) {
-            addParent(candidateParent, rtt, event.getPrpPorts());
+            addParent(candidateParent, event.getPrpPorts());
         } else {
             List<RTT> currentRtts = getCurrentRtts();
             RTT worstRtt = Collections.max(currentRtts, RTT.Order.ByRto);
-            if (rttValue + config.getKeepParentRttRange() < worstRtt.getRTO()) {
+            if (rtt + config.getKeepParentRttRange() < worstRtt.getRTO()) {
                 VodAddress hpAddr = worstRtt.getAddress();
                 removeParent(hpAddr, false, true);
                 logger.info(compName + "Found a better parent {} . Removing {}."
                         + "Old/new RTTS = " + worstRtt.getRTO() + " vs "
-                        + rttValue,
+                        + rtt,
                         candidateParent.getId(),
                         hpAddr.getId());
-                addParent(candidateParent, rtt, event.getPrpPorts());
+                addParent(candidateParent, event.getPrpPorts());
             }
         }
     }

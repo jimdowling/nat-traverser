@@ -899,7 +899,7 @@ public final class NettyNetwork extends ComponentDefinition {
      */
     final void deliverMessage(RewriteableMsg msg) {
         logger.trace("Receiving " + msg.getClass().getCanonicalName() + " source {} dest {} ",
-                msg.getSource().getId(), msg.getDestination().getId());
+                msg.getSource(), msg.getDestination());
         trigger(msg, net);
         totalReadBytes += msg.getSize();
     }

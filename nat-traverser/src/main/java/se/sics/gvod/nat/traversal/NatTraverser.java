@@ -243,7 +243,9 @@ public class NatTraverser extends ComponentDefinition {
 //        subscribe(handleRTO, timer);
 
         connect(hpClient.getNegative(Timer.class), timer);
-        connect(hpClient.getNegative(VodNetwork.class), network, new MsgDestFilterOverlayId(VodConfig.SYSTEM_OVERLAY_ID));
+        connect(hpClient.getNegative(VodNetwork.class), network
+                , new MsgDestFilterOverlayId(VodConfig.SYSTEM_OVERLAY_ID)
+                );
         connect(hpClient.getNegative(NatNetworkControl.class), lowerNetControl);
     }
     Handler<NatTraverserInit> handleInit = new Handler<NatTraverserInit>() {
@@ -802,8 +804,10 @@ public class NatTraverser extends ComponentDefinition {
         zServer = create(RendezvousServer.class);
 
         connect(zServer.getNegative(Timer.class), timer);
-        connect(zServer.getNegative(VodNetwork.class), network, new MsgDestFilterOverlayId(VodConfig.SYSTEM_OVERLAY_ID));
-        trigger(new RendezvousServerInit(self.clone(VodConfig.SYSTEM_OVERLAY_ID), registeredClients, rendezvousServerConfig), zServer.getControl());
+        connect(zServer.getNegative(VodNetwork.class), network, 
+                new MsgDestFilterOverlayId(VodConfig.SYSTEM_OVERLAY_ID));
+        trigger(new RendezvousServerInit(self.clone(VodConfig.SYSTEM_OVERLAY_ID), 
+                registeredClients, rendezvousServerConfig), zServer.getControl());
 
         connect(stunServer.getNegative(Timer.class), timer);
         connect(stunServer.getNegative(VodNetwork.class), network, new MsgDestFilterOverlayId(VodConfig.SYSTEM_OVERLAY_ID));
@@ -1015,10 +1019,11 @@ public class NatTraverser extends ComponentDefinition {
             parentMaker = create(ParentMaker.class);
             // TODO - do i need a filter for timer msgs too?
             connect(parentMaker.getNegative(Timer.class), timer);
-            connect(parentMaker.getNegative(VodNetwork.class), network, new MsgDestFilterOverlayId(VodConfig.SYSTEM_OVERLAY_ID));
+            connect(parentMaker.getNegative(VodNetwork.class), network
+//                    , new MsgDestFilterOverlayId(VodConfig.SYSTEM_OVERLAY_ID)
+                    );
             connect(parentMaker.getNegative(NatNetworkControl.class), lowerNetControl);
-            trigger(
-                    new ParentMakerInit(self.clone(VodConfig.SYSTEM_OVERLAY_ID),
+            trigger(new ParentMakerInit(self.clone(VodConfig.SYSTEM_OVERLAY_ID),
                     parentMakerConfig), parentMaker.control());
             List<VodAddress> bootstrappers = new ArrayList<VodAddress>();
             for (Address va : stunServers) {

@@ -35,7 +35,7 @@ public class HpKeepAliveMsg {
         
         @Override
         public byte getOpcode() {
-            return BaseMsgFrameDecoder.PARENT_KEEP_ALIVE_REQUEST;
+            return BaseMsgFrameDecoder.HP_KEEP_ALIVE_REQUEST;
         }
 
         @Override
@@ -67,7 +67,7 @@ public class HpKeepAliveMsg {
 
          @Override
         public byte getOpcode() {
-            return BaseMsgFrameDecoder.PARENT_KEEP_ALIVE_RESPONSE;
+            return BaseMsgFrameDecoder.HP_KEEP_ALIVE_RESPONSE;
         }
 
         @Override

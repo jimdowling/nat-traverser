@@ -140,7 +140,7 @@ public final class NtTesterMain extends ComponentDefinition {
                 logger.info("bootstrapNodeId@bootstrapNodeIp format incorrect.");
                 exit();
             }
-            server = serverStr.substring(idx+1);
+            server = serverStr.substring(idx + 1);
             serverId = Integer.parseInt(serverStr.substring(0, idx));
         }
         try {
@@ -232,9 +232,7 @@ public final class NtTesterMain extends ComponentDefinition {
 
         if (natType == null) {
             connect(natTraverser.getNegative(Timer.class), timer.getPositive(Timer.class));
-            connect(natTraverser.getNegative(VodNetwork.class), network.getPositive(VodNetwork.class)
-                    ,new MsgDestFilterNodeId(myId)
-                    );
+            connect(natTraverser.getNegative(VodNetwork.class), network.getPositive(VodNetwork.class), new MsgDestFilterNodeId(myId));
             connect(natTraverser.getNegative(NatNetworkControl.class), network.getPositive(NatNetworkControl.class));
         } else {
             natGateway = create(DistributedNatGatewayEmulator.class);
@@ -243,10 +241,9 @@ public final class NtTesterMain extends ComponentDefinition {
             connect(natGateway.getNegative(NatNetworkControl.class), network.getPositive(NatNetworkControl.class));
 
             connect(natTraverser.getNegative(Timer.class), timer.getPositive(Timer.class));
-            connect(natTraverser.getNegative(VodNetwork.class), natGateway.getPositive(VodNetwork.class)
-                    ,new MsgDestFilterNodeId(myId)                    
-                    );
+            connect(natTraverser.getNegative(VodNetwork.class), natGateway.getPositive(VodNetwork.class), new MsgDestFilterNodeId(myId));
             connect(natTraverser.getNegative(NatNetworkControl.class), natGateway.getPositive(NatNetworkControl.class));
+            subscribe(handleFault, natGateway.getControl());
         }
 
         connect(resolveIp.getNegative(Timer.class), timer.getPositive(Timer.class));
@@ -259,6 +256,10 @@ public final class NtTesterMain extends ComponentDefinition {
         subscribe(handlePang, natTraverser.getPositive(VodNetwork.class));
         subscribe(handleNtPortBindResponse, network.getPositive(NatNetworkControl.class));
         subscribe(handleFault, natTraverser.getControl());
+        subscribe(handleFault, network.getControl());
+        subscribe(handleFault, resolveIp.getControl());
+        subscribe(handleFault, croupier.getControl());
+        subscribe(handleFault, timer.getControl());
         subscribe(handlePingTimeout, timer.getPositive(Timer.class));
         subscribe(handlePangTimeout, timer.getPositive(Timer.class));
         subscribe(handleCroupierSample, croupier.getPositive(PeerSamplePort.class));
@@ -273,7 +274,8 @@ public final class NtTesterMain extends ComponentDefinition {
                         resolveIp.getPositive(ResolveIpPort.class));
             } else {
                 trigger(new GetIpRequest(false, EnumSet.of(
-                        GetIpRequest.NetworkInterfacesMask.IGNORE_LOOPBACK //                        , GetIpRequest.NetworkInterfacesMask.IGNORE_TEN_DOT_PRIVATE 
+                        GetIpRequest.NetworkInterfacesMask.IGNORE_LOOPBACK 
+                        //, GetIpRequest.NetworkInterfacesMask.IGNORE_TEN_DOT_PRIVATE 
                         //,GetIpRequest.NetworkInterfacesMask.IGNORE_PRIVATE
                         )),
                         resolveIp.getPositive(ResolveIpPort.class));
@@ -511,6 +513,6 @@ public final class NtTesterMain extends ComponentDefinition {
         VodAddress dest = ToVodAddr.bootstrap(VodConfig.getBootstrapServer());
         NatReportMsg msg = new NatReportMsg(self.getAddress(), dest, nrs);
         trigger(msg, network.getPositive(VodNetwork.class));
-        logger.info("Reporting nat type msg to " + dest);
+        logger.info("Sending report to " + dest);
     }
 }

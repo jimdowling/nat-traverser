@@ -329,13 +329,6 @@ public class HpClient extends MsgRetryComponent {
         }
     }
 
-    private class HeartbeatTimeout extends RewriteableRetryTimeout {
-
-        public HeartbeatTimeout(ScheduleRetryTimeout request, HpKeepAliveMsg.Ping msg) {
-            super(request, msg);
-        }
-    }
-
     private class SendHeartbeatTimeout extends Timeout {
 
         private final int remoteId;
@@ -923,6 +916,8 @@ public class HpClient extends MsgRetryComponent {
             oc.setLastUsed(System.currentTimeMillis());
         }
     }
+    
+    
     Handler<HpKeepAliveMsg.Ping> handleHpKeepAliveMsgPing =
             new Handler<HpKeepAliveMsg.Ping>() {
         @Override
@@ -930,7 +925,7 @@ public class HpClient extends MsgRetryComponent {
             logger.debug(compName + "Received ping from: " + msg.getSource());
             HpKeepAliveMsg.Pong reply = new HpKeepAliveMsg.Pong(self.getAddress(), msg.getVodSource(),
                     msg.getTimeoutId());
-            trigger(reply, network);
+            delegator.doTrigger(reply, network);
         }
     };
     Handler<HpKeepAliveMsg.Pong> handleHpKeepAliveMsgPong =
@@ -943,7 +938,7 @@ public class HpClient extends MsgRetryComponent {
             startTime = startTime == null ? 0 : startTime;
             long timeTaken = System.currentTimeMillis() - startTime;
             if (delegator.doCancelRetry(msg.getTimeoutId())) {
-                logger.debug(compName + "Received pong from: " + msg.getSource());
+                logger.info(compName + "Received pong from: " + msg.getSource());
                 if (oc == null) {
                     logger.warn(compName + "Couldn't find connection to heartbeat to: " + remoteId);
                 } else {
@@ -957,6 +952,8 @@ public class HpClient extends MsgRetryComponent {
                 // update or add an openedConnection
                 addOrUpdateOpenedConnectionNoSession(msg.getSource(), msg.getDestination().getPort());
                 pingSuccessCount.incrementAndGet();
+            } else {
+                logger.warn(compName + "Couldn't cancel timeoutId for HpKeepAliveMsg.Ping");
             }
         }
     };
@@ -976,7 +973,7 @@ public class HpClient extends MsgRetryComponent {
         HpKeepAliveMsg.Ping pingMsg = new HpKeepAliveMsg.Ping(
                 src, openedHole);
         ScheduleRetryTimeout srt = new ScheduleRetryTimeout(2000, 3, 0.5);
-        HeartbeatTimeout hbt = new HeartbeatTimeout(srt, pingMsg);
+        HpKeepAliveMsg.PingTimeout hbt = new HpKeepAliveMsg.PingTimeout(srt, pingMsg);
         delegator.doRetry(hbt);
         logger.trace(compName + "Sending heartbeat from " + self.getAddress()
                 + "=>" + src.getPort() + " to : {} with timeout=" + 2000,
@@ -996,10 +993,10 @@ public class HpClient extends MsgRetryComponent {
             }
         }
     };
-    Handler<HeartbeatTimeout> handleHeartbeatTimeout =
-            new Handler<HeartbeatTimeout>() {
+    Handler<HpKeepAliveMsg.PingTimeout> handleHeartbeatTimeout =
+            new Handler<HpKeepAliveMsg.PingTimeout>() {
         @Override
-        public void handle(HeartbeatTimeout event) {
+        public void handle(HpKeepAliveMsg.PingTimeout event) {
             int remoteId = event.getMsg().getDestination().getId();
             OpenedConnection oc = openedConnections.remove(remoteId);
             logger.warn(compName + " heartbeat timed out to private node. "
