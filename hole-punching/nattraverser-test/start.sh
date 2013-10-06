@@ -11,19 +11,16 @@ fi
 x=1
 for i in ${hosts[@]}
 do
-if [ $x -eq ${#hosts[@]} ] ; then
- y=0
-else
- y=$x
-fi
+ if [ $x -eq ${#hosts[@]} ] ; then
+  y=0
+ else
+  y=$x
+ fi
 
  ssh $USER@cloud$i.sics.se "cd hpServer ; killall java ; ./run.sh false $i 0 ${hosts[$y]}@cloud${hosts[$y]}.sics.se true"
  echo "ssh $USER@cloud$i.sics.se 'cd hpServer ; killall java ; ./run.sh false $i 0 ${hosts[$y]}@cloud${hosts[$y]}.sics.se true'"
-x=`expr $x + 1`
+ x=`expr $x + 1`
 done
 
 
-echo ""
-echo "See log file: $USER@cloud5.sics.se ~/hpServer"
-echo "See log file: $USER@cloud4.sics.se ~/hpServer"
 echo ""

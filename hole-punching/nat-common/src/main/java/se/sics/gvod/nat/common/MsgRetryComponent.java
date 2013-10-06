@@ -11,6 +11,8 @@ import org.apache.commons.lang.NotImplementedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import se.sics.gvod.address.Address;
+import se.sics.gvod.common.msgs.DirectMsgNetty;
+import se.sics.gvod.common.msgs.RelayMsgNetty;
 import se.sics.gvod.net.VodNetwork;
 import se.sics.gvod.net.msgs.DirectMsg;
 import se.sics.gvod.net.msgs.RewriteableMsg;
@@ -511,6 +513,11 @@ public abstract class MsgRetryComponent extends AutoSubscribeComponent
     public <P extends PortType> void doTrigger(Event event, Port<P> port) {
         if (event == null || port == null) {
             throw new NullPointerException("Null event or null port when calling trigger.");
+        }
+        if (event instanceof DirectMsgNetty.Request || 
+                event instanceof RelayMsgNetty.Request) {
+            throw new IllegalStateException("Request msgs should not call doTrigger(). "
+                    + " They should call doRetry().");
         }
         trigger(event, port);
     }
