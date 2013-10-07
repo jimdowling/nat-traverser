@@ -243,14 +243,12 @@ public class NatTraverser extends ComponentDefinition {
 
         subscribe(handleFault, hpClient.getControl());
 
-        
-        
+
+
 //        subscribe(handleRTO, timer);
 
         connect(hpClient.getNegative(Timer.class), timer);
-        connect(hpClient.getNegative(VodNetwork.class), network
-                , new MsgDestFilterOverlayId(VodConfig.SYSTEM_OVERLAY_ID)
-                );
+        connect(hpClient.getNegative(VodNetwork.class), network, new MsgDestFilterOverlayId(VodConfig.SYSTEM_OVERLAY_ID));
         connect(hpClient.getNegative(NatNetworkControl.class), lowerNetControl);
     }
     Handler<NatTraverserInit> handleInit = new Handler<NatTraverserInit>() {
@@ -448,7 +446,11 @@ public class NatTraverser extends ComponentDefinition {
             openedConnections.put(msg.getSource().getId(), oc);
             logger.debug(compName + " Adding OpenedConnection to " + msg.getSource()
                     + " from Local Port" + msg.getDestination().getPort());
-        }
+        } 
+//        else if (!msg.getVodSource().isOpen()
+//                && openedConnections.containsKey(msg.getSource().getId())) {
+//            OpenedConnection oc = openedConnections.get(msg.getSource().getId());
+//        }
         trigger(msg, upperNet);
     }
     Handler<DirectMsgNetty.Request> handleLowerDirectMsgRequest = new Handler<DirectMsgNetty.Request>() {
@@ -810,9 +812,9 @@ public class NatTraverser extends ComponentDefinition {
         zServer = create(RendezvousServer.class);
 
         connect(zServer.getNegative(Timer.class), timer);
-        connect(zServer.getNegative(VodNetwork.class), network, 
+        connect(zServer.getNegative(VodNetwork.class), network,
                 new MsgDestFilterOverlayId(VodConfig.SYSTEM_OVERLAY_ID));
-        trigger(new RendezvousServerInit(self.clone(VodConfig.SYSTEM_OVERLAY_ID), 
+        trigger(new RendezvousServerInit(self.clone(VodConfig.SYSTEM_OVERLAY_ID),
                 registeredClients, rendezvousServerConfig), zServer.getControl());
 
         connect(stunServer.getNegative(Timer.class), timer);
@@ -1028,9 +1030,7 @@ public class NatTraverser extends ComponentDefinition {
             parentMaker = create(ParentMaker.class);
             // TODO - do i need a filter for timer msgs too?
             connect(parentMaker.getNegative(Timer.class), timer);
-            connect(parentMaker.getNegative(VodNetwork.class), network
-                    , new MsgDestFilterOverlayId(VodConfig.SYSTEM_OVERLAY_ID)
-                    );
+            connect(parentMaker.getNegative(VodNetwork.class), network, new MsgDestFilterOverlayId(VodConfig.SYSTEM_OVERLAY_ID));
             // TODO - do i need a filter for natNetworkControl msgs too?
             connect(parentMaker.getNegative(NatNetworkControl.class), lowerNetControl);
             trigger(new ParentMakerInit(self.clone(VodConfig.SYSTEM_OVERLAY_ID),
@@ -1044,7 +1044,6 @@ public class NatTraverser extends ComponentDefinition {
         }
 //        cacheStunResults();
     }
-    
     private Handler<GetNatTypeResponse> handleGetNatTypeResponse = new Handler<GetNatTypeResponse>() {
         @Override
         public void handle(GetNatTypeResponse event) {
@@ -1147,8 +1146,6 @@ public class NatTraverser extends ComponentDefinition {
             logger.trace(sb.toString());
         }
     };
-    
-    
     public Handler<Fault> handleFault =
             new Handler<Fault>() {
         @Override
@@ -1156,7 +1153,7 @@ public class NatTraverser extends ComponentDefinition {
             logger.error(ex.getFault().toString());
             trigger(ex, control);
         }
-    };    
+    };
     public Handler<Stop> handleStop = new Handler<Stop>() {
         @Override
         public void handle(Stop event) {

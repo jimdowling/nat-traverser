@@ -328,41 +328,56 @@ public final class NtTesterMain extends ComponentDefinition {
             new Handler<NtPortBindResponse>() {
         @Override
         public void handle(NtPortBindResponse event) {
-
-            if (event.getStatus() != NtPortBindResponse.Status.SUCCESS) {
+            if (event.getStatus() == NtPortBindResponse.Status.FAIL) {
                 logger.error("Couldn't bind to port: " + event.getPort() + " - "
                         + event.getStatus());
                 Kompics.shutdown();
                 System.exit(-1);
+            } else if (event.getStatus() == NtPortBindResponse.Status.PORT_ALREADY_BOUND) {
+                if (localAddress.getPort() == Integer.MAX_VALUE) {
+                    logger.error("Ran out of ports: " + event.getStatus());
+                    Kompics.shutdown();
+                    System.exit(-1);
+                }
+                int newPort = localAddress.getPort() + 1;
+                localAddress = new Address(localAddress.getIp(), newPort, localAddress.getId());
+                PortBindRequest pb1 = new PortBindRequest(localAddress, Transport.UDP);
+                PortBindResponse pbr1 = new NtPortBindResponse(pb1);
+                trigger(pb1, network.getPositive(NatNetworkControl.class));
+
+            } else if (event.getStatus() == NtPortBindResponse.Status.SUCCESS) {
+                self = new SelfImpl(null, localIp, event.getPort(),
+                        localAddress.getId(), OVERLAY_ID);
+
+                if (natType != null) {
+                    trigger(new DistributedNatGatewayEmulatorInit(natType, localIp,
+                            2000, 65535), natGateway.getControl());
+                    self.setNat(natType);
+                }
+
+
+                trigger(new NatTraverserInit(self.clone(VodConfig.SYSTEM_OVERLAY_ID),
+                        servers, VodConfig.getSeed(),
+                        NatTraverserConfiguration.build(),
+                        HpClientConfiguration.build(),
+                        RendezvousServerConfiguration.build(),
+                        StunClientConfiguration.build().setUpnpEnable(upnpEnabled),
+                        StunServerConfiguration.build()
+                        .setRto(500)
+                        .setRtoRetries(8)
+                        .setRtoScale(1.2),
+                        ParentMakerConfiguration.build(),
+                        openServer),
+                        natTraverser.getControl());
+
+                trigger(new CroupierInit(self.clone(VodConfig.SYSTEM_OVERLAY_ID),
+                        CroupierConfiguration.build()),
+                        croupier.getControl());
+                startTimers.put(self.getId(), System.currentTimeMillis());
+            } else {
+                throw new IllegalStateException("Unknown port binding response: " +
+                        event.getStatus());
             }
-            self = new SelfImpl(null, localIp, event.getPort(),
-                    localAddress.getId(), OVERLAY_ID);
-
-            if (natType != null) {
-                trigger(new DistributedNatGatewayEmulatorInit(natType, localIp,
-                        2000, 65535), natGateway.getControl());
-                self.setNat(natType);
-            }
-
-
-            trigger(new NatTraverserInit(self.clone(VodConfig.SYSTEM_OVERLAY_ID),
-                    servers, VodConfig.getSeed(),
-                    NatTraverserConfiguration.build(),
-                    HpClientConfiguration.build(),
-                    RendezvousServerConfiguration.build(),
-                    StunClientConfiguration.build().setUpnpEnable(upnpEnabled),
-                    StunServerConfiguration.build()
-                    .setRto(500)
-                    .setRtoRetries(8)
-                    .setRtoScale(1.2),
-                    ParentMakerConfiguration.build(),
-                    openServer),
-                    natTraverser.getControl());
-
-            trigger(new CroupierInit(self.clone(VodConfig.SYSTEM_OVERLAY_ID),
-                    CroupierConfiguration.build()),
-                    croupier.getControl());
-            startTimers.put(self.getId(), System.currentTimeMillis());
         }
     };
     private Handler<GetNatTypeResponse> handleGetNatTypeResponse =
@@ -509,7 +524,6 @@ public final class NtTesterMain extends ComponentDefinition {
         trigger(msg, network.getPositive(VodNetwork.class));
         logger.info("Sending report to " + dest);
     }
-    
     public Handler<Fault> handleFault = new Handler<Fault>() {
         @Override
         public void handle(Fault ex) {

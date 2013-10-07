@@ -22,6 +22,7 @@ do
  ssh $USER@cloud$i.sics.se "cd hpServer ; killall java ; ./run.sh false $i 0 4@cloud4.sics.se false ${nats[$x]}"
  echo "Starting on cloud$i with nat ${nats[$x]}"
  x=`expr $x + 1`
+ sleep 200
 done
 
 
