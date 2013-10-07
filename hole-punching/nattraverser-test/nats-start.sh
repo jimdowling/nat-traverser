@@ -16,7 +16,12 @@ else
 fi
 for i in ${hosts[@]}
 do
+# don't kill the bootstrap server on cloud6.sics.se
+if [ $i -ne 6 ] ; then
  ssh $USER@cloud$i.sics.se "cd hpServer ; killall java "
+else
+ ssh $USER@cloud$i.sics.se "cd hpServer ; ./kill.sh "
+fi
 done
 
 

@@ -16,7 +16,6 @@ do
  else
   y=$x
  fi
-
  ssh $USER@cloud$i.sics.se "cd hpServer ; killall java ; ./run.sh false $i 0 ${hosts[$y]}@cloud${hosts[$y]}.sics.se true"
  echo "ssh $USER@cloud$i.sics.se 'cd hpServer ; killall java ; ./run.sh false $i 0 ${hosts[$y]}@cloud${hosts[$y]}.sics.se true'"
  x=`expr $x + 1`
