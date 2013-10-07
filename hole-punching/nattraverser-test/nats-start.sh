@@ -14,11 +14,16 @@ if [ ${#hosts[@]} -lt 2 ] ; then
 else 
  echo "${hosts[@]}"
 fi
+for i in ${hosts[@]}
+do
+ ssh $USER@cloud$i.sics.se "cd hpServer ; killall java "
+done
+
 
 x=0
 for i in ${hosts[@]}
 do
- ssh $USER@cloud$i.sics.se "cd hpServer ; killall java ; ./run.sh false $i 0 4@cloud4.sics.se false ${nats[$x]}"
+ ssh $USER@cloud$i.sics.se "cd hpServer ; ./run.sh false $i 0 4@cloud4.sics.se false ${nats[$x]}"
  echo "Starting on cloud$i with nat ${nats[$x]}"
  x=`expr $x + 1`
  sleep 200
