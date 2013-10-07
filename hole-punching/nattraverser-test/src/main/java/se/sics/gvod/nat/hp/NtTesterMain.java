@@ -170,6 +170,12 @@ public final class NtTesterMain extends ComponentDefinition {
             java.util.logging.Logger.getLogger(NtTesterMain.class.getName()).log(Level.SEVERE, null, ex);
         }
 
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            @Override
+            public void run() {
+            }
+        });
+
         Kompics.createAndStart(NtTesterMain.class, 3);
     }
 
@@ -273,8 +279,7 @@ public final class NtTesterMain extends ComponentDefinition {
                         resolveIp.getPositive(ResolveIpPort.class));
             } else {
                 trigger(new GetIpRequest(false, EnumSet.of(
-                        GetIpRequest.NetworkInterfacesMask.IGNORE_LOOPBACK 
-                        //, GetIpRequest.NetworkInterfacesMask.IGNORE_TEN_DOT_PRIVATE 
+                        GetIpRequest.NetworkInterfacesMask.IGNORE_LOOPBACK //, GetIpRequest.NetworkInterfacesMask.IGNORE_TEN_DOT_PRIVATE 
                         //,GetIpRequest.NetworkInterfacesMask.IGNORE_PRIVATE
                         )),
                         resolveIp.getPositive(ResolveIpPort.class));
@@ -439,16 +444,6 @@ public final class NtTesterMain extends ComponentDefinition {
             logger.info("Total Success/Failure ratio is: {}/{}", numSuccess, numFail);
         }
     };
-    public Handler<Fault> handleFault =
-            new Handler<Fault>() {
-        @Override
-        public void handle(Fault ex) {
-
-            logger.debug(ex.getFault().toString());
-            report(0, self.getAddress(), false, 0, ex.getFault().getMessage());
-            System.exit(-1);
-        }
-    };
     Handler<PingTimeout> handlePingTimeout = new Handler<PingTimeout>() {
         @Override
         public void handle(PingTimeout msg) {
@@ -514,4 +509,17 @@ public final class NtTesterMain extends ComponentDefinition {
         trigger(msg, network.getPositive(VodNetwork.class));
         logger.info("Sending report to " + dest);
     }
+    
+    public Handler<Fault> handleFault = new Handler<Fault>() {
+        @Override
+        public void handle(Fault ex) {
+
+            for (StackTraceElement ste : ex.getFault().getStackTrace()) {
+                logger.error(ste.toString());
+            }
+            logger.error(ex.getFault().toString());
+            report(0, self.getAddress(), false, 0, ex.getFault().getMessage());
+            System.exit(-1);
+        }
+    };
 }

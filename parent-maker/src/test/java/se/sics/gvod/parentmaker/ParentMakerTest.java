@@ -23,6 +23,7 @@ import se.sics.gvod.common.VodRetryComponentTestCase;
 import se.sics.gvod.common.RTTStore;
 import se.sics.gvod.common.Self;
 import se.sics.gvod.common.SelfNoUtility;
+import se.sics.gvod.common.msgs.NatReportMsg;
 import se.sics.gvod.config.VodConfig;
 import se.sics.gvod.hp.msgs.HpRegisterMsg;
 import se.sics.gvod.hp.msgs.HpRegisterMsg.RegisterStatus;
@@ -121,8 +122,8 @@ public class ParentMakerTest extends VodRetryComponentTestCase {
         SchedulePeriodicTimeout spt2 = new SchedulePeriodicTimeout(0, 5000);
         parentMaker.handleKeepBindingOpenTimeout.handle(
                 new KeepBindingOpenTimeout(spt2, pubAddrs.get(0)));
-        events = pollEvent(1);
-        assertSequence(events, ParentKeepAliveMsg.Ping.class);
+        events = pollEvent(2);
+        assertSequence(events, NatReportMsg.class, ParentKeepAliveMsg.Ping.class);
 
         parentMaker.handleUnregisterParentRequest.handle(
                 new HpUnregisterMsg.Request(pubAddrs.get(0), privAddrs.get(0), 0, 

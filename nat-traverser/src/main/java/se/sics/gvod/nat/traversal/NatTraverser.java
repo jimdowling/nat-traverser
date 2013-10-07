@@ -85,6 +85,7 @@ import se.sics.gvod.config.BaseCommandLineConfig;
 import se.sics.gvod.config.StunServerConfiguration;
 import se.sics.gvod.parentmaker.ParentMakerPort;
 import se.sics.kompics.ComponentDefinition;
+import se.sics.kompics.Fault;
 
 /**
  *
@@ -240,6 +241,10 @@ public class NatTraverser extends ComponentDefinition {
 
         subscribe(handleOpenConnectionResponse, hpClient.getPositive(HpClientPort.class));
 
+        subscribe(handleFault, hpClient.getControl());
+
+        
+        
 //        subscribe(handleRTO, timer);
 
         connect(hpClient.getNegative(Timer.class), timer);
@@ -287,6 +292,7 @@ public class NatTraverser extends ComponentDefinition {
 
                 subscribe(handleGetNatTypeResponse, stunClient.getPositive(StunPort.class));
                 subscribe(handleNatTypeResponseRuleTimeout, stunClient.getPositive(StunPort.class));
+                subscribe(handleFault, stunClient.getControl());
 
                 connect(stunClient.getNegative(Timer.class), timer);
                 connect(stunClient.getNegative(VodNetwork.class), network,
@@ -813,6 +819,9 @@ public class NatTraverser extends ComponentDefinition {
         connect(stunServer.getNegative(VodNetwork.class), network, new MsgDestFilterOverlayId(VodConfig.SYSTEM_OVERLAY_ID));
         connect(stunServer.getNegative(NatNetworkControl.class), lowerNetControl);
 
+        subscribe(handleFault, stunServer.getControl());
+        subscribe(handleFault, zServer.getControl());
+
         List<VodAddress> partners = new ArrayList<VodAddress>();
         for (VodAddress a : nodes) {
             partners.add(ToVodAddr.stunServer(a.getPeerAddress()));
@@ -1020,8 +1029,9 @@ public class NatTraverser extends ComponentDefinition {
             // TODO - do i need a filter for timer msgs too?
             connect(parentMaker.getNegative(Timer.class), timer);
             connect(parentMaker.getNegative(VodNetwork.class), network
-//                    , new MsgDestFilterOverlayId(VodConfig.SYSTEM_OVERLAY_ID)
+                    , new MsgDestFilterOverlayId(VodConfig.SYSTEM_OVERLAY_ID)
                     );
+            // TODO - do i need a filter for natNetworkControl msgs too?
             connect(parentMaker.getNegative(NatNetworkControl.class), lowerNetControl);
             trigger(new ParentMakerInit(self.clone(VodConfig.SYSTEM_OVERLAY_ID),
                     parentMakerConfig), parentMaker.control());
@@ -1034,6 +1044,7 @@ public class NatTraverser extends ComponentDefinition {
         }
 //        cacheStunResults();
     }
+    
     private Handler<GetNatTypeResponse> handleGetNatTypeResponse = new Handler<GetNatTypeResponse>() {
         @Override
         public void handle(GetNatTypeResponse event) {
@@ -1043,7 +1054,9 @@ public class NatTraverser extends ComponentDefinition {
 
             if (event.getStatus() == GetNatTypeResponse.Status.SUCCEED) {
                 List<Address> l = new ArrayList<Address>();
-                l.add(event.getStunServer());
+                if (event.getStunServer() != null) {
+                    l.add(event.getStunServer());
+                }
                 sendGetNatTypeResponse(l);
             } else {
                 retryStun(event.getStunServer());
@@ -1134,6 +1147,16 @@ public class NatTraverser extends ComponentDefinition {
             logger.trace(sb.toString());
         }
     };
+    
+    
+    public Handler<Fault> handleFault =
+            new Handler<Fault>() {
+        @Override
+        public void handle(Fault ex) {
+            logger.error(ex.getFault().toString());
+            trigger(ex, control);
+        }
+    };    
     public Handler<Stop> handleStop = new Handler<Stop>() {
         @Override
         public void handle(Stop event) {

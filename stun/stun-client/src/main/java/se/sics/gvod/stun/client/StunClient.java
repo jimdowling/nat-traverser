@@ -40,7 +40,6 @@ import se.sics.gvod.address.Address;
 import se.sics.gvod.common.RTTStore;
 import se.sics.gvod.common.RetryComponentDelegator;
 import se.sics.gvod.common.Self;
-import se.sics.gvod.common.SelfFactory;
 import se.sics.gvod.config.VodConfig;
 import se.sics.gvod.common.util.ToVodAddr;
 import se.sics.gvod.config.StunClientConfiguration;
@@ -624,11 +623,22 @@ public class StunClient extends MsgRetryComponent {
             // See the NatCracker paper for more details.
             // Try 0 to Try 7 to four addresses
             Session session = sessionMap.get(transactionId);
+            
+            
+            if (session == null) {
+                StringBuilder sb = new StringBuilder();
+                for (Long t : sessionMap.keySet()) {
+                    sb.append(t).append(", ");
+                }
+                logger.error(compName + " couldn't find session for PortAllocReq. My tid: {}. Existing tids: " 
+                        + sb.toString(), response.getKey().toString());
+                return;
+            }
+            
             VodAddress serverS1Address = session.getServer1();
             VodAddress serverS2Address = ToVodAddr.stunServer(
                     session.getPartnerServer().getPeerAddress());
             int s1AlternativePort = VodConfig.DEFAULT_STUN_PORT_2;
-//                    session.getServer1Port2();
 
             VodAddress serverS1AddressPrime =
                     ToVodAddr.stunServer2(new Address(serverS1Address.getIp(),
@@ -962,10 +972,12 @@ public class StunClient extends MsgRetryComponent {
                 long transactionId = event.getRequestMsg().getTransactionId();
                 Session session = sessionMap.get(transactionId);
                 if (session == null) {
-                    System.out.println("Missing entry for " + transactionId);
+                    StringBuilder sb = new StringBuilder();
                     for (Long t : sessionMap.keySet()) {
-                        System.out.println(t);
+                        sb.append(t).append(", ");
                     }
+                    logger.error(compName + "Missing entry for " + transactionId + " . Entries are: "
+                            + sb.toString());
                 }
                 sendEchoChangePortRequest(session.getServer1(), transactionId);
 

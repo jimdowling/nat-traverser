@@ -11,7 +11,6 @@ import se.sics.gvod.common.msgs.RelayMsgNetty;
 import se.sics.gvod.config.BaseCommandLineConfig;
 import se.sics.gvod.croupier.msgs.ShuffleMsg;
 import se.sics.gvod.hp.msgs.HpMsg;
-import se.sics.gvod.nat.common.MsgRetryComponent;
 import se.sics.gvod.nat.emu.events.DistributedNatGatewayEmulatorInit;
 import se.sics.gvod.nat.emu.events.NatPortBindResponse;
 import se.sics.gvod.nat.emu.events.RuleCleanupTimeout;
@@ -36,9 +35,11 @@ import se.sics.kompics.*;
  *
  * @author jdowling
  */
-public class DistributedNatGatewayEmulator extends MsgRetryComponent {
+public class DistributedNatGatewayEmulator extends ComponentDefinition {
 
     private final Logger logger = LoggerFactory.getLogger(DistributedNatGatewayEmulator.class);
+    Positive<VodNetwork> network = positive(VodNetwork.class);
+    Positive<se.sics.gvod.timer.Timer> timer = positive(se.sics.gvod.timer.Timer.class);
     Negative<VodNetwork> upperNet = negative(VodNetwork.class);
     Negative<NatNetworkControl> upperNetControl = negative(NatNetworkControl.class);
     Positive<NatNetworkControl> lowerNetControl = positive(NatNetworkControl.class);
@@ -114,27 +115,25 @@ public class DistributedNatGatewayEmulator extends MsgRetryComponent {
     }
 
     public DistributedNatGatewayEmulator() {
-        this(null);
-    }
-
-    public DistributedNatGatewayEmulator(RetryComponentDelegator delegator) {
-        super(delegator);
-        this.delegator.doSubscribe(handleStart, control);
-        this.delegator.doSubscribe(handleStop, control);
-        this.delegator.doSubscribe(handleUpperMessage, upperNet);
-        this.delegator.doSubscribe(handleLowerMessage, network);
-        this.delegator.doSubscribe(handleInit, control);
-        this.delegator.doSubscribe(handleUpnpGetPublicIpRequest, upnpPort);
-        this.delegator.doSubscribe(handleMapPortsRequest, upnpPort);
-        this.delegator.doSubscribe(handleUnmapPortRequest, upnpPort);
-        this.delegator.doSubscribe(handleShutdownUpnp, upnpPort);
-        this.delegator.doSubscribe(handleNatPortBindResponse, lowerNetControl);
-        this.delegator.doSubscribe(handlePortBindRequest, upperNetControl);
-        this.delegator.doSubscribe(handlePortAllocRequest, upperNetControl);
-        this.delegator.doSubscribe(handlePortDeleteRequest, upperNetControl);
+        subscribe(handleStart, control);
+        subscribe(handleStop, control);
+        subscribe(handleUpperMessage, upperNet);
+        subscribe(handleLowerMessage, network);
+        subscribe(handleInit, control);
+        subscribe(handleUpnpGetPublicIpRequest, upnpPort);
+        subscribe(handleMapPortsRequest, upnpPort);
+        subscribe(handleUnmapPortRequest, upnpPort);
+        subscribe(handleShutdownUpnp, upnpPort);
+        subscribe(handleNatPortBindResponse, lowerNetControl);
+        subscribe(handlePortBindRequest, upperNetControl);
+        subscribe(handlePortBindResponse, lowerNetControl);
+        subscribe(handlePortAllocRequest, upperNetControl);
+        subscribe(handlePortAllocResponse, lowerNetControl);
+        subscribe(handlePortDeleteRequest, upperNetControl);
+        subscribe(handlePortDeleteResponse, lowerNetControl);
 
         // handler in super class
-        this.delegator.doSubscribe(handleRTO, timer);
+//        subscribe(handleRTO, timer);
     }
     Handler<DistributedNatGatewayEmulatorInit> handleInit = new Handler<DistributedNatGatewayEmulatorInit>() {
         @Override
@@ -161,7 +160,7 @@ public class DistributedNatGatewayEmulator extends MsgRetryComponent {
             SchedulePeriodicTimeout st = new SchedulePeriodicTimeout(ruleCleanupPeriod, ruleCleanupPeriod);
             RuleCleanupTimeout msgTimeout = new RuleCleanupTimeout(st);
             st.setTimeoutEvent(msgTimeout);
-            delegator.doTrigger(st, timer);
+            trigger(st, timer);
         }
     };
     Handler<PortBindRequest> handlePortBindRequest = new Handler<PortBindRequest>() {
@@ -170,64 +169,103 @@ public class DistributedNatGatewayEmulator extends MsgRetryComponent {
 
             logger.trace(compName + "Port bind request received.");
 
-            PortBindResponse response = event.getResponse();
-            if (allocatedPorts.contains(event.getPort())) {
-                response.setStatus(PortBindResponse.Status.PORT_ALREADY_BOUND);
-            } else {
-                allocatedPorts.add(event.getPort());
-                response.setStatus(PortBindResponse.Status.SUCCESS);
-            }
-            delegator.doTrigger(response, upperNetControl);
-        }
-    };
-    Handler<PortAllocRequest> handlePortAllocRequest = new Handler<PortAllocRequest>() {
-        @Override
-        public void handle(PortAllocRequest event) {
-            int numPorts = event.getNumPorts();
-
-            logger.trace(compName + "Port allocation request received.");
-
-            Set<Integer> setPorts = new HashSet<Integer>();
-
-            for (int i = 0; i < numPorts; i++) {
-                int randPort = -1;
-                do {
-                    randPort = rand.nextInt(Math.abs(endPortRange - startPortRange)) + startPortRange;
-                } while (allocatedPorts.contains(randPort));
-                allocatedPorts.add(randPort);
-                setPorts.add(randPort);
-                logger.trace(compName + "Allocated port : " + randPort);
-            }
-
-            PortAllocResponse response = event.getResponse();
-            response.setAllocatedPorts(setPorts);
-            delegator.doTrigger(response, upperNetControl);
+//            PortBindResponse response = event.getResponse();
+//            if (allocatedPorts.contains(event.getPort())) {
+//                response.setStatus(PortBindResponse.Status.PORT_ALREADY_BOUND);
+//            } else {
+//                allocatedPorts.add(event.getPort());
+//                response.setStatus(PortBindResponse.Status.SUCCESS);
+//            }
+//            trigger(response, upperNetControl);
+            trigger(event, lowerNetControl);
         }
     };
     
-    Handler<PortDeleteRequest> handlePortDeleteRequest = new Handler<PortDeleteRequest>() {
+    Handler<PortBindResponse> handlePortBindResponse = new Handler<PortBindResponse>() {
         @Override
-        public void handle(PortDeleteRequest message) {
-            Set<Integer> p = message.getPortsToDelete();
-            Set<Integer> deletedPorts = new HashSet<Integer>();
-            for (int i : p) {
-                if (allocatedPorts.remove(i)) {
-                    deletedPorts.add(i);
-                }
+        public void handle(PortBindResponse event) {
+            
+            if (event.getStatus() == PortBindResponse.Status.SUCCESS) {
+                allocatedPorts.add(event.getPort());
             }
-            PortDeleteResponse response = message.getResponse();
-            if (response != null) {
-                response.setPorts(deletedPorts);
-                delegator.doTrigger(response, upperNetControl);
-            }
+            
+            trigger(event, upperNetControl);
+        }
+    };        
+    Handler<PortAllocRequest> handlePortAllocRequest = new Handler<PortAllocRequest>() {
+        @Override
+        public void handle(PortAllocRequest event) {
+//            int numPorts = event.getNumPorts();
+//
+//            logger.trace(compName + "Port allocation request received.");
+//
+//            Set<Integer> setPorts = new HashSet<Integer>();
+//
+//            for (int i = 0; i < numPorts; i++) {
+//                int randPort = -1;
+//                do {
+//                    randPort = rand.nextInt(Math.abs(endPortRange - startPortRange)) + startPortRange;
+//                } while (allocatedPorts.contains(randPort));
+//                allocatedPorts.add(randPort);
+//                setPorts.add(randPort);
+//                logger.trace(compName + "Allocated port : " + randPort);
+//            }
+//
+//            PortAllocResponse response = event.getResponse();
+//            response.setAllocatedPorts(setPorts);
+//            trigger(response, upperNetControl);
+            
+            trigger(event, lowerNetControl);
         }
     };
+    
+    Handler<PortAllocResponse> handlePortAllocResponse = new Handler<PortAllocResponse>() {
+        @Override
+        public void handle(PortAllocResponse event) {
+            
+            for (int p : event.getAllocatedPorts()) {
+                allocatedPorts.add(p);
+            }
+            
+            trigger(event, upperNetControl);
+        }
+    };    
+    
+    Handler<PortDeleteRequest> handlePortDeleteRequest = new Handler<PortDeleteRequest>() {
+        @Override
+        public void handle(PortDeleteRequest event) {
+//            Set<Integer> p = event.getPortsToDelete();
+//            Set<Integer> deletedPorts = new HashSet<Integer>();
+//            for (int i : p) {
+//                if (allocatedPorts.remove(i)) {
+//                    deletedPorts.add(i);
+//                }
+//            }
+//            PortDeleteResponse response = event.getResponse();
+//            if (response != null) {
+//                response.setPorts(deletedPorts);
+//                trigger(response, upperNetControl);
+//            }
+            trigger(event, lowerNetControl);
+        }
+    };
+    
+    Handler<PortDeleteResponse> handlePortDeleteResponse = new Handler<PortDeleteResponse>() {
+        @Override
+        public void handle(PortDeleteResponse event) {
+            for (int i : event.getPorts()) {
+                allocatedPorts.remove(i);
+            }
+            trigger(event, upperNetControl);
+        }
+    };
+    
     Handler<UnmapPortsRequest> handleUnmapPortRequest =
             new Handler<UnmapPortsRequest>() {
         @Override
         public void handle(UnmapPortsRequest event) {
             logger.trace(compName + "UnmapPortsRequest event");
-            delegator.doTrigger(new UnmapPortsResponse(event, true), upnpPort);
+            trigger(new UnmapPortsResponse(event, true), upnpPort);
         }
     };
     Handler<ShutdownUpnp> handleShutdownUpnp =
@@ -262,11 +300,11 @@ public class DistributedNatGatewayEmulator extends MsgRetryComponent {
                 }
 
                 logger.debug(compName + "UPNP mapping " + upnpMappedPort);
-                delegator.doTrigger(new MapPortsResponse(event, mappedPorts,
+                trigger(new MapPortsResponse(event, mappedPorts,
                         natPublicAddress, 99 /* natId */, res), upnpPort);
 
             } else {
-                delegator.doTrigger(new MapPortsResponse(event, event.getPrivatePublicPorts(),
+                trigger(new MapPortsResponse(event, event.getPrivatePublicPorts(),
                         natPublicAddress, 99 /* natId */, false), upnpPort);
             }
         }
@@ -276,7 +314,7 @@ public class DistributedNatGatewayEmulator extends MsgRetryComponent {
         @Override
         public void handle(UpnpGetPublicIpRequest event) {
             logger.trace(compName + "handleUPNPGetPublicIPrequest");
-            delegator.doTrigger(new UpnpGetPublicIpResponse(event, natPublicAddress), upnpPort);
+            trigger(new UpnpGetPublicIpResponse(event, natPublicAddress), upnpPort);
         }
     };
     Handler<Start> handleStart = new Handler<Start>() {
@@ -331,7 +369,7 @@ public class DistributedNatGatewayEmulator extends MsgRetryComponent {
                         + inMsg.getClass());
             }
             if (natType == Nat.Type.OPEN) {
-                delegator.doTrigger(msg, network);
+                trigger(msg, network);
                 return;
             } else if (isUpnp()) {
                 logger.trace(compName + "Handle Upper Message.UPnP");
@@ -348,7 +386,7 @@ public class DistributedNatGatewayEmulator extends MsgRetryComponent {
                         msg.getSource().getPort(),
                         msg.getSource().getId());
                 msg.rewritePublicSource(newSourceAddress);
-                delegator.doTrigger(msg, network);
+                trigger(msg, network);
                 logger.trace(compName + " packet send to lower port. private src:"
                         //                        + msg.getPrivateSource() 
                         + " src:"
@@ -512,7 +550,7 @@ public class DistributedNatGatewayEmulator extends MsgRetryComponent {
                     msg.getSource().getId());
 
             msg.rewritePublicSource(newSourceAddress);
-            delegator.doTrigger(msg, network);
+            trigger(msg, network);
             logger.debug(compName + "handleUpperMsg in Nat. timeoutId " + msg.getTimeoutId()
                     + " src: " + msg.getSource()
                     + " dest: " + msg.getDestination()
@@ -545,7 +583,7 @@ public class DistributedNatGatewayEmulator extends MsgRetryComponent {
                         + msg.getClass());
             }
             if (natType == Nat.Type.OPEN) {
-                delegator.doTrigger(msg, upperNet);
+                trigger(msg, upperNet);
             } else if (isUpnp()) {
                 logger.trace(compName + "HandleLowerMessage. UPnP");
                 // before sending the message change the dest address
@@ -554,7 +592,7 @@ public class DistributedNatGatewayEmulator extends MsgRetryComponent {
                         msg.getDestination().getPort(),
                         msg.getDestination().getId());
                 msg.rewriteDestination(newDestinationAddress);
-                delegator.doTrigger(msg, upperNet);
+                trigger(msg, upperNet);
                 logger.trace(compName + "allowing the packet in src " + msg.getSource()
                         + " dest " + msg.getDestination()
                         + " msg class " + msg.getClass().toString());
@@ -684,7 +722,7 @@ public class DistributedNatGatewayEmulator extends MsgRetryComponent {
                 if (forward) {
                     // Change dest port and address
                     msg.rewriteDestination(v);
-                    delegator.doTrigger(msg, upperNet);
+                    trigger(msg, upperNet);
 
                     logger.debug(compName + "FORWARDING the packet in src " + msg.getSource()
                             + " dest " + msg.getDestination()
@@ -807,7 +845,7 @@ public class DistributedNatGatewayEmulator extends MsgRetryComponent {
                     if (event.getStatus() == NatPortBindResponse.Status.PORT_ALREADY_BOUND) {
                         // Something wrong here.
                         // TODO - change this to a normal PortBindResponse.Failed event
-                        delegator.doTrigger(new Fault(new IllegalStateException("Could not bind port "
+                        trigger(new Fault(new IllegalStateException("Could not bind port "
                                 + portToMap + " . Port already bound.")), control);
                     }
 
@@ -829,7 +867,7 @@ public class DistributedNatGatewayEmulator extends MsgRetryComponent {
             // will not send a message from an IP address and port that it is not bound to.
             msg.rewritePublicSource(newSourceAddress);
 
-            delegator.doTrigger(msg, network);
+            trigger(msg, network);
 
             logger.debug(compName + " NatPortBindResponse packet send to lower port. private src:"
                     + " public src:"
@@ -891,7 +929,7 @@ public class DistributedNatGatewayEmulator extends MsgRetryComponent {
         BindingSession session = new BindingSession(v, destIp, dstPort, msg);
         NatPortBindResponse resp = new NatPortBindResponse(req, session, rtoRetries);
         req.setResponse(resp);
-        delegator.doTrigger(req, lowerNetControl);
+        trigger(req, lowerNetControl);
 
         // Map the new one, mapping overrides current mapping
         // TODO: should not override
@@ -967,8 +1005,11 @@ public class DistributedNatGatewayEmulator extends MsgRetryComponent {
         return className;
     }
 
-    @Override
-    public void stop(Stop event) {
+    public Handler<Stop> handleStop = new Handler<Stop>() {
+        @Override
+        public void handle(Stop event) {
         logger.debug(compName + " nat gateway stopped");
-    }
+
+        }
+    };    
 }

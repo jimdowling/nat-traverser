@@ -5,6 +5,10 @@ import se.sics.gvod.net.Nat;
 import se.sics.kompics.Event;
 import se.sics.gvod.address.Address;
 
+/**
+ * 
+ * @author jdowling
+ */
 public final class GetNatTypeResponse extends Event {
 
     public static enum Status {
@@ -25,7 +29,14 @@ public final class GetNatTypeResponse extends Event {
     private final int mappedUpnpPort;
     private final Address stunServer;
     private final long timeTaken;
-    
+   
+    /**
+     * 
+     * @param nat
+     * @param status
+     * @param stunServer can be null
+     * @param timeTaken 
+     */
     public GetNatTypeResponse(Nat nat, Status status, Address stunServer, long timeTaken) {
         this.nat = nat;
         this.status = status;
@@ -45,6 +56,10 @@ public final class GetNatTypeResponse extends Event {
         this.timeTaken = timeTaken;
     }
 
+    /**
+     * 
+     * @return stunServerAddress or null, if none.
+     */
     public Address getStunServer() {
         return this.stunServer;
     }
