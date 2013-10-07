@@ -1030,7 +1030,10 @@ public class NatTraverser extends ComponentDefinition {
             parentMaker = create(ParentMaker.class);
             // TODO - do i need a filter for timer msgs too?
             connect(parentMaker.getNegative(Timer.class), timer);
-            connect(parentMaker.getNegative(VodNetwork.class), network, new MsgDestFilterOverlayId(VodConfig.SYSTEM_OVERLAY_ID));
+            connect(parentMaker.getNegative(VodNetwork.class), network
+                    // TODO - This filter is causing msgs to be dropped.
+//                    , new MsgDestFilterOverlayId(VodConfig.SYSTEM_OVERLAY_ID)
+                    );
             // TODO - do i need a filter for natNetworkControl msgs too?
             connect(parentMaker.getNegative(NatNetworkControl.class), lowerNetControl);
             trigger(new ParentMakerInit(self.clone(VodConfig.SYSTEM_OVERLAY_ID),
