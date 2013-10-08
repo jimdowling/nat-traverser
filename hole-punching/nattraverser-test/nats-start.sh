@@ -14,14 +14,10 @@ if [ ${#hosts[@]} -lt 2 ] ; then
 else 
  echo "${hosts[@]}"
 fi
+
 for i in ${hosts[@]}
 do
-# don't kill the bootstrap server on cloud6.sics.se
-if [ $i -ne 6 ] ; then
- ssh $USER@cloud$i.sics.se "cd hpServer ; killall java "
-else
  ssh $USER@cloud$i.sics.se "cd hpServer ; ./kill.sh "
-fi
 done
 
 
@@ -31,7 +27,7 @@ do
  ssh $USER@cloud$i.sics.se "cd hpServer ; ./run.sh false $i 0 4@cloud4.sics.se false ${nats[$x]}"
  echo "Starting on cloud$i with nat ${nats[$x]}"
  x=`expr $x + 1`
- sleep 200
+ sleep 5
 done
 
 

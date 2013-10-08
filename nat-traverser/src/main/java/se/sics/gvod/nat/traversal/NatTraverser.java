@@ -879,7 +879,8 @@ public class NatTraverser extends ComponentDefinition {
 
     public void startHolePunchingProcess(VodAddress destAddress,
             boolean keepConnectionOpenWithHeartbeat, int connRetries, TimeoutId msgTimeoutId) {
-        logger.debug(compName + "Starting hole punching for [" + self.getId() + ", " + destAddress.getId() + "]");
+        logger.info(compName + "Starting hole punching for [" + self.getId() + ", " + destAddress.getId() 
+                + "]. Keep-alive connection=" + keepConnectionOpenWithHeartbeat);
         // starting timer
         ScheduleTimeout st = new ScheduleTimeout(connectionEstablishmentWaitTime + 3000);
         ConnectionEstablishmentTimeout timeoutEvent = new ConnectionEstablishmentTimeout(st, destAddress, msgTimeoutId);
@@ -977,7 +978,7 @@ public class NatTraverser extends ComponentDefinition {
                         // send message to the hole punching client to
                         // remove the connection
 
-                        logger.trace(compName + " deleting the connection " + connectionKey);
+                        logger.info(compName + " deleting the connection " + connectionKey);
                         DeleteConnectionRequest request =
                                 new DeleteConnectionRequest(connectionKey);
                         trigger(request, hpClient.getPositive(HpClientPort.class));

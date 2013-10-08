@@ -67,7 +67,11 @@ public final class BootstrapConfiguration
     public BootstrapConfiguration(String ip, int port, int id,
             long clientRetryPeriod, int clientRetryCount,
             long clientKeepAlivePeriod, int clientWebPort) {
-        this.ip = ip;
+        if (ip != null) {
+            this.ip = ip;
+        } else {
+            this.ip = BaseCommandLineConfig.DEFAULT_BOOTSTRAP_IP;
+        }
         this.port = port;
         this.id = id;
         this.clientRetryPeriod = clientRetryPeriod;

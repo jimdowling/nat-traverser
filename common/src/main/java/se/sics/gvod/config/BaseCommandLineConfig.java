@@ -471,6 +471,10 @@ public abstract class BaseCommandLineConfig {
         singleton.compositeConfig.setProperty(PROP_BOOTSTRAP_IP, ip.getHostAddress());
     }    
     
+    /**
+     * 
+     * @return Address or null if it cannot resolve the hostname
+     */
     public static Address getBootstrapServer() {
         baseInitialized();
         String addr = singleton.compositeConfig.getString(PROP_BOOTSTRAP_IP,

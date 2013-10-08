@@ -375,8 +375,8 @@ public final class NtTesterMain extends ComponentDefinition {
                         croupier.getControl());
                 startTimers.put(self.getId(), System.currentTimeMillis());
             } else {
-                throw new IllegalStateException("Unknown port binding response: " +
-                        event.getStatus());
+                throw new IllegalStateException("Unknown port binding response: "
+                        + event.getStatus());
             }
         }
     };
@@ -519,10 +519,13 @@ public final class NtTesterMain extends ComponentDefinition {
                 new NatReportMsg.NatReport(portUsed, target, success, timeTaken, str);
         List<NatReportMsg.NatReport> nrs = new ArrayList<NatReportMsg.NatReport>();
         nrs.add(nr);
-        VodAddress dest = ToVodAddr.bootstrap(VodConfig.getBootstrapServer());
-        NatReportMsg msg = new NatReportMsg(self.getAddress(), dest, nrs);
-        trigger(msg, network.getPositive(VodNetwork.class));
-        logger.info("Sending report to " + dest);
+        Address b = VodConfig.getBootstrapServer();
+        if (b != null) {
+            VodAddress dest = ToVodAddr.bootstrap(b);
+            NatReportMsg msg = new NatReportMsg(self.getAddress(), dest, nrs);
+            trigger(msg, network.getPositive(VodNetwork.class));
+            logger.debug("Sending report to " + dest);
+        }
     }
     public Handler<Fault> handleFault = new Handler<Fault>() {
         @Override

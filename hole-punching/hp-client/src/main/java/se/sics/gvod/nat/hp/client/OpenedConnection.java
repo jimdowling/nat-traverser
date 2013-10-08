@@ -5,6 +5,7 @@
 package se.sics.gvod.nat.hp.client;
 
 import se.sics.gvod.address.Address;
+import se.sics.gvod.net.Nat;
 
 /**
  *
@@ -15,7 +16,7 @@ public class OpenedConnection {
     final Address holeOpened;
     final int portInUse;
     long lastUsed;
-    short numSuccessfulPings;
+    int numTimesUsed;
     final int natBindingTimeout;
     final boolean heartbeat;
 
@@ -34,9 +35,9 @@ public class OpenedConnection {
         this.portInUse = portInUseLocally;
         this.holeOpened = holeOpened;
         this.lastUsed = System.currentTimeMillis();
-        this.natBindingTimeout = natBindingTimeout;
+        this.natBindingTimeout = Math.max(Nat.DEFAULT_RULE_EXPIRATION_TIME, natBindingTimeout);
         this.heartbeat = heartbeat;
-        this.numSuccessfulPings = 0;
+        this.numTimesUsed = 0;
     }
 
     public int getNatBindingTimeout() {
@@ -55,12 +56,13 @@ public class OpenedConnection {
         this.lastUsed = lastUsed;
     }
 
-    public void incNumSuccessfulPings() {
-        this.numSuccessfulPings++;
+    public void incNumTimesUsed() {
+        this.numTimesUsed = (this.numTimesUsed == Integer.MAX_VALUE) ? Integer.MIN_VALUE :
+                ++this.numTimesUsed;
     }
 
-    public short getNumSuccessfulPings() {
-        return numSuccessfulPings;
+    public int getNumTimesUsed() {
+        return numTimesUsed;
     }
 
     public int getPortInUse() {
@@ -69,7 +71,7 @@ public class OpenedConnection {
 
     public boolean isExpired() {
         return ((System.currentTimeMillis() - getLastUsed())
-                > getNatBindingTimeout());
+                > (getNatBindingTimeout()));
     }
 
     public Address getHoleOpened() {

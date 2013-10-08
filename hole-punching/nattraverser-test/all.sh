@@ -1,6 +1,6 @@
 #!/bin/bash
-set -e
 ./kill.sh
+set -e
 ./build.sh
 ./copy.sh
 ./start.sh

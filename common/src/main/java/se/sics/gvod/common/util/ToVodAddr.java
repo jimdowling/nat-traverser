@@ -6,6 +6,7 @@ package se.sics.gvod.common.util;
 
 import se.sics.gvod.address.Address;
 import se.sics.gvod.config.VodConfig;
+import se.sics.gvod.net.Nat;
 import se.sics.gvod.net.VodAddress;
 
 /**
@@ -35,9 +36,9 @@ public class ToVodAddr {
                 addr.getId()), VodConfig.SYSTEM_OVERLAY_ID);
     }
 
-    public static VodAddress hpClient(Address addr) {
+    public static VodAddress hpClient(Address addr, Nat nat) {
         return new VodAddress(new Address(addr.getIp(), addr.getPort(),
-                addr.getId()), VodConfig.SYSTEM_OVERLAY_ID);
+                addr.getId()), VodConfig.SYSTEM_OVERLAY_ID, nat);
     }
 
     public static VodAddress systemAddr(Address addr) {
