@@ -7,7 +7,7 @@
         <groupId>se.sics.hp</groupId>
         <version>1.0-SNAPSHOT</version>
     </parent>
-    <groupId>se.sics.hp.clientmain</groupId>
+    <groupId>se.sics.hp.test</groupId>
     <artifactId>nattraverser-test</artifactId>
     <name>NatTraverser Test</name>
     <url>http://maven.apache.org</url>
@@ -63,21 +63,44 @@
     <build>
         <plugins>
             <plugin>
+                <groupId>com.pyx4me</groupId>
+                <artifactId>proguard-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <phase></phase>
+                        <goals>
+                            <goal>proguard</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <obfuscate>true</obfuscate>
+                    <injar>${project.build.finalName}-jar-with-dependencies.jar</injar>
+                    <outjar>${project.build.finalName}-small.jar</outjar>
+                    <outputDirectory>${project.build.directory}</outputDirectory>
+                    <proguardInclude>${basedir}/proguard.conf</proguardInclude>
+                    <options>
+                        <option>-allowaccessmodification</option>
+                    </options>
+                    <libs>
+                        <lib>${java.home}/lib/rt.jar</lib>
+                    </libs>
+                    <addMavenDescriptor>false</addMavenDescriptor>
+                </configuration>
+            </plugin>            
+            
+            <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
                 <configuration>
-<!--                    <appendAssemblyId>true</appendAssemblyId>
-                    <descriptors>
-                        <descriptor>src/main/assembly/jar.xml</descriptor>
-                    </descriptors>-->
                     <descriptorRefs>
                         <descriptorRef>jar-with-dependencies</descriptorRef>
                     </descriptorRefs>
-                    
                     <archive>
                         <manifest>
                             <mainClass>se.sics.gvod.nat.hp.NtTesterMain</mainClass>
                         </manifest>
                     </archive>
+                    <recompressZippedFiles>true</recompressZippedFiles>
                 </configuration>
             </plugin>
             <plugin>
@@ -92,6 +115,36 @@
                     </execution>                
                 </executions>
             </plugin>
+            
+<!--            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>2.1</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <transformers>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                    <mainClass>se.sics.gvod.nat.hp.NtTesterMain</mainClass>
+                                </transformer>
+                            </transformers>
+                            <minimizeJar>true</minimizeJar>
+                            <artifactSet>
+                                <excludes>
+                                    <exclude>se.sics.nat.common:nat-common:jar</exclude>
+                                    <exclude>org.slf4j:slf4j-log4j12:jar:1.5.6</exclude>
+                                    <exclude>se.sics.stun.upnp:upnp-component:jar</exclude>
+                                    <exclude>se.sics.kompics.nat.logger:logger:jar</exclude>
+                                </excludes>
+                            </artifactSet>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>            -->
         </plugins>
     </build>
 </project>

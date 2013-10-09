@@ -47,7 +47,7 @@ public final class CroupierStats {
             new ConcurrentHashMap<Integer, Integer>();
     private static final ConcurrentHashMap<Integer, Integer> shufflesTimedout =
             new ConcurrentHashMap<Integer, Integer>();
-    private static GraphUtil g = new GraphUtil();
+//    private static GraphUtil g = new GraphUtil();
     private final static NetworkModel networkModel = new KingLatencyMap(VodConfig.getSeed());
     private static int totalLatencyToPrivateNodes = 0;
     
@@ -804,20 +804,20 @@ public final class CroupierStats {
         double id, od, cc, pl, istd;
         int diameter;
         
-        g.init(nodeMap);
-        id = g.getMeanInDegree();
-        istd = g.getInDegreeStdDev();
-        od = g.getMeanOutDegree();
-        cc = g.getMeanClusteringCoefficient();
-        pl = g.getMeanPathLength();
-        diameter = g.getDiameter();
+//        g.init(nodeMap);
+//        id = g.getMeanInDegree();
+//        istd = g.getInDegreeStdDev();
+//        od = g.getMeanOutDegree();
+//        cc = g.getMeanClusteringCoefficient();
+//        pl = g.getMeanPathLength();
+//        diameter = g.getDiameter();
         
-        str += "Diameter: " + diameter + "\n";
-        str += "Average path length: " + String.format("%.4f", pl) + "\n";
-        str += "Clustering-coefficient: " + String.format("%.4f", cc) + "\n";
-        str += "Average in-degree: " + String.format("%.4f", id) + "\n";
-        str += "In-degree standard deviation: " + String.format("%.4f", istd) + "\n";
-        str += "Average out-degree: " + String.format("%.4f", od) + "\n";
+//        str += "Diameter: " + diameter + "\n";
+//        str += "Average path length: " + String.format("%.4f", pl) + "\n";
+//        str += "Clustering-coefficient: " + String.format("%.4f", cc) + "\n";
+//        str += "Average in-degree: " + String.format("%.4f", id) + "\n";
+//        str += "In-degree standard deviation: " + String.format("%.4f", istd) + "\n";
+//        str += "Average out-degree: " + String.format("%.4f", od) + "\n";
         
         return str;
     }

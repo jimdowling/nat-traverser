@@ -137,7 +137,7 @@ public final class NtTesterMain extends ComponentDefinition {
             String serverStr = args[3];
             int idx = serverStr.lastIndexOf("@");
             if (idx == -1) {
-                logger.info("bootstrapNodeId@bootstrapNodeIp format incorrect.");
+                logger.info("id@ip is the correct format. Your address format was incorrect.");
                 exit();
             }
             server = serverStr.substring(idx + 1);
@@ -402,7 +402,7 @@ public final class NtTesterMain extends ComponentDefinition {
         @Override
         public void handle(TConnectionMsg.Ping ping) {
 
-            logger.info("ping recvd from "
+            logger.debug("ping recvd from "
                     + ping.getSource() + " at " + ping.getDestination() + " - "
                     + ping.getTimeoutId());
 //            report("ping recvd from " + ping.getVodSource() + " at " + ping.getVodDestination()
@@ -430,7 +430,7 @@ public final class NtTesterMain extends ComponentDefinition {
         public void handle(TConnectionMsg.Pong pong) {
 
             long timeTaken = System.currentTimeMillis() - (startTimers.get(pong.getSource().getId()));
-            logger.info("pong recvd from " + pong.getSource() + " - " + pong.getTimeoutId()
+            logger.debug("pong recvd from " + pong.getSource() + " - " + pong.getTimeoutId()
                     + " time taken: " + timeTaken);
             numSuccess++;
             report(pong.getDestination().getPort(),
@@ -454,7 +454,7 @@ public final class NtTesterMain extends ComponentDefinition {
             TimeoutId pt = pangTimeouts.remove(pang.getMsgTimeoutId().getId());
             assert (pt != null);
             trigger(new CancelTimeout(pt), timer.getPositive(Timer.class));
-            logger.info("pang recvd from " + pang.getSource() + " - " + pang.getMsgTimeoutId());
+            logger.debug("pang recvd from " + pang.getSource() + " - " + pang.getMsgTimeoutId());
             numSuccess++;
             logger.info("Total Success/Failure ratio is: {}/{}", numSuccess, numFail);
         }
@@ -462,7 +462,7 @@ public final class NtTesterMain extends ComponentDefinition {
     Handler<PingTimeout> handlePingTimeout = new Handler<PingTimeout>() {
         @Override
         public void handle(PingTimeout msg) {
-            logger.info("FAILURE: pong not recvd for TimeoutId: " + msg.getTimeoutId());
+            logger.debug("FAILURE: pong not recvd for TimeoutId: " + msg.getTimeoutId());
             numFail++;
             logger.info("Total Success/Failure ratio is: {}/{}", numSuccess, numFail);
             report(0, msg.getDest(), false, 0, "Nat Traversal Ping Timeout");
@@ -478,7 +478,7 @@ public final class NtTesterMain extends ComponentDefinition {
                 }
             }
             pangTimeouts.remove(pt);
-            logger.info("FAILURE: pang not recvd for PingtimeoutId {} with PangTimeoutId: " + pt,
+            logger.debug("FAILURE: pang not recvd for PingtimeoutId {} with PangTimeoutId: " + pt,
                     timeout.getId());
             numFail++;
             logger.info("Total Success/Failure ratio is: {}/{}", numSuccess, numFail);
@@ -504,7 +504,7 @@ public final class NtTesterMain extends ComponentDefinition {
                                 natTraverser.getPositive(VodNetwork.class));
                         trigger(st, timer.getPositive(Timer.class));
                         alreadyConnected.add(dest);
-                        logger.info("sending ping with TimeoutId {} to {} ",
+                        logger.debug("sending ping with TimeoutId {} to {} ",
                                 hp.getTimeoutId(), dest);
                         startTimers.put(dest.getId(), System.currentTimeMillis());
                     }

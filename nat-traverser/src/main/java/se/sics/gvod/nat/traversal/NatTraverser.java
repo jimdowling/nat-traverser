@@ -879,7 +879,7 @@ public class NatTraverser extends ComponentDefinition {
 
     public void startHolePunchingProcess(VodAddress destAddress,
             boolean keepConnectionOpenWithHeartbeat, int connRetries, TimeoutId msgTimeoutId) {
-        logger.info(compName + "Starting hole punching for [" + self.getId() + ", " + destAddress.getId() 
+        logger.debug(compName + "Starting hole punching for [" + self.getId() + ", " + destAddress.getId() 
                 + "]. Keep-alive connection=" + keepConnectionOpenWithHeartbeat);
         // starting timer
         ScheduleTimeout st = new ScheduleTimeout(connectionEstablishmentWaitTime + 3000);
@@ -978,7 +978,7 @@ public class NatTraverser extends ComponentDefinition {
                         // send message to the hole punching client to
                         // remove the connection
 
-                        logger.info(compName + " deleting the connection " + connectionKey);
+                        logger.debug(compName + " deleting the connection " + connectionKey);
                         DeleteConnectionRequest request =
                                 new DeleteConnectionRequest(connectionKey);
                         trigger(request, hpClient.getPositive(HpClientPort.class));
@@ -1023,7 +1023,7 @@ public class NatTraverser extends ComponentDefinition {
             // start the server components, when we have some partner for the stun server
             retryStartServerComponents();
         } else if (self.isUpnp()) {
-            logger.info(compName + "UPnP is supported.");
+            logger.debug(compName + "UPnP is supported.");
             if (parentMaker != null) {
                 trigger(new Stop(), parentMaker.getControl());
             }
@@ -1051,7 +1051,7 @@ public class NatTraverser extends ComponentDefinition {
     private Handler<GetNatTypeResponse> handleGetNatTypeResponse = new Handler<GetNatTypeResponse>() {
         @Override
         public void handle(GetNatTypeResponse event) {
-            logger.info(compName + " Nat type is " + event.getStatus() + " - " + event.getNat());
+            logger.debug(compName + " Nat type is " + event.getStatus() + " - " + event.getNat());
             self.setNat(event.getNat());
             self.setUpnp(event.getNat().isUpnp());
 

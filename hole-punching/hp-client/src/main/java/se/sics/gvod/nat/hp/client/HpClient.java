@@ -568,7 +568,7 @@ public class HpClient extends MsgRetryComponent {
             // second: send message to the remote client to delete the connection
             // third: delete the connection from the map
 
-            logger.info(compName + " deleting the connection " + request.getRemoteId());
+            logger.debug(compName + " deleting the connection " + request.getRemoteId());
             OpenedConnection openedConnection = openedConnections.get(request.getRemoteId());
 
             if (openedConnection != null) {
@@ -837,7 +837,7 @@ public class HpClient extends MsgRetryComponent {
                         // has Nat.FilteringPolicy.PORT_DEPENDENT, it will reject the response.
                         // So, use the original openedHole to send the msg.
                         if (session.getRemoteOpenedHole().equals(openedHole) == false) {
-                            logger.info(compName + " ! openedHole {} <-> source of the msg {} ",
+                            logger.debug(compName + " ! openedHole {} <-> source of the msg {} ",
                                     openedHole, response.getVodSource());
                         }
                         if (session.getRemoteOpenedHole() != null) {
@@ -901,7 +901,7 @@ public class HpClient extends MsgRetryComponent {
         if (session.isHeartbeatConnection()) {
             scheduleHeartbeat(openedHole.getId());
         } else {
-            logger.info(compName + "Not heartbeating " + openedHole.getId());
+            logger.debug(compName + "Not heartbeating " + openedHole.getId());
             nonPingedConnections.incrementAndGet();
         }
         openedConnection = new OpenedConnection(
@@ -917,14 +917,14 @@ public class HpClient extends MsgRetryComponent {
     private void addOrUpdateOpenedConnectionNoSession(Address remote, int srcPort) {
         OpenedConnection oc = openedConnections.get(remote.getId());
         if (oc == null) {
-            logger.info(compName + "Couldn't find openedConnection, but now adding one to: " + remote.getId());
+            logger.debug(compName + "Couldn't find openedConnection, but now adding one to: " + remote.getId());
             OpenedConnection newOc = new OpenedConnection(srcPort, remote,
                     (int) self.getNat().getBindingTimeout(), true);
             openedConnections.put(remote.getId(), newOc);
             hpSessions.remove(remote.getId());
             scheduleHeartbeat(remote.getId());            
         } else {
-            logger.info(compName + "Updating openedConnection to: " + remote.getId());
+            logger.debug(compName + "Updating openedConnection to: " + remote.getId());
             oc.setLastUsed(System.currentTimeMillis());
         }
     }
@@ -935,7 +935,7 @@ public class HpClient extends MsgRetryComponent {
         public void handle(HpKeepAliveMsg.Ping msg) {
             NatConnection.refreshConnection(openedConnections, 
                     msg.getVodSource(), msg.getDestination().getPort());
-            logger.info(compName + "Received ping from: " + msg.getSource());
+            logger.debug(compName + "Received ping from: " + msg.getSource());
             HpKeepAliveMsg.Pong reply = new HpKeepAliveMsg.Pong(self.getAddress(), msg.getVodSource(),
                     msg.getTimeoutId());
             delegator.doTrigger(reply, network);
@@ -951,7 +951,7 @@ public class HpClient extends MsgRetryComponent {
             startTime = startTime == null ? 0 : startTime;
             long timeTaken = System.currentTimeMillis() - startTime;
             if (delegator.doCancelRetry(msg.getTimeoutId())) {
-                logger.info(compName + "Received pong from: " + msg.getSource());
+                logger.debug(compName + "Received pong from: " + msg.getSource());
                 if (oc == null) {
                     logger.warn(compName + "Couldn't find connection to heartbeat to: " + remoteId);
                 } else {
@@ -971,7 +971,7 @@ public class HpClient extends MsgRetryComponent {
     };
 
     private void scheduleHeartbeat(int remoteId) {
-        logger.info(compName + "Scheduling heartbeat to " + remoteId);
+        logger.debug(compName + "Scheduling heartbeat to " + remoteId);
         ScheduleTimeout st = new ScheduleTimeout(self.getNat().getBindingTimeout() / 2);
         SendHeartbeatTimeout sht = new SendHeartbeatTimeout(st, remoteId);
         st.setTimeoutEvent(sht);
@@ -988,7 +988,7 @@ public class HpClient extends MsgRetryComponent {
         ScheduleRetryTimeout srt = new ScheduleRetryTimeout(2000, 3, 0.5);
         HpKeepAliveMsg.PingTimeout hbt = new HpKeepAliveMsg.PingTimeout(srt, pingMsg);
         delegator.doRetry(hbt);
-        logger.info(compName + "Sending heartbeat from " + self.getAddress()
+        logger.debug(compName + "Sending heartbeat from " + self.getAddress()
                 + "=>" + src.getPort() + " to : {} with timeout=" + 2000,
                 openedHole);
         startTimers.put(openedHole.getId(), System.currentTimeMillis());
@@ -1240,7 +1240,7 @@ public class HpClient extends MsgRetryComponent {
                     return;
                 } else {
                     openedConnections.remove(oc.getHoleOpened().getId());
-                    logger.info(compName + " removing openedConnection " + oc.getHoleOpened());
+                    logger.debug(compName + " removing openedConnection " + oc.getHoleOpened());
                 }
             }
 
@@ -1396,7 +1396,7 @@ public class HpClient extends MsgRetryComponent {
             }
             for (Integer key : toBeDeleted) {
                 HpSession session = hpSessions.remove(key);
-                logger.info(compName + " GC: hp session time expired. deleting the session " + key + " mechanism: " + session.getHolePunchingMechanism()
+                logger.debug(compName + " GC: hp session time expired. deleting the session " + key + " mechanism: " + session.getHolePunchingMechanism()
                         + " from " + session.getPortInUse() + "=>" + session.getRemoteOpenedHole());
             }
 
@@ -1412,7 +1412,7 @@ public class HpClient extends MsgRetryComponent {
             }
             for (OpenedConnection oc : toDeleteOc) {
                 openedConnections.remove(oc.getHoleOpened().getId());
-                logger.info(compName + " Deleting opened connection: {}"
+                logger.debug(compName + " Deleting opened connection: {}"
                         + self.getId() + "/" + oc.getHoleOpened(),
                         oc.getPortInUse() + "=>");
 
@@ -1923,7 +1923,7 @@ public class HpClient extends MsgRetryComponent {
 
                 if (session != null) {
                     if (session.isHpOngoing()) {
-                        logger.warn(compName + " hp is ongoing: " + session);
+                        logger.debug(compName + " hp is ongoing: " + session);
                         return;
                     }
                     session.setPortInUse(response.getPortToUse());

@@ -497,7 +497,7 @@ public class ParentMaker extends MsgRetryComponent {
         }
 
         if (hpServer.getId() == self.getId()) {
-            logger.info(compName + " trying to add myself as a parent.");
+            logger.debug(compName + " trying to add myself as a parent.");
             return;
         }
         if (hpServer.getPort() == VodConfig.DEFAULT_STUN_PORT
