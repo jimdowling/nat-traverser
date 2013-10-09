@@ -1014,7 +1014,7 @@ public class HpClient extends MsgRetryComponent {
             OpenedConnection oc = openedConnections.remove(remoteId);
             logger.warn(compName + " heartbeat timed out to private node. "
                     + "Removing openedConnection to " + event.getMsg().getDestination()
-                    + " numLeft = " + openedConnections.size());
+                    + " #openNatConnections = " + openedConnections.size());
             pingFailureCount.incrementAndGet();
             HpKeepAliveMsg.Ping msg = (HpKeepAliveMsg.Ping) event.getMsg();
             String str = self.getNat() + " - " + msg.getVodDestination().getNatAsString();
@@ -1919,7 +1919,6 @@ public class HpClient extends MsgRetryComponent {
 
                 // TODO: remove the port from either the boundUnusedPorts or the
                 // tempUnusedPorts. Add any tempUnusedPorts to the boundUnusedPorts
-                int srcPort = response.getPortToUse();
 
                 if (session != null) {
                     if (session.isHpOngoing()) {
@@ -1959,7 +1958,7 @@ public class HpClient extends MsgRetryComponent {
                         delegator.doTrigger(bindReq, natNetworkControl);
                     }
                 } else {
-                    logger.warn(compName + "ERROR: Session not found for " + response.getClass());
+                    logger.debug(compName + "ERROR: Session not found for " + response.getClass());
                 }
             } else { // The ports I sent to the server are not OK.
                 HpSession session = hpSessions.get(remoteId);
