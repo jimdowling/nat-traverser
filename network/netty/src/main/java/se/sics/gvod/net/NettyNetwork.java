@@ -794,8 +794,7 @@ public final class NettyNetwork extends ComponentDefinition {
             String strError = "Source for msg " + "of type " + msg.getClass()
                     + " is not bound at network component: " + msg.getSource();
             logger.error(strError);
-            trigger(new Fault(new IllegalArgumentException(strError)), control);
-            return;
+            throw new IllegalArgumentException(strError);
         }
 
         // use one channel per local socket
@@ -815,8 +814,7 @@ public final class NettyNetwork extends ComponentDefinition {
         } catch (Exception ex) {
             logger.warn("Problem trying to write msg of type: "
                     + msg.getClass().getCanonicalName() + " with src address: "
-                    + src.toString());
-            throw new RuntimeException(ex.getMessage());
+                    + src.toString() + " Exception: " + ex.getMessage());
         }
     }
 

@@ -85,10 +85,6 @@ public class HpConnectMsg implements Serializable {
     public final static class Response extends HpMsg.Response {
 
         static final long serialVersionUID = 1213423434L;
-//        public static enum ResponseType {
-//            OK, REGISTER_FIRST_THEN_CHECK_FEASIBILITY, REMOTE_PEER_NOT_REGISTERED,
-//            NAT_COMBINATION_NOT_TRAVERSABLE, SESSION_ALREADY_EXISTS, BOTH_PEERS_OPEN
-//        }
         private final OpenConnectionResponseType responseType;
         private final HPMechanism hpMechanism;
         private boolean newSession;
