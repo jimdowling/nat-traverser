@@ -156,6 +156,7 @@ public abstract class BaseCommandLineConfig {
     protected static boolean PLANET_LAB = false;
     protected static boolean SKIP_UPNP = true;
     protected static boolean SKIP_GRADIENT = true;
+    protected static boolean REPORT_NETTY_EXCEPTIONS = true;
 
     // All protocol default params
     public static final int DEFAULT_RTO = 1 * 1000;
@@ -564,5 +565,9 @@ public abstract class BaseCommandLineConfig {
 
     protected static CompositeConfiguration getCompositeConfiguration() {
         return singleton.compositeConfig;
+    }
+    
+    public static boolean reportNettyExceptions() {
+        return REPORT_NETTY_EXCEPTIONS;
     }
 }

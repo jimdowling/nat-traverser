@@ -34,7 +34,6 @@ import io.netty.channel.udt.UdtChannel;
 import io.netty.channel.udt.nio.NioUdtProvider;
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.GenericFutureListener;
-import java.net.Inet4Address;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import se.sics.gvod.address.Address;
@@ -55,6 +54,10 @@ import java.net.SocketAddress;
 import java.util.*;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicLong;
+import se.sics.gvod.common.msgs.NatReportMsg;
+import se.sics.gvod.common.util.ToVodAddr;
+import se.sics.gvod.config.BaseCommandLineConfig;
+import se.sics.gvod.net.util.NatReporter;
 
 /**
  * The
@@ -815,6 +818,23 @@ public final class NettyNetwork extends ComponentDefinition {
             logger.warn("Problem trying to write msg of type: "
                     + msg.getClass().getCanonicalName() + " with src address: "
                     + src.toString() + " Exception: " + ex.getMessage());
+            if (BaseCommandLineConfig.reportNettyExceptions()) {
+                try {
+                    NatReportMsg.NatReport nr = new NatReportMsg.NatReport(msg.getSource().getPort(),
+                            ToVodAddr.systemAddr(msg.getDestination()), false,
+                            0, "Netty error: " + ex.getMessage());
+                    List<NatReportMsg.NatReport> nrs = new ArrayList<NatReportMsg.NatReport>();
+                    nrs.add(nr);
+                    VodAddress reportServer = ToVodAddr.bootstrap(VodConfig.getBootstrapServer());
+                    NatReportMsg evt = new NatReportMsg(ToVodAddr.systemAddr(msg.getSource()),
+                            reportServer, nrs);
+                    InetSocketAddress reportDest = address2SocketAddress(
+                            reportServer.getPeerAddress());
+                    channel.writeAndFlush(new DatagramPacket(((Encodable) evt).toByteArray(), reportDest));
+                } catch (Throwable t) {
+                    logger.warn("Couldn't report exception to NatReportServer: " + t.getMessage());
+                }
+            }
         }
     }
 

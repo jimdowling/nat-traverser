@@ -151,7 +151,6 @@ public class NatTraverser extends ComponentDefinition {
     private List<VodAddress> croupierSamples = new ArrayList<VodAddress>();
 
     class ServersInitTimeout extends Timeout {
-
         public ServersInitTimeout(ScheduleTimeout st) {
             super(st);
         }
