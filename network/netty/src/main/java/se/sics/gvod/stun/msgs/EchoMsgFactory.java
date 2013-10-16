@@ -23,7 +23,7 @@ public class EchoMsgFactory  {
         }
 
         @Override
-        protected DirectMsg process(ByteBuf buffer) throws MessageDecodingException {
+        protected EchoMsg.Request process(ByteBuf buffer) throws MessageDecodingException {
          
             int typeId = UserTypesDecoderFactory.readUnsignedIntAsOneByte(buffer);
             EchoMsg.Test testType = EchoMsg.Test.create(typeId);
@@ -46,7 +46,7 @@ public class EchoMsgFactory  {
         }
 
         @Override
-        protected DirectMsg process(ByteBuf buffer) throws MessageDecodingException {
+        protected EchoMsg.Response process(ByteBuf buffer) throws MessageDecodingException {
             int partnerPort  = UserTypesDecoderFactory.readUnsignedIntAsTwoBytes(buffer);
             int typeId = UserTypesDecoderFactory.readUnsignedIntAsOneByte(buffer);
             int tryId = UserTypesDecoderFactory.readUnsignedIntAsOneByte(buffer);

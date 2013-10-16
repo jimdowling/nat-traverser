@@ -62,8 +62,6 @@ public class PingTest
 
 
             try {
-                // www.sics.se
-//                ip = InetAddress.getByName("193.10.64.51");
                 ip = InetAddress.getByName("193.10.67.135");
 
             } catch (UnknownHostException ex) {

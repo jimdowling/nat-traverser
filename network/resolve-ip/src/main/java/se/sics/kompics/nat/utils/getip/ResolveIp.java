@@ -29,10 +29,11 @@ import se.sics.kompics.nat.utils.getip.events.GetIpResponse;
 import se.sics.kompics.nat.utils.getip.events.IpChange;
 
 /**
- * A stateful component that gets the current list of IP addresses
- * bound to different network interfaces on this host.
- * A client can register for an IpChange event that is sent when the the
- * list of available IP addresses changes.
+ * A stateful component that gets the current list of IP addresses bound to
+ * different network interfaces on this host. A client can register for an
+ * IpChange event that is sent when the the list of available IP addresses
+ * changes.
+ *
  * @author jdowling
  */
 public final class ResolveIp extends ComponentDefinition {
@@ -102,7 +103,7 @@ public final class ResolveIp extends ComponentDefinition {
 
         public RecheckIpTimeout(SchedulePeriodicTimeout request,
                 boolean filterTenDot,
-            boolean filterPrivateIps, boolean filterLoopback) {
+                boolean filterPrivateIps, boolean filterLoopback) {
             super(request);
             this.filterLoopback = filterLoopback;
             this.filterTenDot = filterTenDot;
@@ -120,7 +121,6 @@ public final class ResolveIp extends ComponentDefinition {
         public boolean isFilterPrivateIps() {
             return filterPrivateIps;
         }
-        
     }
 
     public ResolveIp() {
@@ -128,11 +128,9 @@ public final class ResolveIp extends ComponentDefinition {
         subscribe(handleRecheckIpTimeout, timerPort);
     }
     private Handler<RecheckIpTimeout> handleRecheckIpTimeout = new Handler<RecheckIpTimeout>() {
-
         @Override
         public void handle(RecheckIpTimeout event) {
-            Set<IpAddrStatus> difference = getLocalNetworkInterfaces(event.isFilterTenDot()
-                    , event.isFilterPrivateIps(), event.isFilterLoopback());
+            Set<IpAddrStatus> difference = getLocalNetworkInterfaces(event.isFilterTenDot(), event.isFilterPrivateIps(), event.isFilterLoopback());
 
             getBoundIpAddr();
 
@@ -201,15 +199,18 @@ public final class ResolveIp extends ComponentDefinition {
                                 || addr.isLoopbackAddress() == true && filterLoopback == false)
                                 && ((addr instanceof Inet6Address) == false)) {
                             // plab nodes have 2 n/w interfaces, the local addr is "10.*.*.*"
-                            if (filterTenDot == false
-                                    || textualPrefixAddr.compareTo("10") != 0) {
-                                if (filterPrivateIps == false
-                                        || textual2PartAddr.compareTo("192.168") != 0) {
-                                    int mtu = ni.getMTU();
-                                    boolean isUp = ni.isUp();
-                                    IpAddrStatus ipAddr =
-                                            new IpAddrStatus(ni, addr, isUp, networkPrefixLength, mtu);
-                                    addresses.add(ipAddr);
+                            if (filterLoopback == false
+                                    || textual2PartAddr.compareTo("127.0") != 0) {
+                                if (filterTenDot == false
+                                        || textualPrefixAddr.compareTo("10") != 0) {
+                                    if (filterPrivateIps == false
+                                            || textual2PartAddr.compareTo("192.168") != 0) {
+                                        int mtu = ni.getMTU();
+                                        boolean isUp = ni.isUp();
+                                        IpAddrStatus ipAddr =
+                                                new IpAddrStatus(ni, addr, isUp, networkPrefixLength, mtu);
+                                        addresses.add(ipAddr);
+                                    }
                                 }
                             }
                         }
@@ -232,7 +233,6 @@ public final class ResolveIp extends ComponentDefinition {
         return difference;
     }
     private Handler<GetIpRequest> handleGetIpRequest = new Handler<GetIpRequest>() {
-
         @Override
         public void handle(GetIpRequest event) {
 
@@ -269,8 +269,7 @@ public final class ResolveIp extends ComponentDefinition {
         Collections.sort(netIfs, new IpComparator());
         InetAddress firstIp;
         if (netIfs.isEmpty()) {
-            getBoundIpAddr();
-            firstIp = boundIp;
+            firstIp = null;
         } else {
             firstIp = netIfs.get(0).getAddr();
         }

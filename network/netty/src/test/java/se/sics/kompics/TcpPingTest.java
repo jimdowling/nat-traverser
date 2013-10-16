@@ -98,7 +98,7 @@ public class TcpPingTest extends TestCase {
         public Handler<Start> handleStart = new Handler<Start>() {
             public void handle(Start event) {
                 trigger(new GetIpRequest(false, EnumSet.of(
-                        GetIpRequest.NetworkInterfacesMask.IGNORE_LOOPBACK,
+                        GetIpRequest.NetworkInterfacesMask.IGNORE_LOCAL_ADDRESSES,
                         GetIpRequest.NetworkInterfacesMask.IGNORE_TEN_DOT_PRIVATE)),
                         resolveIp.getPositive(ResolveIpPort.class));
 

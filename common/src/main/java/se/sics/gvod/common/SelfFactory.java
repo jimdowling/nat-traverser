@@ -91,7 +91,7 @@ public class SelfFactory {
                 new Address(VodConfig.getIp(),
                 VodConfig.getPort(), VodConfig.getNodeId()),
                 VodConfig.SYSTEM_OVERLAY_ID,
-                VodConfig.getNatPolicy(),
+                nats.get(nodeId),
                 parents.get(nodeId));
     }
 

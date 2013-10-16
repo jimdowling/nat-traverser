@@ -6,6 +6,7 @@ package se.sics.gvod.net.util;
 
 import java.util.ArrayList;
 import java.util.List;
+import se.sics.gvod.address.Address;
 import se.sics.gvod.common.RetryComponentDelegator;
 import se.sics.gvod.common.msgs.NatReportMsg;
 import se.sics.gvod.common.util.ToVodAddr;
@@ -19,11 +20,11 @@ import se.sics.kompics.Positive;
  * @author jdowling
  */
 public class NatReporter {
-    
+
     /**
-     * 
+     *
      * @param component
-     * @param network 
+     * @param network
      * @param selfAddress the client's address
      * @param portUsed by the client that is reporting the issue
      * @param target destination address for the issue being reported
@@ -43,15 +44,15 @@ public class NatReporter {
         if (msg.length() > 65535) {
             throw new IllegalArgumentException("msg should be less than 65535 chars.");
         }
-        NatReportMsg.NatReport nr = new NatReportMsg.NatReport(portUsed, target, success, 
+        NatReportMsg.NatReport nr = new NatReportMsg.NatReport(portUsed, target, success,
                 timeTaken, msg);
         List<NatReportMsg.NatReport> nrs = new ArrayList<NatReportMsg.NatReport>();
         nrs.add(nr);
-        VodAddress dest = ToVodAddr.bootstrap(VodConfig.getBootstrapServer());
-        if (dest!= null) {
+        Address bAddr = VodConfig.getBootstrapServer();
+        if (bAddr != null) {
+            VodAddress dest = ToVodAddr.bootstrap(bAddr);
             NatReportMsg evt = new NatReportMsg(selfAddress, dest, nrs);
             component.doTrigger(evt, network);
-        } 
+        }
     }
-    
 }

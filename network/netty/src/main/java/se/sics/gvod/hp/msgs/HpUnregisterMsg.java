@@ -69,7 +69,9 @@ public class HpUnregisterMsg {
 
         @Override
         public RewriteableMsg copy() {
-            return new HpUnregisterMsg.Request(this, vodSrc, delay, status);
+             HpUnregisterMsg.Request hum = new HpUnregisterMsg.Request(this, vodSrc, delay, status);
+             hum.setTimeoutId(timeoutId);
+             return hum;
         }
     }
 

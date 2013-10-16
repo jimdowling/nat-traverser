@@ -128,7 +128,7 @@ public final class NtTesterMain extends ComponentDefinition {
             Random r = new Random(System.currentTimeMillis());
             myId = r.nextInt();
             pickIp = 0;
-            server = "cloud4.sics.se";
+            server = "193.10.64.109";
             serverId = 4;
         } else {
             upnpEnabled = Boolean.parseBoolean(args[0]);
@@ -237,7 +237,8 @@ public final class NtTesterMain extends ComponentDefinition {
 
         if (natType == null) {
             connect(natTraverser.getNegative(Timer.class), timer.getPositive(Timer.class));
-            connect(natTraverser.getNegative(VodNetwork.class), network.getPositive(VodNetwork.class), new MsgDestFilterNodeId(myId));
+            connect(natTraverser.getNegative(VodNetwork.class), network.getPositive(VodNetwork.class), 
+                    new MsgDestFilterNodeId(myId));
             connect(natTraverser.getNegative(NatNetworkControl.class), network.getPositive(NatNetworkControl.class));
         } else {
             natGateway = create(DistributedNatGatewayEmulator.class);
@@ -275,11 +276,11 @@ public final class NtTesterMain extends ComponentDefinition {
         public void handle(Start event) {
             if (pickIp != 0) {
                 trigger(new GetIpRequest(false, EnumSet.of(
-                        GetIpRequest.NetworkInterfacesMask.IGNORE_LOOPBACK)),
+                        GetIpRequest.NetworkInterfacesMask.IGNORE_LOCAL_ADDRESSES)),
                         resolveIp.getPositive(ResolveIpPort.class));
             } else {
                 trigger(new GetIpRequest(false, EnumSet.of(
-                        GetIpRequest.NetworkInterfacesMask.IGNORE_LOOPBACK //, GetIpRequest.NetworkInterfacesMask.IGNORE_TEN_DOT_PRIVATE 
+                        GetIpRequest.NetworkInterfacesMask.IGNORE_LOCAL_ADDRESSES //, GetIpRequest.NetworkInterfacesMask.IGNORE_TEN_DOT_PRIVATE 
                         //,GetIpRequest.NetworkInterfacesMask.IGNORE_PRIVATE
                         )),
                         resolveIp.getPositive(ResolveIpPort.class));

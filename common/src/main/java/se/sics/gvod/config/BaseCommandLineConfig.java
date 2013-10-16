@@ -134,12 +134,13 @@ public abstract class BaseCommandLineConfig {
     public static final int DEFAULT_PORT = 58022;
     public static final int DEFAULT_STUN_PORT = 3478;
     public static final int DEFAULT_STUN_PORT_2 = 3479;
-    public static final String DEFAULT_BOOTSTRAP_IP = "cloud6.sics.se";
+    // only use IP Addresses here - not hostnames.
+    public static final String DEFAULT_BOOTSTRAP_IP = "193.10.64.216";
     public static final int DEFAULT_BOOTSTRAP_PORT = 8011;
 //    public static final int DEFAULT_BOOTSTRAP_ID = Integer.MAX_VALUE;
 //    public static final int DEFAULT_STUN_ID = 1;
 //    public static final int DEFAULT_RENDEZVOUS_ID = 0;
-    public static final String DEFAULT_MONITOR_IP = "cloud6.sics.se";
+    public static final String DEFAULT_MONITOR_IP = "193.10.64.216";
     public static final int DEFAULT_MONITOR_PORT = 8020;
 //    public static final int DEFAULT_MONITOR_ID = Integer.MAX_VALUE - 1;
     public static final int DEFAULT_MEDIA_PORT = 58026;
@@ -151,7 +152,7 @@ public abstract class BaseCommandLineConfig {
     protected static final String VAL_NUMBER = "number";
     protected static final String VAL_PERIOD_SECS = "seconds";
     protected static final String VAL_PERIOD_MILLISECS = "milliseconds";
-    protected static InetAddress ip = null;
+    protected InetAddress ip = null;
     protected static boolean SIMULATION = false;
     protected static boolean PLANET_LAB = false;
     protected static boolean SKIP_UPNP = true;
@@ -180,8 +181,7 @@ public abstract class BaseCommandLineConfig {
      */
     protected Options options = new Options();
     protected CommandLine line;
-    protected static int nodeId;
-    protected static short natPolicy;
+    protected int nodeId;
 
     /**
      * You can call this constructor from the main method of your Main class,
@@ -271,7 +271,7 @@ public abstract class BaseCommandLineConfig {
         processAdditionalOptions();
 
         if (line.hasOption(help.getOpt())) {
-            help(args, "GVod usage:", options);
+            help(args, "GVod usage", options);
         }
 
         if (line.hasOption(simulation.getOpt())) {
@@ -372,13 +372,9 @@ public abstract class BaseCommandLineConfig {
      */
     protected void help(String[] args, String message, Options options) {
         HelpFormatter formatter = new HelpFormatter();
-//        String applicationName = System.getProperty("app.name", "gvod");
         StringWriter stringWriter = new StringWriter();
         PrintWriter writer = new PrintWriter(stringWriter);
-//        formatter.printHelp(writer, HelpFormatter.DEFAULT_WIDTH, applicationName, "", options,
-//                HelpFormatter.DEFAULT_LEFT_PAD, HelpFormatter.DEFAULT_DESC_PAD, "");
         formatter.printHelp("Gvod", options);
-        // XXX add the default values for parameters
         writer.close();
         displayHelper(args, message, stringWriter.getBuffer().toString());
         System.exit(1);
@@ -390,9 +386,9 @@ public abstract class BaseCommandLineConfig {
             System.out.print(" ");
         }
         if (message != null) {
-            logger.info(message);
+            System.out.println(message);
         }
-        logger.info(usage);
+        System.out.println(usage);
     }
 
     /**
@@ -426,24 +422,16 @@ public abstract class BaseCommandLineConfig {
         singleton.ip = nodeIp;
     }
 
+    
+    
     public static int getNodeId() {
         baseInitialized();
-        return nodeId;
+        return singleton.nodeId;
     }
 
     public static void setNodeId(int nodeId) {
         baseInitialized();
-        nodeId = nodeId;
-    }
-
-    public static short getNatPolicy() {
-        baseInitialized();
-        return natPolicy;
-    }
-
-    public static void setNatPolicy(short natPolicy) {
-        baseInitialized();
-        natPolicy = natPolicy;
+        singleton.nodeId = nodeId;
     }
 
     public static int getPort() {

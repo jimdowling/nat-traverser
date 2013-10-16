@@ -22,7 +22,7 @@ public abstract class ServerHostChangeMsgFactory {
         }
 
         @Override
-        protected DirectMsg process(ByteBuf buffer) throws MessageDecodingException {
+        protected ServerHostChangeMsg.Request process(ByteBuf buffer) throws MessageDecodingException {
             Address clientPublicAddr = UserTypesDecoderFactory.readAddress(buffer);
 //            UUID origId = UserTypesDecoderFactory.readUUID(buffer);
             UUID origId = new UUID(buffer.readInt());
@@ -45,7 +45,7 @@ public abstract class ServerHostChangeMsgFactory {
         }
 
         @Override
-        protected DirectMsg process(ByteBuf buffer) throws MessageDecodingException {
+        protected ServerHostChangeMsg.Response process(ByteBuf buffer) throws MessageDecodingException {
             return new ServerHostChangeMsg.Response(vodSrc, vodDest, transactionId, timeoutId);
         }
     }

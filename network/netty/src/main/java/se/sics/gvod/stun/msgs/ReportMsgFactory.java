@@ -20,7 +20,7 @@ public class ReportMsgFactory  {
         }
 
         @Override
-        protected DirectMsg process(ByteBuf buffer) throws MessageDecodingException {
+        protected ReportMsg.Request process(ByteBuf buffer) throws MessageDecodingException {
          
             String msg = UserTypesDecoderFactory.readStringLength256(buffer);
             ReportMsg.Request r = new ReportMsg.Request(vodSrc, vodDest, timeoutId, msg);
@@ -41,7 +41,7 @@ public class ReportMsgFactory  {
         }
 
         @Override
-        protected DirectMsg process(ByteBuf buffer) throws MessageDecodingException {
+        protected ReportMsg.Response process(ByteBuf buffer) throws MessageDecodingException {
             return new ReportMsg.Response(vodSrc, vodDest, timeoutId);
         }
 

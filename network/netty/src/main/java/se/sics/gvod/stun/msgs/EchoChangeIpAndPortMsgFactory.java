@@ -2,7 +2,6 @@ package se.sics.gvod.stun.msgs;
 
 import io.netty.buffer.ByteBuf;
 import se.sics.gvod.common.msgs.MessageDecodingException;
-import se.sics.gvod.net.msgs.DirectMsg;
 import se.sics.gvod.net.util.UserTypesDecoderFactory;
 
 public class EchoChangeIpAndPortMsgFactory  {
@@ -20,7 +19,7 @@ public class EchoChangeIpAndPortMsgFactory  {
         }
 
         @Override
-        protected DirectMsg process(ByteBuf buffer) throws MessageDecodingException {
+        protected EchoChangeIpAndPortMsg.Request process(ByteBuf buffer) throws MessageDecodingException {
             return new EchoChangeIpAndPortMsg.Request(vodSrc, vodDest, transactionId);
         }
     }
@@ -38,7 +37,7 @@ public class EchoChangeIpAndPortMsgFactory  {
         }
 
         @Override
-        protected DirectMsg process(ByteBuf buffer) throws MessageDecodingException {
+        protected EchoChangeIpAndPortMsg.Response process(ByteBuf buffer) throws MessageDecodingException {
             int statusOrdinal = UserTypesDecoderFactory.readUnsignedIntAsOneByte(buffer);
             EchoChangeIpAndPortMsg.Response.Status testType =
                     EchoChangeIpAndPortMsg.Response.Status.values()[statusOrdinal];

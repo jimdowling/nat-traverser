@@ -66,7 +66,7 @@ public class GetIpTest
             public void handle(Start event) {
 
                 trigger(new GetIpRequest(true,
-                        EnumSet.of(NetworkInterfacesMask.IGNORE_LOOPBACK,
+                        EnumSet.of(NetworkInterfacesMask.IGNORE_LOCAL_ADDRESSES,
                         NetworkInterfacesMask.IGNORE_PRIVATE)),
                         resolveIp.getPositive(ResolveIpPort.class));
 

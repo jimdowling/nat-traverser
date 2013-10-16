@@ -263,7 +263,7 @@ public class VodConfig extends BaseCommandLineConfig {
         playerOption.setArgName("player");
         options.addOption(playerOption);
 
-        movieOption = new Option("movie", true, "Movie filename");
+        movieOption = new Option("movie", true, "Movie filename. Creates a torrent, customize using -width and -height");
         movieOption.setArgName("movie");
         options.addOption(movieOption);
 

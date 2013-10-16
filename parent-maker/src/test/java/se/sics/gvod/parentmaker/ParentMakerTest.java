@@ -8,7 +8,6 @@ import se.sics.gvod.config.ParentMakerConfiguration;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import se.sics.gvod.timer.TimeoutId;

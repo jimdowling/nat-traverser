@@ -19,7 +19,7 @@ public class DisconnectMsgFactory {
         }
 
         @Override
-        protected DirectMsg process(ByteBuf buffer) throws MessageDecodingException {
+        protected DisconnectMsg.Request process(ByteBuf buffer) throws MessageDecodingException {
             return new DisconnectMsg.Request(vodSrc, vodDest);
         }
     }
@@ -37,7 +37,7 @@ public class DisconnectMsgFactory {
         }
 
         @Override
-        protected DirectMsg process(ByteBuf buffer) throws MessageDecodingException {
+        protected DisconnectMsg.Response process(ByteBuf buffer) throws MessageDecodingException {
             int ref = UserTypesDecoderFactory.readUnsignedIntAsTwoBytes(buffer);
             return new DisconnectMsg.Response(vodSrc, vodDest, timeoutId, ref);
         }

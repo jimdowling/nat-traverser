@@ -19,7 +19,7 @@ public class GetIpRequest extends Request {
     public static enum NetworkInterfacesMask {
         IGNORE_PRIVATE /* 192.168.*.* IP addresses*/,
         IGNORE_TEN_DOT_PRIVATE /* 10.*.*.* IP addresses*/,
-        IGNORE_LOOPBACK /*127.0.*.* IP addresses*/,
+        IGNORE_LOCAL_ADDRESSES /*127.0.*.* IP addresses*/,
         NO_MASK
     };
 
@@ -35,7 +35,7 @@ public class GetIpRequest extends Request {
      * @param periodicCheckNetworkInterfaces
      */
     public GetIpRequest(boolean periodicCheckNetworkInterfaces) {
-        this(periodicCheckNetworkInterfaces, EnumSet.of(NetworkInterfacesMask.IGNORE_LOOPBACK));
+        this(periodicCheckNetworkInterfaces, EnumSet.of(NetworkInterfacesMask.IGNORE_LOCAL_ADDRESSES));
     }
 
     public GetIpRequest(boolean periodicCheckNetworkInterfaces,
@@ -49,7 +49,7 @@ public class GetIpRequest extends Request {
         this.periodicCheckNetworkInterfaces = periodicCheckNetworkInterfaces;
         this.upnpMappedPort = upnpMapPort;
         this.protocol = protocol;
-        this.ignoreMask = EnumSet.of(NetworkInterfacesMask.IGNORE_LOOPBACK);
+        this.ignoreMask = EnumSet.of(NetworkInterfacesMask.IGNORE_LOCAL_ADDRESSES);
     }
 
     public boolean isFilterTenDotIps() {
@@ -61,7 +61,7 @@ public class GetIpRequest extends Request {
     }
 
     public boolean isFilterLoopback() {
-        return ignoreMask.contains(NetworkInterfacesMask.IGNORE_LOOPBACK);
+        return ignoreMask.contains(NetworkInterfacesMask.IGNORE_LOCAL_ADDRESSES);
     }
 
     public boolean isPeriodicCheckNetworkInterfaces() {

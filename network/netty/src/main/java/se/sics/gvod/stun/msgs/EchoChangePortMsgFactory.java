@@ -19,7 +19,7 @@ public class EchoChangePortMsgFactory  {
         }
 
         @Override
-        protected DirectMsg process(ByteBuf buffer) throws MessageDecodingException {
+        protected EchoChangePortMsg.Request process(ByteBuf buffer) throws MessageDecodingException {
             return new EchoChangePortMsg.Request(vodSrc, vodDest, transactionId);
         }
     }
@@ -37,7 +37,7 @@ public class EchoChangePortMsgFactory  {
         }
 
         @Override
-        protected DirectMsg process(ByteBuf buffer) throws MessageDecodingException {
+        protected EchoChangePortMsg.Response process(ByteBuf buffer) throws MessageDecodingException {
             EchoChangePortMsg.Response response = new EchoChangePortMsg.Response(
                     vodSrc, vodDest, transactionId, timeoutId);
             return response;
