@@ -920,7 +920,8 @@ public class HpClient extends MsgRetryComponent {
     private void addOrUpdateOpenedConnectionNoSession(Address remote, int srcPort) {
         OpenedConnection oc = openedConnections.get(remote.getId());
         if (oc == null) {
-            logger.debug(compName + "Couldn't find openedConnection, but now adding one to: " + remote.getId());
+            logger.debug(compName + "Couldn't find openedConnection, but now adding one to: " 
+                    + remote + " from srcPort " + srcPort);
             OpenedConnection newOc = new OpenedConnection(srcPort, remote,
                     (int) self.getNat().getBindingTimeout(), true);
             openedConnections.put(remote.getId(), newOc);
@@ -986,7 +987,7 @@ public class HpClient extends MsgRetryComponent {
         VodAddress src = new VodAddress(new Address(self.getIp(), oc.getPortInUse(), self.getId()),
                 self.getOverlayId(), self.getNat());
         HpKeepAliveMsg.Ping pingMsg = new HpKeepAliveMsg.Ping(src, openedHole);
-        ScheduleRetryTimeout srt = new ScheduleRetryTimeout(1500, 5, 0.5);
+        ScheduleRetryTimeout srt = new ScheduleRetryTimeout(2000, 3, 0.5);
         HpKeepAliveMsg.PingTimeout hbt = new HpKeepAliveMsg.PingTimeout(srt, pingMsg);
         delegator.doRetry(hbt);
         logger.debug(compName + "Sending heartbeat from " + self.getAddress()
@@ -1121,7 +1122,9 @@ public class HpClient extends MsgRetryComponent {
                         openedHole = session.getRemoteOpenedHole();
                     }
                     addOrUpdateOpenedConnectionNoSession(openedHole.getPeerAddress(),
-                            session.getPortInUse());
+//                            session.getPortInUse()
+                            msg.getDestination().getPort()
+                            );
                     logger.debug(compName + "Local port :" + session.getPortInUse()
                             + " for communicating with " + msg.getDestination());
                 } else {
