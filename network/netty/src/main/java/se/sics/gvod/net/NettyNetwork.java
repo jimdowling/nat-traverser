@@ -796,7 +796,8 @@ public final class NettyNetwork extends ComponentDefinition {
             String strError = "Source for msg " + "of type " + msg.getClass()
                     + " is not bound at network component: " + msg.getSource();
             logger.error(strError);
-            throw new IllegalArgumentException(strError);
+//            throw new IllegalArgumentException(strError);
+            return;
         }
 
         // use one channel per local socket
@@ -804,9 +805,11 @@ public final class NettyNetwork extends ComponentDefinition {
         // the channel object, but only in the MessageEvent object.
         DatagramChannel channel = udpSocketsToChannels.get(src);
         if (channel == null) {
-            throw new IllegalStateException(
-                    "Port not bound at client, cannot send message. "
-                    + "Need to first allocate port: " + src.getPort());
+            String strError = "Source for msg " + "of type " + msg.getClass()
+                    + " . Port not bound at client, need to bind the port first: " + msg.getSource();
+            logger.error(strError);
+//            throw new IllegalArgumentException(strError);
+            return;
         }
         try {
             logger.trace("Sending " + msg.getClass().getCanonicalName() + " from {} to {} ",
