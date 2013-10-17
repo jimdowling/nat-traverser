@@ -23,6 +23,7 @@ public class HpMsgFactory {
             remoteClientId = buffer.readInt();
             msgTimeoutId = UserTypesDecoderFactory.readTimeoutId(buffer);
         }
+        
     };
 
     public static abstract class Request extends Base {
