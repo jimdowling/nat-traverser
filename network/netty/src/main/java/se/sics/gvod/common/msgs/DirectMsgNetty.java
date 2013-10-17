@@ -53,10 +53,7 @@ public class DirectMsgNetty {
 
         protected ByteBuf createChannelBufferWithHeader()
                 throws MessageEncodingException {
-            ByteBuf buffer =
-                    Unpooled.buffer(
-                    getSize()
-                    + 1 /*opcode*/);
+            ByteBuf buffer = Unpooled.buffer( getSize() + 1 /*opcode*/);
             writeHeader(buffer);
             return buffer;
         }

@@ -266,7 +266,7 @@ public class HpClient extends MsgRetryComponent {
             Address scanAddress = new Address(remoteOpenedHole.getIp(),
                     remoteOpenedHole.getPort() + delta,
                     remoteOpenedHole.getId());
-            VodAddress toScan = ToVodAddr.hpServer(scanAddress);
+            VodAddress toScan = new VodAddress(scanAddress, self.getOverlayId());
             scanRetriesCounter++;
             return toScan;
         }
@@ -543,7 +543,7 @@ public class HpClient extends MsgRetryComponent {
                     throw new IllegalStateException("Shouldn't have gotten this far");
                 }
                 Address addr = remoteAddr.getParents().iterator().next();
-                VodAddress zServer = ToVodAddr.hpServer(addr);
+                VodAddress zServer = new VodAddress(addr, self.getOverlayId());
                 HpConnectMsg.Request req = new HpConnectMsg.Request(self.getAddress(),
                         zServer, remoteId, remoteAddr.getDelta(), 0 /* rtt */, msgTimeoutId);
                 ScheduleRetryTimeout st =
@@ -576,7 +576,7 @@ public class HpClient extends MsgRetryComponent {
                 VodAddress newSourceAddress = new VodAddress(srcAddr,
                         self.getOverlayId(), self.getNat(), self.getParents());
                 VodAddress destinationAddress =
-                        ToVodAddr.hpServer(openedConnection.getHoleOpened());
+                        new VodAddress(openedConnection.getHoleOpened(), self.getOverlayId());
                 DeleteConnectionMsg requestMsg = new DeleteConnectionMsg(newSourceAddress,
                         destinationAddress, self.getId(), UUID.nextUUID());
                 delegator.doTrigger(requestMsg, network);
@@ -722,12 +722,7 @@ public class HpClient extends MsgRetryComponent {
     }
 
     private void sendHolePunchingMsg(VodAddress sourceAddress, VodAddress dest,
-            TimeoutId msgTimeoutId,
-            int msgRetries, int rto, double scaleRetries) {
-//        if (msgRetries == 0) // race condition. see paper by roberto
-//        {
-//            throw new UnsupportedOperationException("Message Retries is set to 0. Not a good idea. Should be 1 or more");
-//        }
+            TimeoutId msgTimeoutId, int msgRetries, int rto, double scaleRetries) {
         dest = ToVodAddr.hpClient(dest.getPeerAddress(), dest.getNat());
 
         HolePunchingMsg.Request holePunchingMessage =
@@ -1511,7 +1506,7 @@ public class HpClient extends MsgRetryComponent {
             // For PRP-PRC, this is not a dummyMessage, but the target hole.
             HolePunchingMsg.Request dummyMessage =
                     new HolePunchingMsg.Request(sourceAddress,
-                    ToVodAddr.hpServer(session.getDummyAddress()),
+                    new VodAddress(session.getDummyAddress(), self.getOverlayId()),
                     response.getMsgTimeoutId());
 
             // Message 2 sent to zServer
@@ -1839,7 +1834,7 @@ public class HpClient extends MsgRetryComponent {
         }
         PRP_ConnectMsg.Request availablePortsMsg =
                 new PRP_ConnectMsg.Request(self.getAddress(),
-                ToVodAddr.hpServer(dest),
+                new VodAddress(dest, self.getId()),
                 session.getRemoteClientId(),
                 someAvailablePorts, session.getMsgTimeoutId());
 
@@ -2012,13 +2007,13 @@ public class HpClient extends MsgRetryComponent {
             Address parent,
             Set<Integer> someAvailablePorts) {
         logger.debug(compName + "Sending Interleaved_PRP_ConnectMsg.Request to "
-                + ToVodAddr.hpServer(parent) + " - "
+                + parent + " - "
                 + session.getMsgTimeoutId());
 
         Interleaved_PRP_ConnectMsg.Request availablePortsMsg =
                 new Interleaved_PRP_ConnectMsg.Request(
                 self.getAddress(),
-                ToVodAddr.hpServer(parent),
+                new VodAddress(parent, self.getOverlayId()),
                 session.getRemoteClientId(),
                 someAvailablePorts, session.getMsgTimeoutId());
         ScheduleRetryTimeout st = new ScheduleRetryTimeout(config.getRto(),
