@@ -811,14 +811,12 @@ public class HpClient extends MsgRetryComponent {
                         + response.getSource() + " - id: " + response.getMsgTimeoutId());
                 int remoteId = response.getSource().getId();
 
-                if (openedConnections.contains(remoteId)) {
-                    return;
-                }
+                VodAddress openedHole = response.getVodSource();
+                int srcPort = response.getDestination().getPort();
                 HpSession session = hpSessions.get(remoteId);
                 if (session != null) {
                     session.setHpOngoing(false);
-                    VodAddress openedHole = response.getVodSource();
-                    int srcPort = response.getVodDestination().getPort();
+                    srcPort = response.getVodDestination().getPort();
                     session.setPortInUse(srcPort);
 
 //                    if (self.getNat().getMappingPolicy() == Nat.MappingPolicy.PORT_DEPENDENT
@@ -838,24 +836,14 @@ public class HpClient extends MsgRetryComponent {
 //                            openedHole = session.getRemoteOpenedHole();
 //                        }
 //                    }
-                    
+
                     if (!openedConnections.containsKey(remoteId)) {
                         addOpenedConnection(openedHole,
                                 srcPort, session.isHeartbeatConnection());
                         logger.debug(compName + "Hole session registered f(" + self.getId() + ","
                                 + remoteId + ") - received msg at " + response.getDestination());
-                    } else {
-                        openedConnections.get(remoteId).setLastUsed(System.currentTimeMillis());
                     }
 
-                    Address srcAddr = new Address(self.getIp(), session.getPortInUse(), self.getId());
-                    HolePunchingMsg.ResponseAck ack = new HolePunchingMsg.ResponseAck(
-                            new VodAddress(srcAddr, self.getOverlayId(),
-                            self.getNat(), self.getParents()),
-                            openedHole, response.getTimeoutId(), response.getMsgTimeoutId());
-                    delegator.doTrigger(ack, network);
-                    logger.debug(compName + " sending HolePunchingMsg.ResponseAck to "
-                            + response.getSource().getId());
 
                     // send response to upper component
                     if (session.getOpenConnectionRequest() != null) {
@@ -881,6 +869,15 @@ public class HpClient extends MsgRetryComponent {
                             + remoteId);
                     printSessions();
                 }
+                Address srcAddr = new Address(self.getIp(), srcPort, self.getId());
+                HolePunchingMsg.ResponseAck ack = new HolePunchingMsg.ResponseAck(
+                        new VodAddress(srcAddr, self.getOverlayId(),
+                        self.getNat(), self.getParents()),
+                        openedHole, response.getTimeoutId(), response.getMsgTimeoutId());
+                delegator.doTrigger(ack, network);
+                logger.debug(compName + " sending HolePunchingMsg.ResponseAck to "
+                        + response.getSource().getId());
+
             }
         }
     };
@@ -1003,7 +1000,7 @@ public class HpClient extends MsgRetryComponent {
             int remoteId = event.getMsg().getDestination().getId();
             OpenedConnection oc = openedConnections.remove(remoteId);
             logger.warn(compName + " heartbeat timed out to private node from "
-                   + event.getRequestMsg().getSource()
+                    + event.getRequestMsg().getSource()
                     + " Removing openedConnection to " + event.getMsg().getDestination()
                     + " #openNatConnections = " + openedConnections.size());
             pingFailureCount.incrementAndGet();
