@@ -57,7 +57,6 @@ import java.util.concurrent.atomic.AtomicLong;
 import se.sics.gvod.common.msgs.NatReportMsg;
 import se.sics.gvod.common.util.ToVodAddr;
 import se.sics.gvod.config.BaseCommandLineConfig;
-import se.sics.gvod.net.util.NatReporter;
 
 /**
  * The

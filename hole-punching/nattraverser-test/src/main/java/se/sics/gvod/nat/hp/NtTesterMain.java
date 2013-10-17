@@ -128,7 +128,7 @@ public final class NtTesterMain extends ComponentDefinition {
             Random r = new Random(System.currentTimeMillis());
             myId = r.nextInt();
             pickIp = 0;
-            server = "193.10.64.109";
+            server = "193.10.64.86"; // cloud3
             serverId = 4;
         } else {
             upnpEnabled = Boolean.parseBoolean(args[0]);

@@ -20,4 +20,4 @@ ID=$1
 
 shift
 
-java -jar deploy/hp.jar false $ID 0 4@cloud4.sics.se false $@
+java -jar deploy/hp.jar false $ID 0 6@cloud6.sics.se false $@

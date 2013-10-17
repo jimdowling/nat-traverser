@@ -56,7 +56,7 @@ public abstract class NettyBaseHandler<I> extends SimpleChannelInboundHandler<I>
 
     protected RewriteableMsg updateAddress(RewriteableMsg msg, ChannelHandlerContext ctx, InetSocketAddress remoteAddress)
             throws Exception {
-        logger.debug("updating address of " + msg.getClass() + " src " + msg.getSource().getId()
+        logger.trace("updating address of " + msg.getClass() + " src " + msg.getSource().getId()
                 + " dest: " + msg.getDestination());
         if (remoteAddress.getAddress() instanceof Inet4Address == false) {
             throw new IllegalArgumentException("You are using ipv6 network addresses. "
@@ -74,7 +74,7 @@ public abstract class NettyBaseHandler<I> extends SimpleChannelInboundHandler<I>
         msg.getDestination().setIp(getAddress(ctx));
         msg.getDestination().setPort(getPort(ctx));
 
-        logger.debug("updated address of " + msg.getClass() + " src " + msg.getSource() + " dest: "
+        logger.trace("updated address of " + msg.getClass() + " src " + msg.getSource() + " dest: "
                 + msg.getDestination());
 
         // TODO - for UPNP, the port on which the data is sent from the NAT
