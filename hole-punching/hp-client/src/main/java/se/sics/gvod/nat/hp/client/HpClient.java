@@ -939,8 +939,8 @@ public class HpClient extends MsgRetryComponent {
             NatConnection.refreshConnection(openedConnections, 
                     msg.getVodSource(), msg.getDestination().getPort());
             logger.debug(compName + "Received ping from: " + msg.getSource());
-            HpKeepAliveMsg.Pong reply = new HpKeepAliveMsg.Pong(self.getAddress(), msg.getVodSource(),
-                    msg.getTimeoutId());
+            HpKeepAliveMsg.Pong reply = new HpKeepAliveMsg.Pong(msg.getVodDestination(), 
+                    msg.getVodSource(), msg.getTimeoutId());
             delegator.doTrigger(reply, network);
         }
     };
@@ -983,12 +983,10 @@ public class HpClient extends MsgRetryComponent {
 
     private void sendHeartbeat(OpenedConnection oc) {
         VodAddress openedHole = ToVodAddr.hpServer(oc.getHoleOpened());
-        VodAddress src = new VodAddress(
-                new Address(self.getIp(), oc.getPortInUse(), self.getId()),
+        VodAddress src = new VodAddress(new Address(self.getIp(), oc.getPortInUse(), self.getId()),
                 self.getOverlayId(), self.getNat());
-        HpKeepAliveMsg.Ping pingMsg = new HpKeepAliveMsg.Ping(
-                src, openedHole);
-        ScheduleRetryTimeout srt = new ScheduleRetryTimeout(2000, 3, 0.5);
+        HpKeepAliveMsg.Ping pingMsg = new HpKeepAliveMsg.Ping(src, openedHole);
+        ScheduleRetryTimeout srt = new ScheduleRetryTimeout(1500, 5, 0.5);
         HpKeepAliveMsg.PingTimeout hbt = new HpKeepAliveMsg.PingTimeout(srt, pingMsg);
         delegator.doRetry(hbt);
         logger.debug(compName + "Sending heartbeat from " + self.getAddress()
