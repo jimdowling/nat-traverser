@@ -151,6 +151,7 @@ public class NatTraverser extends ComponentDefinition {
     private List<VodAddress> croupierSamples = new ArrayList<VodAddress>();
 
     class ServersInitTimeout extends Timeout {
+
         public ServersInitTimeout(ScheduleTimeout st) {
             super(st);
         }
@@ -438,18 +439,17 @@ public class NatTraverser extends ComponentDefinition {
     private void forwardDirectMsgUp(DirectMsgNetty.Base msg) {
         logger.trace("handleLowerMessage src (" + msg.getSource()
                 + ") message class :" + msg.getClass().getName());
+        int remoteId = msg.getSource().getId();
+        // If the msg is from a private node, and i don't have a cached openConnection to
+        // it, store it.
         if (!msg.getVodSource().isOpen()
-                && !openedConnections.containsKey(msg.getSource().getId())) {
-            OpenedConnection oc = new OpenedConnection(msg.getDestination().getPort(),
-                    msg.getSource(), Nat.DEFAULT_RULE_EXPIRATION_TIME, false);
-            openedConnections.put(msg.getSource().getId(), oc);
-            logger.debug(compName + " Adding OpenedConnection to " + msg.getSource()
-                    + " from Local Port " + msg.getDestination().getPort());
-        } 
-//        else if (!msg.getVodSource().isOpen()
-//                && openedConnections.containsKey(msg.getSource().getId())) {
-//            OpenedConnection oc = openedConnections.get(msg.getSource().getId());
-//        }
+                && !openedConnections.containsKey(remoteId)) {
+                OpenedConnection oc = new OpenedConnection(msg.getDestination().getPort(),
+                        msg.getSource(), Nat.DEFAULT_RULE_EXPIRATION_TIME, false);
+                openedConnections.put(msg.getSource().getId(), oc);
+                logger.debug(compName + " Adding OpenedConnection to " + msg.getSource()
+                        + " from Local Port " + msg.getDestination().getPort());
+        }
         trigger(msg, upperNet);
     }
     Handler<DirectMsgNetty.Request> handleLowerDirectMsgRequest = new Handler<DirectMsgNetty.Request>() {
@@ -878,7 +878,7 @@ public class NatTraverser extends ComponentDefinition {
 
     public void startHolePunchingProcess(VodAddress destAddress,
             boolean keepConnectionOpenWithHeartbeat, int connRetries, TimeoutId msgTimeoutId) {
-        logger.debug(compName + "Starting hole punching for [" + self.getId() + ", " + destAddress.getId() 
+        logger.debug(compName + "Starting hole punching for [" + self.getId() + ", " + destAddress.getId()
                 + "]. Keep-alive connection=" + keepConnectionOpenWithHeartbeat);
         // starting timer
         ScheduleTimeout st = new ScheduleTimeout(connectionEstablishmentWaitTime + 3000);
@@ -1030,9 +1030,8 @@ public class NatTraverser extends ComponentDefinition {
             parentMaker = create(ParentMaker.class);
             // TODO - do i need a filter for timer msgs too?
             connect(parentMaker.getNegative(Timer.class), timer);
-            connect(parentMaker.getNegative(VodNetwork.class), network
-                    // TODO - This filter is causing msgs to be dropped.
-//                    , new MsgDestFilterOverlayId(VodConfig.SYSTEM_OVERLAY_ID)
+            connect(parentMaker.getNegative(VodNetwork.class), network // TODO - This filter is causing msgs to be dropped.
+                    //                    , new MsgDestFilterOverlayId(VodConfig.SYSTEM_OVERLAY_ID)
                     );
             // TODO - do i need a filter for natNetworkControl msgs too?
             connect(parentMaker.getNegative(NatNetworkControl.class), lowerNetControl);

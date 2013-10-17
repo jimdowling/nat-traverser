@@ -826,23 +826,24 @@ public class HpClient extends MsgRetryComponent {
                     int srcPort = response.getVodDestination().getPort();
                     session.setPortInUse(srcPort);
 
-                    if (self.getNat().getMappingPolicy() == Nat.MappingPolicy.PORT_DEPENDENT
-                            && response.getVodSource().getNat().getFilteringPolicy()
-                            == Nat.FilteringPolicy.PORT_DEPENDENT) {
-                        // if the initiator receives a HolePunchingMsg.Request from the responder on 
-                        // port X, then the HolePunchingMsg.Response to the initiator is sent from port Y -
-                        // the initiator will create a new mapping if it sends a msg to port Y if
-                        // it has Nat.MappingPolicy.PORT_DEPENDENT. In this case, if the initiator
-                        // has Nat.FilteringPolicy.PORT_DEPENDENT, it will reject the response.
-                        // So, use the original openedHole to send the msg.
-                        if (session.getRemoteOpenedHole().equals(openedHole) == false) {
-                            logger.debug(compName + " ! openedHole {} <-> source of the msg {} ",
-                                    openedHole, response.getVodSource());
-                        }
-                        if (session.getRemoteOpenedHole() != null) {
-                            openedHole = session.getRemoteOpenedHole();
-                        }
-                    }
+//                    if (self.getNat().getMappingPolicy() == Nat.MappingPolicy.PORT_DEPENDENT
+//                            && response.getVodSource().getNat().getFilteringPolicy()
+//                            == Nat.FilteringPolicy.PORT_DEPENDENT) {
+//                        // if the initiator receives a HolePunchingMsg.Request from the responder on 
+//                        // port X, then the HolePunchingMsg.Response to the initiator is sent from port Y -
+//                        // the initiator will create a new mapping if it sends a msg to port Y if
+//                        // it has Nat.MappingPolicy.PORT_DEPENDENT. In this case, if the initiator
+//                        // has Nat.FilteringPolicy.PORT_DEPENDENT, it will reject the response.
+//                        // So, use the original openedHole to send the msg.
+//                        if (session.getRemoteOpenedHole().equals(openedHole) == false) {
+//                            logger.debug(compName + " ! openedHole {} <-> source of the msg {} ",
+//                                    openedHole, response.getVodSource());
+//                        }
+//                        if (session.getRemoteOpenedHole() != null) {
+//                            openedHole = session.getRemoteOpenedHole();
+//                        }
+//                    }
+                    
                     if (!openedConnections.containsKey(remoteId)) {
                         addOpenedConnection(openedHole,
                                 srcPort, session.isHeartbeatConnection());
@@ -975,7 +976,7 @@ public class HpClient extends MsgRetryComponent {
     }
 
     private void sendHeartbeat(OpenedConnection oc) {
-        VodAddress openedHole = ToVodAddr.hpServer(oc.getHoleOpened());
+        VodAddress openedHole = new VodAddress(oc.getHoleOpened(), self.getOverlayId());
         VodAddress src = new VodAddress(new Address(self.getIp(), oc.getPortInUse(), self.getId()),
                 self.getOverlayId(), self.getNat());
         HpKeepAliveMsg.Ping pingMsg = new HpKeepAliveMsg.Ping(src, openedHole);
@@ -1006,7 +1007,8 @@ public class HpClient extends MsgRetryComponent {
         public void handle(HpKeepAliveMsg.PingTimeout event) {
             int remoteId = event.getMsg().getDestination().getId();
             OpenedConnection oc = openedConnections.remove(remoteId);
-            logger.warn(compName + " heartbeat timed out to private node. "
+            logger.warn(compName + " heartbeat timed out to private node from "
+                   + event.getRequestMsg().getSource()
                     + "Removing openedConnection to " + event.getMsg().getDestination()
                     + " #openNatConnections = " + openedConnections.size());
             pingFailureCount.incrementAndGet();
