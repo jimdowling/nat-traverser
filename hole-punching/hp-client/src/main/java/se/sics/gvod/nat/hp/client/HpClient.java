@@ -845,10 +845,8 @@ public class HpClient extends MsgRetryComponent {
                         }
 //                    }
 
+                    session.setPortInUse(response.getVodDestination().getPort());
                     if (!openedConnections.containsKey(remoteId)) {
-//                        if (session.getPortInUse() == 0) {
-                            session.setPortInUse(response.getVodDestination().getPort());
-//                        }
                         addOpenedConnection(openedHole, session);
                         logger.debug(compName + "Hole session registered f(" + self.getId() + ","
                                 + remoteId + ") - received msg at " + response.getDestination());
@@ -858,7 +856,9 @@ public class HpClient extends MsgRetryComponent {
 
                     Address srcAddr = new Address(self.getIp(), session.getPortInUse(), self.getId());
                     HolePunchingMsg.ResponseAck ack = new HolePunchingMsg.ResponseAck(
-                            ToVodAddr.hpServer(srcAddr),
+                            new VodAddress(srcAddr, VodConfig.SYSTEM_OVERLAY_ID, 
+                                self.getNat(), self.getParents()),
+//                            response.getVodDestination(),
                             openedHole,
                             response.getTimeoutId(),
                             response.getMsgTimeoutId());
