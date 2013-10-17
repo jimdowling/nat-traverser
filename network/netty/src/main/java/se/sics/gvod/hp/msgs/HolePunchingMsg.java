@@ -58,7 +58,7 @@ public class HolePunchingMsg {
         @Override
         public ByteBuf toByteArray() throws MessageEncodingException {
             ByteBuf buffer = super.createChannelBufferWithHeader();
-//            UserTypesEncoderFactory.writeUnsignedintAsTwoBytes(buffer, destport);
+            UserTypesEncoderFactory.writeUnsignedintAsTwoBytes(buffer, destport);
             return buffer;
         }
 
