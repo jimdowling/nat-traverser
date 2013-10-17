@@ -848,7 +848,9 @@ public class HpClient extends MsgRetryComponent {
 
                     session.setPortInUse(response.getVodDestination().getPort());
                     if (!openedConnections.containsKey(remoteId)) {
-                        addOpenedConnection(openedHole, session);
+                        addOpenedConnection(openedHole, 
+                                response.getVodDestination().getPort(), 
+                                session.isHeartbeatConnection());
                         logger.debug(compName + "Hole session registered f(" + self.getId() + ","
                                 + remoteId + ") - received msg at " + response.getDestination());
                     } else {
@@ -894,24 +896,25 @@ public class HpClient extends MsgRetryComponent {
         }
     };
 
-    private void addOpenedConnection(VodAddress openedHole, HpSession session) {
+    private void addOpenedConnection(VodAddress openedHole, int srcPort, 
+            boolean isHeartbeat) {
         OpenedConnection openedConnection;
         int natBindingTimeout = (int) Math.min(self.getNat().getBindingTimeout(),
                 openedHole.getNatBindingTimeout());
-        if (session.isHeartbeatConnection()) {
+        if (isHeartbeat) {
             scheduleHeartbeat(openedHole.getId());
         } else {
             logger.debug(compName + "Not heartbeating " + openedHole.getId());
             nonPingedConnections.incrementAndGet();
         }
         openedConnection = new OpenedConnection(
-                session.getPortInUse(),
+                srcPort,
                 openedHole.getPeerAddress(),
                 natBindingTimeout,
-                session.isHeartbeatConnection());
+                isHeartbeat);
 
         openedConnections.put(openedHole.getId(), openedConnection);
-        hpSessions.remove(session.getRemoteClientId());
+        hpSessions.remove(openedHole.getId());
     }
 
     private void addOrUpdateOpenedConnectionNoSession(Address remote, int srcPort) {
