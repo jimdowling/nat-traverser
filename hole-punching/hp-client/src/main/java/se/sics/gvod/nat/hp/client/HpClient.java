@@ -1531,7 +1531,7 @@ public class HpClient extends MsgRetryComponent {
             if (session.getHolePunchingMechanism() == HPMechanism.PRP_PRC) {
                 delegator.doRetry(dummyMessage, 500, 5, 1.2d);
             } else {
-                delegator.doTrigger(dummyMessage, network);
+                delegator.doRetry(dummyMessage);
             }
 
         }
@@ -1940,7 +1940,7 @@ public class HpClient extends MsgRetryComponent {
                         if (session.getHolePunchingMechanism() == HPMechanism.PRP_PRC) {
                             delegator.doRetry(dummyHolePunchingMsg, 500, 5, 1.2d);
                         } else {
-                            delegator.doTrigger(dummyHolePunchingMsg, network);
+                            delegator.doRetry(dummyHolePunchingMsg);
                         }
                     } else {
                         Address a = new Address(self.getIp(), response.getPortToUse(), self.getId());
@@ -1972,7 +1972,7 @@ public class HpClient extends MsgRetryComponent {
             if (response.isPrcPrp()) {
                 delegator.doRetry(msg, 500, 5, 1.2d);
             } else {
-                delegator.doTrigger(msg, network);
+                delegator.doRetry(msg);
             }
         }
     };
