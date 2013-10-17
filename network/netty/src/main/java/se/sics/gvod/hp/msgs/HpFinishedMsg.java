@@ -39,7 +39,7 @@ public class HpFinishedMsg extends HpMsg.Oneway
     @Override
     public int getSize()
     {
-      return getHeaderSize()
+      return super.getHeaderSize()
                 + 1 /* hpsuccessful */;
     }
 

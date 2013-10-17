@@ -58,7 +58,7 @@ public class Interleaved_PRC_ServersRequestForPredictionMsg
         @Override
 	public int getSize()
 	{
-		return getHeaderSize()
+		return super.getHeaderSize()
                         + 1
                         + 1
                         + UserTypesEncoderFactory.VOD_ADDRESS_LEN_NO_PARENTS

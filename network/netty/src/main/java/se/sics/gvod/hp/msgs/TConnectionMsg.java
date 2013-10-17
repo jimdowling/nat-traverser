@@ -25,7 +25,8 @@ public class TConnectionMsg {
 
         @Override
         public int getSize() {
-            return getHeaderSize();
+            return super.getHeaderSize()
+                    ;
         }
 
         public Ping(VodAddress src, VodAddress dest,
@@ -71,7 +72,8 @@ public class TConnectionMsg {
 
         @Override
         public int getSize() {
-            return getHeaderSize();
+            return super.getHeaderSize()
+                    ;
         }
 
         public Pong(VodAddress src, VodAddress dest,
@@ -117,7 +119,8 @@ public class TConnectionMsg {
         private final TimeoutId msgTimeoutId;
         @Override
         public int getSize() {
-            return getHeaderSize() + 4;
+            return super.getHeaderSize()
+            + 4;
         }
 
         public Pang(VodAddress src, VodAddress dest,

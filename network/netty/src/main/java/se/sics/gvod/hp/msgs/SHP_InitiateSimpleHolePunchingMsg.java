@@ -47,7 +47,7 @@ public class SHP_InitiateSimpleHolePunchingMsg
 
         @Override
         public int getSize() {
-            return getHeaderSize()
+            return super.getHeaderSize()
                     + 1
                     + 1
                     ;

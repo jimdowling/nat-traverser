@@ -52,7 +52,7 @@ public class PRC_ServerRequestForConsecutiveMsg {
 
         @Override
         public int getSize() {
-            return getHeaderSize()
+            return super.getHeaderSize()
                     + 1
                     + 1
                     + UserTypesEncoderFactory.VOD_ADDRESS_LEN_NO_PARENTS;

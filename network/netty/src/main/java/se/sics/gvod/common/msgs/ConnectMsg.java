@@ -61,7 +61,7 @@ public class ConnectMsg {
 
         @Override
         public int getSize() {
-            return getHeaderSize()
+            return super.getHeaderSize()
                     + UserTypesEncoderFactory.UTILITY_LEN
                     + 1 /*toUtilitySet*/
                     + 2 /* MTU size */

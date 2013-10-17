@@ -32,7 +32,8 @@ public class EchoChangeIpAndPortMsg {
 
         @Override
         public int getSize() {
-            return getHeaderSize();
+            return super.getHeaderSize()
+                    ;
         }
 
         @Override
@@ -91,7 +92,7 @@ public class EchoChangeIpAndPortMsg {
 
         @Override
         public int getSize() {
-            return getHeaderSize()
+            return super.getHeaderSize()
                     + 1 /*status*/
                     ;
         }

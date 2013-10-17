@@ -91,7 +91,7 @@ public class GoMsg
         @Override
 	public int getSize()
 	{
-		return getHeaderSize()
+		return super.getHeaderSize()
                         + UserTypesEncoderFactory.ADDRESS_LEN
                         + 1 /* HPMechanism size */
                         + 2 /* HPRole size */

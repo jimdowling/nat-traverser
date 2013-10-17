@@ -36,7 +36,8 @@ public class PRC_OpenHoleMsg
 
         @Override
         public int getSize() {
-            return getHeaderSize();
+            return super.getHeaderSize()
+                    ;
         }
 
         @Override
@@ -85,7 +86,7 @@ public class PRC_OpenHoleMsg
         }
         @Override
         public int getSize() {
-            return getHeaderSize()
+            return super.getHeaderSize()
                     + 1
                     ;
         }

@@ -48,7 +48,7 @@ public class PRP_ConnectMsg
 
         @Override
         public int getSize() {
-            return getHeaderSize()
+            return super.getHeaderSize()
                     + 1 /* size set */
                     + setOfAvailablePorts.size() * 2
                     ;
@@ -120,7 +120,7 @@ public class PRP_ConnectMsg
         
         @Override
         public int getSize() {
-            return getHeaderSize()
+            return super.getHeaderSize()
                     + 1
                     + UserTypesEncoderFactory.VOD_ADDRESS_LEN_NO_PARENTS
                     + 2 /* portToUse */

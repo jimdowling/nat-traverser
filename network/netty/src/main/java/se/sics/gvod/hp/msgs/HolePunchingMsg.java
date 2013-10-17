@@ -46,7 +46,7 @@ public class HolePunchingMsg {
         
         @Override
         public int getSize() {
-            return getHeaderSize()
+            return super.getHeaderSize()
                     + 2 // destPort
                     ;
         }
@@ -89,8 +89,7 @@ public class HolePunchingMsg {
 
         @Override
         public int getSize() {
-            return getHeaderSize()
-                    ;
+            return super.getHeaderSize();
         }
 
         @Override
@@ -125,8 +124,7 @@ public class HolePunchingMsg {
 
         @Override
         public int getSize() {
-            return getHeaderSize()
-                    ;
+            return super.getHeaderSize();
         }
 
         @Override

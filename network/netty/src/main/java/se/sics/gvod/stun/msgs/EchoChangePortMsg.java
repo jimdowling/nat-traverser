@@ -32,7 +32,8 @@ public class EchoChangePortMsg {
         
         @Override
         public int getSize() {
-            return getHeaderSize();
+            return super.getHeaderSize()
+                    ;
         }
         @Override
         public ByteBuf toByteArray() throws MessageEncodingException {
@@ -69,7 +70,8 @@ public class EchoChangePortMsg {
 
         @Override
         public int getSize() {
-            return getHeaderSize();
+            return super.getHeaderSize()
+                    ;
         }
 
         @Override

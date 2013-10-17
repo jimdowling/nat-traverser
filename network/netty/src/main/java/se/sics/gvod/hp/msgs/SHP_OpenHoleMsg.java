@@ -44,7 +44,7 @@ public class SHP_OpenHoleMsg {
 
         @Override
         public int getSize() {
-            return getHeaderSize()
+            return super.getHeaderSize()
                     + 1
                     + UserTypesEncoderFactory.VOD_ADDRESS_LEN_NO_PARENTS;
         }

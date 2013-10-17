@@ -49,7 +49,7 @@ public class HpUnregisterMsg {
 
         @Override
         public int getSize() {
-            return getHeaderSize()
+            return super.getHeaderSize()
                     + 16
                     + 1;
         }
@@ -102,7 +102,7 @@ public class HpUnregisterMsg {
 
         @Override
         public int getSize() {
-            return getHeaderSize()
+            return super.getHeaderSize()
                     + 1;
         }
 

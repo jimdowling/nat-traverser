@@ -54,7 +54,7 @@ public class HpRegisterMsg {
 
         @Override
         public int getSize() {
-            return getHeaderSize()
+            return super.getHeaderSize()
                     + 1 /*delta */
                     + 2 /* rtt */
                     + 1 + (prpPorts == null ? 0 : prpPorts.size() * 4) /* prpPorts */;
@@ -113,7 +113,7 @@ public class HpRegisterMsg {
 
         @Override
         public int getSize() {
-            return getHeaderSize()
+            return super.getHeaderSize()
                     + 1
                     + 1 + prpPorts.size() * 4;
         }

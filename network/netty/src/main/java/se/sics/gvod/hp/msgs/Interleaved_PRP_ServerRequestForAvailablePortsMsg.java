@@ -45,7 +45,7 @@ public class Interleaved_PRP_ServerRequestForAvailablePortsMsg {
 
         @Override
         public int getSize() {
-            return getHeaderSize()
+            return super.getHeaderSize()
                     + 1
                     + 1;
         }

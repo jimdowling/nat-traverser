@@ -50,7 +50,7 @@ public class RelayRequestMsg
         @Override
         public int getSize() {
             DirectMsg msg = (DirectMsg) message;
-            return getHeaderSize()
+            return super.getHeaderSize()
                     + msg.getSize();
         }
 
@@ -99,7 +99,7 @@ public class RelayRequestMsg
         @Override
         public int getSize() {
             DirectMsg msg = (DirectMsg) message;
-            return getHeaderSize()
+            return super.getHeaderSize()
                     + msg.getSize();
         }
 

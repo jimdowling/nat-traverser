@@ -22,7 +22,8 @@ public class ParentKeepAliveMsg {
         
         @Override
         public int getSize() {
-            return getHeaderSize();
+            return super.getHeaderSize()
+                    ;
         }
 
         public Ping(VodAddress src, VodAddress dest) {
@@ -58,7 +59,8 @@ public class ParentKeepAliveMsg {
         
         @Override
         public int getSize() {
-            return getHeaderSize();
+            return super.getHeaderSize()
+                    ;
         }
 
         public Pong(VodAddress src, VodAddress dest, TimeoutId timeoutId) {

@@ -32,7 +32,8 @@ public class DisconnectMsg {
 
         @Override
         public int getSize() {
-            return getHeaderSize();
+            return super.getHeaderSize()
+            ;
         }
 
         @Override
@@ -69,7 +70,7 @@ public class DisconnectMsg {
 
         @Override
         public int getSize() {
-            return getHeaderSize()
+            return super.getHeaderSize()
                     + 2 /* refs */;
         }
 

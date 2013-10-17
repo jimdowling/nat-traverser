@@ -34,7 +34,7 @@ public class PRP_PreallocatedPortsMsg
 
         @Override
         public int getSize() {
-            return getHeaderSize()
+            return super.getHeaderSize()
                     ;
         }
 
@@ -90,7 +90,7 @@ public class PRP_PreallocatedPortsMsg
 
         @Override
         public int getSize() {
-            return getHeaderSize()
+            return super.getHeaderSize()
                     + 1
                     + ((prpPorts == null) ? 0 : prpPorts.size() * 4)
                    ;

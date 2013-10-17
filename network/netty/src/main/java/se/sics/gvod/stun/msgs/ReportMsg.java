@@ -36,7 +36,7 @@ public class ReportMsg {
 
         @Override
         public int getSize() {
-            return getHeaderSize()
+            return super.getHeaderSize()
                     + 20 // estimate of size of string
                     ;
         }
@@ -69,7 +69,8 @@ public class ReportMsg {
 
         @Override
         public int getSize() {
-            return getHeaderSize();
+            return super.getHeaderSize()
+                    ;
         }
 
         @Override

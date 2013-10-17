@@ -21,7 +21,8 @@ import se.sics.gvod.net.VodAddress;
 
         @Override
         public int getSize() {
-            return getHeaderSize();
+            return super.getHeaderSize()
+                    ;
         }
 
         @Override

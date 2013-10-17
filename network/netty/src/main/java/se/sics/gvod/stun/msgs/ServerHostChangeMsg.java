@@ -57,7 +57,7 @@ public class ServerHostChangeMsg {
 
         @Override
         public int getSize() {
-            return getHeaderSize()
+            return super.getHeaderSize()
                     + UserTypesEncoderFactory.ADDRESS_LEN
                     + 4 /* timeoutId */
                     ;
@@ -99,7 +99,8 @@ public class ServerHostChangeMsg {
 
         @Override
         public int getSize() {
-            return getHeaderSize();
+            return super.getHeaderSize()
+                    ;
         }
 
         @Override

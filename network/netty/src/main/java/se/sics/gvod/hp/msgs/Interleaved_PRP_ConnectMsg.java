@@ -48,7 +48,7 @@ public class Interleaved_PRP_ConnectMsg
 
         @Override
         public int getSize() {
-            return getHeaderSize()
+           return super.getHeaderSize()
                     + (setOfAvailablePorts.size() * 4)
                     ;
         }
@@ -105,7 +105,7 @@ public class Interleaved_PRP_ConnectMsg
 
         @Override
         public int getSize() {
-            return getHeaderSize()
+            return super.getHeaderSize()
                     + 1
                     ;
         }

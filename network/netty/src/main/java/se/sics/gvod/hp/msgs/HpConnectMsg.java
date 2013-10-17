@@ -55,7 +55,7 @@ public class HpConnectMsg implements Serializable {
 
         @Override
         public int getSize() {
-            return getHeaderSize()
+            return super.getHeaderSize()
                     + 1 /*delta*/
                     + 2 /*rtt*/;
         }
@@ -113,7 +113,7 @@ public class HpConnectMsg implements Serializable {
 
         @Override
         public int getSize() {
-            return getHeaderSize()
+            return super.getHeaderSize()
                     + 1
                     + 1
                     + 1;

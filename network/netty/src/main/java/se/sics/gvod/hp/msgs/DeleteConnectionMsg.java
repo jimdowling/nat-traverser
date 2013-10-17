@@ -24,7 +24,8 @@ public class DeleteConnectionMsg extends HpMsg.Oneway {
 
     @Override
     public int getSize() {
-        return getHeaderSize();
+        return super.getHeaderSize()
+                ;
     }
 
     @Override

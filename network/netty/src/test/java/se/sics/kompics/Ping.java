@@ -23,7 +23,8 @@ public class Ping extends DirectMsgNetty.Request {
 
     @Override
     public int getSize() {
-        return getHeaderSize();
+        return super.getHeaderSize()
+                ;
     }
 
     @Override

@@ -37,7 +37,8 @@ public class Interleaved_PRC_OpenHoleMsg
         @Override
 	public int getSize()
 	{
-		return getHeaderSize();
+		return super.getHeaderSize()
+                ;
         }
 
         @Override
@@ -90,7 +91,8 @@ public class Interleaved_PRC_OpenHoleMsg
         @Override
 	public int getSize()
 	{
-		return getHeaderSize() + 1;
+		return super.getHeaderSize()
+                        + 1;
         }
 
         @Override

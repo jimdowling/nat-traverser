@@ -115,7 +115,7 @@ public class EchoMsg {
 
         @Override
         public int getSize() {
-            return getHeaderSize()
+            return super.getHeaderSize()
                     + 1 /*test type*/
                     + 1 /*try id*/
                     + UserTypesEncoderFactory.ADDRESS_LEN // replyTo
@@ -208,7 +208,7 @@ public class EchoMsg {
         
         @Override
         public int getSize() {
-            return getHeaderSize()
+            return super.getHeaderSize()
                     + 2 /*port*/
                     + 1 /* test type*/
                     + 1 /* try id */
