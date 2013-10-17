@@ -515,7 +515,9 @@ public abstract class MsgRetryComponent extends AutoSubscribeComponent
             throw new NullPointerException("Null event or null port when calling trigger.");
         }
         if (event instanceof DirectMsgNetty.Request || 
-                event instanceof RelayMsgNetty.Request) {
+                event instanceof RelayMsgNetty.Request ||
+                event instanceof DirectMsgNetty.SystemRequest
+                ) {
             logger.error("calling doTrigger - should call doRetry: " + event.getClass());
             throw new IllegalStateException("Request msgs should not call doTrigger(). "
                     + " They should call doRetry().");
