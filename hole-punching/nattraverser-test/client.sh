@@ -1,5 +1,6 @@
 #!/bin/bash
 
+id=3
 function help_exit {
     echo ""
     echo "Usage: $0 MY_ID]"
@@ -20,4 +21,4 @@ ID=$1
 
 shift
 
-java -jar deploy/hp.jar false $ID 0 6@cloud6.sics.se false $@
+java -jar deploy/hp.jar false $ID 0 ${id}@cloud${id}.sics.se false $@
