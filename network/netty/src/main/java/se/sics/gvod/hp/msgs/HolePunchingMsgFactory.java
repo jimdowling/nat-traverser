@@ -21,7 +21,8 @@ public class HolePunchingMsgFactory {
 
         @Override
         protected HolePunchingMsg.Request process(ByteBuf buffer) throws MessageDecodingException {
-            return new HolePunchingMsg.Request(vodSrc, vodDest, msgTimeoutId);
+            int destPort = UserTypesDecoderFactory.readUnsignedIntAsTwoBytes(buffer);
+            return new HolePunchingMsg.Request(vodSrc, vodDest, msgTimeoutId, destPort);
         }
     }
 
