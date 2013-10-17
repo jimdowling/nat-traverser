@@ -1004,7 +1004,7 @@ public class HpClient extends MsgRetryComponent {
             OpenedConnection oc = openedConnections.remove(remoteId);
             logger.warn(compName + " heartbeat timed out to private node from "
                    + event.getRequestMsg().getSource()
-                    + "Removing openedConnection to " + event.getMsg().getDestination()
+                    + " Removing openedConnection to " + event.getMsg().getDestination()
                     + " #openNatConnections = " + openedConnections.size());
             pingFailureCount.incrementAndGet();
             HpKeepAliveMsg.Ping msg = (HpKeepAliveMsg.Ping) event.getMsg();
