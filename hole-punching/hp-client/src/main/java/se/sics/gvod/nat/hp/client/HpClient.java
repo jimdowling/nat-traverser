@@ -750,57 +750,57 @@ public class HpClient extends MsgRetryComponent {
             String compName = HpClient.this.compName + " - " + request.getMsgTimeoutId() + " - ";
 
             int remoteId = request.getClientId();
-            logger.debug(compName + " Hole Punching Request Message Recvd from: ("
-                    + request.getSource() + ")");
+            logger.debug(compName + " Hole Punching Request Message Recvd from:  to {} at destPort {}"
+                    + request.getSource(), request.getDestination(), request.getDestport());
             boolean holeExists = openedConnections.containsKey(remoteId) == true;
             if (holeExists) {
                 logger.debug(compName + " Hole Punched connection already established with " + remoteId);
             }
-                HpSession session = hpSessions.get(remoteId);
-                int srcPort = request.getVodDestination().getPort();
-                if (session == null && !holeExists) {
-                    session = new HpSession(remoteId, null,
-                            config.getScanRetries(), config.isScanningEnabled(), System.currentTimeMillis(), request.getMsgTimeoutId());
-                    session.setPortInUse(srcPort);
-                }
+            HpSession session = hpSessions.get(remoteId);
+            int srcPort = request.getVodDestination().getPort();
+            if (session == null && !holeExists) {
+                session = new HpSession(remoteId, null,
+                        config.getScanRetries(), config.isScanningEnabled(), System.currentTimeMillis(), request.getMsgTimeoutId());
+                session.setPortInUse(srcPort);
+            }
 
-                // sending the response to the remote client
-                Address srcAddress = new Address(self.getIp(), srcPort, self.getId());
-                VodAddress sourceAddress = new VodAddress(srcAddress, self.getOverlayId(),
-                        self.getNat(), self.getParents());
-                logger.debug(compName + "sending back response to ("
-                        + request.getVodSource() + ") - " + request.getMsgTimeoutId() + " : "
-                        + request.getTimeoutId());
-                HolePunchingMsg.Response hpResponse = new HolePunchingMsg.Response(sourceAddress,
-                        request.getVodSource(), request.getTimeoutId(),
-                        request.getMsgTimeoutId());
-                ScheduleRetryTimeout st = new ScheduleRetryTimeout(config.getRto(),
-                        config.getRtoRetries(), config.getRtoScale());
-                HolePunchingMsg.ResponseRetryTimeout hrrt = new HolePunchingMsg.ResponseRetryTimeout(st, hpResponse);
-                delegator.doRetry(hrrt);
+            // sending the response to the remote client
+            Address srcAddress = new Address(self.getIp(), srcPort, self.getId());
+            VodAddress sourceAddress = new VodAddress(srcAddress, self.getOverlayId(),
+                    self.getNat(), self.getParents());
+            logger.debug(compName + "sending back response to ("
+                    + request.getVodSource() + ") - " + request.getMsgTimeoutId() + " : "
+                    + request.getTimeoutId() + " from " + srcAddress);
+            HolePunchingMsg.Response hpResponse = new HolePunchingMsg.Response(sourceAddress,
+                    request.getVodSource(), request.getTimeoutId(),
+                    request.getMsgTimeoutId());
+            ScheduleRetryTimeout st = new ScheduleRetryTimeout(config.getRto(),
+                    config.getRtoRetries(), config.getRtoScale());
+            HolePunchingMsg.ResponseRetryTimeout hrrt = new HolePunchingMsg.ResponseRetryTimeout(st, hpResponse);
+            delegator.doRetry(hrrt);
 
-                // if the connection is not already opened, then send response to NatTraverser component
-                if (!holeExists) {
-                    OpenConnectionRequest req = session.getOpenConnectionRequest();
-                    addOrUpdateOpenedConnectionNoSession(request.getSource(), srcPort);
-                    if (req != null) {
-                        logger.debug(compName + "sending response to the outer component from hp-ack-ack. remote client id ("
-                                + request.getClientId() + ")");
-                        sendOpenConnectionResponseMessage(req,
-                                request.getVodSource(),
-                                OpenConnectionResponseType.OK,
-                                session.getHolePunchingMechanism(),
-                                request.getMsgTimeoutId());
-                        HPStats stats = hpStats.get(session.getHolePunchingMechanism());
-                        if (stats != null) {
-                            stats.incrementSuccessCounter();
-                        }
-                    } else {
-                        // no need to send response to the upper component
-                        logger.debug(compName + "no need to send HpMsg.Request response to the upper component");
+            // if the connection is not already opened, then send response to NatTraverser component
+            if (!holeExists) {
+                OpenConnectionRequest req = session.getOpenConnectionRequest();
+                addOrUpdateOpenedConnectionNoSession(request.getSource(), srcPort);
+                if (req != null) {
+                    logger.debug(compName + "sending response to the outer component from hp-ack-ack. remote client id ("
+                            + request.getClientId() + ")");
+                    sendOpenConnectionResponseMessage(req,
+                            request.getVodSource(),
+                            OpenConnectionResponseType.OK,
+                            session.getHolePunchingMechanism(),
+                            request.getMsgTimeoutId());
+                    HPStats stats = hpStats.get(session.getHolePunchingMechanism());
+                    if (stats != null) {
+                        stats.incrementSuccessCounter();
                     }
-                    hpSessions.remove(session.getRemoteClientId());
+                } else {
+                    // no need to send response to the upper component
+                    logger.debug(compName + "no need to send HpMsg.Request response to the upper component");
                 }
+                hpSessions.remove(session.getRemoteClientId());
+            }
         }
     };
     Handler<HolePunchingMsg.Response> handleHolePunchingMsgResponse = new Handler<HolePunchingMsg.Response>() {

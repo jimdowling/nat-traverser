@@ -47,7 +47,7 @@ public class HolePunchingMsg {
         @Override
         public int getSize() {
             return getHeaderSize()
-                    + 4 // destPort
+                    + 2 // destPort
                     ;
         }
 
