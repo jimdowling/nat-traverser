@@ -89,7 +89,8 @@ public final class NettyNetwork extends ComponentDefinition {
     private NettyNetwork component;
     private Map<Integer, InetSocketAddress> udpPortsToSockets = new HashMap<Integer, InetSocketAddress>();
     private Map<InetSocketAddress, Bootstrap> udpSocketsToBootstraps = new HashMap<InetSocketAddress, Bootstrap>();
-    private Map<InetSocketAddress, DatagramChannel> udpSocketsToChannels = new HashMap<InetSocketAddress, DatagramChannel>();
+//    private Map<InetSocketAddress, DatagramChannel> udpSocketsToChannels = new HashMap<InetSocketAddress, DatagramChannel>();
+    private Map<Integer, DatagramChannel> udpSocketsToChannels = new HashMap<Integer, DatagramChannel>();
     private Map<Integer, InetSocketAddress> tcpPortsToSockets = new HashMap<Integer, InetSocketAddress>();
     private Map<InetSocketAddress, ServerBootstrap> tcpSocketsToServerBootstraps = new HashMap<InetSocketAddress, ServerBootstrap>();
     private Map<InetSocketAddress, Bootstrap> tcpSocketsToBootstraps = new HashMap<InetSocketAddress, Bootstrap>();
@@ -652,7 +653,8 @@ public final class NettyNetwork extends ComponentDefinition {
      */
     private void addLocalSocket(InetSocketAddress localAddress, DatagramChannel channel) {
         udpPortsToSockets.put(localAddress.getPort(), localAddress);
-        udpSocketsToChannels.put(localAddress, channel);
+//        udpSocketsToChannels.put(localAddress, channel);
+        udpSocketsToChannels.put(localAddress.getPort(), channel);
     }
 
     /**
@@ -729,7 +731,8 @@ public final class NettyNetwork extends ComponentDefinition {
                 break;
             case UDP:
                 udpPortsToSockets.remove(addr.getPort());
-                udpSocketsToChannels.remove(addr);
+//                udpSocketsToChannels.remove(addr);
+                udpSocketsToChannels.remove(addr.getPort());
                 udpSocketsToBootstraps.remove(addr);
                 break;
             case UDT:
@@ -803,7 +806,8 @@ public final class NettyNetwork extends ComponentDefinition {
         // use one channel per local socket
         // session-less UDP. This means that remoteAddresses cannot be found in
         // the channel object, but only in the MessageEvent object.
-        DatagramChannel channel = udpSocketsToChannels.get(src);
+//        DatagramChannel channel = udpSocketsToChannels.get(src);
+        DatagramChannel channel = udpSocketsToChannels.get(src.getPort());
         if (channel == null) {
             String strError = "Source for msg " + "of type " + msg.getClass()
                     + " . Port not bound at client, need to bind the port first: " + msg.getSource();
