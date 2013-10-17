@@ -779,7 +779,8 @@ public class HpClient extends MsgRetryComponent {
                     request.getMsgTimeoutId());
             ScheduleRetryTimeout st = new ScheduleRetryTimeout(config.getRto(),
                     config.getRtoRetries(), config.getRtoScale());
-            HolePunchingMsg.ResponseRetryTimeout hrrt = new HolePunchingMsg.ResponseRetryTimeout(st, hpResponse);
+            HolePunchingMsg.ResponseRetryTimeout hrrt 
+                    = new HolePunchingMsg.ResponseRetryTimeout(st, hpResponse);
             delegator.doRetry(hrrt);
 
             // if the connection is not already opened, then send response to NatTraverser component

@@ -57,7 +57,7 @@ public class HolePunchingMsg {
         }
     }
 
-    public final static class Response extends HpMsg.Response {
+        public final static class Response extends HpMsg.Response {
 
         static final long serialVersionUID = 1L;
 
