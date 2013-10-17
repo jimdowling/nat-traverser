@@ -7,6 +7,7 @@ import se.sics.gvod.net.VodAddress;
 import se.sics.gvod.net.msgs.RewriteableMsg;
 import se.sics.gvod.net.msgs.RewriteableRetryTimeout;
 import se.sics.gvod.net.msgs.ScheduleRetryTimeout;
+import se.sics.gvod.net.util.UserTypesEncoderFactory;
 import se.sics.gvod.timer.TimeoutId;
 
 /**
@@ -60,12 +61,17 @@ public class HolePunchingMsg {
 
         static final long serialVersionUID = 1L;
 
+        private final TimeoutId srcTimeoutId;
         public Response(VodAddress src, VodAddress dest,  
-                TimeoutId msgTimeoutId) {
+                TimeoutId srcTimeoutId, TimeoutId msgTimeoutId) {
             super(src, dest, dest.getId(), msgTimeoutId);
+            this.srcTimeoutId = srcTimeoutId;
         }
 
-        
+        public TimeoutId getSrcTimeoutId() {
+            return srcTimeoutId;
+        }
+
         @Override
         public int getSize() {
             return getHeaderSize()
@@ -80,13 +86,14 @@ public class HolePunchingMsg {
         @Override
         public ByteBuf toByteArray() throws MessageEncodingException {
         	ByteBuf buffer = createChannelBufferWithHeader();
+                UserTypesEncoderFactory.writeTimeoutId(buffer, srcTimeoutId);
             return buffer;
         }
 
         @Override
         public RewriteableMsg copy() {
             HolePunchingMsg.Response r = new HolePunchingMsg.Response(vodSrc, vodDest, 
-                    msgTimeoutId);
+                    msgTimeoutId, srcTimeoutId);
             r.setTimeoutId(timeoutId);
             return r;
         }

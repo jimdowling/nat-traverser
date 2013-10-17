@@ -540,7 +540,7 @@ public class EncodingDecodingTest {
     @Test
     public void HolePunchingResponseMsg() {
         HolePunchingMsg.Response msg = new HolePunchingMsg.Response(gSrc, gDest,
-                UUID.nextUUID());
+                UUID.nextUUID(), UUID.nextUUID());
         msg.setTimeoutId(UUID.nextUUID());
         try {
             ByteBuf buffer = msg.toByteArray();

@@ -444,7 +444,7 @@ public class NatTraverser extends ComponentDefinition {
                     msg.getSource(), Nat.DEFAULT_RULE_EXPIRATION_TIME, false);
             openedConnections.put(msg.getSource().getId(), oc);
             logger.debug(compName + " Adding OpenedConnection to " + msg.getSource()
-                    + " from Local Port" + msg.getDestination().getPort());
+                    + " from Local Port " + msg.getDestination().getPort());
         } 
 //        else if (!msg.getVodSource().isOpen()
 //                && openedConnections.containsKey(msg.getSource().getId())) {

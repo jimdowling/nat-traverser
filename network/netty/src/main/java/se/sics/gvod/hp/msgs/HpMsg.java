@@ -18,8 +18,7 @@ public class HpMsg {
         public TimeoutId getMsgTimeoutId();
     }
 
-    public static abstract class Request extends DirectMsgNetty.SystemRequest implements Hp 
-    {
+    public static abstract class Request extends DirectMsgNetty.SystemRequest implements Hp {
 
         protected final int remoteClientId;
         protected final TimeoutId msgTimeoutId;
@@ -67,7 +66,7 @@ public class HpMsg {
         }
     }
 
-    public static abstract class Response extends DirectMsgNetty.SystemResponse implements Hp{
+    public static abstract class Response extends DirectMsgNetty.SystemResponse implements Hp {
 
         protected final int remoteClientId;
         protected final TimeoutId msgTimeoutId;
@@ -115,7 +114,7 @@ public class HpMsg {
         }
     }
 
-    public static abstract class Oneway extends DirectMsgNetty.SystemOneway implements Hp{
+    public static abstract class Oneway extends DirectMsgNetty.SystemOneway implements Hp {
 
         protected final int remoteClientId;
         protected final TimeoutId msgTimeoutId;

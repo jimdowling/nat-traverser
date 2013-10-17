@@ -755,7 +755,7 @@ public class HpClient extends MsgRetryComponent {
 
             if (openedConnections.containsKey(remoteId) == true) {
                 logger.debug(compName + " Hole Punched connection already established with " + remoteId);
-                // do not return here, as client might have missed an earlier HpResponseMsg 
+                // do not return here, as caller might still be waiting on a HpResponseMsg (which may have been dropped)
             }
 
             HpSession session = hpSessions.get(remoteId);
@@ -775,7 +775,7 @@ public class HpClient extends MsgRetryComponent {
                     + request.getVodSource() + ") - " + request.getMsgTimeoutId() + " : "
                     + request.getTimeoutId());
             HolePunchingMsg.Response hpResponse = new HolePunchingMsg.Response(sourceAddress,
-                    request.getVodSource(),
+                    request.getVodSource(), request.getTimeoutId(), 
                     request.getMsgTimeoutId());
             ScheduleRetryTimeout st = new ScheduleRetryTimeout(config.getRto(),
                     config.getRtoRetries(), config.getRtoScale());
@@ -813,7 +813,7 @@ public class HpClient extends MsgRetryComponent {
             String compName = HpClient.this.compName + " - " + response.getMsgTimeoutId() + " - "
                     + " from " + response.getSource() + " ";
             // don't check the getTimeoutId() - as this has the responseTimeoutId, not the requestTimeoutId
-            if (delegator.doCancelRetry(response.getTimeoutId())) {
+            if (delegator.doCancelRetry(response.getSrcTimeoutId())) {
                 // if response is recvd --> hole punching was successful
                 logger.debug(compName + "Hole punching response message is recvd. From Client "
                         + response.getSource() + " - id: " + response.getMsgTimeoutId());
@@ -827,9 +827,9 @@ public class HpClient extends MsgRetryComponent {
                     session.setHpOngoing(false);
                     VodAddress openedHole = response.getVodSource();
                     
-//                    if (self.getNat().getMappingPolicy() == Nat.MappingPolicy.PORT_DEPENDENT
-//                            && response.getVodSource().getNat().getFilteringPolicy()
-//                            == Nat.FilteringPolicy.PORT_DEPENDENT) {
+                    if (self.getNat().getMappingPolicy() == Nat.MappingPolicy.PORT_DEPENDENT
+                            && response.getVodSource().getNat().getFilteringPolicy()
+                            == Nat.FilteringPolicy.PORT_DEPENDENT) {
                         // if the initiator receives a HolePunchingMsg.Request from the responder on 
                         // port X, then the HolePunchingMsg.Response to the initiator is sent from port Y -
                         // the initiator will create a new mapping if it sends a msg to port Y if
@@ -843,7 +843,7 @@ public class HpClient extends MsgRetryComponent {
                         if (session.getRemoteOpenedHole() != null) {
                             openedHole = session.getRemoteOpenedHole();
                         }
-//                    }
+                    }
 
                     session.setPortInUse(response.getVodDestination().getPort());
                     if (!openedConnections.containsKey(remoteId)) {
@@ -856,9 +856,8 @@ public class HpClient extends MsgRetryComponent {
 
                     Address srcAddr = new Address(self.getIp(), session.getPortInUse(), self.getId());
                     HolePunchingMsg.ResponseAck ack = new HolePunchingMsg.ResponseAck(
-                            new VodAddress(srcAddr, VodConfig.SYSTEM_OVERLAY_ID, 
+                            new VodAddress(srcAddr, self.getOverlayId(), 
                                 self.getNat(), self.getParents()),
-//                            response.getVodDestination(),
                             openedHole,
                             response.getTimeoutId(),
                             response.getMsgTimeoutId());

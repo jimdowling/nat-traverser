@@ -2,6 +2,8 @@ package se.sics.gvod.hp.msgs;
 
 import io.netty.buffer.ByteBuf;
 import se.sics.gvod.common.msgs.MessageDecodingException;
+import se.sics.gvod.net.util.UserTypesDecoderFactory;
+import se.sics.gvod.timer.TimeoutId;
 
 public class HolePunchingMsgFactory {
 
@@ -37,8 +39,9 @@ public class HolePunchingMsgFactory {
 
         @Override
         protected HolePunchingMsg.Response process(ByteBuf buffer) throws MessageDecodingException {
+            TimeoutId srcTimeoutId = UserTypesDecoderFactory.readTimeoutId(buffer);
             return new HolePunchingMsg.Response(vodSrc, vodDest,
-                    msgTimeoutId);
+                    srcTimeoutId, msgTimeoutId);
         }
 
     }
