@@ -11,7 +11,7 @@ import se.sics.gvod.net.util.UserTypesEncoderFactory;
 import se.sics.gvod.timer.TimeoutId;
 
 /**
- * 
+ *
  * @author jim
  */
 public class HolePunchingMsg {
@@ -19,15 +19,14 @@ public class HolePunchingMsg {
     public static final class Request extends HpMsg.Request {
 
         static final long serialVersionUID = 654322451L;
-
         private final int destport;
-        
+
         public Request(VodAddress src, VodAddress dest,
                 TimeoutId msgTimeoutId) {
             super(src, dest, dest.getId(), msgTimeoutId);
             this.destport = dest.getPort();
         }
-        
+
         public Request(VodAddress src, VodAddress dest,
                 TimeoutId msgTimeoutId, int destPort) {
             super(src, dest, dest.getId(), msgTimeoutId);
@@ -43,7 +42,7 @@ public class HolePunchingMsg {
         public int getDestport() {
             return destport;
         }
-        
+
         @Override
         public int getSize() {
             return super.getHeaderSize()
@@ -58,8 +57,8 @@ public class HolePunchingMsg {
 
         @Override
         public ByteBuf toByteArray() throws MessageEncodingException {
-        	ByteBuf buffer = createChannelBufferWithHeader();
-                UserTypesEncoderFactory.writeUnsignedintAsTwoBytes(buffer, destport);
+            ByteBuf buffer = super.createChannelBufferWithHeader();
+            UserTypesEncoderFactory.writeUnsignedintAsTwoBytes(buffer, destport);
             return buffer;
         }
 
@@ -72,12 +71,12 @@ public class HolePunchingMsg {
         }
     }
 
-        public final static class Response extends HpMsg.Response {
+    public final static class Response extends HpMsg.Response {
 
         static final long serialVersionUID = 1L;
-
         private final TimeoutId srcTimeoutId;
-        public Response(VodAddress src, VodAddress dest,  
+
+        public Response(VodAddress src, VodAddress dest,
                 TimeoutId srcTimeoutId, TimeoutId msgTimeoutId) {
             super(src, dest, dest.getId(), msgTimeoutId);
             this.srcTimeoutId = srcTimeoutId;
@@ -99,14 +98,14 @@ public class HolePunchingMsg {
 
         @Override
         public ByteBuf toByteArray() throws MessageEncodingException {
-        	ByteBuf buffer = createChannelBufferWithHeader();
-                UserTypesEncoderFactory.writeTimeoutId(buffer, srcTimeoutId);
+            ByteBuf buffer = createChannelBufferWithHeader();
+            UserTypesEncoderFactory.writeTimeoutId(buffer, srcTimeoutId);
             return buffer;
         }
 
         @Override
         public RewriteableMsg copy() {
-            HolePunchingMsg.Response r = new HolePunchingMsg.Response(vodSrc, vodDest, 
+            HolePunchingMsg.Response r = new HolePunchingMsg.Response(vodSrc, vodDest,
                     msgTimeoutId, srcTimeoutId);
             r.setTimeoutId(timeoutId);
             return r;
@@ -134,21 +133,20 @@ public class HolePunchingMsg {
 
         @Override
         public ByteBuf toByteArray() throws MessageEncodingException {
-        	ByteBuf buffer = createChannelBufferWithHeader();
+            ByteBuf buffer = createChannelBufferWithHeader();
             return buffer;
         }
 
         @Override
         public RewriteableMsg copy() {
-            HolePunchingMsg.ResponseAck copy = 
+            HolePunchingMsg.ResponseAck copy =
                     new HolePunchingMsg.ResponseAck(vodSrc, vodDest, timeoutId,
                     msgTimeoutId);
             copy.setTimeoutId(timeoutId);
             return copy;
         }
-    }    
-    
-    
+    }
+
     public static final class RequestRetryTimeout extends RewriteableRetryTimeout {
 
         private final Request requestMsg;
@@ -162,6 +160,7 @@ public class HolePunchingMsg {
             return requestMsg;
         }
     }
+
     public static final class ResponseRetryTimeout extends RewriteableRetryTimeout {
 
         private final Response responseMsg;
