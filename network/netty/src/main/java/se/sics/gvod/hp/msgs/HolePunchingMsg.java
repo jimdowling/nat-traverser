@@ -47,6 +47,7 @@ public class HolePunchingMsg {
         public int getSize() {
             return super.getHeaderSize()
                     + 2 // destPort
+                    + 4 // crap
                     ;
         }
 
