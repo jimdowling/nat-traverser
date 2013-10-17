@@ -80,7 +80,6 @@ public class Croupier extends MsgRetryComponent {
                     config.getShufflePeriod());
             spt.setTimeoutEvent(new CroupierShuffleCycle(spt));
             delegator.doTrigger(spt, timer);
-
         }
     };
 

@@ -1131,8 +1131,12 @@ public class NatTraverser extends ComponentDefinition {
         @Override
         public void handle(CroupierSample event) {
             logger.trace("Received {} samples from Croupier.", event.getNodes().size());
-            // add samples to list that can be used to bootstrap STUN..
-            croupierSamples.clear();
+
+            // add samples to list that can be used to bootstrap STUN.
+            // Setting '50' as the max number of samples to hold at a time
+            if (croupierSamples.size() > 50) {
+                croupierSamples.clear();
+            }
             StringBuilder sb = new StringBuilder();
             sb.append(compName).append("Received samples from Croupier: ");
             for (VodDescriptor vd : event.getNodes()) {
