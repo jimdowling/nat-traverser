@@ -84,6 +84,7 @@ public class PortAllocTest
         }
         public Handler<Start> handleStart = new Handler<Start>() {
 
+            @Override
             public void handle(Start event) {
                 ScheduleTimeout st = new ScheduleTimeout(2000);
                 MsgTimeout mt = new MsgTimeout(st);

@@ -45,6 +45,7 @@ import se.sics.gvod.croupier.PeerSamplePort;
 import se.sics.gvod.croupier.events.CroupierInit;
 import se.sics.gvod.croupier.events.CroupierJoin;
 import se.sics.gvod.croupier.snapshot.CroupierStats;
+import se.sics.gvod.filters.ResponseIdFilter;
 import se.sics.gvod.nat.hp.client.HpClient;
 import se.sics.gvod.nat.traversal.NatTraverserPort;
 import se.sics.gvod.timer.Timer;
@@ -213,17 +214,21 @@ public final class NatTraverserSimulator extends ComponentDefinition {
         int filterId = peerAddress.getId();
         connect(natTraverser.getPositive(NatTraverserPort.class), peer.getNegative(NatTraverserPort.class));
         connect(natTraverser.getPositive(VodNetwork.class), peer.getNegative(VodNetwork.class));
-        connect(natGateway.getPositive(VodNetwork.class), natTraverser.getNegative(VodNetwork.class));
-        connect(natGateway.getNegative(VodNetwork.class), network, new MsgDestFilterNodeId(filterId));
         connect(natTraverser.getPositive(VodNetwork.class), croupier.getNegative(VodNetwork.class));
+        connect(natGateway.getPositive(VodNetwork.class), natTraverser.getNegative(VodNetwork.class));
+        connect(natGateway.getNegative(VodNetwork.class), network, 
+                new MsgDestFilterNodeId(filterId));
 
         connect(timer, peer.getNegative(Timer.class));
         connect(timer, natTraverser.getNegative(Timer.class));
         connect(timer, natGateway.getNegative(Timer.class));
         connect(timer, croupier.getNegative(Timer.class));
 
-        connect(natGateway.getPositive(NatNetworkControl.class), natTraverser.getNegative(NatNetworkControl.class));
-        connect(natGateway.getNegative(NatNetworkControl.class), portReservoir.getPositive(NatNetworkControl.class));
+        connect(natGateway.getPositive(NatNetworkControl.class), 
+                natTraverser.getNegative(NatNetworkControl.class));
+        connect(portReservoir.getPositive(NatNetworkControl.class), 
+                natGateway.getNegative(NatNetworkControl.class),
+                new ResponseIdFilter(filterId));
 
         connect(natTraverser.getNegative(PeerSamplePort.class), croupier.getPositive(PeerSamplePort.class));
 

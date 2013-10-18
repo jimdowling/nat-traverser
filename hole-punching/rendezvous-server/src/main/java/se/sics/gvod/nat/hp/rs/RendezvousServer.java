@@ -309,7 +309,7 @@ public class RendezvousServer extends MsgRetryComponent {
         }
     };
 
-    private String printChildren() {
+    private String getChildrenAsString() {
         StringBuilder sb = new StringBuilder();
         sb.append(compName).append(" Children: ");
         for (Integer id : registeredClients.keySet()) {
@@ -321,7 +321,7 @@ public class RendezvousServer extends MsgRetryComponent {
     private boolean removeClient(int id) {
         if (registeredClients.remove(id) == null) {
             logger.warn(compName + "Couldn't find client to remove: {}", id);
-            logger.warn(compName + printChildren());
+            logger.trace(compName + getChildrenAsString());
             return false;
         }
         logger.debug(compName + "Found client and removed: {}", id);
@@ -399,7 +399,8 @@ public class RendezvousServer extends MsgRetryComponent {
             RegisteredClientRecord clientData = new RegisteredClientRecord(
                     client, rtt, prpPorts, tempRecord);
             registeredClients.put(clientId, clientData);
-            logger.debug(compName + " " + client + " REGISTERING on Z: " + printChildren());
+            logger.debug(compName + " " + client + " REGISTERING");
+            logger.trace(getChildrenAsString());
         } else {
             // Don't update RTTs here, as some clients may not have supplied a correct RTT
             // don't update tempRecord either, as both nodes may have the same zServer,
@@ -408,7 +409,8 @@ public class RendezvousServer extends MsgRetryComponent {
             clientData.setClient(client);
             clientData.setLastHeardFrom(System.currentTimeMillis());
             clientData.setExpirationTime(client.getNatBindingTimeout());
-            logger.debug(compName + " " + client + " RE-REGISTERING on Z: " + printChildren());
+            logger.debug(compName + " " + client + " RE-REGISTERING on Z: ");
+            logger.trace(getChildrenAsString());
             // add the new prp ports to the already registered ports...
             Set<Integer> ports = clientData.getPrpPorts();
             ports.addAll(prpPorts);
@@ -475,7 +477,7 @@ public class RendezvousServer extends MsgRetryComponent {
 
                 // JIM - should I not create a duplicate session here???
                 // first store the session
-                logger.debug(compName + "Total Sessions:" + hpSessions.size() + " Creating Session between ID: " + hpSessionKey
+                logger.trace(compName + "Total Sessions:" + hpSessions.size() + " Creating Session between ID: " + hpSessionKey
                         + " Starting " + session.getHolePunchingMechanism());
                 // save the session start time
                 session.setSesssionStartTime(System.currentTimeMillis());
@@ -610,7 +612,7 @@ public class RendezvousServer extends MsgRetryComponent {
             // solution: hole punching server only listens on 3478 so
             // ignore the ping if its destination port is not 3478
 
-            logger.debug(compName + " recvd connection keep alive ping message from ("
+            logger.trace(compName + " received connection keep alive ping message from ("
                     + ping.getVodSource() + ") ");
 
             // update the client record time stamp
@@ -620,9 +622,9 @@ public class RendezvousServer extends MsgRetryComponent {
                 // or its port dynamically, this can potentially happen. Or if the client
                 // changes from WiFi to 3G or something like that.
                 // Or if it changes its set of parents, its VodAddress will change.
-                logger.debug(compName + " Sending Pong back to : " 
+                logger.trace(compName + " Sending Pong back to : " 
                         + record.getClient().getPeerAddress());
-                logger.debug(compName + " Sending Pong really back to : " 
+                logger.trace(compName + " Sending Pong really back to : " 
                         + ping.getVodSource());
                 record.setClient(ping.getVodSource());
                 record.setLastHeardFrom(System.currentTimeMillis());
@@ -634,7 +636,6 @@ public class RendezvousServer extends MsgRetryComponent {
                 delegator.doTrigger(pong, network);
             } else {
                 logger.debug(compName + " Ping recvd from a non-child: : " + ping.getVodSource());
-                printChildren();
                 // Ping'ing node is not a child, tell it to remove itself as a child
                 HpUnregisterMsg.Request msg =
                         new HpUnregisterMsg.Request(self.getAddress(),

@@ -5,13 +5,11 @@
 
 package se.sics.gvod.net.events;
 
-import se.sics.kompics.Response;
-
 /**
  *
  * @author jdowling
  */
-public abstract class DoubleDispatchResponseId<T extends DoubleDispatchRequestId> extends Response
+public abstract class DoubleDispatchResponseId<T extends DoubleDispatchRequestId> extends ResponseId
 {
     private final int id;
 
@@ -21,6 +19,7 @@ public abstract class DoubleDispatchResponseId<T extends DoubleDispatchRequestId
         request.setResponse(this);
     }
 
+    @Override
     public int getId() {
         return id;
     }

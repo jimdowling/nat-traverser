@@ -28,10 +28,10 @@ import se.sics.kompics.*;
 /**
  * DistributedNatGatewayEmulator doesn't rewrite the clientId in messages. Can
  * be used on planetlab.
- * 
- * Normally NatTraverser has its Network, NatNetworkControl, Timer ports bound to this components.
- * bind NatNetworkControl to this component for PortBind, PortAllocation
- * events.
+ *
+ * Normally NatTraverser has its Network, NatNetworkControl, Timer ports bound
+ * to this components. bind NatNetworkControl to this component for PortBind,
+ * PortAllocation events.
  *
  * @author jdowling
  */
@@ -180,18 +180,17 @@ public class DistributedNatGatewayEmulator extends ComponentDefinition {
             trigger(event, lowerNetControl);
         }
     };
-    
     Handler<PortBindResponse> handlePortBindResponse = new Handler<PortBindResponse>() {
         @Override
         public void handle(PortBindResponse event) {
-            
+
             if (event.getStatus() == PortBindResponse.Status.SUCCESS) {
                 allocatedPorts.add(event.getPort());
             }
-            
+
             trigger(event, upperNetControl);
         }
-    };        
+    };
     Handler<PortAllocRequest> handlePortAllocRequest = new Handler<PortAllocRequest>() {
         @Override
         public void handle(PortAllocRequest event) {
@@ -214,23 +213,21 @@ public class DistributedNatGatewayEmulator extends ComponentDefinition {
 //            PortAllocResponse response = event.getResponse();
 //            response.setAllocatedPorts(setPorts);
 //            trigger(response, upperNetControl);
-            
+
             trigger(event, lowerNetControl);
         }
     };
-    
     Handler<PortAllocResponse> handlePortAllocResponse = new Handler<PortAllocResponse>() {
         @Override
         public void handle(PortAllocResponse event) {
-            
+
             for (int p : event.getAllocatedPorts()) {
                 allocatedPorts.add(p);
             }
-            
+
             trigger(event, upperNetControl);
         }
-    };    
-    
+    };
     Handler<PortDeleteRequest> handlePortDeleteRequest = new Handler<PortDeleteRequest>() {
         @Override
         public void handle(PortDeleteRequest event) {
@@ -249,7 +246,6 @@ public class DistributedNatGatewayEmulator extends ComponentDefinition {
             trigger(event, lowerNetControl);
         }
     };
-    
     Handler<PortDeleteResponse> handlePortDeleteResponse = new Handler<PortDeleteResponse>() {
         @Override
         public void handle(PortDeleteResponse event) {
@@ -259,7 +255,6 @@ public class DistributedNatGatewayEmulator extends ComponentDefinition {
             trigger(event, upperNetControl);
         }
     };
-    
     Handler<UnmapPortsRequest> handleUnmapPortRequest =
             new Handler<UnmapPortsRequest>() {
         @Override
@@ -420,11 +415,11 @@ public class DistributedNatGatewayEmulator extends ComponentDefinition {
                     logger.debug(compName + "\t\t VIOLATION for " + msg.getClass()
                             + "\tSrc: " + src + "\tdest: " + msg.getDestination()
                             + "\t\tparent " + vm.getNextDest().getPeerAddress());
-                    
-                    logger.debug(compName + "\tVIOLATION " + mappingPolicy + "\t" +
-                            allocationPolicy + "\t" + filteringPolicy);
+
+                    logger.debug(compName + "\tVIOLATION " + mappingPolicy + "\t"
+                            + allocationPolicy + "\t" + filteringPolicy);
                     logger.debug(compName + "\tVIOLATION " + vm.getVodSource().getNatAsString());
-                    
+
                 }
             }
 
@@ -560,12 +555,14 @@ public class DistributedNatGatewayEmulator extends ComponentDefinition {
     Handler<RewriteableMsg> handleLowerMessage = new Handler<RewriteableMsg>() {
         @Override
         public void handle(RewriteableMsg msg) {
+            String msgTimeoutId = "";
             if (msg instanceof HpMsg.Hp) {
                 HpMsg.Hp hm = (HpMsg.Hp) msg;
+                msgTimeoutId = Integer.toString(hm.getMsgTimeoutId().getId());
                 logger.debug(compName + msg.getSource() + " -- "
                         + msg.getDestination() + " of type "
                         + msg.getClass().getCanonicalName() + " - "
-                        + hm.getMsgTimeoutId());
+                        + msgTimeoutId);
             }
 
 
@@ -655,12 +652,15 @@ public class DistributedNatGatewayEmulator extends ComponentDefinition {
                                          * as it sent earlier
                                          */
                                         // Drop  1
-                                        logger.warn(compName + "Drop PD-1 " + msg.getClass().getCanonicalName());
+                                        logger.warn(compName + "Drop PD-1 "
+                                                + msg.getClass().getCanonicalName()
+                                                + " "
+                                                + msgTimeoutId);
                                         logger.warn(compName + "Existing mappings: "
                                                 + portMap);
                                         if (msg instanceof ShuffleMsg.Response) {
                                             ShuffleMsg.Response hm = (ShuffleMsg.Response) msg;
-                                            logger.warn(compName + "Drop PD-1. Nat addr " 
+                                            logger.warn(compName + "Drop PD-1. Nat addr "
                                                     + natPublicAddress + " src= "
                                                     + msg.getSource() + " -- dest= "
                                                     + msg.getDestination() + " of type "
@@ -696,11 +696,12 @@ public class DistributedNatGatewayEmulator extends ComponentDefinition {
                                     } else {
                                         sb.append(msg.getSource());
                                     }
+                                    sb.append(" ").append((msgTimeoutId));
                                     sb.append(getExistingMappingsAsString(map));
                                     logger.warn(compName + sb.toString());
                                     if (msg instanceof HpMsg.Hp) {
                                         HpMsg.Hp hm = (HpMsg.Hp) msg;
-                                        logger.warn(compName + "Drop PD-2 " + msg.getSource() + " -- "
+                                        logger.warn(compName + " Drop PD-2 " + msg.getSource() + " -- "
                                                 + msg.getDestination() + " of type "
                                                 + msg.getClass().getCanonicalName() + " - "
                                                 + hm.getMsgTimeoutId());
@@ -713,10 +714,12 @@ public class DistributedNatGatewayEmulator extends ComponentDefinition {
                                 break;
                         }
                     } else {
-                        logger.debug(compName + "Lower. No mapping found. Src: " + srcIp + ":"
+                        logger.info(compName + "Lower. No mapping found. Src: " + srcIp + ":"
                                 + srcPort + " destPort: "
                                 + destPort + " private addr: " + v + " - " + msg.getClass()
-                                + "::" + natPublicAddress + "::");
+                                + "::" + natPublicAddress + "::"
+                                + " "
+                                + msgTimeoutId);
                     }
                 }
                 if (forward) {
@@ -734,17 +737,18 @@ public class DistributedNatGatewayEmulator extends ComponentDefinition {
                             + filteringPolicy
                             + " Dropped Msg. Src:"
                             + msg.getSource() + " - "
+                            + msgTimeoutId
                             + " dest:"
                             + msg.getDestination() + " message class: "
                             + shortClassName(msg.getClass().toString())
                             + getExistingMappingsAsString(privateEndPointToDestinationTable.get(v)));
-            if (msg instanceof HpMsg.Hp) {
-                HpMsg.Hp hm = (HpMsg.Hp) msg;
-                logger.debug(compName + msg.getSource() + " -- "
-                        + msg.getDestination() + " FILTERING "
-                        + msg.getClass().getCanonicalName() + " - "
-                        + hm.getMsgTimeoutId());
-            }
+                    if (msg instanceof HpMsg.Hp) {
+                        HpMsg.Hp hm = (HpMsg.Hp) msg;
+                        logger.debug(compName + msg.getSource() + " -- "
+                                + msg.getDestination() + " FILTERING "
+                                + msg.getClass().getCanonicalName() + " - "
+                                + hm.getMsgTimeoutId());
+                    }
                 }
             }
 
@@ -1004,12 +1008,11 @@ public class DistributedNatGatewayEmulator extends ComponentDefinition {
         String className = (new StringBuffer(reversedName)).reverse().toString();
         return className;
     }
-
     public Handler<Stop> handleStop = new Handler<Stop>() {
         @Override
         public void handle(Stop event) {
-        logger.debug(compName + " nat gateway stopped");
+            logger.debug(compName + " nat gateway stopped");
 
         }
-    };    
+    };
 }

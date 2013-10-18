@@ -294,17 +294,29 @@ public class HpFeasability {
         }
     }
 
+    private static boolean isDirectConnectionOverNatPossible(VodAddress client) {
+        if (client.isOpen() == false) {
+            Nat n = client.getNat();
+            return (n.getMappingPolicy() == Nat.MappingPolicy.ENDPOINT_INDEPENDENT &&
+                    n.getFilteringPolicy() == Nat.FilteringPolicy.ENDPOINT_INDEPENDENT);
+        }
+        return false;
+    }
+    
     private static HolePunching isConnectionReversalFeasible(VodAddress clientA, VodAddress clientB) {
 
-        if (clientA.isOpen() || clientB.isOpen()) {
-            if (clientA.isOpen()) {
+        if (clientA.isOpen() || clientB.isOpen() ||
+                isDirectConnectionOverNatPossible(clientA) ||
+                isDirectConnectionOverNatPossible(clientB)
+                ) {
+            if (clientA.isOpen() || isDirectConnectionOverNatPossible(clientA)) {
                 logger.debug("One sided HP is feasible between [" + clientA + ", " + clientB + "]");
                 HolePunching holePunching = new HolePunching(clientA.getId(), clientB.getId(),
                         HPMechanism.CONNECTION_REVERSAL, /*Overall mechanism used*/
                         HPRole.CONNECTION_REVERSAL_OPEN,
                         HPRole.CONNECTION_REVERSAL_NAT);
                 return holePunching;
-            } else if (clientB.isOpen()) {
+            } else if (clientB.isOpen() || isDirectConnectionOverNatPossible(clientB)) {
                 logger.debug("One sided HP is feasible between [" + clientA + ", " + clientB + "]");
                 HolePunching holePunching = new HolePunching(clientA.getId(), clientB.getId(),
                         HPMechanism.CONNECTION_REVERSAL, /*Overall mechanism used*/

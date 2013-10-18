@@ -1049,7 +1049,7 @@ public class NatTraverser extends ComponentDefinition {
     private Handler<GetNatTypeResponse> handleGetNatTypeResponse = new Handler<GetNatTypeResponse>() {
         @Override
         public void handle(GetNatTypeResponse event) {
-            logger.debug(compName + " Nat type is " + event.getStatus() + " - " + event.getNat());
+            logger.info(compName + " Nat type is " + event.getStatus() + " - " + event.getNat());
             self.setNat(event.getNat());
             self.setUpnp(event.getNat().isUpnp());
 

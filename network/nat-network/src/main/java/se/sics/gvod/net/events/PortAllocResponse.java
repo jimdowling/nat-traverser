@@ -10,7 +10,7 @@ import java.util.Set;
  *
  * @author jdowling
  */
-public abstract class PortAllocResponse extends DoubleDispatchResponseId<PortAllocRequest>
+public abstract class PortAllocResponse extends DoubleDispatchResponseId<PortAllocRequest> 
 {
 
     private Set<Integer> allocatedPorts;

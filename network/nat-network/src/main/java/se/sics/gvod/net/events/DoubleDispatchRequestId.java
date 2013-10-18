@@ -5,7 +5,6 @@
 package se.sics.gvod.net.events;
 
 import se.sics.kompics.Request;
-import se.sics.kompics.Request;
 
 /**
  *
