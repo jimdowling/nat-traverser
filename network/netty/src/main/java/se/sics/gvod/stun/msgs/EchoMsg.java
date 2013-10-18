@@ -240,11 +240,11 @@ public class EchoMsg {
         }
     }
 
-    public static final class RequestRetryTimeout extends RewriteableRetryTimeout {
+    public static final class RequestTimeout extends RewriteableRetryTimeout {
 
         private final Request requestMsg;
 
-        public RequestRetryTimeout(ScheduleRetryTimeout st, Request requestMsg) {
+        public RequestTimeout(ScheduleRetryTimeout st, Request requestMsg) {
             super(st, requestMsg);
             this.requestMsg = requestMsg;
         }

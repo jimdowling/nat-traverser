@@ -10,6 +10,7 @@ import se.sics.gvod.config.VodConfig;
 import se.sics.gvod.common.msgs.RelayMsgNetty;
 import se.sics.gvod.config.BaseCommandLineConfig;
 import se.sics.gvod.croupier.msgs.ShuffleMsg;
+import se.sics.gvod.hp.msgs.HolePunchingMsg;
 import se.sics.gvod.hp.msgs.HpMsg;
 import se.sics.gvod.nat.emu.events.DistributedNatGatewayEmulatorInit;
 import se.sics.gvod.nat.emu.events.NatPortBindResponse;
@@ -151,7 +152,9 @@ public class DistributedNatGatewayEmulator extends ComponentDefinition {
             ruleLifeTime = init.getRuleLifeTime();
             randomPortSeed = init.getRandomPortSeed();
             reset();
-            compName = "Nat(" + init.getNatIP() + ":" + natType + ") ";
+            compName = "Nat(" + init.getNatIP() + ":" + 
+                    Nat.natToStr(natType, mappingPolicy, allocationPolicy, filteringPolicy)
+                    + ") ";
 
             logger.debug(compName + "NatGateway: " + natPublicAddress + " - "
                     + mappingPolicy + " - "
@@ -342,7 +345,7 @@ public class DistributedNatGatewayEmulator extends ComponentDefinition {
 
             if (msg instanceof HpMsg.Hp) {
                 HpMsg.Hp hm = (HpMsg.Hp) msg;
-                logger.debug(compName + inMsg.getSource() + " -- "
+                logger.debug(compName + inMsg.getSource() + " HpMsg handleUpperMsg -- "
                         + inMsg.getDestination() + " of type "
                         + inMsg.getClass().getCanonicalName() + " - "
                         + hm.getMsgTimeoutId());
@@ -559,14 +562,14 @@ public class DistributedNatGatewayEmulator extends ComponentDefinition {
             if (msg instanceof HpMsg.Hp) {
                 HpMsg.Hp hm = (HpMsg.Hp) msg;
                 msgTimeoutId = Integer.toString(hm.getMsgTimeoutId().getId());
-                logger.debug(compName + msg.getSource() + " -- "
+                logger.debug(compName + msg.getSource() + " -- HpMsg handleLowerMsg "
                         + msg.getDestination() + " of type "
                         + msg.getClass().getCanonicalName() + " - "
                         + msgTimeoutId);
             }
 
 
-            logger.debug(compName + "handleLowerMsg in Nat. timeoutId " + msg.getTimeoutId()
+            logger.trace(compName + "handleLowerMsg in Nat. timeoutId " + msg.getTimeoutId()
                     + " src: " + msg.getSource()
                     + " dest: " + msg.getDestination()
                     + " msg class " + shortClassName(msg.getClass().toString()));
@@ -669,7 +672,7 @@ public class DistributedNatGatewayEmulator extends ComponentDefinition {
                                         }
                                         if (msg instanceof HpMsg.Hp) {
                                             HpMsg.Hp hm = (HpMsg.Hp) msg;
-                                            logger.warn(compName + "Drop PD-1 " + msg.getSource() + " -- "
+                                            logger.warn(compName + "Drop PD-1 HpMsg " + msg.getSource() + " -- "
                                                     + msg.getDestination() + " of type "
                                                     + msg.getClass().getCanonicalName() + " - "
                                                     + hm.getMsgTimeoutId());
@@ -681,6 +684,7 @@ public class DistributedNatGatewayEmulator extends ComponentDefinition {
                                     StringBuilder sb = new StringBuilder();
                                     sb.append("Drop PD-2 ").append(msg.getClass()).append(" - ");
                                     sb.append(mappingPolicy).append(":").append(allocationPolicy).append(":").append(filteringPolicy).append(" - ");
+                                    
                                     if (msg instanceof DirectMsg) {
                                         DirectMsg vm = (DirectMsg) msg;
                                         sb.append(vm.getVodSource());
@@ -693,6 +697,12 @@ public class DistributedNatGatewayEmulator extends ComponentDefinition {
                                         RelayMsgNetty.Request vm = (RelayMsgNetty.Request) msg;
                                         sb.append(vm.getVodSource());
                                         sb.append(vm.getVodDestination());
+                                    } else if (msg instanceof HolePunchingMsg.Response) {
+                                        HolePunchingMsg.Response hm 
+                                                = (HolePunchingMsg.Response) msg;
+                                        sb.append(hm.getVodSource());
+                                        sb.append(hm.getVodDestination());
+                                        sb.append(hm.getMsgTimeoutId());
                                     } else {
                                         sb.append(msg.getSource());
                                     }
@@ -706,8 +716,6 @@ public class DistributedNatGatewayEmulator extends ComponentDefinition {
                                                 + msg.getClass().getCanonicalName() + " - "
                                                 + hm.getMsgTimeoutId());
                                     }
-
-
                                 }
                                 break;
                             default:
@@ -729,7 +737,8 @@ public class DistributedNatGatewayEmulator extends ComponentDefinition {
 
                     logger.debug(compName + "FORWARDING the packet in src " + msg.getSource()
                             + " dest " + msg.getDestination()
-                            + " timeoutId " + msg.getTimeoutId()
+                            + " timeoutId " + msg.getTimeoutId() + " "
+                            + msgTimeoutId
                             + " msg class "
                             + shortClassName(msg.getClass().toString()));
                 } else {

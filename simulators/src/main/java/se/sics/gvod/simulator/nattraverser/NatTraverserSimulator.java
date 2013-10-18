@@ -208,7 +208,7 @@ public final class NatTraverserSimulator extends ComponentDefinition {
             addr = new VodAddress(peerAddress, NT_PEER_OVERLAY_ID, nat);
             self = new SelfImpl(addr);
             privateAddress.put(id, self);
-            logger.debug("Starting peer " + peerAddress + " nat ip" + natIp + " (Nat Type is) : " + nat);
+            logger.info("Starting peer " + peerAddress + " nat ip" + natIp + " (Nat Type is) : " + nat);
         }
 
         int filterId = peerAddress.getId();
@@ -216,8 +216,9 @@ public final class NatTraverserSimulator extends ComponentDefinition {
         connect(natTraverser.getPositive(VodNetwork.class), peer.getNegative(VodNetwork.class));
         connect(natTraverser.getPositive(VodNetwork.class), croupier.getNegative(VodNetwork.class));
         connect(natGateway.getPositive(VodNetwork.class), natTraverser.getNegative(VodNetwork.class));
-        connect(natGateway.getNegative(VodNetwork.class), network, 
-                new MsgDestFilterNodeId(filterId));
+        connect(natGateway.getNegative(VodNetwork.class), network
+                , new MsgDestFilterNodeId(filterId)
+                );
 
         connect(timer, peer.getNegative(Timer.class));
         connect(timer, natTraverser.getNegative(Timer.class));
@@ -227,8 +228,7 @@ public final class NatTraverserSimulator extends ComponentDefinition {
         connect(natGateway.getPositive(NatNetworkControl.class), 
                 natTraverser.getNegative(NatNetworkControl.class));
         connect(portReservoir.getPositive(NatNetworkControl.class), 
-                natGateway.getNegative(NatNetworkControl.class),
-                new ResponseIdFilter(filterId));
+                natGateway.getNegative(NatNetworkControl.class));
 
         connect(natTraverser.getNegative(PeerSamplePort.class), croupier.getPositive(PeerSamplePort.class));
 

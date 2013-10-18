@@ -281,9 +281,9 @@ public class Nat implements Serializable, Comparable {
         return false;
     }
 
-    @Override
-    public String toString() {
-
+    
+    public static String natToStr(Type type, MappingPolicy mappingPolicy,
+            AllocationPolicy allocationPolicy, FilteringPolicy filteringPolicy) {
         StringBuilder msg = new StringBuilder();
         if (type != Type.NAT) {
             msg.append(type.toString());
@@ -327,6 +327,14 @@ public class Nat implements Serializable, Comparable {
 
             return msg.toString();
         }
+        
+    }
+    
+    
+    @Override
+    public String toString() {
+
+        return natToStr(type, mappingPolicy, allocationPolicy, filteringPolicy);
     }
 
     @Override

@@ -248,7 +248,9 @@ public class NatTraverser extends ComponentDefinition {
 //        subscribe(handleRTO, timer);
 
         connect(hpClient.getNegative(Timer.class), timer);
-        connect(hpClient.getNegative(VodNetwork.class), network, new MsgDestFilterOverlayId(VodConfig.SYSTEM_OVERLAY_ID));
+        connect(hpClient.getNegative(VodNetwork.class), network 
+                ,new MsgDestFilterOverlayId(VodConfig.SYSTEM_OVERLAY_ID)
+                );
         connect(hpClient.getNegative(NatNetworkControl.class), lowerNetControl);
     }
     Handler<NatTraverserInit> handleInit = new Handler<NatTraverserInit>() {

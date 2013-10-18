@@ -1054,8 +1054,6 @@ public class RendezvousServer extends MsgRetryComponent {
             // sanity check
             if (session.getResponderID() != remoteId) {
                 throw new UnsupportedOperationException("Responder does not match the remote client id");
-//                            logger.warn("Responder does not match the remote client id");
-//                            return;
             }
 
             Address openedHole = new Address(client.getIp(), predictedPort, client.getId());
@@ -1063,8 +1061,6 @@ public class RendezvousServer extends MsgRetryComponent {
                     VodConfig.SYSTEM_OVERLAY_ID, client.getNatPolicy(),
                     client.getParents());
 
-
-            RegisteredClientRecord clientRecord = registeredClients.get(client.getId());
 
             GoMsg.Request goMsg = new GoMsg.Request(self.getAddress(), responder.getClient(),
                     openedHoleOnInitiatorNat,
@@ -1132,6 +1128,8 @@ public class RendezvousServer extends MsgRetryComponent {
                 HolePunching session = hpSessions.get(key);
                 session.set_Interleaved_PRC_PredictivePort(request.getClientId(), thisClientInterleavedPort);
 
+                // TODO: what if replies arrive at different zServers. 
+                // This will never get executed.
                 if (areBothRepliesRecvd(session)) {
 
                     // send go message to both the clients
@@ -1605,7 +1603,10 @@ public class RendezvousServer extends MsgRetryComponent {
                     new Interleaved_PRC_ServersRequestForPredictionMsg.Request(self.getAddress(), client_B_PublicAddress,
                     remoteClientFor_B, hpMechanism, client_B_HPRole,
                     client_A_PublicAddress, msgTimeoutId);
-            // oneway msgs, so ok to call trigger instead of retry
+            // As hole-punching is executed in parallel across many different rendezvous servers, 
+            // It is possible that A will receive a response from the zServer, while
+            // B will receive a response from a different zServer first. 
+            // TODO: If A and B receive the msgs from different zServers, does it matter?
             delegator.doTrigger(reqFor_A, network);
             delegator.doTrigger(reqFor_B, network);
         } else if (session.getHolePunchingMechanism() == HPMechanism.PRP_PRC) {

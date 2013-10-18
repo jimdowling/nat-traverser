@@ -173,7 +173,7 @@ public class StunClient extends MsgRetryComponent {
 
         this.delegator.doSubscribe(handleEchoChangeIpAndPortTimeout, timer);
         this.delegator.doSubscribe(handleEchoChangePortTimeout, timer);
-        this.delegator.doSubscribe(handleEchoTimeout, timer);
+        this.delegator.doSubscribe(handleEchoRequestTimeout, timer);
         this.delegator.doSubscribe(handleRequestServerHeartBeatTimer, timer);
         this.delegator.doSubscribe(handleUpnpTimeout, timer);
         this.delegator.doSubscribe(handleStartUpnp, timer);
@@ -206,7 +206,7 @@ public class StunClient extends MsgRetryComponent {
 
             sessionMap.clear();
             logger.trace(compName
-                    + " local address is " + self.getId() + "@" 
+                    + " local address is " + self.getId() + "@"
                     + self.getIp() + ":" + self.getPort()
                     + " retry delay is " + config.getRto()
                     + " ruleExpirationMinWait " + config.getRuleExpirationMinWait()
@@ -272,31 +272,32 @@ public class StunClient extends MsgRetryComponent {
             return;
         }
 
-        // Even and Odd Ids:
-        // If a 
-        boolean evenId = false, oddId = false;
-        for (Address serverAddress : initialServers) {
-            if (serverAddress.getId() % 2 == 0) {
-                if (evenId) {
-                    continue;
-                }
-                evenId = true;
-            } else if (serverAddress.getId() % 2 == 1) {
-                if (oddId) {
-                    continue;
-                }
-            }
-            oddId = true;
-            long transactionId = random.nextLong();
-            VodAddress sVodAddr = ToVodAddr.stunServer(serverAddress);
-            Session session = new Session(transactionId,
-                    self.getAddress().getPeerAddress(), sVodAddr.getPeerAddress(),
-                    measureNatBindingTimeout);
-            sessionMap.put(transactionId, session);
-            transactionMap.put(serverAddress, transactionId);
-            echoTimestamps.put(serverAddress, System.currentTimeMillis());
-            sendEchoRequest(ToVodAddr.stunServer(serverAddress), EchoMsg.Test.UDP_BLOCKED, transactionId);
-        }
+        Iterator<Address> iter = initialServers.iterator();
+        Address serverAddress = iter.next();
+        initialServers.remove(serverAddress);
+//        boolean evenId = false, oddId = false;
+//        for (Address serverAddress : initialServers) {
+//            if (serverAddress.getId() % 2 == 0) {
+//                if (evenId) {
+//                    continue;
+//                }
+//                evenId = true;
+//            } else if (serverAddress.getId() % 2 == 1) {
+//                if (oddId) {
+//                    continue;
+//                }
+//            }
+//        oddId = true;
+        long transactionId = random.nextLong();
+        VodAddress sVodAddr = ToVodAddr.stunServer(serverAddress);
+        Session session = new Session(transactionId,
+                self.getAddress().getPeerAddress(), sVodAddr.getPeerAddress(),
+                measureNatBindingTimeout);
+        sessionMap.put(transactionId, session);
+        transactionMap.put(serverAddress, transactionId);
+        echoTimestamps.put(serverAddress, System.currentTimeMillis());
+        sendEchoRequest(ToVodAddr.stunServer(serverAddress), EchoMsg.Test.UDP_BLOCKED, transactionId);
+//        }
     }
 
     private void sendEchoRequest(VodAddress target, EchoMsg.Test testType, long transactionId) {
@@ -307,8 +308,8 @@ public class StunClient extends MsgRetryComponent {
         ScheduleRetryTimeout st =
                 new ScheduleRetryTimeout(rto, config.getRtoRetries(),
                 config.getRtoScale());
-        EchoMsg.RequestRetryTimeout requestRetryTimeout =
-                new EchoMsg.RequestRetryTimeout(st, bindingReq);
+        EchoMsg.RequestTimeout requestRetryTimeout =
+                new EchoMsg.RequestTimeout(st, bindingReq);
         delegator.doRetry(requestRetryTimeout);
         logger.debug(compName + "Sending " + testType + " from "
                 + self.getAddress() + " to" + target.getPeerAddress() + " . Rto="
@@ -419,8 +420,8 @@ public class StunClient extends MsgRetryComponent {
                 transactionId, replyTo);
         ScheduleRetryTimeout st =
                 new ScheduleRetryTimeout(config.getRto(), 0);
-        EchoMsg.RequestRetryTimeout requestRetryTimeout =
-                new EchoMsg.RequestRetryTimeout(st, hbRequest);
+        EchoMsg.RequestTimeout requestRetryTimeout =
+                new EchoMsg.RequestTimeout(st, hbRequest);
         delegator.doRetry(requestRetryTimeout);
     }
 
@@ -593,7 +594,7 @@ public class StunClient extends MsgRetryComponent {
 
     private void determineMappingAndAllocationPolicies(long transactionId) {
         logger.debug(compName + "Sending PortAllocRequest for two new ports on client...");
-        PortAllocRequest allocReq = new PortAllocRequest(self.getIp(), 
+        PortAllocRequest allocReq = new PortAllocRequest(self.getIp(),
                 self.getId(), 2, Transport.UDP);
         StunPortAllocResponse allocResp = new StunPortAllocResponse(allocReq, transactionId);
         allocReq.setResponse(allocResp);
@@ -623,18 +624,18 @@ public class StunClient extends MsgRetryComponent {
             // See the NatCracker paper for more details.
             // Try 0 to Try 7 to four addresses
             Session session = sessionMap.get(transactionId);
-            
-            
+
+
             if (session == null) {
                 StringBuilder sb = new StringBuilder();
                 for (Long t : sessionMap.keySet()) {
                     sb.append(t).append(", ");
                 }
-                logger.error(compName + " couldn't find session for PortAllocReq. My tid: {}. Existing tids: " 
+                logger.error(compName + " couldn't find session for PortAllocReq. My tid: {}. Existing tids: "
                         + sb.toString(), response.getKey().toString());
                 return;
             }
-            
+
             VodAddress serverS1Address = session.getServer1();
             VodAddress serverS2Address = ToVodAddr.stunServer(
                     session.getPartnerServer().getPeerAddress());
@@ -699,8 +700,8 @@ public class StunClient extends MsgRetryComponent {
                 new ScheduleRetryTimeout(rto,
                 config.getRtoRetries(), config.getRtoScale());
 
-        EchoMsg.RequestRetryTimeout requestRetryTimeout =
-                new EchoMsg.RequestRetryTimeout(st, pingReq);
+        EchoMsg.RequestTimeout requestRetryTimeout =
+                new EchoMsg.RequestTimeout(st, pingReq);
 
         delegator.doRetry(requestRetryTimeout);
         logger.debug(compName + "Sending Echo Ping " + tryId
@@ -813,10 +814,10 @@ public class StunClient extends MsgRetryComponent {
      * Echo request is not returned to the client. Have retried sending this
      * message, and after all retries, this event handler gets called.
      */
-    Handler<EchoMsg.RequestRetryTimeout> handleEchoTimeout =
-            new Handler<EchoMsg.RequestRetryTimeout>() {
+    Handler<EchoMsg.RequestTimeout> handleEchoRequestTimeout =
+            new Handler<EchoMsg.RequestTimeout>() {
         @Override
-        public void handle(EchoMsg.RequestRetryTimeout event) {
+        public void handle(EchoMsg.RequestTimeout event) {
             long transactionId = event.getRequestMsg().getTransactionId();
             logger.debug(compName + " handled EchoMsg.RequestRetryTimeout "
                     + event.getRequestMsg().getTestType().toString()
@@ -875,7 +876,14 @@ public class StunClient extends MsgRetryComponent {
         } else if (failedHosts.containsAll(initialServers)) {
             logger.debug(compName + " All hosts are identified as failed");
         }
-        sendResponse(session, status);
+        if (status == GetNatTypeResponse.Status.FIRST_SERVER_FAILED &&
+                initialServers.isEmpty() == false) {
+            // try the next stun server from the list
+            startEcho();
+        } else {
+            sendResponse(session, status);
+        }
+        
     }
 
     private void startTest2(EchoMsg.Response event) {

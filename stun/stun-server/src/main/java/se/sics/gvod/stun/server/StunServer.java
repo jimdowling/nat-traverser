@@ -381,13 +381,13 @@ public final class StunServer extends MsgRetryComponent {
             return;
         }
 
-        if (addr.getPeerAddress().equals(self.getAddress().getPeerAddress())) {
+        if (addr.getId() == self.getId()) {
             logger.debug(compName + "Cannot add self as partner");
             return;
         }
-        if ((self.getId() % 2) != (addr.getId() % 2)) {
-            logger.trace("Not adding " + addr + " . Only accept partners of the same polarity.");
-        }
+//        if ((self.getId() % 2) != (addr.getId() % 2)) {
+//            logger.trace("Not adding " + addr + " . Only accept partners of the same polarity.");
+//        }
 
         Partner newPartner = new Partner(self.getId(), addr, config.getRto());
         if (partners.contains(newPartner)) {

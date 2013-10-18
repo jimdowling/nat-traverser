@@ -147,11 +147,11 @@ public class HolePunchingMsg {
         }
     }
 
-    public static final class RequestRetryTimeout extends RewriteableRetryTimeout {
+    public static final class RequestTimeout extends RewriteableRetryTimeout {
 
         private final Request requestMsg;
 
-        public RequestRetryTimeout(ScheduleRetryTimeout st, Request requestMsg) {
+        public RequestTimeout(ScheduleRetryTimeout st, Request requestMsg) {
             super(st, requestMsg);
             this.requestMsg = requestMsg;
         }
@@ -161,11 +161,11 @@ public class HolePunchingMsg {
         }
     }
 
-    public static final class ResponseRetryTimeout extends RewriteableRetryTimeout {
+    public static final class ResponseTimeout extends RewriteableRetryTimeout {
 
         private final Response responseMsg;
 
-        public ResponseRetryTimeout(ScheduleRetryTimeout st, Response ResponseMsg) {
+        public ResponseTimeout(ScheduleRetryTimeout st, Response ResponseMsg) {
             super(st, ResponseMsg);
             this.responseMsg = ResponseMsg;
         }

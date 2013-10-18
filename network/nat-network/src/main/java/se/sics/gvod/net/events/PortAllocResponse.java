@@ -9,6 +9,9 @@ import java.util.Set;
 /**
  *
  * @author jdowling
+ * 
+ * TODO: Assumption is that this always succeeds.
+ * Add a status enum indicating if it succeeded, and if it failed - reason.
  */
 public abstract class PortAllocResponse extends DoubleDispatchResponseId<PortAllocRequest> 
 {
