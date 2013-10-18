@@ -519,7 +519,8 @@ public class EncodingDecodingTest {
 
     @Test
     public void HolePunchingMsg() {
-        HolePunchingMsg.Request msg = new HolePunchingMsg.Request(gSrc, gDest, UUID.nextUUID(), 5554);
+        HolePunchingMsg.Request msg = new HolePunchingMsg.Request(gSrc, gDest, 
+                UUID.nextUUID());
         msg.setTimeoutId(UUID.nextUUID());
         try {
             ByteBuf buffer = msg.toByteArray();
@@ -528,7 +529,6 @@ public class EncodingDecodingTest {
                     HolePunchingMsgFactory.Request.fromBuffer(buffer);
             assert (msg.getRemoteClientId() == res.getRemoteClientId());
             compareNatMsgs(msg, res);
-            assert(msg.getDestport() == res.getDestport());
             assert(msg.getRemoteClientId() == res.getRemoteClientId());
         } catch (MessageDecodingException ex) {
             Logger.getLogger(EncodingDecodingTest.class.getName()).log(Level.SEVERE, null, ex);
