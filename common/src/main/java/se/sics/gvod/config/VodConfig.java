@@ -54,7 +54,7 @@ public class VodConfig extends BaseCommandLineConfig {
     public static final String PROP_VIDEO_HEIGHT = "video.height";
     public static String STARTUP_CONFIG_FILE;
     // Vod config params
-    public static final int BOOTSTRAP_REFRESH_PERIOD = 5 * 60 * 1000;
+    public static final int BOOTSTRAP_REFRESH_PERIOD = 10 * 1000;
     public static final int DEFAULT_CONTROL_PORT = 58024;
     protected static final int DEFAULT_MEDIA_PLAYER = 0;
     protected static final int DEFAULT_VIDEO_WIDTH = 640;
