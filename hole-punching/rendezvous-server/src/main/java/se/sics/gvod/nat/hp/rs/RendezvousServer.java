@@ -1701,9 +1701,9 @@ public class RendezvousServer extends MsgRetryComponent {
                 // remove as child - it has probably died
                 int childId = event.getRequestMsg().getDestination().getId();
                 registeredClients.remove(childId);
-                delegator.doTrigger(new HpUnregisterMsg.Request(self.getAddress(),
+                delegator.doRetry(new HpUnregisterMsg.Request(self.getAddress(),
                         event.getRequestMsg().getVodDestination(), 0,
-                        HpRegisterMsg.RegisterStatus.PARENT_REQUEST_FAILED), network);
+                        HpRegisterMsg.RegisterStatus.PARENT_REQUEST_FAILED));
                 logger.warn(compName + " Child didn't allocate requested ports. Disconnecting child.");
             }
         }
