@@ -537,7 +537,6 @@ public class NatTraverser extends ComponentDefinition {
 
             if (msg.getVodDestination().isOpen()) {
                 trigger(msg, network);
-                TimeoutId id = msg.getTimeoutId();
                 outstandingTimestamps.put(msg.getTimeoutId().getId(), System.currentTimeMillis());
             } else {
                 if (!sendMsgUsingConnection(msg, msg.getRemoteId())) {
@@ -557,7 +556,9 @@ public class NatTraverser extends ComponentDefinition {
                                     System.currentTimeMillis());
                         }
                     } else {
-                        logger.debug(compName + msg.getClass() + " No parents. No relay msg sent from {} to relay {} ", msg.getVodSource(), msg.getVodDestination());
+                        logger.debug(compName + msg.getClass() 
+                                + " No parents. No relay msg sent from {} to relay {} ", 
+                                msg.getVodSource(), msg.getVodDestination());
                         // TODO send a FAULT msg, indicating that the dest has no parents to relay to.
                     }
                 } else {

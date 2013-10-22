@@ -58,7 +58,7 @@ public final class BootstrapConfiguration
                 BaseCommandLineConfig.DEFAULT_BS_CLIENT_RETRY_PERIOD,
                 BaseCommandLineConfig.DEFAULT_BS_CLIENT_RETRY_COUNT,
                 BaseCommandLineConfig.DEFAULT_BS_CLIENT_KEEP_ALIVE_PERIOD,
-                BaseCommandLineConfig.DEFAULT_BS_CLIENT_WEB_PORT);
+                BaseCommandLineConfig.DEFAULT_BS_WEB_PORT);
     }
 
     /**

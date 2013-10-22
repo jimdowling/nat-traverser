@@ -136,7 +136,7 @@ public class Croupier extends MsgRetryComponent {
         }
     };
 
-    private void initiateShuffle(int shuffleSize, VodAddress node) {
+    private void shuffle(int shuffleSize, VodAddress node) {
         if (node == null) {
             return;
         }
@@ -161,9 +161,9 @@ public class Croupier extends MsgRetryComponent {
         ScheduleRetryTimeout st =
                 new ScheduleRetryTimeout(config.getRto(),
                 config.getRtoRetries(), config.getRtoScale());
-        ShuffleMsg.Request request = new ShuffleMsg.Request(self.getAddress(), node,
+        ShuffleMsg.Request msg = new ShuffleMsg.Request(self.getAddress(), node,
                 buffer, self.getDescriptor());
-        ShuffleMsg.RequestTimeout retryRequest = new ShuffleMsg.RequestTimeout(st, request);
+        ShuffleMsg.RequestTimeout retryRequest = new ShuffleMsg.RequestTimeout(st, msg);
         TimeoutId id = delegator.doRetry(retryRequest);
 
         shuffleTimes.put(id.getId(), System.currentTimeMillis());
@@ -194,7 +194,7 @@ public class Croupier extends MsgRetryComponent {
                 }
 
                 CroupierStats.instance(self).incSelectedTimes();
-                initiateShuffle(config.getShuffleLength(), peer);
+                shuffle(config.getShuffleLength(), peer);
                 publicView.incrementDescriptorAges();
                 privateView.incrementDescriptorAges();
             }
@@ -242,7 +242,7 @@ public class Croupier extends MsgRetryComponent {
                     msg.getNextDest(), msg.getTimeoutId(), RelayMsgNetty.Status.OK,
                     toSendBuffer, self.getDescriptor());
 
-            logger.trace(compName + "trigger ShuffleMsg.Response");
+            logger.trace(compName + "sending ShuffleMsg.Response");
 
             delegator.doTrigger(response, network);
 
@@ -267,13 +267,22 @@ public class Croupier extends MsgRetryComponent {
 
                 CroupierStats.instance(self).incShuffleResp();
 
-                Long timeStarted = shuffleTimes.remove(event.getTimeoutId().getId());
+                Long timeStarted = shuffleTimes.get(event.getTimeoutId().getId());
                 if (timeStarted != null) {
-                    RTTStore.addSample(self.getId(), event.getVodSource(),
-                            System.currentTimeMillis() - timeStarted);
+                    RTTStore.addSample(self.getId(), event.getVodSource(), System.currentTimeMillis() - timeStarted);
+                    logger.debug(compName + "Adding a RTT sample. TimeoutId: {}. Rtt={}", event.getTimeoutId().getId(), timeStarted);
                 } else {
-                    logger.warn(compName + "Timestarted was null when trying to add a RTT sample");
+                    logger.warn(compName + "Time started was null when trying to add a RTT sample. TimeoutId: {}",
+                            event.getTimeoutId().getId());
+                    StringBuilder sb = new StringBuilder();
+                    sb.append(compName).append("Existing timestamp ids: ");
+                    for (Integer k : shuffleTimes.keySet()) {
+                        sb.append(k).append(", ");
+                    }
+                    logger.warn(sb.toString());
                 }
+                shuffleTimes.remove(event.getTimeoutId().getId());
+                
                 if (!firstSuccessfulShuffle) {
                     firstSuccessfulShuffle = true;
                     delegator.doTrigger(new CroupierJoinCompleted(), croupierPort);

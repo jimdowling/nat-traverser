@@ -168,6 +168,7 @@ public abstract class BaseCommandLineConfig {
     public final static int DEFAULT_BS_CLIENT_RETRY_PERIOD = 10 * 1000;
     public final static int DEFAULT_BS_CLIENT_RETRY_COUNT = 2;
     public final static int DEFAULT_BS_CLIENT_KEEP_ALIVE_PERIOD = 15 * 60 * 1000;
+    public final static int DEFAULT_BS_WEB_PORT = 1969;
     
     
     /**
