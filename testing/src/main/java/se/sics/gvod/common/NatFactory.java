@@ -282,6 +282,15 @@ public class NatFactory {
                 Nat.FilteringPolicy.ENDPOINT_INDEPENDENT,
                 0, Nat.DEFAULT_RULE_EXPIRATION_TIME);
     }
+    
+    public Nat getHdPpEi() {
+        return new Nat(Nat.Type.NAT,
+                Nat.MappingPolicy.HOST_DEPENDENT,
+                Nat.AllocationPolicy.PORT_PRESERVATION,
+                Nat.FilteringPolicy.ENDPOINT_INDEPENDENT,
+                0, Nat.DEFAULT_RULE_EXPIRATION_TIME);
+    }    
+    
     public Nat getPdPpPd() {
         return new Nat(Nat.Type.NAT,
                 Nat.MappingPolicy.PORT_DEPENDENT,

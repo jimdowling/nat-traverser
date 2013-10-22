@@ -167,10 +167,10 @@ public class RendezvousServerUnitTest extends VodRetryComponentTestCase {
     @Test
     public void testShpResponder() {
         VodAddress client = new VodAddress(privAddrs.get(0).getPeerAddress(),
-                VodConfig.SYSTEM_OVERLAY_ID, nf.getEiPpEi());
+                VodConfig.SYSTEM_OVERLAY_ID, nf.getHdPpEi());
         addPrivateChild(client, HpRegisterMsg.RegisterStatus.ACCEPT, 1000, null);
         VodAddress responder = new VodAddress(privAddrs.get(1).getPeerAddress(),
-                VodConfig.SYSTEM_OVERLAY_ID, nf.getPdRdPd());
+                VodConfig.SYSTEM_OVERLAY_ID, nf.getPdPcHd());
         
         HpConnectMsg.Request c = new HpConnectMsg.Request(responder, getAddress(), client.getId(),
                 1, 1000, UUID.nextUUID());
@@ -195,12 +195,12 @@ public class RendezvousServerUnitTest extends VodRetryComponentTestCase {
     @Test
     public void testShpInitiator() {
         VodAddress responder = new VodAddress(privAddrs.get(1).getPeerAddress(),
-                VodConfig.SYSTEM_OVERLAY_ID, nf.getPdRdPd());
+                VodConfig.SYSTEM_OVERLAY_ID, nf.getHdPpEi());
         addPrivateChild(responder, HpRegisterMsg.RegisterStatus.ACCEPT, 1000, null);
         LinkedList<Event> events;
 
         VodAddress client = new VodAddress(privAddrs.get(0).getPeerAddress(),
-                VodConfig.SYSTEM_OVERLAY_ID, nf.getEiPpEi());
+                VodConfig.SYSTEM_OVERLAY_ID, nf.getPdPcHd());
         HpConnectMsg.Request c = new HpConnectMsg.Request(client, getAddress(), responder.getId(),
                 1, 1000, UUID.nextUUID());
         zServer.handleHpConnect.handle(c);
@@ -210,8 +210,8 @@ public class RendezvousServerUnitTest extends VodRetryComponentTestCase {
         HpConnectMsg.Response e1 = (HpConnectMsg.Response) events.get(0);
         assert (e1.getResponseType() == OpenConnectionResponseType.HP_WILL_START);
         GoMsg.Request e2 = (GoMsg.Request) events.get(2);
-        assert (e2.getRemoteId() == client.getId());
-        assert (e2.getVodDestination().equals(responder));
+        assert (e2.getRemoteId() == responder.getId());
+        assert (e2.getVodDestination().equals(client));
     }
 
     @Test
