@@ -101,11 +101,11 @@ public final class NettyNetwork extends ComponentDefinition {
     private Map<InetSocketAddress, UdtChannel> udtSocketsToChannels = new HashMap<InetSocketAddress, UdtChannel>();
     // Bandwidth Measurement statistics
     private boolean enableBandwidthStats;
-    private long prevTotalWrote;
+    private long prevTotalWritten;
     private long prevTotalRead;
     private static long totalWrittenBytes, totalReadBytes;
     private static AtomicLong lastSecRead = new AtomicLong();
-    private static AtomicLong lastSecWrote = new AtomicLong();
+    private static AtomicLong lastSecWritten = new AtomicLong();
     // 60 samples stored
     private static LinkedList<Integer> lastMinWrote = new LinkedList<Integer>();
     private static LinkedList<Integer> lastHourWrote = new LinkedList<Integer>();
@@ -162,6 +162,7 @@ public final class NettyNetwork extends ComponentDefinition {
             if (enableBandwidthStats) {
                 SchedulePeriodicTimeout spt = new SchedulePeriodicTimeout(0, 1000);
                 ByteCounterTimeout bct = new ByteCounterTimeout(spt);
+                spt.setTimeoutEvent(bct);
                 trigger(spt, timer);
             }
         }
@@ -169,13 +170,13 @@ public final class NettyNetwork extends ComponentDefinition {
     Handler<ByteCounterTimeout> handleByteCounterTimeout = new Handler<ByteCounterTimeout>() {
         @Override
         public void handle(ByteCounterTimeout event) {
-            lastSecWrote.set(totalWrittenBytes - prevTotalWrote);
+            lastSecWritten.set(totalWrittenBytes - prevTotalWritten);
             lastSecRead.set(totalReadBytes - prevTotalRead);
-            prevTotalWrote = totalWrittenBytes;
+            prevTotalWritten = totalWrittenBytes;
             prevTotalRead = totalReadBytes;
 
-            if (lastSecWrote.longValue() > VodConfig.getMaxUploadBwCapacity()) {
-                VodConfig.setMaxUploadBwCapacity(lastSecWrote.longValue());
+            if (lastSecWritten.longValue() > VodConfig.getMaxUploadBwCapacity()) {
+                VodConfig.setMaxUploadBwCapacity(lastSecWritten.longValue());
             }
 
             if (lastMinRead.size() == 60) {
@@ -187,7 +188,7 @@ public final class NettyNetwork extends ComponentDefinition {
                 lastMinWrote.removeLast();
             }
 
-            lastMinWrote.addFirst((int) lastSecWrote.longValue());
+            lastMinWrote.addFirst((int) lastSecWritten.longValue());
             if (bwSampleCounter == 60) {
 
                 if (lastHourRead.size() == 24) {
@@ -206,7 +207,8 @@ public final class NettyNetwork extends ComponentDefinition {
             }
 
             trigger(new BandwidthStats((int) lastSecRead.longValue(),
-                    (int) lastSecWrote.longValue()), netControl);
+                    (int) lastSecWritten.longValue(), 
+                    (int) totalReadBytes), netControl);
         }
     };
 
@@ -978,6 +980,6 @@ public final class NettyNetwork extends ComponentDefinition {
     }
 
     public static long getNumBytesWroteLastSec() {
-        return lastSecWrote.longValue();
+        return lastSecWritten.longValue();
     }
 }

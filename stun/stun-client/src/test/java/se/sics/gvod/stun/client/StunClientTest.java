@@ -358,7 +358,7 @@ public class StunClientTest {
 
     @Test
     public void testAllNatCombinationsWithMultipleServers() {
-        List<Nat> allNatCombinations = Nat.getAllNatCombinations();
+        List<Nat> allNatCombinations = Nat.getAllNatTypes();
         logger.info("Testing " + allNatCombinations.size() + " NAT types");
 
         StunClientComponentTester.numberOfPairServers = 1;

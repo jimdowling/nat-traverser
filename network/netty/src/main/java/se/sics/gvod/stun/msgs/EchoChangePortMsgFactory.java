@@ -2,7 +2,6 @@ package se.sics.gvod.stun.msgs;
 
 import io.netty.buffer.ByteBuf;
 import se.sics.gvod.common.msgs.MessageDecodingException;
-import se.sics.gvod.net.msgs.DirectMsg;
 
 public class EchoChangePortMsgFactory  {
 

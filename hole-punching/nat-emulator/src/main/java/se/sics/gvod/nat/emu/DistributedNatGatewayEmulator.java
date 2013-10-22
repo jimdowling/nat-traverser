@@ -615,12 +615,10 @@ public class DistributedNatGatewayEmulator extends ComponentDefinition {
                     if (map != null) {
                         logger.debug(compName + "Lower. Found mapping. Src: " + srcIp + ":"
                                 + srcPort + " -> "
-                                //                                + natPublicAddress + ":" + destPort 
                                 + " private addr: " + v + " => (dest)"
                                 + msg.getDestination()
                                 + "  "
                                 + msg.getClass()
-                                //                                + "::" + natPublicAddress + "::"
                                 + ". existing mappings ("
                                 + getExistingMappingsAsString(map) + ")");
 

@@ -354,7 +354,7 @@ public class StunClient extends MsgRetryComponent {
         EchoChangePortMsg.Request echoChangePortReq = new EchoChangePortMsg.Request(
                 self.getAddress(), target, transactionId);
         RoundTripTime echoRtt = echoRtts.get(target.getPeerAddress());
-        long rto = calculateRto(target.getPeerAddress(), 0);
+        long rto = calculateRto(target.getPeerAddress(), 1000);
         ScheduleRetryTimeout st =
                 new ScheduleRetryTimeout(rto, config.getRtoRetries(),
                 config.getRtoScale());
@@ -583,7 +583,7 @@ public class StunClient extends MsgRetryComponent {
         } // if try 1 and try 2 are same and try 3 and try 4 are same then
         // the mapping is Host Dependent
         // TODO - this isn't working. HD mapping policy is very rare. Ignore for now.
-        else if (a0.equals(a1) && a2.equals(a3) && !a0.equals(a2)) {
+        else if (a0.equals(a1) && a2.equals(a3)) { //&& !a0.equals(a2)
             session.setMappingPolicy(MappingPolicy.HOST_DEPENDENT);
         } // try 1 to try 4 are all different then mapping policy is
         else {
@@ -1010,6 +1010,9 @@ public class StunClient extends MsgRetryComponent {
         @Override
         public void handle(EchoChangePortMsg.Response event) {
             printMsgDetails(event);
+            logger.debug(compName + "EchoChangePortMsg.Response received at "
+                    + event.getDestination() + " from " +
+                            event.getSource() + " tid: " + event.getTransactionId());
 
             if (delegator.doCancelRetry(event.getTimeoutId())) {
 
@@ -1045,8 +1048,7 @@ public class StunClient extends MsgRetryComponent {
                 session.setFilteringPolicy(FilteringPolicy.PORT_DEPENDENT);
                 session.setFinishedFilter(true);
                 if (session.isFinishedAllocation() && session.isFinishedMapping()) {
-                    sendResponse(session,
-                            GetNatTypeResponse.Status.SUCCEED);
+                    sendResponse(session, GetNatTypeResponse.Status.SUCCEED);
                 } else {
                     logger.warn(compName + "EchoChangePort: Not finished all branches "
                             + " tid: " + transactionId);

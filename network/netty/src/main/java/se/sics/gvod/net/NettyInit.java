@@ -41,7 +41,7 @@ public final class NettyInit extends Init {
 
     public NettyInit(int seed, int mtu,
             Class<? extends MsgFrameDecoder> msgDecoderClass) {
-        this(seed, mtu, msgDecoderClass, false);
+        this(seed, mtu, msgDecoderClass, true);
     }
 
     public NettyInit(int seed, int mtu, Class<? extends MsgFrameDecoder> msgDecoderClass, 

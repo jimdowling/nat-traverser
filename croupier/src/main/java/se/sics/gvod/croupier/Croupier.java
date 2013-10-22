@@ -132,7 +132,7 @@ public class Croupier extends MsgRetryComponent {
             logger.trace(compName + "initiateShuffle join");
 
             // Send bootstrap descriptors to Vod Component and others
-            publishSample();
+//            publishSample();
         }
     };
 

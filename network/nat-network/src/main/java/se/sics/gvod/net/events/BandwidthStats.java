@@ -1,7 +1,5 @@
 package se.sics.gvod.net.events;
 
-import se.sics.gvod.net.Transport;
-import java.net.InetSocketAddress;
 
 import se.sics.kompics.Event;
 
@@ -11,20 +9,27 @@ import se.sics.kompics.Event;
  */
 public final class BandwidthStats extends Event {
 
-    private final int lastSecReadBytes;
-    private final int lastSecWroteBytes;
+    private final int lastSecBytesRead;
+    private final int lastSecBytesWritten;
+    private final int totalBytesDownloaded;
 
-    public BandwidthStats(int lastSecReadBytes, int lastSecWroteBytes) {
-        this.lastSecReadBytes = lastSecReadBytes;
-        this.lastSecWroteBytes = lastSecWroteBytes;
+    public BandwidthStats(int lastSecBytesRead, int lastSecBytesWritten, 
+            int totalBytesDownloaded) {
+        this.lastSecBytesRead = lastSecBytesRead;
+        this.lastSecBytesWritten = lastSecBytesWritten;
+        this.totalBytesDownloaded = totalBytesDownloaded;
     }
 
-    public int getLastSecReadBytes() {
-        return lastSecReadBytes;
+    public int getTotalBytesDownloaded() {
+        return totalBytesDownloaded;
+    }
+    
+    public int getLastSecBytesRead() {
+        return lastSecBytesRead;
     }
 
-    public int getLastSecWroteBytes() {
-        return lastSecWroteBytes;
+    public int getLastSecBytesWritten() {
+        return lastSecBytesWritten;
     }
     
 }
