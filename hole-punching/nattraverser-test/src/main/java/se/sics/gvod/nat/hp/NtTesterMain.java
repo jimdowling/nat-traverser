@@ -200,6 +200,7 @@ public final class NtTesterMain extends ComponentDefinition {
             return dest;
         }
     }
+        
 
     public static class PangTimeout extends Timeout {
 
@@ -375,12 +376,12 @@ public final class NtTesterMain extends ComponentDefinition {
                         .setRto(500)
                         .setRtoRetries(8)
                         .setRtoScale(1.2),
-                        ParentMakerConfiguration.build(),
+                        ParentMakerConfiguration.build().setParentUpdatePeriod(1000),
                         openServer),
                         natTraverser.getControl());
 
                 trigger(new CroupierInit(self.clone(VodConfig.SYSTEM_OVERLAY_ID),
-                        CroupierConfiguration.build()),
+                        CroupierConfiguration.build().setShufflePeriod(15*1000)),
                         croupier.getControl());
                 startTimers.put(self.getId(), System.currentTimeMillis());
             } else {
@@ -505,7 +506,7 @@ public final class NtTesterMain extends ComponentDefinition {
                     if (self.getId() != dest.getId()
                             && dest.isOpen() == false && dest.getParents().size() >= 1
                             && dest.isHpPossible(self.getAddress())) {
-                        ScheduleTimeout st = new ScheduleTimeout(10 * 1000);
+                        ScheduleTimeout st = new ScheduleTimeout(30 * 1000);
                         PingTimeout hp = new PingTimeout(st, dest);
                         st.setTimeoutEvent(hp);
                         trigger(new TConnectionMsg.Ping(self.getAddress(),
