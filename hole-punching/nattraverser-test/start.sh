@@ -1,6 +1,6 @@
 #!/bin/bash
 
-declare -a hosts=(4 5)
+declare -a hosts=(3 4)
 
 if [ ${#hosts[@]} -lt 2 ] ; then
  echo "You must define more than 1 host."

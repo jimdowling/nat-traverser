@@ -81,6 +81,7 @@ import se.sics.kompics.nat.utils.getip.IpAddrStatus;
 public final class NtTesterMain extends ComponentDefinition {
 
     private static final Logger logger = LoggerFactory.getLogger(NtTesterMain.class);
+    private static final String BOOTSTRAP_SERVER_IP = "193.10.64.216";
     private static final int OVERLAY_ID = 100;
     private static Address localAddress;
     private final Component timer;
@@ -110,7 +111,7 @@ public final class NtTesterMain extends ComponentDefinition {
         logger.info("Usage: <prog> upnp id bindIp bootstrapNodeId@bootstrapNodeIp [openServer] [natGateway]");
         logger.info("       bindIp: 0=publicIp, 1=privateIp1, 2=privateIp2");
         logger.info("e.g.  <prog> true 111 0 1@cloud4.sics.se false");
-        logger.info("To run bootstrap server:  <prog> false 1 0 1@cloud4.sics.se true");
+        logger.info("To run an open server to bootstrap Croupier:  <prog> false 1 0 1@cloud4.sics.se true");
         logger.info("To run a nat-emulated node:  <prog> false 1 0 1@cloud4.sics.se false NAT_EI_PP_PD");
         System.exit(0);
     }
@@ -166,6 +167,13 @@ public final class NtTesterMain extends ComponentDefinition {
         System.setProperty("java.net.preferIPv4Stack", "true");
         try {
             VodConfig.init(args);
+            InetAddress bootIp = InetAddress.getByName(BOOTSTRAP_SERVER_IP);
+            if (bootIp == null) {
+                System.err.println("Invalid bootstrap ip: " + BOOTSTRAP_SERVER_IP);
+                System.exit(-3);
+            }
+            VodConfig.setBoostrapServerIp(bootIp);
+            
         } catch (IOException ex) {
             java.util.logging.Logger.getLogger(NtTesterMain.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -199,7 +207,7 @@ public final class NtTesterMain extends ComponentDefinition {
         private final VodAddress dest;
 
         public PangTimeout(ScheduleTimeout st, int id, VodAddress dest) {
-            super(st);
+            super(st); 
             this.id = id;
             this.dest = dest;
         }

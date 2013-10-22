@@ -137,12 +137,8 @@ public abstract class BaseCommandLineConfig {
     // only use IP Addresses here - not hostnames.
     public static final String DEFAULT_BOOTSTRAP_IP = "193.10.64.216";
     public static final int DEFAULT_BOOTSTRAP_PORT = 8011;
-//    public static final int DEFAULT_BOOTSTRAP_ID = Integer.MAX_VALUE;
-//    public static final int DEFAULT_STUN_ID = 1;
-//    public static final int DEFAULT_RENDEZVOUS_ID = 0;
     public static final String DEFAULT_MONITOR_IP = "193.10.64.216";
     public static final int DEFAULT_MONITOR_PORT = 8020;
-//    public static final int DEFAULT_MONITOR_ID = Integer.MAX_VALUE - 1;
     public static final int DEFAULT_MEDIA_PORT = 58026;
     public static final int DEFAULT_WEB_REQUEST_TIMEOUT_MS = 30 * 1000;
     public static final int DEFAULT_WEB_THREADS = 2;

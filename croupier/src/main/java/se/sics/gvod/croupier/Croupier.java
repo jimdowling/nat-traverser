@@ -83,13 +83,13 @@ public class Croupier extends MsgRetryComponent {
         }
     };
 
-    private boolean initializeCaches(List<VodDescriptor> nodes) {
-        if (nodes == null || nodes.isEmpty()) {
+    private boolean initializeCaches(List<VodDescriptor> bootstrapNodes) {
+        if (bootstrapNodes == null || bootstrapNodes.isEmpty()) {
             return false;
         }
         Set<VodDescriptor> pub = new HashSet<VodDescriptor>();
         Set<VodDescriptor> priv = new HashSet<VodDescriptor>();
-        for (VodDescriptor n : nodes) {
+        for (VodDescriptor n : bootstrapNodes) {
             if (self.getId() == n.getVodAddress().getId()) {
                 logger.warn("Trying to add myself to self: {}", self.getId());
             } else {
@@ -117,11 +117,11 @@ public class Croupier extends MsgRetryComponent {
     Handler<CroupierJoin> handleJoin = new Handler<CroupierJoin>() {
         @Override
         public void handle(CroupierJoin event) {
-            List<VodDescriptor> insiders = event.getVodInsiders();
+            List<VodDescriptor> bootstrapNodes = event.getVodInsiders();
 
-            logger.debug(compName + "JOIN {} using {} public nodes", self.getId(), insiders.size());
+            logger.debug(compName + "JOIN {} using {} public nodes", self.getId(), bootstrapNodes.size());
 
-            if (!initializeCaches(insiders)) {
+            if (!initializeCaches(bootstrapNodes)) {
                 logger.warn(compName + "No insiders, not shuffling.");
                 // I am the first peer
                 delegator.doTrigger(new CroupierJoinCompleted(), croupierPort);
