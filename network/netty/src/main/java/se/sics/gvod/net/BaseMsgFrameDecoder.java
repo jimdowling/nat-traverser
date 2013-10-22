@@ -89,8 +89,8 @@ public class BaseMsgFrameDecoder extends MsgFrameDecoder {
     // HOLE PUNCHING MSGS
     public static final byte GO_MSG                        = 0x30;
     public static final byte HP_FINISHED                   = 0x31;
-    public static final byte HP_FEASABILITY_REQUEST        = 0x32;
-    public static final byte HP_FEASABILITY_RESPONSE       = 0x33;
+    public static final byte HP_CONNECT_REQUEST        = 0x32;
+    public static final byte HP_CONNECT_RESPONSE       = 0x33;
     public static final byte HOLE_PUNCHING_REQUEST         = 0x34;
     public static final byte HOLE_PUNCHING_RESPONSE        = 0x35;
     public static final byte HOLE_PUNCHING_RESPONSE_ACK    = 0x36;
@@ -263,9 +263,9 @@ public class BaseMsgFrameDecoder extends MsgFrameDecoder {
                 return HpKeepAliveMsgFactory.Request.fromBuffer(buffer);
             case HP_KEEP_ALIVE_RESPONSE:
                 return HpKeepAliveMsgFactory.Response.fromBuffer(buffer);
-            case HP_FEASABILITY_REQUEST:
+            case HP_CONNECT_REQUEST:
                 return HpConnectMsgFactory.Request.fromBuffer(buffer);
-            case HP_FEASABILITY_RESPONSE:
+            case HP_CONNECT_RESPONSE:
                 return HpConnectMsgFactory.Response.fromBuffer(buffer);
             case SHUFFLE_REQUEST:
                 return ShuffleMsgFactory.Request.fromBuffer(buffer);

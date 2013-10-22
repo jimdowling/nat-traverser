@@ -823,9 +823,10 @@ public final class NettyNetwork extends ComponentDefinition {
             channel.writeAndFlush(new DatagramPacket(((Encodable) msg).toByteArray(), dest));
             totalWrittenBytes += msg.getSize();
         } catch (Exception ex) {
-            logger.warn("Problem trying to write msg of type: "
+            logger.warn("Problem trying to send msg of type: "
                     + msg.getClass().getCanonicalName() + " with src address: "
-                    + src.toString() + " Exception: " + ex.getMessage());
+                    + src.toString() + " and dest address: " + msg.getDestination() 
+                    + " Exception: " + ex.getMessage() + " " + ex.getClass());
             if (BaseCommandLineConfig.reportNettyExceptions()) {
                 try {
                     NatReportMsg.NatReport nr = new NatReportMsg.NatReport(msg.getSource().getPort(),

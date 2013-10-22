@@ -16,19 +16,20 @@ import se.sics.gvod.net.util.UserTypesEncoderFactory;
 import se.sics.gvod.timer.TimeoutId;
 
 /**
- * 
+ *
  * @author salman
  *
- * this class is used by the client to inform the RVP that it wants to punch hole for
- * some other client. to do so the client must know the public ip (i.e. ip of the nat reponsible for
- * the other client) and the ID of the client to whome it wants to talk.
+ * this class is used by the client to inform the RVP that it wants to punch
+ * hole for some other client. to do so the client must know the public ip (i.e.
+ * ip of the nat reponsible for the other client) and the ID of the client to
+ * whome it wants to talk.
  *
- * client (lets say A) will send this message to the RVP. RVP will check the feasibility for hole punching.
- * hole punching many not be feasible due to many reasons like 
- * 1) if the remote client (lets say B)to whom we want to talk to is not registered with the RVP
- * 2) nat type of both clients are incompatible (non traversable). 
- * if B is registered and the two nats are traversable then RVP replies by sending ACK
- * response, otherwise it will send the NACK message
+ * client (lets say A) will send this message to the RVP. RVP will check the
+ * feasibility for hole punching. hole punching many not be feasible due to many
+ * reasons like 1) if the remote client (lets say B)to whom we want to talk to
+ * is not registered with the RVP 2) nat type of both clients are incompatible
+ * (non traversable). if B is registered and the two nats are traversable then
+ * RVP replies by sending ACK response, otherwise it will send the NACK message
  */
 public class HpConnectMsg implements Serializable {
 
@@ -62,12 +63,12 @@ public class HpConnectMsg implements Serializable {
 
         @Override
         public byte getOpcode() {
-            return BaseMsgFrameDecoder.HP_FEASABILITY_REQUEST;
+            return BaseMsgFrameDecoder.HP_CONNECT_REQUEST;
         }
 
         @Override
         public ByteBuf toByteArray() throws MessageEncodingException {
-        	ByteBuf buffer = createChannelBufferWithHeader();
+            ByteBuf buffer = createChannelBufferWithHeader();
             UserTypesEncoderFactory.writeUnsignedintAsOneByte(buffer, delta);
             UserTypesEncoderFactory.writeUnsignedintAsTwoBytes(buffer, (int) rtt);
             return buffer;
@@ -121,12 +122,12 @@ public class HpConnectMsg implements Serializable {
 
         @Override
         public byte getOpcode() {
-            return BaseMsgFrameDecoder.HP_FEASABILITY_RESPONSE;
+            return BaseMsgFrameDecoder.HP_CONNECT_RESPONSE;
         }
 
         @Override
         public ByteBuf toByteArray() throws MessageEncodingException {
-        	ByteBuf buffer = createChannelBufferWithHeader();
+            ByteBuf buffer = createChannelBufferWithHeader();
             UserTypesEncoderFactory.writeUnsignedintAsOneByte(buffer, responseType.ordinal());
             UserTypesEncoderFactory.writeUnsignedintAsOneByte(buffer, hpMechanism.ordinal());
             UserTypesEncoderFactory.writeBoolean(buffer, newSession);
@@ -135,8 +136,8 @@ public class HpConnectMsg implements Serializable {
 
         @Override
         public RewriteableMsg copy() {
-           return new HpConnectMsg.Response(vodSrc, vodDest, remoteClientId, 
-                   responseType, timeoutId, hpMechanism, newSession, msgTimeoutId);
+            return new HpConnectMsg.Response(vodSrc, vodDest, remoteClientId,
+                    responseType, timeoutId, hpMechanism, newSession, msgTimeoutId);
         }
     }
 
