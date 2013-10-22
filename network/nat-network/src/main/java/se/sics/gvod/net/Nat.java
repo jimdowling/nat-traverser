@@ -30,8 +30,7 @@ public class Nat implements Serializable, Comparable {
         "NAT_EI_PP_EI_AltPC", "NAT_EI_PP_HD", "NAT_EI_PP_PD",
         "NAT_EI_RD_EI", "NAT_EI_RD_HD", "NAT_EI_RD_PD",
         "NAT_HD_PC_HD", "NAT_HD_PP_HD_AltPC", "NAT_HD_PP_HD_AltRD",
-        "NAT_HD_RD_HD",
-        "NAT_PD_PC_EI", "NAT_PD_PC_PD",
+        "NAT_HD_RD_HD", "NAT_PD_PC_EI", "NAT_PD_PC_PD",
         "NAT_PD_RD_PD", "NAT_PD_PP_EI", "NAT_PD_PP_PD"
     };
 
@@ -306,7 +305,7 @@ public class Nat implements Serializable, Comparable {
                 } else if (allocationPolicy == AllocationPolicy.PORT_CONTIGUITY) {
                     ap = "a(PC)";
                 } else if (allocationPolicy == AllocationPolicy.RANDOM) {
-                    ap = "a(RA)";
+                    ap = "a(RD)";
                 } else {
                     ap = "a(??)";
                 }
@@ -379,7 +378,7 @@ public class Nat implements Serializable, Comparable {
         return 1;
     }
 
-    public static List<Nat> getAllNatCombinations() {
+    public static List<Nat> getAllNatTypes() {
         List<Nat> nats = new ArrayList<Nat>();
 
         for (String natType : NAT_COMBINATIONS) {

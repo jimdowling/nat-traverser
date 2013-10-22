@@ -25,7 +25,8 @@ public class CroupierCompositeConfiguration extends CompositeConfiguration {
                 CroupierConfiguration.build()
                 .setPolicy(croupierNodeSelectionPolicy)
                 .setShuffleLength(VIEW_SIZE / 2)
-                .setViewSize(VIEW_SIZE);
+                .setViewSize(VIEW_SIZE)
+                .setShufflePeriod(10*1000);
 
         gradientConfig = GradientConfiguration.build()
                 .setSimilarSetSize(VIEW_SIZE)

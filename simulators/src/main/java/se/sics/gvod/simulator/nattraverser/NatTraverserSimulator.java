@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 
 import org.slf4j.Logger;
@@ -45,10 +46,10 @@ import se.sics.gvod.croupier.PeerSamplePort;
 import se.sics.gvod.croupier.events.CroupierInit;
 import se.sics.gvod.croupier.events.CroupierJoin;
 import se.sics.gvod.croupier.snapshot.CroupierStats;
-import se.sics.gvod.filters.ResponseIdFilter;
 import se.sics.gvod.nat.hp.client.HpClient;
 import se.sics.gvod.nat.traversal.NatTraverserPort;
 import se.sics.gvod.timer.Timer;
+import se.sics.kompics.Component;
 import se.sics.kompics.Component;
 import se.sics.kompics.ComponentDefinition;
 import se.sics.kompics.Handler;
@@ -75,6 +76,7 @@ public final class NatTraverserSimulator extends ComponentDefinition {
     private Map<String, Integer> successCount = new HashMap<String,Integer>();
     private Map<String, Integer> failCount  = new HashMap<String,Integer>();
     private VodAddress server1, server2;
+    private Random r;
     
 //-------------------------------------------------------------------    
     public NatTraverserSimulator() {
@@ -85,6 +87,7 @@ public final class NatTraverserSimulator extends ComponentDefinition {
         peerTypes = new HashMap<Integer, VodAddress.NatType>();
         view = new ConsistentHashtable<Integer>();
 
+        r = new Random(VodConfig.getSeed());
         subscribe(handleInit, control);
 
         subscribe(handlePeerJoin, simulator);
@@ -171,7 +174,7 @@ public final class NatTraverserSimulator extends ComponentDefinition {
 
 //-------------------------------------------------------------------    
     private void createAndStartNewPeer(Integer id, VodAddress.NatType natType) {
-        long seed = System.currentTimeMillis();
+        long seed = r.nextInt();
         Component peer = create(NtPeer.class);
         Component natTraverser = create(NatTraverser.class);
         Component natGateway = create(DistributedNatGatewayEmulator.class);
@@ -201,7 +204,9 @@ public final class NatTraverserSimulator extends ComponentDefinition {
                 isOpen = true;
             }
         } else {
-            nat = new NatFactory(seed).getProbabilisticNat();
+            nat = 
+//                    new NatFactory(seed).getRandomNat();
+                    new NatFactory(seed).getProbabilisticNat();
             trigger(new DistributedNatGatewayEmulatorInit(nat, natIp, 50000, 65000), natGateway.control());
             trigger(new PortInit(seed), portReservoir.control());
             privatePeers.put(id, peer);
@@ -255,7 +260,8 @@ public final class NatTraverserSimulator extends ComponentDefinition {
 
 
         trigger(new NtPeerInit(self.clone(NT_PEER_OVERLAY_ID)), peer.getControl());
-        trigger(new CroupierInit(self.clone(VodConfig.SYSTEM_OVERLAY_ID), CroupierConfiguration.build()), croupier.getControl());
+        trigger(new CroupierInit(self.clone(VodConfig.SYSTEM_OVERLAY_ID), 
+                CroupierConfiguration.build().setShufflePeriod(20*1000)), croupier.getControl());
 
         List<VodDescriptor> bootstrappers = new ArrayList<VodDescriptor>();
         if (server1 != null) {

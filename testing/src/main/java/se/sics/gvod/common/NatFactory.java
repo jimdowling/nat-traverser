@@ -178,6 +178,7 @@ public class NatFactory {
             String percent = (String) stz1.nextElement();
 
             nwp[i] = new NatWithPercentage(new BigDecimal(percent), nat);
+            logger.debug("Added nat: " + nat.toString());
         }
 
         natsWithPercentage = nwp;

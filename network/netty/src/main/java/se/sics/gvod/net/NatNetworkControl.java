@@ -23,6 +23,7 @@ public class NatNetworkControl extends PortType {
         positive(PortDeleteResponse.class);
         positive(CloseConnectionResponse.class);
 
+        positive(BandwidthStats.class);
         positive(NetworkSessionOpened.class);
         positive(NetworkSessionClosed.class);
         positive(NetworkException.class);

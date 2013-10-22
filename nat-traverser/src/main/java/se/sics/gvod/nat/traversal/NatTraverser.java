@@ -84,6 +84,7 @@ import se.sics.gvod.common.util.CachedNatType;
 import se.sics.gvod.config.BaseCommandLineConfig;
 import se.sics.gvod.config.StunServerConfiguration;
 import se.sics.gvod.parentmaker.ParentMakerPort;
+import se.sics.gvod.stun.msgs.EchoChangePortMsg;
 import se.sics.kompics.ComponentDefinition;
 import se.sics.kompics.Fault;
 
@@ -226,6 +227,8 @@ public class NatTraverser extends ComponentDefinition {
         subscribe(handleRelayOnewayDown, upperNet);
         subscribe(handleRelayResponseDown, upperNet);
 
+        subscribe(handleEchoChangePortResponse, network);
+        
         subscribe(handleLowerDirectMsgRequest, network);
         subscribe(handleLowerDirectMsgResponse, network);
         subscribe(handleLowerDirectMsgOneway, network);
@@ -248,9 +251,8 @@ public class NatTraverser extends ComponentDefinition {
 //        subscribe(handleRTO, timer);
 
         connect(hpClient.getNegative(Timer.class), timer);
-        connect(hpClient.getNegative(VodNetwork.class), network 
-                ,new MsgDestFilterOverlayId(VodConfig.SYSTEM_OVERLAY_ID)
-                );
+        connect(hpClient.getNegative(VodNetwork.class), network, 
+                new MsgDestFilterOverlayId(VodConfig.SYSTEM_OVERLAY_ID));
         connect(hpClient.getNegative(NatNetworkControl.class), lowerNetControl);
     }
     Handler<NatTraverserInit> handleInit = new Handler<NatTraverserInit>() {
@@ -295,8 +297,9 @@ public class NatTraverser extends ComponentDefinition {
                 subscribe(handleFault, stunClient.getControl());
 
                 connect(stunClient.getNegative(Timer.class), timer);
-                connect(stunClient.getNegative(VodNetwork.class), network,
-                        new MsgDestFilterOverlayId(VodConfig.SYSTEM_OVERLAY_ID));
+                connect(stunClient.getNegative(VodNetwork.class), network
+//                        , new MsgDestFilterOverlayId(VodConfig.SYSTEM_OVERLAY_ID)
+                        );
                 connect(stunClient.getNegative(NatNetworkControl.class), lowerNetControl);
 
                 trigger(new StunClientInit(self, VodConfig.getSeed(), stunClientConfiguration), stunClient.getControl());
@@ -446,11 +449,11 @@ public class NatTraverser extends ComponentDefinition {
         // it, store it.
         if (!msg.getVodSource().isOpen()
                 && !openedConnections.containsKey(remoteId)) {
-                OpenedConnection oc = new OpenedConnection(msg.getDestination().getPort(),
-                        msg.getSource(), Nat.DEFAULT_RULE_EXPIRATION_TIME, false);
-                openedConnections.put(msg.getSource().getId(), oc);
-                logger.debug(compName + " Adding OpenedConnection to " + msg.getSource()
-                        + " from Local Port " + msg.getDestination().getPort());
+            OpenedConnection oc = new OpenedConnection(msg.getDestination().getPort(),
+                    msg.getSource(), Nat.DEFAULT_RULE_EXPIRATION_TIME, false);
+            openedConnections.put(msg.getSource().getId(), oc);
+            logger.debug(compName + " Adding OpenedConnection to " + msg.getSource()
+                    + " from Local Port " + msg.getDestination().getPort());
         }
         trigger(msg, upperNet);
     }
@@ -479,6 +482,15 @@ public class NatTraverser extends ComponentDefinition {
             holePunchingFailed(false, timeout.getDestAddress().getId(),
                     OpenConnectionResponseType.HP_TIMEOUT,
                     null, timeout.getMsgTimeoutId());
+        }
+    };
+    Handler<EchoChangePortMsg.Response> handleEchoChangePortResponse =
+            new Handler<EchoChangePortMsg.Response>() {
+        @Override
+        public void handle(EchoChangePortMsg.Response event) {
+            // TODO - this is a kompics bug. 
+            // EchoChangePortMsg.Response doesn't get forwarded to StunClient,
+            // if i don't have this handler subscribed here.
         }
     };
 
