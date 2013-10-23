@@ -726,10 +726,10 @@ public class StunClient extends MsgRetryComponent {
         public void handle(EchoMsg.Response msg) {
             printMsgDetails(msg);
             long transactionId = msg.getTransactionId();
-            if (delegator.doCancelRetry(msg.getTimeoutId())) {
+            Session session = sessionMap.get(transactionId);
+            if (delegator.doCancelRetry(msg.getTimeoutId()) && session != null) {
                 logger.debug(compName + " EchoMsg.Response Recvd - timeoutId = "
                         + msg.getTimeoutId() + " tid: " + transactionId);
-                Session session = sessionMap.get(transactionId);
                 Address serverAddress = msg.getSource();
 
                 if (msg.getTestType() == EchoMsg.Test.UDP_BLOCKED) {

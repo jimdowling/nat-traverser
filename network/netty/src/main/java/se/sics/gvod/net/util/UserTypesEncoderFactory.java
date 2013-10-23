@@ -170,8 +170,7 @@ public class UserTypesEncoderFactory {
     }
 
     public static void writeListVodNodeDescriptors(ByteBuf buffer,
-            List<VodDescriptor> nodeDescriptors)
-            throws MessageEncodingException {
+            List<VodDescriptor> nodeDescriptors) throws MessageEncodingException {
         if (nodeDescriptors == null) {
             UserTypesEncoderFactory.writeUnsignedintAsTwoBytes(buffer, 0);
             return;

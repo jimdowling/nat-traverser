@@ -135,7 +135,8 @@ public abstract class BaseCommandLineConfig {
     public static final int DEFAULT_STUN_PORT = 3478;
     public static final int DEFAULT_STUN_PORT_2 = 3479;
     // only use IP Addresses here - not hostnames.
-    public static final String DEFAULT_BOOTSTRAP_IP = "193.10.64.216";
+    public static final String DEFAULT_BOOTSTRAP_IP = "193.10.64.216"; // cloud7
+//    public static final String DEFAULT_BOOTSTRAP_IP = "193.10.64.109"; // cloud3
     public static final int DEFAULT_BOOTSTRAP_PORT = 8011;
     public static final String DEFAULT_MONITOR_IP = "193.10.64.216";
     public static final int DEFAULT_MONITOR_PORT = 8020;
