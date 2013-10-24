@@ -6,6 +6,7 @@ package se.sics.gvod.nat.hp.client;
 
 import se.sics.gvod.address.Address;
 import se.sics.gvod.net.Nat;
+import se.sics.gvod.timer.TimeoutId;
 
 /**
  *
@@ -15,10 +16,12 @@ public class OpenedConnection {
 
     final Address holeOpened;
     final int portInUse;
+    final boolean sharedPort;
     long lastUsed;
     int numTimesUsed;
     final int natBindingTimeout;
     final boolean heartbeat;
+    TimeoutId heartbeatTimeoutId = null;
 
     /**
      *
@@ -29,15 +32,30 @@ public class OpenedConnection {
      * @param heartbeat
      */
     public OpenedConnection(
-            int portInUseLocally, Address holeOpened,
+            int portInUseLocally, 
+            boolean sharedPort,
+            Address holeOpened,
             int natBindingTimeout,
             boolean heartbeat) {
         this.portInUse = portInUseLocally;
+        this.sharedPort = sharedPort;
         this.holeOpened = holeOpened;
         this.lastUsed = System.currentTimeMillis();
         this.natBindingTimeout = Math.max(Nat.DEFAULT_RULE_EXPIRATION_TIME, natBindingTimeout);
         this.heartbeat = heartbeat;
         this.numTimesUsed = 0;
+    }
+
+    public TimeoutId getHeartbeatTimeoutId() {
+        return heartbeatTimeoutId;
+    }
+
+    public void setHeartbeatTimeoutId(TimeoutId heartbeatTimeoutId) {
+        this.heartbeatTimeoutId = heartbeatTimeoutId;
+    }
+
+    public boolean isSharedPort() {
+        return sharedPort;
     }
 
     public int getNatBindingTimeout() {

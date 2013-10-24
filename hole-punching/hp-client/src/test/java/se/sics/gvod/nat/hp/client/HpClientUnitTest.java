@@ -17,7 +17,7 @@ import se.sics.gvod.hp.events.OpenConnectionResponseType;
 import se.sics.gvod.hp.msgs.DeleteConnectionMsg;
 import se.sics.gvod.hp.msgs.HolePunchingMsg;
 import se.sics.gvod.hp.msgs.HpConnectMsg;
-import se.sics.gvod.nat.hp.client.events.DeleteConnectionRequest;
+import se.sics.gvod.nat.hp.client.events.DeleteConnection;
 import se.sics.gvod.nat.hp.client.events.OpenConnectionRequest;
 import se.sics.gvod.nat.hp.client.events.OpenConnectionResponse;
 import se.sics.gvod.common.VodRetryComponentTestCase;
@@ -156,7 +156,7 @@ public class HpClientUnitTest extends VodRetryComponentTestCase {
         assert(ocr.getResponseType() == OpenConnectionResponseType.OK);
 
         Integer k = privAddrs.get(0).getId();
-        hpClient.handleDeleteConnectionRequest.handle(new DeleteConnectionRequest(k));
+        hpClient.handleDeleteConnectionRequest.handle(new DeleteConnection(k));
         events = pollEvent(1);
         assertSequence(events, DeleteConnectionMsg.class);
         assert (hpClient.openedConnections.isEmpty());

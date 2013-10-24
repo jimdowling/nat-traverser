@@ -21,8 +21,7 @@ public class NatConnection {
                 oc.setLastUsed(System.currentTimeMillis());
                 oc.incNumTimesUsed();
             } else {
-                // TODO: security hole here - anybody can connect to me, and I will heartbeat them.
-                oc = new OpenedConnection(myPort, 
+                oc = new OpenedConnection(myPort, false,
                         remote.getPeerAddress(), remote.getNatBindingTimeout(), true);
                 openedConnections.put(remoteId, oc);
             }

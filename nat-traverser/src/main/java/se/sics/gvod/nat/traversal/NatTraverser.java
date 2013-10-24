@@ -36,7 +36,7 @@ import se.sics.gvod.config.HpClientConfiguration;
 import se.sics.gvod.nat.hp.client.HpClientInit;
 import se.sics.gvod.nat.hp.client.HpClientPort;
 import se.sics.gvod.nat.hp.client.OpenedConnection;
-import se.sics.gvod.nat.hp.client.events.DeleteConnectionRequest;
+import se.sics.gvod.nat.hp.client.events.DeleteConnection;
 import se.sics.gvod.nat.hp.client.events.OpenConnectionResponse;
 import se.sics.gvod.hp.events.OpenConnectionResponseType;
 import se.sics.gvod.nat.hp.client.events.OpenConnectionRequest;
@@ -45,7 +45,7 @@ import se.sics.gvod.nat.hp.rs.RendezvousServer.RegisteredClientRecord;
 import se.sics.gvod.config.RendezvousServerConfiguration;
 import se.sics.gvod.nat.hp.rs.RendezvousServerInit;
 import se.sics.gvod.nat.traversal.events.ConnectionEstablishmentTimeout;
-import se.sics.gvod.nat.traversal.events.DeleteOpenConnection;
+import se.sics.gvod.nat.traversal.events.CloseOpenConnection;
 import se.sics.gvod.nat.traversal.events.StartServices;
 import se.sics.gvod.net.Nat;
 import se.sics.gvod.net.VodAddress;
@@ -83,6 +83,7 @@ import se.sics.gvod.common.util.NatStr;
 import se.sics.gvod.common.util.CachedNatType;
 import se.sics.gvod.config.BaseCommandLineConfig;
 import se.sics.gvod.config.StunServerConfiguration;
+import se.sics.gvod.net.events.PortDeleteRequest;
 import se.sics.gvod.parentmaker.ParentMakerPort;
 import se.sics.gvod.stun.msgs.EchoChangePortMsg;
 import se.sics.kompics.ComponentDefinition;
@@ -228,7 +229,7 @@ public class NatTraverser extends ComponentDefinition {
         subscribe(handleRelayResponseDown, upperNet);
 
         subscribe(handleEchoChangePortResponse, network);
-        
+
         subscribe(handleLowerDirectMsgRequest, network);
         subscribe(handleLowerDirectMsgResponse, network);
         subscribe(handleLowerDirectMsgOneway, network);
@@ -251,7 +252,7 @@ public class NatTraverser extends ComponentDefinition {
 //        subscribe(handleRTO, timer);
 
         connect(hpClient.getNegative(Timer.class), timer);
-        connect(hpClient.getNegative(VodNetwork.class), network, 
+        connect(hpClient.getNegative(VodNetwork.class), network,
                 new MsgDestFilterOverlayId(VodConfig.SYSTEM_OVERLAY_ID));
         connect(hpClient.getNegative(NatNetworkControl.class), lowerNetControl);
     }
@@ -297,8 +298,7 @@ public class NatTraverser extends ComponentDefinition {
                 subscribe(handleFault, stunClient.getControl());
 
                 connect(stunClient.getNegative(Timer.class), timer);
-                connect(stunClient.getNegative(VodNetwork.class), network
-//                        , new MsgDestFilterOverlayId(VodConfig.SYSTEM_OVERLAY_ID)
+                connect(stunClient.getNegative(VodNetwork.class), network //                        , new MsgDestFilterOverlayId(VodConfig.SYSTEM_OVERLAY_ID)
                         );
                 connect(stunClient.getNegative(NatNetworkControl.class), lowerNetControl);
 
@@ -428,12 +428,24 @@ public class NatTraverser extends ComponentDefinition {
             sendDownDirectMsg(msg);
         }
     };
-    Handler<DeleteOpenConnection> handleDeleteOpenConnection = new Handler<DeleteOpenConnection>() {
+    Handler<CloseOpenConnection> handleDeleteOpenConnection = new Handler<CloseOpenConnection>() {
         @Override
-        public void handle(DeleteOpenConnection event) {
-            openedConnections.remove(event.getRemoteId());
+        public void handle(CloseOpenConnection event) {
+            closeConnection(event.getRemoteId());
         }
     };
+
+    private boolean closeConnection(int remoteId) {
+        OpenedConnection oc = openedConnections.get(remoteId);
+        if (oc == null) {
+            return false;
+        }
+
+        // open connections are removed inside HpClient
+        trigger(new DeleteConnection(remoteId), hpClient.getPositive(HpClientPort.class));
+
+        return true;
+    }
     Handler<StartServices> handleStartServices = new Handler<StartServices>() {
         @Override
         public void handle(StartServices event) {
@@ -450,6 +462,7 @@ public class NatTraverser extends ComponentDefinition {
         if (!msg.getVodSource().isOpen()
                 && !openedConnections.containsKey(remoteId)) {
             OpenedConnection oc = new OpenedConnection(msg.getDestination().getPort(),
+                    false, // this has to be a shared port, if I receive a message here and not in HpClient
                     msg.getSource(), Nat.DEFAULT_RULE_EXPIRATION_TIME, false);
             openedConnections.put(msg.getSource().getId(), oc);
             logger.debug(compName + " Adding OpenedConnection to " + msg.getSource()
@@ -556,8 +569,8 @@ public class NatTraverser extends ComponentDefinition {
                                     System.currentTimeMillis());
                         }
                     } else {
-                        logger.debug(compName + msg.getClass() 
-                                + " No parents. No relay msg sent from {} to relay {} ", 
+                        logger.debug(compName + msg.getClass()
+                                + " No parents. No relay msg sent from {} to relay {} ",
                                 msg.getVodSource(), msg.getVodDestination());
                         // TODO send a FAULT msg, indicating that the dest has no parents to relay to.
                     }
@@ -993,8 +1006,8 @@ public class NatTraverser extends ComponentDefinition {
                         // remove the connection
 
                         logger.debug(compName + " deleting the connection " + connectionKey);
-                        DeleteConnectionRequest request =
-                                new DeleteConnectionRequest(connectionKey);
+                        DeleteConnection request =
+                                new DeleteConnection(connectionKey);
                         trigger(request, hpClient.getPositive(HpClientPort.class));
                     }
                 }
