@@ -196,10 +196,10 @@ public class HolePunchingTestSimulator
         int serverS2ChangePort = port + 1;
         int clientPort = 1234;
         InetAddress natIP = null;
-        private ConcurrentHashMap<Integer, OpenedConnection> openedConnections_A =
-                new ConcurrentHashMap<Integer, OpenedConnection>();
-        private ConcurrentHashMap<Integer, OpenedConnection> openedConnections_B =
-                new ConcurrentHashMap<Integer, OpenedConnection>();
+        private ConcurrentHashMap<Integer, OpenedConnection> openedConnections_A
+                = new ConcurrentHashMap<Integer, OpenedConnection>();
+        private ConcurrentHashMap<Integer, OpenedConnection> openedConnections_B
+                = new ConcurrentHashMap<Integer, OpenedConnection>();
         //Nat of client A
         Nat.AllocationPolicy nat_A_AllocationPolicy;
         Nat.AlternativePortAllocationPolicy nat_A_AlternativeAllocationPolicy;
@@ -251,7 +251,6 @@ public class HolePunchingTestSimulator
         public void destroyEveryThing() {
 
             // send the stop messages
-
             // unsubscribe
 //            unsubscribe(handleStart, control);
             unsubscribe(handleMsgTimeout, timer.getPositive(Timer.class));
@@ -283,7 +282,6 @@ public class HolePunchingTestSimulator
             }
 
             // disconnect components
-
             // disconnecting client A
             if (client_A_NatType != Nat.Type.OPEN) {
                 disconnect(stunClientComp_A.getNegative(UpnpPort.class), natComp_A.getPositive(UpnpPort.class));
@@ -310,7 +308,6 @@ public class HolePunchingTestSimulator
                 disconnect(stunClientComp_B.getNegative(VodNetwork.class), networkSimulator.getPositive(VodNetwork.class));
                 disconnect(holePunchingClientComp_B.getNegative(VodNetwork.class), networkSimulator.getPositive(VodNetwork.class));
             }
-
 
             // disconnecting stun servers
             disconnect(serverS1Comp.getNegative(VodNetwork.class), networkSimulator.getPositive(VodNetwork.class));
@@ -421,9 +418,6 @@ public class HolePunchingTestSimulator
                     subscribe(handlePing_B, natComp_B.getPositive(VodNetwork.class));
                 }
 
-
-
-
                 // kinda use less remove it later on
                 final class MessageDestinationFilter extends ChannelFilter<RewriteableMsg, Address> {
 
@@ -437,20 +431,15 @@ public class HolePunchingTestSimulator
                     }
                 }
 
-
-
 //            try {
 //                ip = event.getBoundIp();
 //                natIP = event.getBoundIp();
 //                ip = InetAddress.getLocalHost();
 //                natIP = InetAddress.getLocalHost();
-
 //            } catch (UnknownHostException ex) {
 //                logger.error("UnknownHostException");
 //                destroyAndFail();
 //            }
-
-
                 try {
                     ip1 = InetAddress.getByName("192.168.0.1");
                     ip2 = InetAddress.getByName("192.168.0.2");
@@ -461,15 +450,12 @@ public class HolePunchingTestSimulator
                     HolePunchingTestSimulator.fail("Could not acquire ip addresses");
                 }
 
-
                 serverS1Address = new Address(ip3, serverS1Port, 1);
                 serverS2Address = new Address(ip4, serverS2Port, 2);
                 z1 = ToVodAddr.hpServer(serverS1Address);
 
-
                 stunClient_A_Address = new Address(ip1, clientPort, client_A_ID);
                 stunClient_B_Address = new Address(ip2, clientPort, client_B_ID);
-
 
                 // no need to filter the packets based on port. a peer may have many opened ports
                 final class MessageDestinationFilterBasedOnIPandID extends ChannelFilter<RewriteableMsg, IpIntPair> {
@@ -508,7 +494,6 @@ public class HolePunchingTestSimulator
 
 //                    connect(pmA.getNegative(GVodNetwork.class), natComp_A.getPositive(GVodNetwork.class),
 //                            new MessageDestinationFilterBasedOnIPandID(new IpIntPair(stunClient_A_Address.getIp(), stunClient_A_Address.getId()), "pmA-natA"));
-
                 } else {
                     // connect it to the simulator 
                     connect(stunClientComp_A.getNegative(VodNetwork.class), networkSimulator.getPositive(VodNetwork.class),
@@ -541,7 +526,6 @@ public class HolePunchingTestSimulator
                     connect(holePunchingClientComp_B.getNegative(VodNetwork.class), networkSimulator.getPositive(VodNetwork.class),
                             new MessageDestinationFilterBasedOnIPandID(new IpIntPair(stunClient_B_Address.getIp(), stunClient_B_Address.getId()), "HP_ClntB-Sim"));
                 }
-
 
                 // connecting stun servers
                 connect(serverS1Comp.getNegative(VodNetwork.class), networkSimulator.getPositive(VodNetwork.class),
@@ -586,7 +570,7 @@ public class HolePunchingTestSimulator
                 p1.add(g2);
                 List<VodAddress> p2 = new ArrayList<VodAddress>();
                 p2.add(g1);
-            StunServerConfiguration ssc = StunServerConfiguration.build();
+                StunServerConfiguration ssc = StunServerConfiguration.build();
 
                 trigger(new StunServerInit(new SelfNoParents(g1), p1, ssc),
                         serverS1Comp.getControl());
@@ -595,7 +579,6 @@ public class HolePunchingTestSimulator
                         serverS2Comp.getControl());
 
                 // initialize two stun client one for node a and other for node b
-
                 StunClientConfiguration sc = StunClientConfiguration.build().
                         setRuleExpirationIncrement(3500).
                         setUpnpEnable(false).
@@ -623,7 +606,6 @@ public class HolePunchingTestSimulator
 //                        3000, 1.2d, 1, 2000), pmA.getControl());
 //                trigger(new ParentMakerInit(new SelfNoParents(ga), 1*1000, 1, 
 //                        3000, 1.2d, 1, 2000), pmB.getControl());
-
                 // initialize the z server
                 // Nat type for z-Server
                 trigger(new RendezvousServerInit(new SelfNoParents(g1),
@@ -662,8 +644,8 @@ public class HolePunchingTestSimulator
                              * rand port seed
                              */, //TODO change it to random seed
                             true/*
-                             * enable upnp
-                             */), natComp_A.getControl());
+                     * enable upnp
+                     */), natComp_A.getControl());
                 }
 
                 if (client_B_NatType != Nat.Type.OPEN) {
@@ -697,10 +679,9 @@ public class HolePunchingTestSimulator
                              * rand port seed
                              */, //TODO change it to random seed
                             true /*
-                             * enable upnp
-                             */), natComp_B.getControl());
+                     * enable upnp
+                     */), natComp_B.getControl());
                 }
-
 
                 ScheduleTimeout stt = new ScheduleTimeout(600 * 1000);
                 MsgTimeout msgTimeout = new MsgTimeout(stt);
@@ -712,7 +693,6 @@ public class HolePunchingTestSimulator
                         stunClientComp_A.getPositive(StunPort.class));
                 trigger(stt, timer.getPositive(Timer.class));
 
-
                 ScheduleTimeout st1 = new ScheduleTimeout(600 * 1000);
                 MsgTimeout msgTimeout1 = new MsgTimeout(st1);
                 st1.setTimeoutEvent(msgTimeout1);
@@ -721,74 +701,69 @@ public class HolePunchingTestSimulator
                         stunClientComp_B.getPositive(StunPort.class));
                 trigger(st1, timer.getPositive(Timer.class));
 
-
             }
         };
-        public Handler<GetNatTypeResponseRuleExpirationTime> handleNatTypeResponseRuleTimeoutFromClient_A =
-                new Handler<GetNatTypeResponseRuleExpirationTime>() {
-            @Override
-            public void handle(GetNatTypeResponseRuleExpirationTime event) {
-                HolePunchingTestSimulator.logger.debug("Rule life time value of Nat A is " + event.getRuleLifeTime());
-                nat_A.setBindingTimeout(event.getRuleLifeTime());
+        public Handler<GetNatTypeResponseRuleExpirationTime> handleNatTypeResponseRuleTimeoutFromClient_A
+                = new Handler<GetNatTypeResponseRuleExpirationTime>() {
+                    @Override
+                    public void handle(GetNatTypeResponseRuleExpirationTime event) {
+                        HolePunchingTestSimulator.logger.debug("Rule life time value of Nat A is " + event.getRuleLifeTime());
+                        nat_A.setBindingTimeout(event.getRuleLifeTime());
 
                 // discovery process is complete
-                // now ask the Hole punching client to establish connection between client A and B
-                // through some zServer
-
-                // register with zServer
-                registerClientA();
-            }
-        };
+                        // now ask the Hole punching client to establish connection between client A and B
+                        // through some zServer
+                        // register with zServer
+                        registerClientA();
+                    }
+                };
 
         public void registerClientA() {
 
             Self me = new SelfNoUtility(ToVodAddr.stunClient(stunClient_A_Address));
             HpRegisterMsg.Request registerRequest = new HpRegisterMsg.Request(
-                    me.getAddress(),z1, 100);
+                    me.getAddress(), z1, 100);
             trigger(registerRequest, natComp_A.getPositive(VodNetwork.class));
         }
-        public Handler<HpRegisterMsg.Response> handleRegisterWithRendezvousServerResponse_A =
-                new Handler<HpRegisterMsg.Response>() {
-            @Override
-            public void handle(HpRegisterMsg.Response response) {
-                if (response.getResponseType() == HpRegisterMsg.RegisterStatus.ACCEPT) {
-                    HolePunchingTestSimulator.logger.debug("Test Component: Client A successfully registered");
+        public Handler<HpRegisterMsg.Response> handleRegisterWithRendezvousServerResponse_A
+                = new Handler<HpRegisterMsg.Response>() {
+                    @Override
+                    public void handle(HpRegisterMsg.Response response) {
+                        if (response.getResponseType() == HpRegisterMsg.RegisterStatus.ACCEPT) {
+                            HolePunchingTestSimulator.logger.debug("Test Component: Client A successfully registered");
 
+                            Self me = new SelfNoUtility(ToVodAddr.stunClient(stunClient_A_Address));
+                            me.addParent(response.getSource());
+                            c2.addParent(response.getSource());
 
-
-                    Self me = new SelfNoUtility(ToVodAddr.stunClient(stunClient_A_Address));
-                    me.addParent(response.getSource());
-                    c2.addParent(response.getSource());
-
-                    // ask to open the connection
+                            // ask to open the connection
 //                            OpenConnectionRequest request = new OpenConnectionRequest(
 //                                    client_B_ID, 
 //                                    nat_B,
 //                                    serverS1Address/*zServer has the same address i.e. same node*/, nat_A);
-                    OpenConnectionRequest request = new OpenConnectionRequest(c2, false,
-                            true, response.getTimeoutId());
+                            OpenConnectionRequest request = new OpenConnectionRequest(c2, false,
+                                    true, response.getTimeoutId());
 //                                    z1);
-                    trigger(request, holePunchingClientComp_A.getPositive(HpClientPort.class));
-                } else {
-                    HolePunchingTestSimulator.logger.debug("Test Component. Registration to zServer by Client A has failed");
-                }
-            }
-        };
-        public Handler<GetNatTypeResponseRuleExpirationTime> handleNatTypeResponseRuleTimeoutFromClient_B =
-                new Handler<GetNatTypeResponseRuleExpirationTime>() {
-            @Override
-            public void handle(GetNatTypeResponseRuleExpirationTime event) {
-                HolePunchingTestSimulator.logger.debug("Rule life time value of Nat B is " + event.getRuleLifeTime());
-                nat_B.setBindingTimeout(event.getRuleLifeTime());
+                            trigger(request, holePunchingClientComp_A.getPositive(HpClientPort.class));
+                        } else {
+                            HolePunchingTestSimulator.logger.debug("Test Component. Registration to zServer by Client A has failed");
+                        }
+                    }
+                };
+        public Handler<GetNatTypeResponseRuleExpirationTime> handleNatTypeResponseRuleTimeoutFromClient_B
+                = new Handler<GetNatTypeResponseRuleExpirationTime>() {
+                    @Override
+                    public void handle(GetNatTypeResponseRuleExpirationTime event) {
+                        HolePunchingTestSimulator.logger.debug("Rule life time value of Nat B is " + event.getRuleLifeTime());
+                        nat_B.setBindingTimeout(event.getRuleLifeTime());
 
                 // discovery process is complete
-                // now ask the Hole punching client to establish connection between client A and B
-                // through some zServer
-
-                // register with zServer
-                registerClientB();
-            }
-        };
+                        // now ask the Hole punching client to establish connection between client A and B
+                        // through some zServer
+                        // register with zServer
+                        registerClientB();
+                    }
+                };
 
         public void registerClientB() {
             Self me = new SelfNoUtility(ToVodAddr.stunClient(stunClient_B_Address));
@@ -796,46 +771,45 @@ public class HolePunchingTestSimulator
                     me.getAddress(), z1, 100);
             trigger(registerRequest, natComp_B.getPositive(VodNetwork.class));
         }
-        public Handler<HpRegisterMsg.Response> handleRegisterWithRendezvousServerResponse_B =
-                new Handler<HpRegisterMsg.Response>() {
-            @Override
-            public void handle(HpRegisterMsg.Response response) {
-                if (response.getResponseType() == HpRegisterMsg.RegisterStatus.ACCEPT) {
-                    HolePunchingTestSimulator.logger.debug("Test Component: Client B successfully registered");
+        public Handler<HpRegisterMsg.Response> handleRegisterWithRendezvousServerResponse_B
+                = new Handler<HpRegisterMsg.Response>() {
+                    @Override
+                    public void handle(HpRegisterMsg.Response response) {
+                        if (response.getResponseType() == HpRegisterMsg.RegisterStatus.ACCEPT) {
+                            HolePunchingTestSimulator.logger.debug("Test Component: Client B successfully registered");
 
-                    Self me = new SelfNoUtility(ToVodAddr.stunClient(stunClient_A_Address));
-                    me.addParent(response.getSource());
-                    c1.addParent(response.getSource());
+                            Self me = new SelfNoUtility(ToVodAddr.stunClient(stunClient_A_Address));
+                            me.addParent(response.getSource());
+                            c1.addParent(response.getSource());
 
-                    // ask to open the connection
-                    OpenConnectionRequest request = new OpenConnectionRequest(c1, true,
-                            true, response.getTimeoutId());
+                            // ask to open the connection
+                            OpenConnectionRequest request = new OpenConnectionRequest(c1, true,
+                                    true, response.getTimeoutId());
 //                                    z1);
-                    trigger(request, holePunchingClientComp_B.getPositive(HpClientPort.class));
-                } else {
-                    HolePunchingTestSimulator.logger.debug("Test Component. Registration to zServer by Client B has failed");
-                }
-            }
-        };
-        public Handler<OpenConnectionResponse> handleOpenConnectionResponseFromHolePunchingClient_A =
-                new Handler<OpenConnectionResponse>() {
-            @Override
-            public void handle(OpenConnectionResponse event) {
-                if (event.getResponseType() == OpenConnectionResponseType.OK) {
+                            trigger(request, holePunchingClientComp_B.getPositive(HpClientPort.class));
+                        } else {
+                            HolePunchingTestSimulator.logger.debug("Test Component. Registration to zServer by Client B has failed");
+                        }
+                    }
+                };
+        public Handler<OpenConnectionResponse> handleOpenConnectionResponseFromHolePunchingClient_A
+                = new Handler<OpenConnectionResponse>() {
+                    @Override
+                    public void handle(OpenConnectionResponse event) {
+                        if (event.getResponseType() == OpenConnectionResponseType.OK) {
 
-                    HolePunchingTestSimulator.logger.debug("Test Comp of Client A:  HP is successful");
+                            HolePunchingTestSimulator.logger.debug("Test Comp of Client A:  HP is successful");
 
-                    ScheduleTimeout st = new ScheduleTimeout(ClientATestDelay);
-                    Client_A_Timeout msgTimeout = new Client_A_Timeout(st);
-                    st.setTimeoutEvent(msgTimeout);
-                    trigger(st, timer.getPositive(Timer.class));
+                            ScheduleTimeout st = new ScheduleTimeout(ClientATestDelay);
+                            Client_A_Timeout msgTimeout = new Client_A_Timeout(st);
+                            st.setTimeoutEvent(msgTimeout);
+                            trigger(st, timer.getPositive(Timer.class));
 
-
-                } else {
-                    HolePunchingTestSimulator.logger.debug("Test Comp of Client A:  HP has FAILED");
-                }
-            }
-        };
+                        } else {
+                            HolePunchingTestSimulator.logger.debug("Test Comp of Client A:  HP has FAILED");
+                        }
+                    }
+                };
         public Handler<Client_A_Timeout> handleStartPingPong_A = new Handler<Client_A_Timeout>() {
             @Override
             public void handle(Client_A_Timeout event) {
@@ -852,125 +826,124 @@ public class HolePunchingTestSimulator
                 trigger(ping, natComp_A.getPositive(VodNetwork.class));
             }
         };
-        public Handler<TConnectionMsg.Ping> handlePing_A =
-                new Handler<TConnectionMsg.Ping>() {
-            @Override
-            public void handle(TConnectionMsg.Ping event) {
-                if (event.getDestination().getId() != client_A_ID) {
-                    return;
-                }
+        public Handler<TConnectionMsg.Ping> handlePing_A
+                = new Handler<TConnectionMsg.Ping>() {
+                    @Override
+                    public void handle(TConnectionMsg.Ping event) {
+                        if (event.getDestination().getId() != client_A_ID) {
+                            return;
+                        }
 
-                HolePunchingTestSimulator.logger.debug("Test Comp A: ping rcvd.");
-                if (nat_A.getType() == Nat.Type.OPEN) {
-                    Address sourceAddress = new Address(ip1, 1234, client_A_ID);
-                    TConnectionMsg.Pong pong = new TConnectionMsg.Pong(
-                            ToVodAddr.hpServer(sourceAddress),
-                            event.getVodSource(), null);
-                    trigger(pong, networkSimulator.getPositive(VodNetwork.class));
-                } else {
-                    // get the opened connection
+                        HolePunchingTestSimulator.logger.debug("Test Comp A: ping rcvd.");
+                        if (nat_A.getType() == Nat.Type.OPEN) {
+                            Address sourceAddress = new Address(ip1, 1234, client_A_ID);
+                            TConnectionMsg.Pong pong = new TConnectionMsg.Pong(
+                                    ToVodAddr.hpServer(sourceAddress),
+                                    event.getVodSource(), null);
+                            trigger(pong, networkSimulator.getPositive(VodNetwork.class));
+                        } else {
+                            // get the opened connection
 //                            HPSessionKey key = new HPSessionKey(client_A_ID, event.getClientID());
-                    OpenedConnection openedConnection =
-                            openedConnections_A.get(event.getSource().getId());
-                    Address sourceAddress = new Address(ip1, openedConnection.getPortInUse(), client_A_ID);
-                    //HolePunchingTest.logger.debug("Test Comp A: hole on Bs nat is " + openedConnection.getHoleOpened());
-                    TConnectionMsg.Pong pong = new TConnectionMsg.Pong(
-                            ToVodAddr.hpServer(sourceAddress),
-                            ToVodAddr.hpServer(openedConnection.getHoleOpened()),
-                            null);
-                    trigger(pong, natComp_A.getPositive(VodNetwork.class));
-                }
+                            OpenedConnection openedConnection
+                            = openedConnections_A.get(event.getSource().getId());
+                            Address sourceAddress = new Address(ip1, openedConnection.getPortInUse(), client_A_ID);
+                            //HolePunchingTest.logger.debug("Test Comp A: hole on Bs nat is " + openedConnection.getHoleOpened());
+                            TConnectionMsg.Pong pong = new TConnectionMsg.Pong(
+                                    ToVodAddr.hpServer(sourceAddress),
+                                    ToVodAddr.hpServer(openedConnection.getHoleOpened()),
+                                    null);
+                            trigger(pong, natComp_A.getPositive(VodNetwork.class));
+                        }
 
-            }
-        };
-        public Handler<TConnectionMsg.Pong> handlePong_A =
-                new Handler<TConnectionMsg.Pong>() {
-            @Override
-            public void handle(TConnectionMsg.Pong event) {
-                if (event.getDestination().getId() != client_A_ID) {
-                    return;
-                }
-                expectedPongMessagesA--;
-                HolePunchingTestSimulator.logger.debug("Test Comp A: pong rcvd. " 
-                        + " Pongs left to receive: " + expectedPongMessagesA
-                        + " src: " + event.getSource() + " dest: " + event.getDestination());
-                if (expectedPongMessagesA == 0) {
-                    destroyAndPass();
-                }
-            }
-        };
-        public Handler<TConnectionMsg.Ping> handlePing_B =
-                new Handler<TConnectionMsg.Ping>() {
-            @Override
-            public void handle(TConnectionMsg.Ping event) {
-                if (event.getDestination().getId() != client_B_ID) {
-                    return;
-                }
-                HolePunchingTestSimulator.logger.debug("Test Comp B: ping rcvd Message: "
-                        );
-                // sending pong back
-                if (nat_B.getType() == Nat.Type.OPEN) {
-                    Address sourceAddress = new Address(ip2, 1234, client_B_ID);
-                    TConnectionMsg.Pong pong = new TConnectionMsg.Pong(
-                            ToVodAddr.hpServer(sourceAddress),
-                            event.getVodSource(), null);
-                    trigger(pong, networkSimulator.getPositive(VodNetwork.class));
-                } else {
-                    // get the opened connection
-//                            HPSessionKey key = new HPSessionKey(client_B_ID, event.getClientID());
-                    OpenedConnection openedConnection =
-                            openedConnections_B.get(event.getSource().getId());
-                    Address sourceAddress = null;
-                    VodAddress holeOpened = null;
-                    if (openedConnection != null) {
-                        sourceAddress = new Address(ip2, openedConnection.getPortInUse(), client_B_ID);
-                        HolePunchingTestSimulator.logger.debug("Test Comp B: hole on As nat is " + openedConnection.getHoleOpened());
-                        holeOpened =
-                                ToVodAddr.hpServer(openedConnection.getHoleOpened());
-                    } else {
-                        sourceAddress = new Address(ip2, event.getSource().getPort(), client_B_ID);
-                        Address openA = new Address(ip2, event.getSource().getPort(), client_B_ID);
-                        holeOpened = ToVodAddr.hpServer(openA);
                     }
-                    TConnectionMsg.Pong pong = new TConnectionMsg.Pong(
-                            ToVodAddr.hpServer(sourceAddress),
-                            holeOpened, null);
-                    trigger(pong, natComp_B.getPositive(VodNetwork.class));
-                }
-            }
-        };
-        public Handler<TConnectionMsg.Pong> handlePong_B =
-                new Handler<TConnectionMsg.Pong>() {
-            @Override
-            public void handle(TConnectionMsg.Pong event) {
-                if (event.getDestination().getId() != client_B_ID) {
-                    return;
-                }
-                HolePunchingTestSimulator.logger.debug("Test Comp B: pong rcvd Message: " 
-                        + " src: " + event.getSource() + " dest: " + event.getDestination());
-                expectedPongMessagesB--;
-                if (expectedPongMessagesB == 0) {
-                    destroyAndPass();
-                }
-            }
-        };
-        public Handler<OpenConnectionResponse> handleOpenConnectionResponseFromHolePunchingClient_B =
-                new Handler<OpenConnectionResponse>() {
-            @Override
-            public void handle(OpenConnectionResponse event) {
-                if (event.getResponseType() == OpenConnectionResponseType.OK) {
-                    HolePunchingTestSimulator.logger.debug("Test Comp of Client B:  HP is successful");
-                    ScheduleTimeout st = new ScheduleTimeout(ClientATestDelay);
-                    Client_B_Timeout msgTimeout = new Client_B_Timeout(st);
-                    st.setTimeoutEvent(msgTimeout);
-                    trigger(st, timer.getPositive(Timer.class));
+                };
+        public Handler<TConnectionMsg.Pong> handlePong_A
+                = new Handler<TConnectionMsg.Pong>() {
+                    @Override
+                    public void handle(TConnectionMsg.Pong event) {
+                        if (event.getDestination().getId() != client_A_ID) {
+                            return;
+                        }
+                        expectedPongMessagesA--;
+                        HolePunchingTestSimulator.logger.debug("Test Comp A: pong rcvd. "
+                                + " Pongs left to receive: " + expectedPongMessagesA
+                                + " src: " + event.getSource() + " dest: " + event.getDestination());
+                        if (expectedPongMessagesA == 0) {
+                            destroyAndPass();
+                        }
+                    }
+                };
+        public Handler<TConnectionMsg.Ping> handlePing_B
+                = new Handler<TConnectionMsg.Ping>() {
+                    @Override
+                    public void handle(TConnectionMsg.Ping event) {
+                        if (event.getDestination().getId() != client_B_ID) {
+                            return;
+                        }
+                        HolePunchingTestSimulator.logger.debug("Test Comp B: ping rcvd Message: "
+                        );
+                        // sending pong back
+                        if (nat_B.getType() == Nat.Type.OPEN) {
+                            Address sourceAddress = new Address(ip2, 1234, client_B_ID);
+                            TConnectionMsg.Pong pong = new TConnectionMsg.Pong(
+                                    ToVodAddr.hpServer(sourceAddress),
+                                    event.getVodSource(), null);
+                            trigger(pong, networkSimulator.getPositive(VodNetwork.class));
+                        } else {
+                            // get the opened connection
+//                            HPSessionKey key = new HPSessionKey(client_B_ID, event.getClientID());
+                            OpenedConnection openedConnection
+                            = openedConnections_B.get(event.getSource().getId());
+                            Address sourceAddress = null;
+                            VodAddress holeOpened = null;
+                            if (openedConnection != null) {
+                                sourceAddress = new Address(ip2, openedConnection.getPortInUse(), client_B_ID);
+                                HolePunchingTestSimulator.logger.debug("Test Comp B: hole on As nat is " + openedConnection.getHoleOpened());
+                                holeOpened
+                                = ToVodAddr.hpServer(openedConnection.getHoleOpened());
+                            } else {
+                                sourceAddress = new Address(ip2, event.getSource().getPort(), client_B_ID);
+                                Address openA = new Address(ip2, event.getSource().getPort(), client_B_ID);
+                                holeOpened = ToVodAddr.hpServer(openA);
+                            }
+                            TConnectionMsg.Pong pong = new TConnectionMsg.Pong(
+                                    ToVodAddr.hpServer(sourceAddress),
+                                    holeOpened, null);
+                            trigger(pong, natComp_B.getPositive(VodNetwork.class));
+                        }
+                    }
+                };
+        public Handler<TConnectionMsg.Pong> handlePong_B
+                = new Handler<TConnectionMsg.Pong>() {
+                    @Override
+                    public void handle(TConnectionMsg.Pong event) {
+                        if (event.getDestination().getId() != client_B_ID) {
+                            return;
+                        }
+                        HolePunchingTestSimulator.logger.debug("Test Comp B: pong rcvd Message: "
+                                + " src: " + event.getSource() + " dest: " + event.getDestination());
+                        expectedPongMessagesB--;
+                        if (expectedPongMessagesB == 0) {
+                            destroyAndPass();
+                        }
+                    }
+                };
+        public Handler<OpenConnectionResponse> handleOpenConnectionResponseFromHolePunchingClient_B
+                = new Handler<OpenConnectionResponse>() {
+                    @Override
+                    public void handle(OpenConnectionResponse event) {
+                        if (event.getResponseType() == OpenConnectionResponseType.OK) {
+                            HolePunchingTestSimulator.logger.debug("Test Comp of Client B:  HP is successful");
+                            ScheduleTimeout st = new ScheduleTimeout(ClientATestDelay);
+                            Client_B_Timeout msgTimeout = new Client_B_Timeout(st);
+                            st.setTimeoutEvent(msgTimeout);
+                            trigger(st, timer.getPositive(Timer.class));
 
-
-                } else {
-                    HolePunchingTestSimulator.logger.debug("Test Comp of Client B:  HP has FAILED");
-                }
-            }
-        };
+                        } else {
+                            HolePunchingTestSimulator.logger.debug("Test Comp of Client B:  HP has FAILED");
+                        }
+                    }
+                };
         public Handler<Client_B_Timeout> handleStartPingPong_B = new Handler<Client_B_Timeout>() {
             @Override
             public void handle(Client_B_Timeout event) {
@@ -991,107 +964,106 @@ public class HolePunchingTestSimulator
                 trigger(ping, natComp_B.getPositive(VodNetwork.class));
             }
         };
-        public Handler<GetNatTypeResponse> handleGetNatTypeResponseFromClient_A =
-                new Handler<GetNatTypeResponse>() {
-            @Override
-            public void handle(GetNatTypeResponse event) {
+        public Handler<GetNatTypeResponse> handleGetNatTypeResponseFromClient_A
+                = new Handler<GetNatTypeResponse>() {
+                    @Override
+                    public void handle(GetNatTypeResponse event) {
 
-                if (event.getStatus() != GetNatTypeResponse.Status.SUCCEED) {
-                    logger.error("STUN could not determine client A's nat type: "
-                            + event.getStatus());
-                    destroyAndFail();
-                    return;
-                }
+                        if (event.getStatus() != GetNatTypeResponse.Status.SUCCEED) {
+                            logger.error("STUN could not determine client A's nat type: "
+                                    + event.getStatus());
+                            destroyAndFail();
+                            return;
+                        }
 
-                HolePunchingTestSimulator.logger.debug("Nat type of client A is:" + event.getNat().toString());
-                nat_A = event.getNat();
-                c1 = new VodAddress(stunClient_A_Address, OVERLAY_ID, nat_A);
+                        HolePunchingTestSimulator.logger.debug("Nat type of client A is:" + event.getNat().toString());
+                        nat_A = event.getNat();
+                        c1 = new VodAddress(stunClient_A_Address, OVERLAY_ID, nat_A);
 
+                        // initialze two hole punching clients. one for node a and other for node b
+                        Self self = new SelfNoUtility(c1);
+                        trigger(new HpClientInit(self,
+                                        openedConnections_A,
+                                        HpClientConfiguration.build().
+                                        setScanRetries(0).
+                                        setScanningEnabled(true).
+                                        setSessionExpirationTime(30 * 1000).
+                                        setRto(retryDelay),
+                                        new ConcurrentHashMap<Integer, Set<Integer>>()
+                                ),
+                                holePunchingClientComp_A.getControl());
 
-                // initialze two hole punching clients. one for node a and other for node b
-                Self self = new SelfNoUtility(c1);
-                trigger(new HpClientInit(self,
-                        openedConnections_A,
-                        HpClientConfiguration.build().
-                        setScanRetries(0).
-                        setScanningEnabled(true).
-                        setSessionExpirationTime(30 * 1000).
-                        setRto(retryDelay)),
-                        holePunchingClientComp_A.getControl());
-
-
-                boolean pass = true;
-                if (nat_A.isOpen()) {
-                    registerClientA(); // no need to wait for rule timeout response etc
-                } else if (nat_A_MappingPolicy == nat_A.getMappingPolicy()
+                        boolean pass = true;
+                        if (nat_A.isOpen()) {
+                            registerClientA(); // no need to wait for rule timeout response etc
+                        } else if (nat_A_MappingPolicy == nat_A.getMappingPolicy()
                         && nat_A_AllocationPolicy == nat_A.getAllocationPolicy()
                         && nat_A_FilteringPolicy == nat_A.getFilteringPolicy()) {
-                    if (nat_A_AllocationPolicy == Nat.AllocationPolicy.PORT_PRESERVATION) {
-                        pass = true;
+                            if (nat_A_AllocationPolicy == Nat.AllocationPolicy.PORT_PRESERVATION) {
+                                pass = true;
 //                                if (nat_A_AlternativeAllocationPolicy != nat_A.getAlternativePortAllocationPolicy()) {
 //                                    pass = false;
 //                                }
+                            }
+                        } else {
+                            pass = false;
+                        }
+
+                        if (pass) {
+                            //destroyAndPass();
+                        } else {
+                            destroyAndFail();
+                        }
                     }
-                } else {
-                    pass = false;
-                }
+                };
+        public Handler<GetNatTypeResponse> handleGetNatTypeResponseFromClient_B
+                = new Handler<GetNatTypeResponse>() {
+                    @Override
+                    public void handle(GetNatTypeResponse event) {
+                        if (event.getStatus() != GetNatTypeResponse.Status.SUCCEED) {
+                            logger.error("STUN could not determine client B's nat type: "
+                                    + event.getStatus());
+                            destroyAndFail();
+                            return;
+                        }
 
-                if (pass) {
-                    //destroyAndPass();
-                } else {
-                    destroyAndFail();
-                }
-            }
-        };
-        public Handler<GetNatTypeResponse> handleGetNatTypeResponseFromClient_B =
-                new Handler<GetNatTypeResponse>() {
-            @Override
-            public void handle(GetNatTypeResponse event) {
-                if (event.getStatus() != GetNatTypeResponse.Status.SUCCEED) {
-                    logger.error("STUN could not determine client B's nat type: "
-                            + event.getStatus());
-                    destroyAndFail();
-                    return;
-                }
+                        HolePunchingTestSimulator.logger.debug("Nat type of client B is: " + event.getNat().toString());
+                        nat_B = event.getNat();
+                        c2 = new VodAddress(stunClient_B_Address, OVERLAY_ID, nat_B);
 
-                HolePunchingTestSimulator.logger.debug("Nat type of client B is: " + event.getNat().toString());
-                nat_B = event.getNat();
-                c2 = new VodAddress(stunClient_B_Address, OVERLAY_ID, nat_B);
+                        Self self = new SelfNoUtility(c2);
+                        trigger(new HpClientInit(self,
+                                        openedConnections_B,
+                                        HpClientConfiguration.build().
+                                        setScanRetries(5).
+                                        setScanningEnabled(true).
+                                        setSessionExpirationTime(30 * 1000).
+                                        setRto(retryDelay),
+                                        new ConcurrentHashMap<Integer, Set<Integer>>()), holePunchingClientComp_B.getControl());
 
-                Self self = new SelfNoUtility(c2);
-                trigger(new HpClientInit(self,
-                        openedConnections_B,
-                        HpClientConfiguration.build().
-                        setScanRetries(5).
-                        setScanningEnabled(true).
-                        setSessionExpirationTime(30 * 1000).
-                        setRto(retryDelay)), holePunchingClientComp_B.getControl());
-
-
-
-                boolean pass = true;
-                if (nat_B.getType() == Nat.Type.UPNP
+                        boolean pass = true;
+                        if (nat_B.getType() == Nat.Type.UPNP
                         || nat_B.getType() == Nat.Type.OPEN) {
-                    registerClientB();
-                } else if (nat_B_MappingPolicy == nat_B.getMappingPolicy()
+                            registerClientB();
+                        } else if (nat_B_MappingPolicy == nat_B.getMappingPolicy()
                         && nat_B_AllocationPolicy == nat_B.getAllocationPolicy()
                         && nat_B_FilteringPolicy == nat_B.getFilteringPolicy()) {
-                    if (nat_B_AllocationPolicy == Nat.AllocationPolicy.PORT_PRESERVATION) {
-                        pass = true;
+                            if (nat_B_AllocationPolicy == Nat.AllocationPolicy.PORT_PRESERVATION) {
+                                pass = true;
 //                                if (nat_B_AlternativeAllocationPolicy != nat_B.getAlternativePortAllocationPolicy()) {
 //                                    pass = false;
 //                                }
+                            }
+                        } else {
+                            pass = false;
+                        }
+                        if (pass) {
+                            //destroyAndPass();
+                        } else {
+                            destroyAndFail();
+                        }
                     }
-                } else {
-                    pass = false;
-                }
-                if (pass) {
-                    //destroyAndPass();
-                } else {
-                    destroyAndFail();
-                }
-            }
-        };
+                };
         public Handler<MsgTimeout> handleMsgTimeout = new Handler<MsgTimeout>() {
             @Override
             public void handle(MsgTimeout event) {
@@ -1525,8 +1497,6 @@ public class HolePunchingTestSimulator
 //        };
 //        tests = someTests;
 
-
-
 //        // for running all tests defined in the above array
         for (int i = 0; i < tests.length; i++) {
             currentTestName = tests[i];
@@ -1553,7 +1523,6 @@ public class HolePunchingTestSimulator
 //        } finally {
 //            Kompics.shutdown();
 //        }
-
         if (testStatus) {
             assertTrue(true);
         } else {

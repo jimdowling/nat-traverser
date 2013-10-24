@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Random;
 
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -92,7 +93,8 @@ public final class GradientSimulator extends ComponentDefinition {
     private AsIpGenerator ipGenerator;
     private PrefixMatcher pm = PrefixMatcher.getInstance();
     Set<InetAddress> allocatedIps = new HashSet<InetAddress>();
-
+    ConcurrentHashMap<Integer,Set<Integer>> parentPorts = new ConcurrentHashMap<Integer,Set<Integer>>();
+    
 //-------------------------------------------------------------------	
     public GradientSimulator() {
         publicPeers = new HashMap<Integer, Component>();
@@ -276,7 +278,7 @@ public final class GradientSimulator extends ComponentDefinition {
         } else {
             privateAddress.put(id, gVodAddr);
             trigger(new ParentMakerInit(self.clone(VodConfig.SYSTEM_OVERLAY_ID),
-                    parentMakerConfiguration), parentMaker.control());
+                    parentMakerConfiguration, parentPorts), parentMaker.control());
         }
 
         trigger(new CroupierInit(

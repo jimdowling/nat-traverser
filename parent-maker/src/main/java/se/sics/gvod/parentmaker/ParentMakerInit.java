@@ -20,6 +20,8 @@
  */
 package se.sics.gvod.parentmaker;
 
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import se.sics.gvod.config.ParentMakerConfiguration;
 import se.sics.gvod.common.Self;
 import se.sics.kompics.Init;
@@ -29,11 +31,20 @@ import se.sics.kompics.Init;
  */
 public class ParentMakerInit extends Init {
     private final Self self;
-    private ParentMakerConfiguration config;
+    private final ParentMakerConfiguration config;
+    private final ConcurrentHashMap<Integer,Set<Integer>> parentPorts;    
     
-    public ParentMakerInit(Self self, ParentMakerConfiguration config) {
+    public ParentMakerInit(Self self, ParentMakerConfiguration config,
+            ConcurrentHashMap<Integer,Set<Integer>> parentPorts) {
+        assert self != null;
+        assert parentPorts != null;
         this.self = self;
         this.config = config;
+        this.parentPorts = parentPorts;
+    }
+
+    public ConcurrentHashMap<Integer, Set<Integer>> getParentPorts() {
+        return parentPorts;
     }
 
     public Self getSelf() {

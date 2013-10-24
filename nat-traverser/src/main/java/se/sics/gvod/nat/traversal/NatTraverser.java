@@ -96,12 +96,12 @@ import se.sics.kompics.Fault;
 public class NatTraverser extends ComponentDefinition {
 
     private final Logger logger = LoggerFactory.getLogger(NatTraverser.class);
-    protected Positive<VodNetwork> network = positive(VodNetwork.class);
-    protected Positive<Timer> timer = positive(Timer.class);
+    private Positive<VodNetwork> network = positive(VodNetwork.class);
+    private Positive<Timer> timer = positive(Timer.class);
     private Negative<VodNetwork> upperNet = negative(VodNetwork.class);
     private Positive<NatNetworkControl> lowerNetControl = positive(NatNetworkControl.class);
     private Negative<NatTraverserPort> natTraverserPort = negative(NatTraverserPort.class);
-    Positive<PeerSamplePort> croupier = positive(PeerSamplePort.class);
+    private Positive<PeerSamplePort> globalCroupierPort = positive(PeerSamplePort.class);
     private Component hpClient;
     private Component stunClient;
     private Component parentMaker;
@@ -110,18 +110,18 @@ public class NatTraverser extends ComponentDefinition {
     private Self self;
     private String compName; // only for debugging
     // Registered private nodes, shared with RendezvousServer
-    private ConcurrentHashMap<Integer, RegisteredClientRecord> registeredClients = new ConcurrentHashMap<Integer, RegisteredClientRecord>();
+    private final ConcurrentHashMap<Integer, RegisteredClientRecord> registeredClients = new ConcurrentHashMap<Integer, RegisteredClientRecord>();
     // Registered open connections to private nodes, shared with HpClient
-    private ConcurrentHashMap<Integer, OpenedConnection> openedConnections = new ConcurrentHashMap<Integer, OpenedConnection>();
+    private final ConcurrentHashMap<Integer, OpenedConnection> openedConnections = new ConcurrentHashMap<Integer, OpenedConnection>();
     // map to store the messages before the hole in the nat is created. 
     // here the Integer is the id of the destination peer
     // TODO: bound list in size, priority?
-    private HashMap<Integer, LinkedList<DirectMsg>> pendingMsgs = new HashMap<Integer, LinkedList<DirectMsg>>();
+    private final HashMap<Integer, LinkedList<DirectMsg>> pendingMsgs = new HashMap<Integer, LinkedList<DirectMsg>>();
     // for each destination we have to do hole punching
     // hole punching consists of multiple stages. to store which
     // state the hole punching is going through following map is used
     private HashMap<Integer, NatTraverser.HpProcess> onGoingHP = new HashMap<Integer, NatTraverser.HpProcess>();
-    private double scaleStunRTO = 1.5;
+    private final double scaleStunRTO = 1.5d;
     private int stunRTO = 2000;
     private int stunRetries = 0;
     private int maxOpenedConnections = 0;
@@ -152,6 +152,16 @@ public class NatTraverser extends ComponentDefinition {
     private Set<Address> failedStunServers = new HashSet<Address>();
     private List<VodAddress> croupierSamples = new ArrayList<VodAddress>();
 
+    /**
+     * For PRP, PRP_PRP nat traversal, we send pre-allocated ports to our parents.
+     * Pre-allocated ports are ports that we bind to locally using Netty::PortBind() or Netty::PortAllocate().
+     * We need to keep track of which ports have been assigned to which parents, and
+     * when parents allocate them to clients to talk to this node.
+     * This data structure is used to garbage-collect those ports and clean-up.
+     */
+    private ConcurrentHashMap<Integer,Set<Integer>> parentPorts 
+            = new ConcurrentHashMap<Integer,Set<Integer>>();
+    
     class ServersInitTimeout extends Timeout {
 
         public ServersInitTimeout(ScheduleTimeout st) {
@@ -241,7 +251,7 @@ public class NatTraverser extends ComponentDefinition {
         subscribe(handleStunRetryTimeout, timer);
         subscribe(handleServersInitTimeout, timer);
 
-        subscribe(handleCroupierSample, croupier);
+        subscribe(handleCroupierSample, globalCroupierPort);
 
         subscribe(handleOpenConnectionResponse, hpClient.getPositive(HpClientPort.class));
 
@@ -342,7 +352,7 @@ public class NatTraverser extends ComponentDefinition {
             //initialize the hole punching client
             trigger(new HpClientInit(
                     self.clone(VodConfig.SYSTEM_OVERLAY_ID), openedConnections,
-                    hpClientConfig), hpClient.getControl());
+                    hpClientConfig, parentPorts), hpClient.getControl());
 
         }
     };
@@ -1064,7 +1074,7 @@ public class NatTraverser extends ComponentDefinition {
             // TODO - do i need a filter for natNetworkControl msgs too?
             connect(parentMaker.getNegative(NatNetworkControl.class), lowerNetControl);
             trigger(new ParentMakerInit(self.clone(VodConfig.SYSTEM_OVERLAY_ID),
-                    parentMakerConfig), parentMaker.control());
+                    parentMakerConfig, parentPorts), parentMaker.control());
             List<VodAddress> bootstrappers = new ArrayList<VodAddress>();
             for (Address va : stunServers) {
                 bootstrappers.add(ToVodAddr.hpServer(va));

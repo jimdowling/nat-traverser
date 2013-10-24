@@ -747,6 +747,9 @@ public class HolePunchingTest
 
                 // initialze two hole punching clients. one for node a and other for node b
                 Self self = new SelfNoParents(a);
+                ConcurrentHashMap<Integer,Set<Integer>> parentPorts = 
+                new ConcurrentHashMap<Integer,Set<Integer>>();
+                
 
                 RTTStore.addSample(a.getId(), z1, 100);
                 RTTStore.addSample(a.getId(), z2, 200);
@@ -757,7 +760,8 @@ public class HolePunchingTest
                         .setRto(1000)
                         .setRtoScale(1.5d)
                         .setKeepParentRttRange(1000)
-                        .setNumParents(1)
+                        .setNumParents(1), 
+                        parentPorts
                 ), parentA.getControl());
                 trigger(new HpClientInit(self,
                         openedConnections_A,
@@ -765,7 +769,8 @@ public class HolePunchingTest
                         setScanRetries(3).
                         setScanningEnabled(true).
                         setSessionExpirationTime(30*1000).
-                        setRto(retryDelay)                                    
+                        setRto(retryDelay), 
+                        parentPorts                                    
                         ),
                         holePunchingClientComp_A.getControl());
 
@@ -816,13 +821,16 @@ public class HolePunchingTest
                 RTTStore.addSample(b.getId(), z1, 100);
                 RTTStore.addSample(b.getId(), z2, 200);
                 RTTStore.addSample(b.getId(), z3, 300);
+                ConcurrentHashMap<Integer,Set<Integer>> parentPorts = 
+                new ConcurrentHashMap<Integer,Set<Integer>>();
                 trigger(new ParentMakerInit(self, 
                         ParentMakerConfiguration.build()
                         .setParentUpdatePeriod(30*1000)
                         .setRto(1000)
                         .setRtoScale(1.5d)
                         .setKeepParentRttRange(1000)
-                        .setNumParents(1)                        
+                        .setNumParents(1),
+                        parentPorts
                 ), parentB.getControl());
 
 
@@ -832,7 +840,8 @@ public class HolePunchingTest
                         setScanRetries(5).
                         setScanningEnabled(true).
                         setSessionExpirationTime(30*1000).
-                        setRto(retryDelay)                                                           
+                        setRto(retryDelay),
+                        parentPorts
                         ), holePunchingClientComp_B.getControl());
 
                 boolean pass = true;

@@ -1281,40 +1281,7 @@ public class RendezvousServer extends MsgRetryComponent {
 
         }
     };
-//    Handler<HpFinishedMsg> handleHpFinishedMsgMessage =
-//            new Handler<HpFinishedMsg>() {
-//
-//                @Override
-//                public void handle(HpFinishedMsg request) {
-//                    HPSessionKey key = new HPSessionKey(request.getClientId(), request.getRemoteClientId());
-//                    HolePunching session = hpSessions.get(key);
-//
-//                    if (session != null) {
-////                        if (request.isHPSuccessful()) {
-////                            session.set_Client_Finished_HP(request.getClientId(),
-////                                    true, HolePunching.HpStatus.SUCCESS);
-////                        } else {
-////                            session.set_Client_Finished_HP(request.getClientId(),
-////                                    true, HolePunching.HpStatus.FAILURE);
-////                        }
-////
-////                        if (session.hasBothClientsFinishedHP()) {
-////                            // dont need session any more
-////                            if (session.bothClientsWereSuccessfulInHP()) {
-////                                logger.debug(compName
-////                                        //                                        + "deleting the session for " + key
-////                                        + " HP was successful " + hpSessions.get(key).getHolePunchingMechanism());
-////                            } else {
-////                                logger.trace(compName + "deleting the session for "
-////                                        + key + " HP failed " + hpSessions.get(key).getHolePunchingMechanism());
-////                            }
-//                        // TODO: JIM leave session open so that any concurrent session 
-//                        // establishment attempts from the remote side will use the same session
-//                        hpSessions.remove(key);
-////                        }
-//                    }
-//                }
-//            };
+
     Handler<RelayRequestMsg.ClientToServer> handleRelayRequestMsg =
             new Handler<RelayRequestMsg.ClientToServer>() {
         @Override

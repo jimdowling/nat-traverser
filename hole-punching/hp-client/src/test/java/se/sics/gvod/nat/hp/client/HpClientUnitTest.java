@@ -6,6 +6,7 @@ package se.sics.gvod.nat.hp.client;
 
 import se.sics.gvod.config.HpClientConfiguration;
 import java.util.LinkedList;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -63,7 +64,7 @@ public class HpClientUnitTest extends VodRetryComponentTestCase {
                         setScanRetries(scanRetries).
                         setScanningEnabled(scanningEnabled).
                         setSessionExpirationTime(30*1000).
-                        setRto(4000)                
+                        setRto(4000), new ConcurrentHashMap<Integer,Set<Integer>>()             
                 ));
         events = pollEvent(1);
         assertSequence(events, GarbageCleanupTimeout.class);

@@ -280,7 +280,6 @@ public class Nat implements Serializable, Comparable {
         return false;
     }
 
-    
     public static String natToStr(Type type, MappingPolicy mappingPolicy,
             AllocationPolicy allocationPolicy, FilteringPolicy filteringPolicy) {
         StringBuilder msg = new StringBuilder();
@@ -326,10 +325,9 @@ public class Nat implements Serializable, Comparable {
 
             return msg.toString();
         }
-        
+
     }
-    
-    
+
     @Override
     public String toString() {
 
@@ -374,7 +372,6 @@ public class Nat implements Serializable, Comparable {
             return -1;
         }
 
-
         return 1;
     }
 
@@ -405,7 +402,7 @@ public class Nat implements Serializable, Comparable {
         if (type == null || mappingPolicy == null || allocationPolicy == null || filteringPolicy == null) {
             return null;
         }
-        
+
         return new Nat(type, mappingPolicy, allocationPolicy, filteringPolicy,
                 0, 3000);
     }
@@ -419,12 +416,12 @@ public class Nat implements Serializable, Comparable {
      * A node that requires PRP-PRP or PRP-PRC or PRP (with PD filtering) will
      * need to allocate a new port for each new connection. Pre-allocated ports
      * are sent to the zServer.
+     * @return 
      */
     public boolean preallocatePorts() {
-        if (this.allocationPolicy == AllocationPolicy.PORT_PRESERVATION) {
-            return true;
-        }
-        return false;
+        return this.allocationPolicy == AllocationPolicy.PORT_PRESERVATION &&
+                (this.filteringPolicy != FilteringPolicy.ENDPOINT_INDEPENDENT
+                || this.mappingPolicy != MappingPolicy.ENDPOINT_INDEPENDENT);
     }
 
     public boolean moreRestrictiveThan(MappingPolicy other) {

@@ -5,7 +5,6 @@
 
 package se.sics.gvod.nat.hp.client.events;
 
-import java.util.Set;
 import se.sics.gvod.address.Address;
 import se.sics.gvod.net.events.PortAllocRequest;
 import se.sics.gvod.net.events.PortAllocResponse;

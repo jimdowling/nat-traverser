@@ -19,16 +19,23 @@ public class GoMsg_PortResponse extends PortBindResponse
     private final int retries;
     private final boolean fixedPort;
     private final TimeoutId msgTimeoutId;
+    private final int parentId;
     
     public GoMsg_PortResponse(PortBindRequest request, Integer key, 
-            int retries, boolean fixedPort, TimeoutId msgTimeoutId) {
+            int retries, boolean fixedPort, TimeoutId msgTimeoutId,
+            int parentId) {
         super(request);
         this.key = key;
         this.retries = retries;
         this.fixedPort = fixedPort;
         this.msgTimeoutId = msgTimeoutId;
+        this.parentId = parentId;
     }
 
+    public int getParentId() {
+        return parentId;
+    }
+    
     public boolean isFixedPort() {
         return fixedPort;
     }

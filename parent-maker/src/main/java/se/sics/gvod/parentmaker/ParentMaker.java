@@ -30,6 +30,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import se.sics.gvod.timer.TimeoutId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -92,53 +93,28 @@ public class ParentMaker extends MsgRetryComponent {
     private boolean outstandingBids = false;
     private int count = 0;
 
+    /*
+     * For PRP-allocation-policy nodes, pre-bind a bunch of ports and send
+     * them to the parent. If the parent needs more ports, it sends this
+     * component a PRP_preallocatePortMsg.Request, which allocates more
+     * ports and sends them back to the parent.
+     */
+    private ConcurrentHashMap<Integer, Set<Integer>> parentPorts;
+
     class Connection {
 
         private RTT rtt;
         private TimeoutId timeoutId;
         private long lastSentPing;
         private long lastReceivedPong;
-        /*
-         * For PRP-allocation-policy nodes, pre-bind a bunch of ports and send
-         * them to the parent. If the parent needs more ports, it sends this
-         * component a PRP_preallocatePortMsg.Request, which allocates more
-         * ports and sends them back to the parent.
-         */
-        private final Set<Integer> prpPorts;
 
-        public Connection(long lastKeepAliveMsgWasSentOn, RTT rtt, TimeoutId timeoutId,
-                Set<Integer> prpPorts) {
+        public Connection(long lastKeepAliveMsgWasSentOn, RTT rtt, TimeoutId timeoutId) {
             if (rtt == null || timeoutId == null) {
                 throw new NullPointerException("RTT or timeoutId cannot be null.");
             }
             this.rtt = rtt;
             this.timeoutId = timeoutId;
             this.lastSentPing = lastKeepAliveMsgWasSentOn;
-            if (prpPorts != null) {
-                this.prpPorts = prpPorts;
-            } else {
-                this.prpPorts = new HashSet<Integer>();
-            }
-        }
-
-        public Set<Integer> getPrpPorts() {
-            return prpPorts;
-        }
-
-        public void addPrpPorts(Set<Integer> newPorts) {
-            prpPorts.addAll(newPorts);
-        }
-
-        public boolean removePrpPort(int port) {
-            return prpPorts.remove(port);
-        }
-
-        public boolean hasPrpPort(int port) {
-            return prpPorts.contains(port);
-        }
-
-        public int sizePrpPorts() {
-            return prpPorts.size();
         }
 
         public long getLastReceivedPong() {
@@ -202,6 +178,7 @@ public class ParentMaker extends MsgRetryComponent {
             self = init.getSelf();
             compName = "PM(" + self.getId() + ") ";
             config = init.getConfig();
+            parentPorts = init.getParentPorts();
             VodConfig.PM_NUM_PARENTS = config.getNumParents();
             if (!self.isOpen()) {
                 needParentsRoundTimeout = init.getConfig().getParentUpdatePeriod();
@@ -245,8 +222,8 @@ public class ParentMaker extends MsgRetryComponent {
                             + pi
                             + " rejected: " + rejections.keySet().size()
                             + " num better rtts " + RTTStore.getOnAvgBest(self.getId(),
-                            config.getNumParents(),
-                            rejections.keySet()).size());
+                                    config.getNumParents(),
+                                    rejections.keySet()).size());
                 }
             }
 
@@ -298,8 +275,8 @@ public class ParentMaker extends MsgRetryComponent {
                         delegator.doTrigger(allocReq, natNetworkControl);
                     } else {
                         // if i have no connections, bid for the parent's slot with RTO as '0'
-                        long normalizedRtt =
-                                (connections.isEmpty() && !outstandingBids) ? 0 : min.getRTO();
+                        long normalizedRtt
+                                = (connections.isEmpty() && !outstandingBids) ? 0 : min.getRTO();
                         sendRequest(min.getAddress(), normalizedRtt, new HashSet<Integer>());
                     }
                 } else {
@@ -362,9 +339,9 @@ public class ParentMaker extends MsgRetryComponent {
             spt.setTimeoutEvent(pt);
             TimeoutId timeoutId = pt.getTimeoutId();
             delegator.doTrigger(spt, timer);
-            Connection connection = new Connection(System.currentTimeMillis(), 
+            Connection connection = new Connection(System.currentTimeMillis(),
                     RTTStore.getRtt(self.getId(), parent),
-                    timeoutId, prpPorts);
+                    timeoutId);
             connections.put(parent, connection);
             self.addParent(parent.getPeerAddress());
             logger.info(compName + "added new parent. Now: " + getParentsAsStr());
@@ -399,16 +376,16 @@ public class ParentMaker extends MsgRetryComponent {
                 delegator.doRetry(req, config.getRto(), config.getRtoRetries());
             }
             connections.remove(parent);
-            if (!c.getPrpPorts().isEmpty()) { // free-up any PRP ports cached at the parent
-                PortDeleteRequest pdr = new PortDeleteRequest(self.getId(), c.getPrpPorts());
-                pdr.setResponse(new PrpDeletePortsResponse(pdr, null));
-                delegator.doTrigger(pdr, natNetworkControl);
-            }
+            // free-up any PRP ports cached at the parent
+            // There is a race condition here, where I may be in the middle of establishing 
+            // a connection with another peer using one of these ports. That connection
+            // will now fail.
             NatReporter.report(delegator, network, self.getAddress(),
-                    self.getPort(), parent,
-                    true, 0,
-                    "Parent removed with numPorts deleted: " + c.getPrpPorts().size());
+                    self.getPort(), parent, true, 0,
+                    "Parent removed with numPorts deleted: " + parentPorts.get(parent.getId()));
             logger.info(compName + "removing parent. Now: " + getParentsAsStr());
+            deletePorts(parent.getId());
+
         } else {
             logger.warn(compName + "Tried to remove non-existant parent: " + parent.getId());
             logger.warn(compName + "Existing parents: " + getParentsAsStr());
@@ -429,11 +406,11 @@ public class ParentMaker extends MsgRetryComponent {
                 long now = System.currentTimeMillis();
                 c.setLastSentPing(now);
                 VodAddress parentVodAddr = event.getParent();
-                ParentKeepAliveMsg.Ping ping = new ParentKeepAliveMsg.Ping(self.getAddress(), 
+                ParentKeepAliveMsg.Ping ping = new ParentKeepAliveMsg.Ping(self.getAddress(),
                         parentVodAddr);
-                ScheduleRetryTimeout st =
-                        new ScheduleRetryTimeout(config.getPingRto(),
-                        config.getPingRetries(), config.getPingRtoScale());
+                ScheduleRetryTimeout st
+                        = new ScheduleRetryTimeout(config.getPingRto(),
+                                config.getPingRetries(), config.getPingRtoScale());
                 ParentKeepAliveMsg.PingTimeout pt = new ParentKeepAliveMsg.PingTimeout(st, ping);
                 TimeoutId id = delegator.doRetry(pt);
                 requestStartTimes.put(id, now);
@@ -478,7 +455,7 @@ public class ParentMaker extends MsgRetryComponent {
                 VodAddress parent = event.getRequestMsg().getVodDestination();
                 CroupierStats.instance(self.clone(VodConfig.SYSTEM_OVERLAY_ID))
                         .parentChangeEvent(parent.getPeerAddress(),
-                        HpRegisterMsg.RegisterStatus.DEAD_PARENT);
+                                HpRegisterMsg.RegisterStatus.DEAD_PARENT);
                 removeParent(parent, true, true);
                 logger.debug(compName + "Ping timeout to parent {} . Removing.", parent);
             }
@@ -511,12 +488,13 @@ public class ParentMaker extends MsgRetryComponent {
         outstandingBids = true;
         ScheduleRetryTimeout st = new ScheduleRetryTimeout(config.getRto(),
                 config.getRtoRetries(), config.getRtoScale());
-        HpRegisterMsg.RequestRetryTimeout requestTimeout =
-                new HpRegisterMsg.RequestRetryTimeout(st, request);
+        HpRegisterMsg.RequestRetryTimeout requestTimeout
+                = new HpRegisterMsg.RequestRetryTimeout(st, request);
         TimeoutId id = delegator.doRetry(requestTimeout);
         logger.debug(compName + "HpRegisterMsg.Request sent to " + hpServer);
         requestStartTimes.put(id, System.currentTimeMillis());
         outstandingParentRequests.add(hpServer.getId());
+        parentPorts.put(hpServer.getId(), prpPorts);
     }
     Handler<HpRegisterMsg.Response> handleHpRegisterMsgResponse = new Handler<HpRegisterMsg.Response>() {
         @Override
@@ -565,9 +543,6 @@ public class ParentMaker extends MsgRetryComponent {
                         event.getVodSource(), 0, HpRegisterMsg.RegisterStatus.PARENT_REQUEST_FAILED);
                 delegator.doRetry(req, config.getRto(), config.getRtoRetries());
                 if (self.getNat().preallocatePorts()) {
-                    PortDeleteRequest pdr = new PortDeleteRequest(self.getId(), event.getPrpPorts());
-                    pdr.setResponse(new PrpDeletePortsResponse(pdr, null));
-                    trigger(pdr, natNetworkControl);
                 }
                 CroupierStats.instance(self.clone(VodConfig.SYSTEM_OVERLAY_ID)).parentChangeEvent(event.getSource(),
                         HpRegisterMsg.RegisterStatus.PARENT_REQUEST_FAILED);
@@ -575,6 +550,17 @@ public class ParentMaker extends MsgRetryComponent {
 
         }
     };
+
+    private void deletePorts(int id) {
+        Set<Integer> ports = parentPorts.remove(id);
+        if (ports != null) {
+            PortDeleteRequest pdr = new PortDeleteRequest(self.getId(), ports);
+            pdr.setResponse(new PrpDeletePortsResponse(pdr, null));
+            trigger(pdr, natNetworkControl);
+        } else {
+            logger.warn("Couldn't find ports to delete for parent: " + id);
+        }
+    }
 
     private void addParentRtt(HpRegisterMsg.Response event, long rtt) {
         VodAddress candidateParent = event.getVodSource();
@@ -597,55 +583,55 @@ public class ParentMaker extends MsgRetryComponent {
             }
         }
     }
-    Handler<HpRegisterMsg.RequestRetryTimeout> handleHpRegisterMsgRequestTimeout =
-            new Handler<HpRegisterMsg.RequestRetryTimeout>() {
-        @Override
-        public void handle(HpRegisterMsg.RequestRetryTimeout event) {
+    Handler<HpRegisterMsg.RequestRetryTimeout> handleHpRegisterMsgRequestTimeout
+            = new Handler<HpRegisterMsg.RequestRetryTimeout>() {
+                @Override
+                public void handle(HpRegisterMsg.RequestRetryTimeout event) {
 
-            outstandingParentRequests.remove(event.getRequest().getDestination().getId());
+                    outstandingParentRequests.remove(event.getRequest().getDestination().getId());
 
-            if (delegator.doCancelRetry(event.getTimeoutId())) {
-                CroupierStats.instance(self.clone(VodConfig.SYSTEM_OVERLAY_ID)).parentChangeEvent(event.getRequest().getDestination(),
-                        RegisterStatus.PARENT_REQUEST_FAILED);
-                outstandingBids = false;
-                requestStartTimes.remove(event.getTimeoutId());
-                rejections.put(event.getMsg().getDestination(), System.currentTimeMillis());
-                logger.warn(compName + "timeout HpRegisterReq {}",
-                        event.getMsg().getDestination());
-                if (self.getNat().preallocatePorts()) {
-                    PortDeleteRequest pdr =
-                            new PortDeleteRequest(self.getId(), event.getRequest().getPrpPorts());
-                    pdr.setResponse(new PrpDeletePortsResponse(pdr, null));
-                    trigger(pdr, natNetworkControl);
+                    if (delegator.doCancelRetry(event.getTimeoutId())) {
+                        CroupierStats.instance(self.clone(VodConfig.SYSTEM_OVERLAY_ID)).parentChangeEvent(event.getRequest().getDestination(),
+                                RegisterStatus.PARENT_REQUEST_FAILED);
+                        outstandingBids = false;
+                        requestStartTimes.remove(event.getTimeoutId());
+                        rejections.put(event.getMsg().getDestination(), System.currentTimeMillis());
+                        logger.warn(compName + "timeout HpRegisterReq {}",
+                                event.getMsg().getDestination());
+                        if (self.getNat().preallocatePorts()) {
+                            PortDeleteRequest pdr
+                            = new PortDeleteRequest(self.getId(), event.getRequest().getPrpPorts());
+                            pdr.setResponse(new PrpDeletePortsResponse(pdr, null));
+                            trigger(pdr, natNetworkControl);
+                        }
+                    }
                 }
-            }
-        }
-    };
-    Handler<HpUnregisterMsg.Response> handleUnregisterParentResponse =
-            new Handler<HpUnregisterMsg.Response>() {
-        @Override
-        public void handle(HpUnregisterMsg.Response event) {
-            if (delegator.doCancelRetry(event.getTimeoutId())) {
-                logger.debug(compName + "Successfully unregistered from {}",
-                        event.getSource().getId());
-            } else {
-                logger.debug(compName + "Unsuccessful unregister from {}",
-                        event.getSource().getId());
-            }
-        }
-    };
-    Handler<HpUnregisterMsg.Request> handleUnregisterParentRequest =
-            new Handler<HpUnregisterMsg.Request>() {
-        @Override
-        public void handle(HpUnregisterMsg.Request event) {
-            logger.debug(compName + "Parent {} telling me to unregister: {}",
-                    event.getVodSource().getId(), event.getStatus());
-            CroupierStats.instance(self.clone(VodConfig.SYSTEM_OVERLAY_ID)).parentChangeEvent(event.getSource(),
-                    HpRegisterMsg.RegisterStatus.BETTER_CHILD);
-            removeParent(event.getVodSource(), false, false);
-            logger.debug(compName + getParentsAsStr());
-        }
-    };
+            };
+    Handler<HpUnregisterMsg.Response> handleUnregisterParentResponse
+            = new Handler<HpUnregisterMsg.Response>() {
+                @Override
+                public void handle(HpUnregisterMsg.Response event) {
+                    if (delegator.doCancelRetry(event.getTimeoutId())) {
+                        logger.debug(compName + "Successfully unregistered from {}",
+                                event.getSource().getId());
+                    } else {
+                        logger.debug(compName + "Unsuccessful unregister from {}",
+                                event.getSource().getId());
+                    }
+                }
+            };
+    Handler<HpUnregisterMsg.Request> handleUnregisterParentRequest
+            = new Handler<HpUnregisterMsg.Request>() {
+                @Override
+                public void handle(HpUnregisterMsg.Request event) {
+                    logger.debug(compName + "Parent {} telling me to unregister: {}",
+                            event.getVodSource().getId(), event.getStatus());
+                    CroupierStats.instance(self.clone(VodConfig.SYSTEM_OVERLAY_ID)).parentChangeEvent(event.getSource(),
+                            HpRegisterMsg.RegisterStatus.BETTER_CHILD);
+                    removeParent(event.getVodSource(), false, false);
+                    logger.debug(compName + getParentsAsStr());
+                }
+            };
 
     private List<RTT> getCurrentRtts() {
         List<RTT> currentRtts = new ArrayList<RTT>();
@@ -668,11 +654,11 @@ public class ParentMaker extends MsgRetryComponent {
         public void handle(PRP_PreallocatedPortsMsg.Request request) {
 
             if (!connections.containsKey(request.getVodSource())) {
-                PRP_PreallocatedPortsMsg.Response resp =
-                        new PRP_PreallocatedPortsMsg.Response(self.getAddress(),
-                        request.getVodSource(), request.getTimeoutId(),
-                        PRP_PreallocatedPortsMsg.ResponseType.INVALID_NOT_A_PARENT,
-                        null, request.getMsgTimeoutId());
+                PRP_PreallocatedPortsMsg.Response resp
+                        = new PRP_PreallocatedPortsMsg.Response(self.getAddress(),
+                                request.getVodSource(), request.getTimeoutId(),
+                                PRP_PreallocatedPortsMsg.ResponseType.INVALID_NOT_A_PARENT,
+                                null, request.getMsgTimeoutId());
                 delegator.doTrigger(resp, network);
             } else {
                 Long rto = 2000l;
@@ -696,20 +682,19 @@ public class ParentMaker extends MsgRetryComponent {
         allocReq.setResponse(allocResp);
         delegator.doTrigger(allocReq, natNetworkControl);
     }
-    Handler<PrpMorePortsResponse> handlePrpMorePortsResponse =
-            new Handler<PrpMorePortsResponse>() {
-        @Override
-        public void handle(PrpMorePortsResponse response) {
-            PRP_PreallocatedPortsMsg.Response resp = new PRP_PreallocatedPortsMsg.Response(
-                    self.getAddress(), (VodAddress) response.getKey(),
-                    response.getTimeoutId(),
-                    PRP_PreallocatedPortsMsg.ResponseType.OK,
-                    response.getAllocatedPorts(), response.getMsgTimeoutId());
-            delegator.doTrigger(resp, network);
-        }
-    };
-    Handler<PrpPortsResponse> handlePrpPortsResponse =
-            new Handler<PrpPortsResponse>() {
+    Handler<PrpMorePortsResponse> handlePrpMorePortsResponse
+            = new Handler<PrpMorePortsResponse>() {
+                @Override
+                public void handle(PrpMorePortsResponse response) {
+                    PRP_PreallocatedPortsMsg.Response resp = new PRP_PreallocatedPortsMsg.Response(
+                            self.getAddress(), (VodAddress) response.getKey(),
+                            response.getTimeoutId(),
+                            PRP_PreallocatedPortsMsg.ResponseType.OK,
+                            response.getAllocatedPorts(), response.getMsgTimeoutId());
+                    delegator.doTrigger(resp, network);
+                }
+            };
+    Handler<PrpPortsResponse> handlePrpPortsResponse = new Handler<PrpPortsResponse>() {
         @Override
         public void handle(PrpPortsResponse response) {
             long rtt = (connections.isEmpty() && !outstandingBids) ? 0
@@ -717,17 +702,25 @@ public class ParentMaker extends MsgRetryComponent {
             sendRequest(response.getServer(), rtt, response.getAllocatedPorts());
         }
     };
+
+    private void removeParentPort(int parentId, int port) {
+        Set<Integer> ports = parentPorts.get(parentId);
+        Set<Integer> updatedPorts = new HashSet<Integer>();
+        updatedPorts.addAll(ports);
+        updatedPorts.remove(port);
+        if (updatedPorts.isEmpty()) {
+            parentPorts.remove(parentId);
+        } else {
+            parentPorts.put(parentId, updatedPorts);
+        }
+    }
+
     // zServer tells me that it is using a PRP port. Delete it locally from my connections.
     // use this info when changing parent.
-    Handler<PRP_ConnectMsg.Response> handlePRP_Response = new Handler<PRP_ConnectMsg.Response>() {
+    Handler<PRP_ConnectMsg.Response> handlePRP_PortUsedByParent = new Handler<PRP_ConnectMsg.Response>() {
         @Override
         public void handle(PRP_ConnectMsg.Response response) {
-            int port = response.getPortToUse();
-            for (Connection c : connections.values()) {
-                if (c.hasPrpPort(port)) {
-                    c.removePrpPort(port);
-                }
-            }
+            removeParentPort(response.getClientId(), response.getPortToUse());
         }
     };
     Handler<CroupierSample> handleCroupierSample = new Handler<CroupierSample>() {

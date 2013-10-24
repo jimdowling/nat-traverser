@@ -14,6 +14,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -76,6 +78,8 @@ public final class CroupierSimulator extends ComponentDefinition {
     // peer initialization state
     private CroupierConfiguration croupierConfiguration;
     private ParentMakerConfiguration parentMakerConfiguration;
+    private ConcurrentHashMap<Integer,Set<Integer>> parentPorts = 
+            new ConcurrentHashMap<Integer,Set<Integer>>();
     private int peerIdSequence;
     private ConsistentHashtable<Integer> view;
     private Random rnd;
@@ -255,7 +259,7 @@ public final class CroupierSimulator extends ComponentDefinition {
         } else {
             privateAddress.put(id, croupierPeerAddress);
             trigger(new ParentMakerInit(self.clone(VodConfig.SYSTEM_OVERLAY_ID),
-                    parentMakerConfiguration), parentMaker.control());
+                    parentMakerConfiguration, parentPorts), parentMaker.control());
         }
 
 

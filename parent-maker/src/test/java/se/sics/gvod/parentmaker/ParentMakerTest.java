@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import se.sics.gvod.timer.TimeoutId;
 import org.junit.After;
@@ -69,18 +70,20 @@ public class ParentMakerTest extends VodRetryComponentTestCase {
                 .setRto(5*1000)
                 .setRtoScale(1.5)
                 .setRtoRetries(4)
-                .setKeepParentRttRange(200)
+                .setKeepParentRttRange(200),
+                new ConcurrentHashMap<Integer,Set<Integer>>()
+
                 ));
         
         mySelf = new SelfNoUtility(privAddrs.get(2));
         parentMaker.handleInit.handle(new ParentMakerInit(mySelf, 
-//                30*1000, 2, 5000, 1.5, 4, 200, 0
                 ParentMakerConfiguration.build(). 
                 setParentUpdatePeriod(30*1000)
                 .setRto(5*1000)
                 .setRtoScale(1.5)
                 .setRtoRetries(4)
-                .setKeepParentRttRange(200)                
+                .setKeepParentRttRange(200),
+                new ConcurrentHashMap<Integer,Set<Integer>>()
                 ));
         LinkedList<Event> events = pollEvent(1);
         assertSequence(events, ParentMakerCycle.class);
