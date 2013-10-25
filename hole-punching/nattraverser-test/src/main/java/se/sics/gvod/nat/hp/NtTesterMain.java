@@ -371,11 +371,11 @@ public final class NtTesterMain extends ComponentDefinition {
                         NatTraverserConfiguration.build(),
                         HpClientConfiguration.build(),
                         RendezvousServerConfiguration.build(),
-                        StunClientConfiguration.build().setUpnpEnable(upnpEnabled),
                         StunServerConfiguration.build()
                         .setRto(500)
                         .setRtoRetries(8)
                         .setRtoScale(1.2),
+                        StunClientConfiguration.build().setUpnpEnable(upnpEnabled),
                         ParentMakerConfiguration.build().setParentUpdatePeriod(1000),
                         openServer),
                         natTraverser.getControl());

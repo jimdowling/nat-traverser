@@ -49,6 +49,7 @@ public class Main {
                 localHistorySize, neighbourHistorySize, nodeSelection);
         configuration.store();
 
+
         if (scenarioName.equalsIgnoreCase("join")) {
             scenario = new ScenarioJoin();
         } else if (scenarioName.equalsIgnoreCase("churn")) {

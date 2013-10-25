@@ -633,8 +633,9 @@ public class HpClient extends MsgRetryComponent {
             // Remove the local opened connection to the remote private node
             openedConnections.remove(remoteId);
             // If a port is allocated for this connection only, unbind the port.
-            if (!oc.isSharedPort()) {
-                unbindPort(oc.getPortInUse());
+
+            if (oc.isSharedPort() == false) {
+                removeAndUnbindPort(oc.getPortInUse(), oc.isSharedPort());
             }
             return true;
         } else {
@@ -1367,19 +1368,22 @@ public class HpClient extends MsgRetryComponent {
     }
 
     private void removeAndUnbindPort(int port, boolean unbind) {
-        boolean succeed = portsInUse.remove(port);
-        if (succeed && unbind) {
-            logger.info(compName + "removing and ubndbind port: " + port);
-            Set<Integer> portsToDelete = new HashSet<Integer>();
-            portsToDelete.add(port);
-            PortDeleteRequest req = new PortDeleteRequest(self.getId(), portsToDelete);
-            req.setResponse(new PortDeleteResponse(req, self.getId()) {
-            });
-            delegator.doTrigger(req, natNetworkControl);
+        if (port != VodConfig.getPort()) {  // paranoid check that we  don't delete the default port
+            boolean succeed = portsInUse.remove(port);
+            if (succeed && unbind) {
+                logger.info(compName + "removing and unbinding port: " + port);
+                Set<Integer> portsToDelete = new HashSet<Integer>();
+                portsToDelete.add(port);
+                PortDeleteRequest req = new PortDeleteRequest(self.getId(), portsToDelete);
+                req.setResponse(new PortDeleteResponse(req, self.getId()) {
+                });
+                delegator.doTrigger(req, natNetworkControl);
+            }
         }
     }
 
     private void removeAndUnbindPorts(Set<Integer> ports, boolean unbind) {
+        ports.remove(VodConfig.getPort()); // paranoid, don't remove default port
         for (Integer port : ports) {
             boolean succeed = portsInUse.remove(port);
             if (succeed && unbind) {
@@ -1507,8 +1511,11 @@ public class HpClient extends MsgRetryComponent {
             }
 
             if (self.getNat().preallocatePorts()) {
-                logger.info(compName + " Number of allocated PRP parent ports:"
-                        + portsInUse.size());
+                if (!portsInUse.isEmpty() || !openedConnections.isEmpty()) {
+                    logger.debug(compName + " Number of allocated PRP parent ports:"
+                            + portsInUse.size() + " number of open connections: "
+                            + openedConnections.size());
+                }
             }
         }
     };

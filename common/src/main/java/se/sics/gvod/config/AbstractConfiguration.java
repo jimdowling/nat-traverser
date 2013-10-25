@@ -120,6 +120,10 @@ public class AbstractConfiguration<T extends AbstractConfiguration> {
             instance = c.newInstance();
             AbstractConfiguration ac = instance.loadP(type,
                     System.getProperty(type.getCanonicalName()));
+            if (ac == null) {
+                throw new NullPointerException("Could not load configuration successfully: " +
+                        type.getCanonicalName());
+            }
             return ac;
         } catch (InstantiationException ex) {
             Logger.getLogger(AbstractConfiguration.class.getName()).log(Level.SEVERE, null, ex);

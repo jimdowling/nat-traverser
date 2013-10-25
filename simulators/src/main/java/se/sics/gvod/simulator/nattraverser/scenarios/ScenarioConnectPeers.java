@@ -6,9 +6,9 @@ import se.sics.kompics.p2p.experiment.dsl.SimulationScenario;
 
 @SuppressWarnings("serial")
 public class ScenarioConnectPeers extends Scenario {
-    public static final int NUM_NODES=100;
+    public static final int NUM_NODES=300;
     public static final int NUM_PARENTS=2;
-    public static final long NUM_DISCONNECT=2;
+    public static final long NUM_DISCONNECT=4;
     
 	private static SimulationScenario scenario = new SimulationScenario() {{
 		
@@ -20,7 +20,7 @@ public class ScenarioConnectPeers extends Scenario {
 		}};
                 
 		StochasticProcess startPrivateNodes = new StochasticProcess() {{
-			eventInterArrivalTime(constant(1000));
+			eventInterArrivalTime(constant(5000));
 			raise(NUM_NODES, Operations.peerJoin(VodAddress.NatType.NAT), 
                                 uniform(0, 10000));
 		}};
@@ -54,7 +54,7 @@ public class ScenarioConnectPeers extends Scenario {
 		}};
 		
 		startPublicNodes.start();
-		startPrivateNodes.startAfterTerminationOf(10*1000, startPublicNodes);
+		startPrivateNodes.startAfterTerminationOf(30*1000, startPublicNodes);
 		connectNodes.startAfterTerminationOf(100*1000, startPrivateNodes);
 		killParents.startAfterTerminationOf(10*1000, connectNodes);
 		disconnectNodes.startAfterTerminationOf(10*1000, killParents);

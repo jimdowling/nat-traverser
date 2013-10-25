@@ -15,7 +15,6 @@ public class CroupierCompositeConfiguration extends CompositeConfiguration {
         super();
         parentMakerConfig = ParentMakerConfiguration.build()
                 .setNumParents(parentSize)
-                .setNumChildren(250)
                 .setParentUpdatePeriod(parentUpdatePeriod)
                 .setKeepParentRttRange(100)
                 .setRtoRetries(0)

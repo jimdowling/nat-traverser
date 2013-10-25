@@ -248,8 +248,8 @@ public final class CroupierSimulator extends ComponentDefinition {
                 HpClientConfiguration.build(),
                 RendezvousServerConfiguration.build().
                 setSessionExpirationTime(30*1000),
-                StunClientConfiguration.build(),
                 StunServerConfiguration.build(),
+                StunClientConfiguration.build(),
                 ParentMakerConfiguration.build(), false
                 ), natTraverser.control());
 

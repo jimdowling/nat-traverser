@@ -78,6 +78,13 @@ public final class NatTraverserSimulator extends ComponentDefinition {
     private Map<String, Integer> failCount = new HashMap<String, Integer>();
     private VodAddress server1, server2;
     private Random r;
+    private CroupierConfiguration croupierConfig;
+    private NatTraverserConfiguration ntConfig;
+    private HpClientConfiguration hpClientConfig;
+    private RendezvousServerConfiguration rendezvousServerConfig;
+    private StunClientConfiguration stunClientConfig;
+    private StunServerConfiguration stunServerConfig;
+    private ParentMakerConfiguration parentMakerConfig;
 
     public NatTraverserSimulator() {
         publicPeers = new HashMap<Integer, Component>();
@@ -107,6 +114,14 @@ public final class NatTraverserSimulator extends ComponentDefinition {
             privatePeers.clear();
             peerIdSequence = 100;
             ipGenerator = AsIpGenerator.getInstance(init.getNatTraverserConfig().getSeed());
+            ntConfig = init.getNatTraverserConfig();
+            croupierConfig = init.getCroupierConfig();
+            hpClientConfig = init.getHpClientConfig();
+            rendezvousServerConfig = init.getRendezvousServerConfig();
+            stunClientConfig = init.getStunClientConfig();
+            stunServerConfig = init.getStunServerConfig();
+            parentMakerConfig = init.getParentMakerConfig();
+            
         }
     };
 
@@ -134,7 +149,7 @@ public final class NatTraverserSimulator extends ComponentDefinition {
             Integer id = event.getPeerId();
             id = view.getNode(id);
             Component peer = getComponent(id);
-            trigger(new Disconnect(id, event.getNumToDisconnect()), 
+            trigger(new Disconnect(id, event.getNumToDisconnect()),
                     peer.getNegative(NatTraverserSimulatorPort.class));
         }
     };
@@ -171,7 +186,6 @@ public final class NatTraverserSimulator extends ComponentDefinition {
         return destNode.getAddress();
     }
 
-    
     Component getComponent(int id) {
         Component peer = privatePeers.get(id);
         if (peer == null) {
@@ -180,7 +194,6 @@ public final class NatTraverserSimulator extends ComponentDefinition {
         return peer;
     }
 
-    
     void connect(Integer src, Integer dest) {
         Component srcPeer = privatePeers.get(src);
         if (srcPeer == null) {
@@ -242,7 +255,8 @@ public final class NatTraverserSimulator extends ComponentDefinition {
         connect(natTraverser.getPositive(VodNetwork.class), peer.getNegative(VodNetwork.class));
         connect(natTraverser.getPositive(VodNetwork.class), croupier.getNegative(VodNetwork.class));
         connect(natGateway.getPositive(VodNetwork.class), natTraverser.getNegative(VodNetwork.class));
-        connect(natGateway.getNegative(VodNetwork.class), network, new MsgDestFilterNodeId(filterId)
+        connect(natGateway.getNegative(VodNetwork.class), network
+                , new MsgDestFilterNodeId(filterId)
         );
 
         connect(timer, peer.getNegative(Timer.class));
@@ -269,18 +283,17 @@ public final class NatTraverserSimulator extends ComponentDefinition {
         trigger(new NatTraverserInit(self,
                 servers,
                 seed,
-                NatTraverserConfiguration.build(),
-                HpClientConfiguration.build(),
-                RendezvousServerConfiguration.build().
-                setSessionExpirationTime(30 * 1000),
-                StunClientConfiguration.build(),
-                StunServerConfiguration.build(),
-                ParentMakerConfiguration.build(),
+                ntConfig,
+                hpClientConfig,
+                rendezvousServerConfig,
+                stunServerConfig,
+                stunClientConfig,
+                parentMakerConfig,
                 isOpen), natTraverser.control());
 
         trigger(new NtPeerInit(self.clone(NT_PEER_OVERLAY_ID)), peer.getControl());
         trigger(new CroupierInit(self.clone(VodConfig.SYSTEM_OVERLAY_ID),
-                CroupierConfiguration.build().setShufflePeriod(20 * 1000)), croupier.getControl());
+                croupierConfig), croupier.getControl());
 
         List<VodDescriptor> bootstrappers = new ArrayList<VodDescriptor>();
         if (server1 != null) {

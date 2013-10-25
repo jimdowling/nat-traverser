@@ -6,18 +6,26 @@ public class NtCompositeConfiguration extends CompositeConfiguration {
     ParentMakerConfiguration parentMakerConfig;
     HpClientConfiguration hpClientConfig;
     RendezvousServerConfiguration rendezvousServerConfig;
-    StunServerConfiguration stunClientConfig;
+    StunServerConfiguration stunServerConfig;
+    StunClientConfiguration stunClientConfig;
     NatConfiguration natConfig;
-    
+    CroupierConfiguration croupierConfig;
+
     public NtCompositeConfiguration() {
         natTraverserConfig = NatTraverserConfiguration.build();
-        parentMakerConfig = ParentMakerConfiguration.build();
+        parentMakerConfig = ParentMakerConfiguration.build().setNumParents(3);
         hpClientConfig = HpClientConfiguration.build();
         rendezvousServerConfig = RendezvousServerConfiguration.build().setNumChildren(1000);
-        stunClientConfig = StunServerConfiguration.build();
+        stunServerConfig = StunServerConfiguration.build();
+        stunClientConfig = StunClientConfiguration.build();
         natConfig = NatConfiguration.build();
+        croupierConfig = CroupierConfiguration.build().setShufflePeriod(10 * 1000);
     }
 
+    public CroupierConfiguration getCroupierConfig() {
+        return croupierConfig;
+    }
+    
     public NatTraverserConfiguration getNatTraverserConfig() {
         return natTraverserConfig;
     }
@@ -34,8 +42,12 @@ public class NtCompositeConfiguration extends CompositeConfiguration {
         return rendezvousServerConfig;
     }
 
-    public StunServerConfiguration getStunClientConfig() {
+    public StunClientConfiguration getStunClientConfig() {
         return stunClientConfig;
+    }
+    
+    public StunServerConfiguration getStunServerConfig() {
+        return stunServerConfig;
     }
 
     public NatConfiguration getNatConfig() {

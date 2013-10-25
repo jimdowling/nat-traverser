@@ -67,7 +67,6 @@ public class RendezvousServer extends MsgRetryComponent {
     int sessionExpirationTime;
     boolean throwException = false;
     private TimeoutId garbageCleanupTimeoutId;
-//    private int numChildren;
     RendezvousServerConfiguration config;
 
     public static class NoPortsException extends Exception {
@@ -217,7 +216,8 @@ public class RendezvousServer extends MsgRetryComponent {
             self = init.getSelf();
             registeredClients = init.getRegisteredClients();
 
-//            numChildren = init.getConfig().getNumChildren();
+            logger.info("Starting RendezvousServer with support for {} children", 
+                    init.getConfig().getNumChildren());
             config = init.getConfig();
             compName = "(" + self.getId() + ") ";
 

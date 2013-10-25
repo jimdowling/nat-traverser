@@ -309,16 +309,31 @@ public class HpFeasability {
                 isDirectConnectionOverNatPossible(clientA) ||
                 isDirectConnectionOverNatPossible(clientB)
                 ) {
-            if (clientA.isOpen() || isDirectConnectionOverNatPossible(clientA)) {
+            // Prefer to use open connections first, if not, then {EI-XX-EI} connections next.
+            if (clientA.isOpen()) {
                 logger.debug("One sided HP is feasible between [" + clientA + ", " + clientB + "]");
                 HolePunching holePunching = new HolePunching(clientA.getId(), clientB.getId(),
                         HPMechanism.CONNECTION_REVERSAL, /*Overall mechanism used*/
                         HPRole.CONNECTION_REVERSAL_OPEN,
                         HPRole.CONNECTION_REVERSAL_NAT);
                 return holePunching;
-            } else if (clientB.isOpen() || isDirectConnectionOverNatPossible(clientB)) {
+            } else if (clientB.isOpen()) {
+                logger.debug("One sided HP is feasible between [" + clientB + ", " + clientA + "]");
+                HolePunching holePunching = new HolePunching(clientA.getId(), clientB.getId(),
+                        HPMechanism.CONNECTION_REVERSAL, /*Overall mechanism used*/
+                        HPRole.CONNECTION_REVERSAL_NAT,
+                        HPRole.CONNECTION_REVERSAL_OPEN);
+                return holePunching;
+            } else if (isDirectConnectionOverNatPossible(clientA)) {
                 logger.debug("One sided HP is feasible between [" + clientA + ", " + clientB + "]");
                 HolePunching holePunching = new HolePunching(clientA.getId(), clientB.getId(),
+                        HPMechanism.CONNECTION_REVERSAL, /*Overall mechanism used*/
+                        HPRole.CONNECTION_REVERSAL_OPEN,
+                        HPRole.CONNECTION_REVERSAL_NAT);
+                return holePunching;
+            } else if (isDirectConnectionOverNatPossible(clientB)) {
+                logger.debug("One sided HP is feasible between [" + clientB + ", " + clientA + "]");
+                HolePunching holePunching = new HolePunching(clientA.getId(), clientB.getId(), 
                         HPMechanism.CONNECTION_REVERSAL, /*Overall mechanism used*/
                         HPRole.CONNECTION_REVERSAL_NAT,
                         HPRole.CONNECTION_REVERSAL_OPEN);

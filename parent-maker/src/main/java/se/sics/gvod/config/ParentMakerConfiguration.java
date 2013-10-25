@@ -6,10 +6,8 @@ public final class ParentMakerConfiguration
     /** 
      * Fields cannot be private. Package protected, ok.
      */
-    // number of parents per child
-    int numParents;
     // Max number of children per parent
-    int numChildren;
+    int numParents;
     
     // How often a child tries to update its parents
     int parentUpdatePeriod;
@@ -38,14 +36,12 @@ public final class ParentMakerConfiguration
      * Default constructor comes first.
      */
     public ParentMakerConfiguration() {
-        this(   
-                VodConfig.PM_NUM_PARENTS, 
-                VodConfig.PM_NUM_CHILDREN, 
+        this(   VodConfig.PM_NUM_PARENTS, 
                 VodConfig.PM_PARENT_UPDATE_PERIOD, 
                 VodConfig.PM_CHILDREN_REMOVE_TIMEOUT, 
                 VodConfig.PM_PARENT_KEEP_RTT_TOLERANCE,
                 VodConfig.DEFAULT_RTO_RETRIES, 
-                VodConfig.PM_PARENT_RTO, 
+                VodConfig.DEFAULT_RTO, 
                 VodConfig.DEFAULT_RTO_SCALE,
                 VodConfig.PM_PING_RTO_RETRIES, 
                 VodConfig.PM_PARENT_RTO,
@@ -55,15 +51,24 @@ public final class ParentMakerConfiguration
     
     /** 
      * Full argument constructor comes second. Contains seed from base class.
+     * @param numParents
+     * @param parentUpdatePeriod
+     * @param removeChildTimeout
+     * @param keepParentRttRange
+     * @param rtoRetries
+     * @param rto
+     * @param rtoScale
+     * @param numPingRetries
+     * @param pingRto
+     * @param pingRtoScale
      */
-    public ParentMakerConfiguration(int parentSize, int childSize, 
+    public ParentMakerConfiguration(int numParents, 
             int parentUpdatePeriod, 
             int removeChildTimeout, int keepParentRttRange, 
             int rtoRetries, int rto, double rtoScale,
             int numPingRetries, int pingRto, double pingRtoScale
             ) {
-        this.numParents = parentSize;
-        this.numChildren = childSize;
+        this.numParents = numParents;
         this.parentUpdatePeriod = parentUpdatePeriod;
         this.childRemoveTimeout = removeChildTimeout;
         this.keepParentRttRange = keepParentRttRange;
@@ -99,10 +104,6 @@ public final class ParentMakerConfiguration
         return this.numParents;
     }
 
-    public int getNumChildren() {
-        return this.numChildren;
-    }
-
     public int getParentUpdatePeriod() {
         return this.parentUpdatePeriod;
     }
@@ -116,18 +117,13 @@ public final class ParentMakerConfiguration
         return this;
     }
 
-    public ParentMakerConfiguration setNumChildren(int numChildren) {
-        this.numChildren = numChildren;
+    public ParentMakerConfiguration setNumParents(int numParents) {
+        this.numParents = numParents;
         return this;
     }
 
     public ParentMakerConfiguration setKeepParentRttRange(int keepParentRttRange) {
         this.keepParentRttRange = keepParentRttRange;
-        return this;
-    }
-
-    public ParentMakerConfiguration setNumParents(int numParents) {
-        this.numParents = numParents;
         return this;
     }
 
@@ -177,6 +173,5 @@ public final class ParentMakerConfiguration
         this.pingRtoScale = pingRtoScale;
         return this;
     }
-
     
 }

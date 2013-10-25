@@ -25,12 +25,14 @@ public abstract class CompositeConfiguration {
     public void store() throws IOException {
 
         Field[] fields = getClass().getDeclaredFields();
+        int numAbstractConfigs = 0;
         for (Field f : fields) {
             try {
                 Object o = f.get(this);
                 if (o instanceof AbstractConfiguration) {
                     AbstractConfiguration configuration = (AbstractConfiguration) o;
                     configuration.store();
+                    numAbstractConfigs++;
                 }
             } catch (IllegalArgumentException ex) {
                 throw new IOException(ex.getMessage());
@@ -38,6 +40,12 @@ public abstract class CompositeConfiguration {
                 throw new IOException(ex.getMessage());
             }
         }
+        if (numAbstractConfigs == 0) {
+            throw new IllegalArgumentException("There are no Configuration objects defined inside this CompositeConfiguration. "
+                    + "You must define AbstractConfiguration objects inside"
+                    + "the compositeConfiguration object");
+        }
+        
     }
 
     public static CompositeConfiguration load(Class<? extends CompositeConfiguration> type)

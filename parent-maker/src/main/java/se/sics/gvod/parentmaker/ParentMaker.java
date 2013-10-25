@@ -368,7 +368,8 @@ public class ParentMaker extends MsgRetryComponent {
                     timeoutId);
             connections.put(parent, connection);
             self.addParent(parent.getPeerAddress());
-            logger.info(compName + "added new parent. Now: " + getParentsAsStr());
+            logger.info(compName + "added new parent: {}. Now: " + getParentsAsStr(),
+                    parent.getId());
 
             NatReporter.report(delegator, network, self.getAddress(),
                     self.getPort(), parent,
@@ -525,54 +526,59 @@ public class ParentMaker extends MsgRetryComponent {
         public void handle(HpRegisterMsg.Response msg) {
 
             outstandingParentRequests.remove(msg.getSource().getId());
+            delegator.doCancelRetry(msg.getTimeoutId());
             // discard duplicate responses or late responses - unless I don't have any parents
-            if (delegator.doCancelRetry(msg.getTimeoutId()) || connections.isEmpty()) {
-                CroupierStats.instance(self.clone(VodConfig.SYSTEM_OVERLAY_ID)).parentChangeEvent(msg.getSource(),
-                        msg.getResponseType());
-                outstandingBids = false;
-                Address peer = msg.getSource();
-                TimeoutId id = msg.getTimeoutId();
-                Long startTime = requestStartTimes.remove(id);
-                long rtt = System.currentTimeMillis() - startTime;
+            CroupierStats.instance(self.clone(VodConfig.SYSTEM_OVERLAY_ID)).parentChangeEvent(msg.getSource(),
+                    msg.getResponseType());
+            outstandingBids = false;
+            Address peer = msg.getSource();
+            TimeoutId id = msg.getTimeoutId();
+            Long startTime = requestStartTimes.remove(id);
+            long rtt = VodConfig.DEFAULT_RTO;
+            if (startTime != null) {
+                rtt = System.currentTimeMillis() - startTime;
                 RTTStore.addSample(self.getId(), msg.getVodSource(), rtt);
-                if (msg.getResponseType() == HpRegisterMsg.RegisterStatus.REJECT) {
-                    rejections.put(peer, System.currentTimeMillis());
-                    logger.debug(compName + "Parent {} rejected client request",
-                            peer);
-                    // free-up the ports that were allocated
-                    if (self.getNat().preallocatePorts()) {
-                        for (int p : msg.getPrpPorts()) {
-                            removePortFromParent(msg.getVodSource().getId(), p);
-                        }
-                        unbindPorts(msg.getPrpPorts());
+            }
+            if (msg.getResponseType() == HpRegisterMsg.RegisterStatus.REJECT) {
+                rejections.put(peer, System.currentTimeMillis());
+                logger.debug(compName + "Parent {} rejected client request",
+                        peer);
+                // free-up the ports that were allocated
+                if (self.getNat().preallocatePorts()) {
+                    for (int p : msg.getPrpPorts()) {
+                        removePortFromParent(msg.getVodSource().getId(), p);
                     }
-                } else if (msg.getResponseType() == HpRegisterMsg.RegisterStatus.ACCEPT) {
+                    unbindPorts(msg.getPrpPorts());
+                }
+            } else if (msg.getResponseType() == HpRegisterMsg.RegisterStatus.ACCEPT) {
+                addParentRtt(msg, rtt);
+            } else if (msg.getResponseType() == HpRegisterMsg.RegisterStatus.ALREADY_REGISTERED) {
+                if (!isParent(msg.getVodSource())) {
                     addParentRtt(msg, rtt);
-                } else if (msg.getResponseType() == HpRegisterMsg.RegisterStatus.ALREADY_REGISTERED) {
-                    if (!isParent(msg.getVodSource())) {
-                        addParentRtt(msg, rtt);
-                    }
-                } else {
-                    logger.warn(compName + "Parent {} client request failed due to "
-                            + msg.getResponseType(), peer);
-                    if (self.getNat().preallocatePorts()) {
-                        for (int p : msg.getPrpPorts()) {
-                            removePortFromParent(msg.getVodSource().getId(), p);
-                        }
-                        unbindPorts(msg.getPrpPorts());
-                    }
                 }
             } else {
-                logger.warn(compName + "cancelRetry for ParentRequest failed");
-                // send unregister request to parent, as I don't want it as my parent.
-                HpUnregisterMsg.Request req = new HpUnregisterMsg.Request(self.getAddress(),
-                        msg.getVodSource(), 0, HpRegisterMsg.RegisterStatus.PARENT_REQUEST_FAILED);
-                delegator.doRetry(req, config.getRto(), config.getRtoRetries());
+                logger.warn(compName + "Parent {} client request failed due to "
+                        + msg.getResponseType(), peer);
                 if (self.getNat().preallocatePorts()) {
+                    for (int p : msg.getPrpPorts()) {
+                        removePortFromParent(msg.getVodSource().getId(), p);
+                    }
+                    unbindPorts(msg.getPrpPorts());
                 }
-                CroupierStats.instance(self.clone(VodConfig.SYSTEM_OVERLAY_ID)).parentChangeEvent(msg.getSource(),
-                        HpRegisterMsg.RegisterStatus.PARENT_REQUEST_FAILED);
             }
+//            } else {
+//                logger.warn(compName + "cancelRetry for ParentRequest failed for: {}. TimeoutId: {}. Current parents: "
+//                + getParentsAsStr() + " reason: " + msg.getResponseType(), msg.getVodSource().getId(), 
+//                msg.getTimeoutId().getId());
+            // send unregister request to parent, as I don't want it as my parent.
+//                HpUnregisterMsg.Request req = new HpUnregisterMsg.Request(self.getAddress(),
+//                        msg.getVodSource(), 0, HpRegisterMsg.RegisterStatus.PARENT_REQUEST_FAILED);
+//                delegator.doRetry(req, config.getRto(), config.getRtoRetries());
+//                if (self.getNat().preallocatePorts()) {
+//                }
+//                CroupierStats.instance(self.clone(VodConfig.SYSTEM_OVERLAY_ID)).parentChangeEvent(msg.getSource(),
+//                        HpRegisterMsg.RegisterStatus.PARENT_REQUEST_FAILED);
+//            }
 
         }
     };
@@ -802,10 +808,10 @@ public class ParentMaker extends MsgRetryComponent {
     }
 
     /**
-     * zServer tells me that it is using a PRP port. Delete it locally from my connections.
-     * use this info when changing parent.
-     * 
-     * 
+     * zServer tells me that it is using a PRP port. Delete it locally from my
+     * connections. use this info when changing parent.
+     *
+     *
      */
     Handler<PRP_ConnectMsg.Response> handlePRP_PortUsedByParent = new Handler<PRP_ConnectMsg.Response>() {
         @Override

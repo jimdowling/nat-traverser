@@ -120,7 +120,7 @@ public class VodConfig extends BaseCommandLineConfig {
     public static int PM_PARENT_UPDATE_PERIOD = 60 * 1000;
     public static int PM_NUM_PARENTS = 3;
     public static int PM_PARENT_KEEP_RTT_TOLERANCE = 20;
-    public static int PM_NUM_CHILDREN = 1000;
+    public static int PM_NUM_CHILDREN = 100;
     public static int PM_CHILDREN_REMOVE_TIMEOUT = 0 * 1000;
     public static int PM_PARENT_TIMEOUT_DELAY = 4 * 1000;
     public static int PM_PARENT_REJECTED_CLEANUP_TIMEOUT = 300 * 1000;

@@ -21,8 +21,8 @@ public final class NatTraverserInit extends Init {
     private final ParentMakerConfiguration parentMakerConfig;
     private final HpClientConfiguration hpClientConfig;
     private final RendezvousServerConfiguration rendezvousServerConfig;
-    private final StunClientConfiguration stunClientConfig;
     private final StunServerConfiguration stunServerConfig;
+    private final StunClientConfiguration stunClientConfig;
     private boolean openServer;
 
     public NatTraverserInit(Self self,
@@ -31,8 +31,8 @@ public final class NatTraverserInit extends Init {
         this(self, publicNodes, seed, NatTraverserConfiguration.build(),
                 HpClientConfiguration.build(),
                 RendezvousServerConfiguration.build(),
-                StunClientConfiguration.build(),
                 StunServerConfiguration.build(),
+                StunClientConfiguration.build(),
                 ParentMakerConfiguration.build(),
                 false);
     }
@@ -43,8 +43,8 @@ public final class NatTraverserInit extends Init {
             NatTraverserConfiguration natTraverserConfig,
             HpClientConfiguration hpClientConfig,
             RendezvousServerConfiguration rendezvousServerConfig,
-            StunClientConfiguration stunClientConfig,
             StunServerConfiguration stunServerConfig,
+            StunClientConfiguration stunClientConfig,
             ParentMakerConfiguration parentMakerConfig,
             boolean openServer) {
         assert (self != null);

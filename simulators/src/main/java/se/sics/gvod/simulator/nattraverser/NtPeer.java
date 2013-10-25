@@ -13,6 +13,7 @@ import se.sics.gvod.timer.Timer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import se.sics.gvod.common.Self;
+import se.sics.gvod.common.hp.HpFeasability;
 import se.sics.gvod.common.util.NatStr;
 import se.sics.gvod.hp.msgs.TConnectionMsg;
 import se.sics.gvod.nat.traversal.NatTraverserPort;
@@ -147,18 +148,18 @@ public final class NtPeer extends ComponentDefinition {
         }
     };
 
-    private Handler<HpFailed> handleHpFailed = new Handler<HpFailed>() {
+    private final Handler<HpFailed> handleHpFailed = new Handler<HpFailed>() {
         @Override
         public void handle(HpFailed event) {
+            VodAddress dest = event.getHpFailedDestNode();
             if (activeMsgs.containsKey(event.getMsgTimeoutId())) {
                 trigger(new CancelTimeout(event.getMsgTimeoutId()), timer);
-                logger.debug("HP failed. " + event.getResponseType() + " - "
-                        + NatStr.pairAsStr(self.getNat(), activeMsgs.get(event.getMsgTimeoutId())));
-
-                VodAddress dest = event.getHpFailedDestNode();
                 trigger(new ConnectionResult(self.getAddress(), dest, NatStr.pairAsStr(self.getNat(), dest.getNat()), false), ntsPort);
                 neighbours.remove(dest);
             }
+            logger.debug("HP failed. " + event.getResponseType()
+                    + " mechanism: " + HpFeasability.isPossible(self.getAddress(), dest).toString()
+                    + " - " + NatStr.pairAsStr(self.getNat(), activeMsgs.get(event.getMsgTimeoutId())));
         }
     };
 }
