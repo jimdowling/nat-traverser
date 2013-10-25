@@ -11,6 +11,7 @@ import se.sics.gvod.simulator.common.PeerJoin;
 import se.sics.gvod.simulator.common.StartCollectData;
 import se.sics.gvod.simulator.common.StopCollectData;
 import se.sics.gvod.simulator.nattraverser.ConnectPeers;
+import se.sics.gvod.simulator.nattraverser.Disconnect;
 import se.sics.kompics.p2p.experiment.dsl.adaptor.Operation;
 import se.sics.kompics.p2p.experiment.dsl.adaptor.Operation1;
 import se.sics.kompics.p2p.experiment.dsl.adaptor.Operation2;
@@ -56,6 +57,16 @@ public class Operations {
             @Override
             public ConnectPeers generate(Long src, Long dest) {
                 return new ConnectPeers(src.intValue(), dest.intValue());
+            }
+        };
+    }
+    
+    static Operation2<Disconnect, Long, Long> disconnectPeers() {
+        return new Operation2<Disconnect, Long, Long>() {
+
+            @Override
+            public Disconnect generate(Long src, Long dest) {
+                return new Disconnect(src.intValue(), dest.intValue());
             }
         };
     }

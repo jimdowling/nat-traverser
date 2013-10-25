@@ -14,6 +14,7 @@ import java.util.Set;
 import java.util.TreeSet;
 import se.sics.gvod.timer.TimeoutId;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListSet;
 import se.sics.kompics.Negative;
 import se.sics.kompics.Positive;
 import se.sics.gvod.timer.Timer;
@@ -22,7 +23,6 @@ import org.slf4j.LoggerFactory;
 import se.sics.gvod.address.Address;
 import se.sics.gvod.common.RTTStore;
 import se.sics.gvod.common.RTTStore.RTT;
-import se.sics.gvod.common.RetryComponentDelegator;
 import se.sics.gvod.common.Self;
 import se.sics.gvod.common.VodDescriptor;
 import se.sics.gvod.config.VodConfig;
@@ -45,7 +45,7 @@ import se.sics.gvod.nat.hp.rs.RendezvousServer.RegisteredClientRecord;
 import se.sics.gvod.config.RendezvousServerConfiguration;
 import se.sics.gvod.nat.hp.rs.RendezvousServerInit;
 import se.sics.gvod.nat.traversal.events.ConnectionEstablishmentTimeout;
-import se.sics.gvod.nat.traversal.events.CloseOpenConnection;
+import se.sics.gvod.nat.traversal.events.DisconnectNeighbour;
 import se.sics.gvod.nat.traversal.events.StartServices;
 import se.sics.gvod.net.Nat;
 import se.sics.gvod.net.VodAddress;
@@ -83,7 +83,6 @@ import se.sics.gvod.common.util.NatStr;
 import se.sics.gvod.common.util.CachedNatType;
 import se.sics.gvod.config.BaseCommandLineConfig;
 import se.sics.gvod.config.StunServerConfiguration;
-import se.sics.gvod.net.events.PortDeleteRequest;
 import se.sics.gvod.parentmaker.ParentMakerPort;
 import se.sics.gvod.stun.msgs.EchoChangePortMsg;
 import se.sics.kompics.ComponentDefinition;
@@ -159,8 +158,8 @@ public class NatTraverser extends ComponentDefinition {
      * when parents allocate them to clients to talk to this node.
      * This data structure is used to garbage-collect those ports and clean-up.
      */
-    private ConcurrentHashMap<Integer,Set<Integer>> parentPorts 
-            = new ConcurrentHashMap<Integer,Set<Integer>>();
+    private ConcurrentSkipListSet<Integer> parentPorts 
+            = new ConcurrentSkipListSet<Integer>();
     
     class ServersInitTimeout extends Timeout {
 
@@ -226,7 +225,7 @@ public class NatTraverser extends ComponentDefinition {
         subscribe(handleInit, control);
         subscribe(handleStop, control);
 
-        subscribe(handleDeleteOpenConnection, natTraverserPort);
+        subscribe(handleDisconnectNeighbour, natTraverserPort);
         subscribe(handleStartServices, natTraverserPort);
         subscribe(handleConnectionEstablishmentTimeout, timer);
 
@@ -438,9 +437,9 @@ public class NatTraverser extends ComponentDefinition {
             sendDownDirectMsg(msg);
         }
     };
-    Handler<CloseOpenConnection> handleDeleteOpenConnection = new Handler<CloseOpenConnection>() {
+    Handler<DisconnectNeighbour> handleDisconnectNeighbour = new Handler<DisconnectNeighbour>() {
         @Override
-        public void handle(CloseOpenConnection event) {
+        public void handle(DisconnectNeighbour event) {
             closeConnection(event.getRemoteId());
         }
     };

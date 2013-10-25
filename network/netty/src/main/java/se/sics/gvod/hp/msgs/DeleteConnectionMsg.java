@@ -43,7 +43,6 @@ public class DeleteConnectionMsg extends HpMsg.Oneway {
     public RewriteableMsg copy() {
         DeleteConnectionMsg copy = new DeleteConnectionMsg(vodSrc, vodDest, remoteClientId,
                 msgTimeoutId);
-        copy.setTimeoutId(timeoutId);
         return copy;
     }
 }

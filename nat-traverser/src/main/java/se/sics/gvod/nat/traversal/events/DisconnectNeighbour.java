@@ -9,10 +9,10 @@ import se.sics.kompics.Event;
  * @author Jim
  */
 
-public final class CloseOpenConnection extends Event
+public final class DisconnectNeighbour extends Event
 {
     private final int remoteId;
-    public CloseOpenConnection(int remoteId)
+    public DisconnectNeighbour(int remoteId)
     {
         this.remoteId = remoteId;
     }

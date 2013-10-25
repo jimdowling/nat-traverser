@@ -7,7 +7,6 @@ package se.sics.gvod.parentmaker.evts;
 import se.sics.gvod.net.VodAddress;
 import se.sics.gvod.net.events.PortAllocRequest;
 import se.sics.gvod.net.events.PortAllocResponse;
-import se.sics.gvod.timer.TimeoutId;
 
 /**
  *

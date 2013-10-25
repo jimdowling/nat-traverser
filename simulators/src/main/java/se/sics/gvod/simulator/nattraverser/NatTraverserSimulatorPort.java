@@ -5,6 +5,7 @@ import se.sics.kompics.PortType;
 import se.sics.kompics.p2p.experiment.dsl.events.TerminateExperiment;
 
 public class NatTraverserSimulatorPort extends PortType {{
+	positive(Disconnect.class);
 	positive(ConnectPeers.class);
 	positive(Connect.class);
 	negative(ConnectionResult.class);

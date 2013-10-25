@@ -30,7 +30,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Random;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListSet;
 import se.sics.gvod.timer.TimeoutId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,9 +60,9 @@ import se.sics.gvod.net.Transport;
 import se.sics.gvod.net.VodAddress;
 import se.sics.gvod.net.events.PortAllocRequest;
 import se.sics.gvod.net.events.PortDeleteRequest;
+import se.sics.gvod.net.events.PortDeleteResponse;
 import se.sics.gvod.net.msgs.ScheduleRetryTimeout;
 import se.sics.gvod.net.util.NatReporter;
-import se.sics.gvod.parentmaker.evts.PrpDeletePortsResponse;
 import se.sics.gvod.parentmaker.evts.PrpMorePortsResponse;
 import se.sics.gvod.parentmaker.evts.PrpPortsResponse;
 import se.sics.gvod.timer.*;
@@ -72,7 +72,30 @@ import se.sics.kompics.Stop;
 import se.sics.kompics.Positive;
 
 /**
+ * Private nodes (behind a NAT) require 'k' parent nodes so that other nodes are
+ * able to talk to them, either via relaying or hole-punched connections. Parent
+ * nodes can be any public node (node not behind a NAT) in the system. Private
+ * nodes have to find public nodes, normally by discovering public nodes with a
+ * peer sampling service, and then ask them to be their parent (send a
+ * HpRegisterMsg.Request to the parent. The parent's RendezvousServer component
+ * handles the request, and sends a HpRegisterMsg.Response, agreeing to be the
+ * parent or not. If a parent agrees to take on a child (the private node), the
+ * child starts heartbeating to the parent (KeepAliveMsg.Ping/Pong) to make sure
+ * its NAT binding to the parent is always refreshed (otherwise it will timeout
+ * and the parent won't be able to send msgs to the child).
  *
+ * A parent can tell a child to disconnect (HpUnregisterMsg.Request) and a child
+ * can change a parent, also sending the parent the same HpUnregisterMsg.Request
+ * msg. Children swap out a parent with a new parent if the RTT to the new
+ * parent is considerably better than the old parent. RTTStore is used to get
+ * the RTT times to parents.
+ *
+ * For private nodes with PRP-type NATs, they send a set of available ports to
+ * the parent, so that when other nodes want to talk to this private node, the
+ * parent can tell them directly what port they should use to talk to the child.
+ *
+ * Parents can be black-listed for a short amount of time if
+ * HpRegisterMsg.Request msgs to them fail a number of times.
  */
 public class ParentMaker extends MsgRetryComponent {
 
@@ -99,7 +122,8 @@ public class ParentMaker extends MsgRetryComponent {
      * component a PRP_preallocatePortMsg.Request, which allocates more
      * ports and sends them back to the parent.
      */
-    private ConcurrentHashMap<Integer, Set<Integer>> parentPorts;
+    ConcurrentSkipListSet<Integer> portsInUse;
+    Map<Integer, Set<Integer>> portsAssignedToParent = new HashMap<Integer, Set<Integer>>();
 
     class Connection {
 
@@ -178,7 +202,7 @@ public class ParentMaker extends MsgRetryComponent {
             self = init.getSelf();
             compName = "PM(" + self.getId() + ") ";
             config = init.getConfig();
-            parentPorts = init.getParentPorts();
+            portsInUse = init.getBoundPorts();
             VodConfig.PM_NUM_PARENTS = config.getNumParents();
             if (!self.isOpen()) {
                 needParentsRoundTimeout = init.getConfig().getParentUpdatePeriod();
@@ -382,9 +406,9 @@ public class ParentMaker extends MsgRetryComponent {
             // will now fail.
             NatReporter.report(delegator, network, self.getAddress(),
                     self.getPort(), parent, true, 0,
-                    "Parent removed with numPorts deleted: " + parentPorts.get(parent.getId()));
+                    "Parent removed with numPorts deleted: " + portsAssignedToParent.get(parent.getId()));
             logger.info(compName + "removing parent. Now: " + getParentsAsStr());
-            deletePorts(parent.getId());
+            deleteParentPorts(parent.getId());
 
         } else {
             logger.warn(compName + "Tried to remove non-existant parent: " + parent.getId());
@@ -392,12 +416,7 @@ public class ParentMaker extends MsgRetryComponent {
         }
         self.removeParent(parent.getPeerAddress());
     }
-    Handler<PrpDeletePortsResponse> handlePrpDeletePortsResponse = new Handler<PrpDeletePortsResponse>() {
-        @Override
-        public void handle(PrpDeletePortsResponse event) {
-            // nothing to do
-        }
-    };
+
     Handler<KeepBindingOpenTimeout> handleKeepBindingOpenTimeout = new Handler<KeepBindingOpenTimeout>() {
         @Override
         public void handle(KeepBindingOpenTimeout event) {
@@ -465,18 +484,22 @@ public class ParentMaker extends MsgRetryComponent {
     private void sendRequest(VodAddress hpServer, long rtt, Set<Integer> prpPorts) {
         if (connections.containsKey(hpServer)) {
             logger.debug(compName + " trying to re-add the parent: " + hpServer);
+            deletePorts(prpPorts);
             return;
         }
 
         if (outstandingParentRequests.contains(hpServer.getId())) {
             logger.trace(compName + " connection request already ongoing for the parent: " + hpServer);
+            deletePorts(prpPorts);
             return;
         }
 
         if (hpServer.getId() == self.getId()) {
             logger.debug(compName + " trying to add myself as a parent.");
+            deletePorts(prpPorts);
             return;
         }
+
         if (hpServer.getPort() == VodConfig.DEFAULT_STUN_PORT
                 || hpServer.getPort() == VodConfig.DEFAULT_STUN_PORT_2) {
             logger.debug(compName + " tried to send a parent request to a Stun Server");
@@ -494,71 +517,97 @@ public class ParentMaker extends MsgRetryComponent {
         logger.debug(compName + "HpRegisterMsg.Request sent to " + hpServer);
         requestStartTimes.put(id, System.currentTimeMillis());
         outstandingParentRequests.add(hpServer.getId());
-        parentPorts.put(hpServer.getId(), prpPorts);
+        addPortsToParent(hpServer.getId(), prpPorts);
     }
+
     Handler<HpRegisterMsg.Response> handleHpRegisterMsgResponse = new Handler<HpRegisterMsg.Response>() {
         @Override
-        public void handle(HpRegisterMsg.Response event) {
+        public void handle(HpRegisterMsg.Response msg) {
 
-            outstandingParentRequests.remove(event.getSource().getId());
+            outstandingParentRequests.remove(msg.getSource().getId());
             // discard duplicate responses or late responses - unless I don't have any parents
-            if (delegator.doCancelRetry(event.getTimeoutId()) || connections.isEmpty()) {
-                CroupierStats.instance(self.clone(VodConfig.SYSTEM_OVERLAY_ID)).parentChangeEvent(event.getSource(),
-                        event.getResponseType());
+            if (delegator.doCancelRetry(msg.getTimeoutId()) || connections.isEmpty()) {
+                CroupierStats.instance(self.clone(VodConfig.SYSTEM_OVERLAY_ID)).parentChangeEvent(msg.getSource(),
+                        msg.getResponseType());
                 outstandingBids = false;
-                Address peer = event.getSource();
-                TimeoutId id = event.getTimeoutId();
+                Address peer = msg.getSource();
+                TimeoutId id = msg.getTimeoutId();
                 Long startTime = requestStartTimes.remove(id);
                 long rtt = System.currentTimeMillis() - startTime;
-                RTTStore.addSample(self.getId(), event.getVodSource(), rtt);
-                if (event.getResponseType() == HpRegisterMsg.RegisterStatus.REJECT) {
+                RTTStore.addSample(self.getId(), msg.getVodSource(), rtt);
+                if (msg.getResponseType() == HpRegisterMsg.RegisterStatus.REJECT) {
                     rejections.put(peer, System.currentTimeMillis());
                     logger.debug(compName + "Parent {} rejected client request",
                             peer);
                     // free-up the ports that were allocated
                     if (self.getNat().preallocatePorts()) {
-                        PortDeleteRequest dReq = new PortDeleteRequest(self.getId(), event.getPrpPorts());
-                        dReq.setResponse(new PrpDeletePortsResponse(dReq, null));
-                        trigger(dReq, natNetworkControl);
+                        for (int p : msg.getPrpPorts()) {
+                            removePortFromParent(msg.getVodSource().getId(), p);
+                        }
+                        unbindPorts(msg.getPrpPorts());
                     }
-                } else if (event.getResponseType() == HpRegisterMsg.RegisterStatus.ACCEPT) {
-                    addParentRtt(event, rtt);
-                } else if (event.getResponseType() == HpRegisterMsg.RegisterStatus.ALREADY_REGISTERED) {
-                    if (!isParent(event.getVodSource())) {
-                        addParentRtt(event, rtt);
+                } else if (msg.getResponseType() == HpRegisterMsg.RegisterStatus.ACCEPT) {
+                    addParentRtt(msg, rtt);
+                } else if (msg.getResponseType() == HpRegisterMsg.RegisterStatus.ALREADY_REGISTERED) {
+                    if (!isParent(msg.getVodSource())) {
+                        addParentRtt(msg, rtt);
                     }
                 } else {
                     logger.warn(compName + "Parent {} client request failed due to "
-                            + event.getResponseType(), peer);
+                            + msg.getResponseType(), peer);
                     if (self.getNat().preallocatePorts()) {
-                        PortDeleteRequest dReq = new PortDeleteRequest(self.getId(), event.getPrpPorts());
-                        dReq.setResponse(new PrpDeletePortsResponse(dReq, null));
-                        trigger(dReq, natNetworkControl);
+                        for (int p : msg.getPrpPorts()) {
+                            removePortFromParent(msg.getVodSource().getId(), p);
+                        }
+                        unbindPorts(msg.getPrpPorts());
                     }
                 }
             } else {
                 logger.warn(compName + "cancelRetry for ParentRequest failed");
                 // send unregister request to parent, as I don't want it as my parent.
                 HpUnregisterMsg.Request req = new HpUnregisterMsg.Request(self.getAddress(),
-                        event.getVodSource(), 0, HpRegisterMsg.RegisterStatus.PARENT_REQUEST_FAILED);
+                        msg.getVodSource(), 0, HpRegisterMsg.RegisterStatus.PARENT_REQUEST_FAILED);
                 delegator.doRetry(req, config.getRto(), config.getRtoRetries());
                 if (self.getNat().preallocatePorts()) {
                 }
-                CroupierStats.instance(self.clone(VodConfig.SYSTEM_OVERLAY_ID)).parentChangeEvent(event.getSource(),
+                CroupierStats.instance(self.clone(VodConfig.SYSTEM_OVERLAY_ID)).parentChangeEvent(msg.getSource(),
                         HpRegisterMsg.RegisterStatus.PARENT_REQUEST_FAILED);
             }
 
         }
     };
 
-    private void deletePorts(int id) {
-        Set<Integer> ports = parentPorts.remove(id);
+    private void deletePorts(Set<Integer> ports) {
+        if (!ports.isEmpty()) {
+            for (Integer p : ports) {
+                portsInUse.remove(p);
+            }
+            PortDeleteRequest req = new PortDeleteRequest(self.getId(), ports);
+            req.setResponse(new PortDeleteResponse(req, self.getId()) {
+            });
+            trigger(req, natNetworkControl);
+        }
+    }
+
+    private void deleteParentPorts(int parentId) {
+        Set<Integer> ports = portsAssignedToParent.remove(parentId);
         if (ports != null) {
-            PortDeleteRequest pdr = new PortDeleteRequest(self.getId(), ports);
-            pdr.setResponse(new PrpDeletePortsResponse(pdr, null));
-            trigger(pdr, natNetworkControl);
+
+            // don't unbind ports that are busy (allocated in HpClient)
+            Set<Integer> portsBusy = new HashSet<Integer>();
+            for (Integer p : ports) {
+                if (portsInUse.contains(p)) {
+                    portsBusy.add(p);
+                }
+            }
+            ports.removeAll(portsBusy);
+            // Now actually unbind the ports using Netty
+            PortDeleteRequest req = new PortDeleteRequest(self.getId(), ports);
+            req.setResponse(new PortDeleteResponse(req, self.getId()) {
+            });
+            trigger(req, natNetworkControl);
         } else {
-            logger.warn("Couldn't find ports to delete for parent: " + id);
+            logger.warn("Couldn't find ports to delete for parent: " + parentId);
         }
     }
 
@@ -583,6 +632,7 @@ public class ParentMaker extends MsgRetryComponent {
             }
         }
     }
+
     Handler<HpRegisterMsg.RequestRetryTimeout> handleHpRegisterMsgRequestTimeout
             = new Handler<HpRegisterMsg.RequestRetryTimeout>() {
                 @Override
@@ -598,11 +648,12 @@ public class ParentMaker extends MsgRetryComponent {
                         rejections.put(event.getMsg().getDestination(), System.currentTimeMillis());
                         logger.warn(compName + "timeout HpRegisterReq {}",
                                 event.getMsg().getDestination());
+                        // free-up the ports that were allocated
                         if (self.getNat().preallocatePorts()) {
-                            PortDeleteRequest pdr
-                            = new PortDeleteRequest(self.getId(), event.getRequest().getPrpPorts());
-                            pdr.setResponse(new PrpDeletePortsResponse(pdr, null));
-                            trigger(pdr, natNetworkControl);
+                            for (int p : event.getRequest().getPrpPorts()) {
+                                removePortFromParent(event.getRequest().getVodDestination().getId(), p);
+                            }
+                            unbindPorts(event.getRequest().getPrpPorts());
                         }
                     }
                 }
@@ -620,6 +671,7 @@ public class ParentMaker extends MsgRetryComponent {
                     }
                 }
             };
+
     Handler<HpUnregisterMsg.Request> handleUnregisterParentRequest
             = new Handler<HpUnregisterMsg.Request>() {
                 @Override
@@ -649,6 +701,7 @@ public class ParentMaker extends MsgRetryComponent {
         }
         return sb.toString();
     }
+
     Handler<PRP_PreallocatedPortsMsg.Request> handlePRP_PreallocatedPortsMsg = new Handler<PRP_PreallocatedPortsMsg.Request>() {
         @Override
         public void handle(PRP_PreallocatedPortsMsg.Request request) {
@@ -694,35 +747,73 @@ public class ParentMaker extends MsgRetryComponent {
                     delegator.doTrigger(resp, network);
                 }
             };
+
     Handler<PrpPortsResponse> handlePrpPortsResponse = new Handler<PrpPortsResponse>() {
         @Override
         public void handle(PrpPortsResponse response) {
             long rtt = (connections.isEmpty() && !outstandingBids) ? 0
                     : response.getRto();
+            for (Integer p : response.getAllocatedPorts()) {
+                portsInUse.add(p);
+            }
+
             sendRequest(response.getServer(), rtt, response.getAllocatedPorts());
         }
     };
 
-    private void removeParentPort(int parentId, int port) {
-        Set<Integer> ports = parentPorts.get(parentId);
-        Set<Integer> updatedPorts = new HashSet<Integer>();
-        updatedPorts.addAll(ports);
-        updatedPorts.remove(port);
-        if (updatedPorts.isEmpty()) {
-            parentPorts.remove(parentId);
-        } else {
-            parentPorts.put(parentId, updatedPorts);
+    private void addPortsToParent(int parentId, Set<Integer> portsToAdd) {
+        // These ports are now assigned to the parent - they are not 'in use'
+        portsInUse.removeAll(portsToAdd);
+
+        if (!portsToAdd.isEmpty()) {
+            Set<Integer> ports = portsAssignedToParent.get(parentId);
+            if (ports == null) {
+                ports = new HashSet<Integer>();
+            }
+            ports.addAll(portsToAdd);
+            portsAssignedToParent.put(parentId, ports);
         }
     }
 
-    // zServer tells me that it is using a PRP port. Delete it locally from my connections.
-    // use this info when changing parent.
+    private void unbindPorts(Set<Integer> ports) {
+        if (!ports.isEmpty()) {
+            PortDeleteRequest req = new PortDeleteRequest(self.getId(), ports);
+            req.setResponse(new PortDeleteResponse(req, self.getId()) {
+            });
+            trigger(req, natNetworkControl);
+        }
+    }
+
+    private void removePortFromParent(int parentId, int port) {
+        Set<Integer> ports = portsAssignedToParent.get(parentId);
+        if (ports != null) {
+            Set<Integer> updatedPorts = new HashSet<Integer>();
+            updatedPorts.addAll(ports);
+            updatedPorts.remove(port);
+            if (updatedPorts.isEmpty()) {
+                portsInUse.remove(parentId);
+            } else {
+                portsAssignedToParent.put(parentId, updatedPorts);
+            }
+        } else {
+            logger.warn("Tried to remove port {} from parent {}, but was null", port,
+                    parentId);
+        }
+    }
+
+    /**
+     * zServer tells me that it is using a PRP port. Delete it locally from my connections.
+     * use this info when changing parent.
+     * 
+     * 
+     */
     Handler<PRP_ConnectMsg.Response> handlePRP_PortUsedByParent = new Handler<PRP_ConnectMsg.Response>() {
         @Override
         public void handle(PRP_ConnectMsg.Response response) {
-            removeParentPort(response.getClientId(), response.getPortToUse());
+            removePortFromParent(response.getClientId(), response.getPortToUse());
         }
     };
+
     Handler<CroupierSample> handleCroupierSample = new Handler<CroupierSample>() {
         @Override
         public void handle(CroupierSample event) {

@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.Semaphore;
 import java.util.logging.Level;
 import junit.framework.Test;
@@ -747,8 +748,8 @@ public class HolePunchingTest
 
                 // initialze two hole punching clients. one for node a and other for node b
                 Self self = new SelfNoParents(a);
-                ConcurrentHashMap<Integer,Set<Integer>> parentPorts = 
-                new ConcurrentHashMap<Integer,Set<Integer>>();
+                ConcurrentSkipListSet<Integer> parentPorts = 
+                new ConcurrentSkipListSet<Integer>();
                 
 
                 RTTStore.addSample(a.getId(), z1, 100);
@@ -821,8 +822,8 @@ public class HolePunchingTest
                 RTTStore.addSample(b.getId(), z1, 100);
                 RTTStore.addSample(b.getId(), z2, 200);
                 RTTStore.addSample(b.getId(), z3, 300);
-                ConcurrentHashMap<Integer,Set<Integer>> parentPorts = 
-                new ConcurrentHashMap<Integer,Set<Integer>>();
+                ConcurrentSkipListSet<Integer> parentPorts = 
+                new ConcurrentSkipListSet<Integer>();
                 trigger(new ParentMakerInit(self, 
                         ParentMakerConfiguration.build()
                         .setParentUpdatePeriod(30*1000)

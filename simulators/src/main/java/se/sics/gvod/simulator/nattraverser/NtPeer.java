@@ -1,7 +1,9 @@
 package se.sics.gvod.simulator.nattraverser;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import se.sics.kompics.ComponentDefinition;
 import se.sics.kompics.Handler;
@@ -14,6 +16,7 @@ import se.sics.gvod.common.Self;
 import se.sics.gvod.common.util.NatStr;
 import se.sics.gvod.hp.msgs.TConnectionMsg;
 import se.sics.gvod.nat.traversal.NatTraverserPort;
+import se.sics.gvod.nat.traversal.events.DisconnectNeighbour;
 import se.sics.gvod.nat.traversal.events.HpFailed;
 import se.sics.gvod.net.Nat;
 import se.sics.gvod.net.VodAddress;
@@ -24,8 +27,7 @@ import se.sics.gvod.timer.TimeoutId;
 import se.sics.kompics.Positive;
 
 /**
- * The
- * <code>Root</code> class
+ * The <code>Root</code> class
  *
  */
 public final class NtPeer extends ComponentDefinition {
@@ -39,6 +41,8 @@ public final class NtPeer extends ComponentDefinition {
     Positive<NatTraverserPort> ntPort = positive(NatTraverserPort.class);
     Map<TimeoutId, Nat> activeMsgs = new HashMap<TimeoutId, Nat>();
     Self self;
+
+    List<VodAddress> neighbours = new ArrayList<VodAddress>();
 
 //-------------------------------------------------------------------    
     public static class HolePunch extends Timeout {
@@ -68,18 +72,30 @@ public final class NtPeer extends ComponentDefinition {
         subscribe(handlePong, network);
         subscribe(handleHolePunch, timer);
         subscribe(handleConnect, ntsPort);
+        subscribe(handleDisconnect, ntsPort);
         subscribe(handleHpFailed, ntPort);
     }
 
 //-------------------------------------------------------------------    
-    private Handler<NtPeerInit> handleInit = new Handler<NtPeerInit>() {
+    private final Handler<NtPeerInit> handleInit = new Handler<NtPeerInit>() {
         @Override
         public void handle(NtPeerInit event) {
             self = event.getSelf();
         }
     };
 
-//-------------------------------------------------------------------    
+    private final Handler<Disconnect> handleDisconnect = new Handler<Disconnect>() {
+        @Override
+        public void handle(Disconnect event) {
+            for (int i = 0; i < event.getNumToDisconnect(); i++) {
+                if (i > neighbours.size() - 1) {
+                    break;
+                }
+                VodAddress disconnectHim = neighbours.get(i);
+                trigger(new DisconnectNeighbour(disconnectHim.getId()), ntPort);
+            }
+        }
+    };
     private Handler<Connect> handleConnect = new Handler<Connect>() {
         @Override
         public void handle(Connect event) {
@@ -90,7 +106,7 @@ public final class NtPeer extends ComponentDefinition {
 
             TConnectionMsg.Ping ping = new TConnectionMsg.Ping(self.getAddress(), event.getDest(), hp.getTimeoutId());
             trigger(ping, network);
-            
+
             activeMsgs.put(hp.getTimeoutId(), event.getDest().getNat());
         }
     };
@@ -111,6 +127,9 @@ public final class NtPeer extends ComponentDefinition {
             logger.debug("Received ping from " + ping.getSource());
             TConnectionMsg.Pong pong = new TConnectionMsg.Pong(self.getAddress(), ping.getVodSource(), ping.getTimeoutId());
             trigger(pong, network);
+            if (!neighbours.contains(ping.getVodSource())) {
+                neighbours.add(ping.getVodSource());
+            }
         }
     };
 
@@ -122,20 +141,23 @@ public final class NtPeer extends ComponentDefinition {
             trigger(new CancelTimeout(pong.getTimeoutId()), timer);
             trigger(new ConnectionResult(self.getAddress(), pong.getVodSource(), NatStr.pairAsStr(self.getNat(), pong.getVodSource().getNat()), true), ntsPort);
             activeMsgs.remove(pong.getTimeoutId());
+            if (!neighbours.contains(pong.getVodSource())) {
+                neighbours.add(pong.getVodSource());
+            }
         }
     };
 
-//-------------------------------------------------------------------    
     private Handler<HpFailed> handleHpFailed = new Handler<HpFailed>() {
         @Override
         public void handle(HpFailed event) {
             if (activeMsgs.containsKey(event.getMsgTimeoutId())) {
                 trigger(new CancelTimeout(event.getMsgTimeoutId()), timer);
-                logger.debug("HP failed. " + event.getResponseType() + " - " 
+                logger.debug("HP failed. " + event.getResponseType() + " - "
                         + NatStr.pairAsStr(self.getNat(), activeMsgs.get(event.getMsgTimeoutId())));
-                
+
                 VodAddress dest = event.getHpFailedDestNode();
                 trigger(new ConnectionResult(self.getAddress(), dest, NatStr.pairAsStr(self.getNat(), dest.getNat()), false), ntsPort);
+                neighbours.remove(dest);
             }
         }
     };

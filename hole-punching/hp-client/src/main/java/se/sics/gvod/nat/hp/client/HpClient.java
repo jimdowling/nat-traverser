@@ -11,6 +11,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.atomic.AtomicInteger;
 import se.sics.kompics.Handler;
 import se.sics.gvod.address.Address;
@@ -67,6 +68,7 @@ import se.sics.gvod.nat.hp.client.events.PRP_DummyMsgPortResponse;
 import se.sics.gvod.nat.hp.client.util.NatConnection;
 import se.sics.gvod.net.Transport;
 import se.sics.gvod.net.events.PortDeleteRequest;
+import se.sics.gvod.net.events.PortDeleteResponse;
 import se.sics.gvod.net.util.NatReporter;
 import se.sics.gvod.timer.CancelTimeout;
 import se.sics.gvod.timer.SchedulePeriodicTimeout;
@@ -171,7 +173,7 @@ public class HpClient extends MsgRetryComponent {
      * openedConnections is a thread-safe data structure shared with the NatTraverser component.
      */
     ConcurrentHashMap<Integer, OpenedConnection> openedConnections;
-    ConcurrentHashMap<Integer, Set<Integer>> parentPorts;
+    ConcurrentSkipListSet<Integer> portsInUse;
 
     /*
      * hp Stats
@@ -401,7 +403,7 @@ public class HpClient extends MsgRetryComponent {
             config = init.getConfig();
 
             openedConnections = init.getOpenedConnections();
-            parentPorts = init.getParentPorts();
+            portsInUse = init.getBoundPorts();
 
             compName = "(" + self.getId() + ") ";
 
@@ -611,7 +613,7 @@ public class HpClient extends MsgRetryComponent {
      * @return
      */
     private boolean deleteConnection(int remoteId, boolean sendDeleteMsgToRemoteNode) {
-        logger.debug(compName + " request to delete the connection to: " + remoteId);
+        logger.info(compName + " request to delete the connection to: " + remoteId);
         OpenedConnection oc = openedConnections.get(remoteId);
         if (oc != null) {
             TimeoutId timeoutId = oc.getHeartbeatTimeoutId();
@@ -642,19 +644,13 @@ public class HpClient extends MsgRetryComponent {
     }
 
     /**
-     * This both removes the port from our parentPorts map and
-     * unbinds the port in Netty.
-     * 
-     * @param port 
+     * This both removes the port from our parentPorts map and unbinds the port
+     * in Netty.
+     *
+     * @param port
      */
     private void unbindPort(int port) {
-        Set<Integer> parents = parentPorts.keySet();
-        for (Integer p : parents) {
-            if (parentPorts.get(p).contains(port)) {
-                deleteParentPort(p, port, true);
-                break;
-            }
-        }
+        removeAndUnbindPort(port, true);
     }
 
     Handler<DeleteConnection> handleDeleteConnectionRequest = new Handler<DeleteConnection>() {
@@ -861,7 +857,7 @@ public class HpClient extends MsgRetryComponent {
             printMsg(response);
             String compName = HpClient.this.compName + " - " + response.getMsgTimeoutId() + " - "
                     + " from " + response.getSource() + " ";
-            
+
             // use getSrcTimeoutId() - don't check the getTimeoutId() 
             // as this has the responseTimeoutId, not the requestTimeoutId
             if (delegator.doCancelRetry(response.getSrcTimeoutId())) {
@@ -981,11 +977,11 @@ public class HpClient extends MsgRetryComponent {
 
                             } else {
                                 if (session.getOpenConnectionRequest() != null) {
-                                    
+
                                     if (session.isDedicatedPort()) {
                                         unbindPort(session.getPortInUse());
                                     }
-                                    
+
                                     sendOpenConnectionResponseMessage(session.getOpenConnectionRequest(),
                                             session.getRemoteOpenedHole(),
                                             OpenConnectionResponseType.REMOTE_PEER_FAILED,
@@ -1244,8 +1240,7 @@ public class HpClient extends MsgRetryComponent {
                             + " MsgId " + request.getMsgTimeoutId());
                     if (request.get_PRP_PRP_InterleavedPort() != 0
                             && self.getNat().preallocatePorts()) {
-                        deleteParentPort(request.getClientId(), 
-                                request.get_PRP_PRP_InterleavedPort(), true);
+                        removeAndUnbindPort(request.get_PRP_PRP_InterleavedPort(), true);
                     }
                     return;
                 }
@@ -1359,7 +1354,7 @@ public class HpClient extends MsgRetryComponent {
                 bindReq.setResponse(bindResp);
                 session.setDedicatedPort();
                 delegator.doTrigger(bindReq, natNetworkControl);
-                addParentPort(request.getSource().getId(), portToBeUsed);
+                addBoundPort(portToBeUsed);
             } else {
                 prepareAndSendHPMessage(portToBeUsed, remoteId,
                         request.getMsgTimeoutId());
@@ -1367,32 +1362,33 @@ public class HpClient extends MsgRetryComponent {
         }
     };
 
-    private void addParentPort(int parentId, int port) {
-        Set<Integer> updatedPorts = new HashSet<Integer>();
-        updatedPorts.add(port);
-        Set<Integer> existingPorts = parentPorts.get(parentId);
-        if (existingPorts != null) {
-            updatedPorts.addAll(existingPorts);
-        }
-        parentPorts.put(parentId, updatedPorts);
+    private void addBoundPort(int port) {
+        portsInUse.add(port);
     }
 
-    private void deleteParentPort(int parentId, int port, boolean unbind) {
-        Set<Integer> existingPorts = parentPorts.get(parentId);
-        if (existingPorts != null) {
-            Set<Integer> updatedPorts = new HashSet<Integer>();
-            updatedPorts.addAll(existingPorts);
-            updatedPorts.remove(port);
-            if (!updatedPorts.isEmpty()) {
-                parentPorts.put(parentId, updatedPorts);
-            } else {
-                parentPorts.remove(parentId);
-            }
-            if (unbind) {
+    private void removeAndUnbindPort(int port, boolean unbind) {
+        boolean succeed = portsInUse.remove(port);
+        if (succeed && unbind) {
+            logger.info(compName + "removing and ubndbind port: " + port);
+            Set<Integer> portsToDelete = new HashSet<Integer>();
+            portsToDelete.add(port);
+            PortDeleteRequest req = new PortDeleteRequest(self.getId(), portsToDelete);
+            req.setResponse(new PortDeleteResponse(req, self.getId()) {
+            });
+            delegator.doTrigger(req, natNetworkControl);
+        }
+    }
+
+    private void removeAndUnbindPorts(Set<Integer> ports, boolean unbind) {
+        for (Integer port : ports) {
+            boolean succeed = portsInUse.remove(port);
+            if (succeed && unbind) {
                 Set<Integer> portsToDelete = new HashSet<Integer>();
                 portsToDelete.add(port);
-                delegator.doTrigger(new PortDeleteRequest(self.getId(), portsToDelete),
-                        natNetworkControl);
+                PortDeleteRequest req = new PortDeleteRequest(self.getId(), portsToDelete);
+                req.setResponse(new PortDeleteResponse(req, self.getId()) {
+                });
+                delegator.doTrigger(req, natNetworkControl);
             }
         }
     }
@@ -1436,7 +1432,7 @@ public class HpClient extends MsgRetryComponent {
 //                        }
                     } else {
                         // some unrecoverable failure.
-                        deleteParentPort(response.getParentId(), port, false);
+                        removeAndUnbindPort(port, false);
                         logger.warn(compName + "GoMsg failed when trying to bind a port "
                                 + response.getStatus());
                     }
@@ -1510,6 +1506,10 @@ public class HpClient extends MsgRetryComponent {
                 deleteConnection(oc.getHoleOpened().getId(), false);
             }
 
+            if (self.getNat().preallocatePorts()) {
+                logger.info(compName + " Number of allocated PRP parent ports:"
+                        + portsInUse.size());
+            }
         }
     };
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1940,9 +1940,7 @@ public class HpClient extends MsgRetryComponent {
                         + "zServer ID (" + event.getRequestMsg().getDestination().getId() + ") -"
                         + event.getRequestMsg().getMsgTimeoutId());
 
-                for (Integer p : event.getRequestMsg().getSetOfAvailablePorts()) {
-                    deleteParentPort(event.getRequestMsg().getDestination().getId(), p, true);
-                }
+                removeAndUnbindPorts(event.getRequestMsg().getSetOfAvailablePorts(), true);
 
                 HpSession session = hpSessions.get(remoteId);
                 session.setHpOngoing(false);
@@ -2019,7 +2017,7 @@ public class HpClient extends MsgRetryComponent {
                                         dummyHolePunchingMsg, response.getClientId());
                         bindReq.setResponse(bindResp);
                         delegator.doTrigger(bindReq, natNetworkControl);
-                        addParentPort(response.getClientId(), response.getPortToUse());
+                        addBoundPort(response.getPortToUse());
                     }
                 } else {
                     logger.debug(compName + "ERROR: Session not found for " + response.getClass());
@@ -2046,7 +2044,7 @@ public class HpClient extends MsgRetryComponent {
                     delegator.doRetry(msg);
                 }
             } else if (response.getStatus() == PRP_DummyMsgPortResponse.Status.FAIL) {
-                deleteParentPort(response.getParentId(), msg.getDestport(), false);
+                removeAndUnbindPort(msg.getDestport(), false);
             } else {
                 throw new IllegalStateException("Invalid port bind response");
             }
@@ -2122,9 +2120,7 @@ public class HpClient extends MsgRetryComponent {
                 // it means zServer id D.E.A.D
                 HpSession session = hpSessions.get(remoteId);
 
-                for (Integer port : event.getRequestMsg().getSetOfAvailablePorts()) {
-                    deleteParentPort(remoteId, port, true);
-                }
+                removeAndUnbindPorts(event.getRequestMsg().getSetOfAvailablePorts(), true);
                 // send response to the app/upper component if
                 // this client asked for hole punching
                 sendOpenConnectionResponseMessage(session,

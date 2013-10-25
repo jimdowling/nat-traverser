@@ -16,6 +16,7 @@ import java.util.Set;
 import java.util.StringTokenizer;
 import se.sics.gvod.timer.TimeoutId;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.Semaphore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -989,7 +990,7 @@ public class HolePunchingTestSimulator
                                         setScanningEnabled(true).
                                         setSessionExpirationTime(30 * 1000).
                                         setRto(retryDelay),
-                                        new ConcurrentHashMap<Integer, Set<Integer>>()
+                                        new ConcurrentSkipListSet<Integer>()
                                 ),
                                 holePunchingClientComp_A.getControl());
 
@@ -1039,7 +1040,7 @@ public class HolePunchingTestSimulator
                                         setScanningEnabled(true).
                                         setSessionExpirationTime(30 * 1000).
                                         setRto(retryDelay),
-                                        new ConcurrentHashMap<Integer, Set<Integer>>()), holePunchingClientComp_B.getControl());
+                                        new ConcurrentSkipListSet<Integer>()), holePunchingClientComp_B.getControl());
 
                         boolean pass = true;
                         if (nat_B.getType() == Nat.Type.UPNP

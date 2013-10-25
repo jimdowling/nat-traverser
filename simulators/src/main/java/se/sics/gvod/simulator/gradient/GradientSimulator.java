@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.Random;
 
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -93,7 +93,7 @@ public final class GradientSimulator extends ComponentDefinition {
     private AsIpGenerator ipGenerator;
     private PrefixMatcher pm = PrefixMatcher.getInstance();
     Set<InetAddress> allocatedIps = new HashSet<InetAddress>();
-    ConcurrentHashMap<Integer,Set<Integer>> parentPorts = new ConcurrentHashMap<Integer,Set<Integer>>();
+    ConcurrentSkipListSet<Integer> parentPorts = new ConcurrentSkipListSet<Integer>();
     
 //-------------------------------------------------------------------	
     public GradientSimulator() {

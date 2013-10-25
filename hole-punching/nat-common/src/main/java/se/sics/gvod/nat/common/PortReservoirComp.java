@@ -117,9 +117,11 @@ public final class PortReservoirComp extends ComponentDefinition {
                     deletedPorts.add(i);
                 }
             }
-            PortDeleteResponse response = message.getResponse();
-            response.setPorts(deletedPorts);
-            trigger(response, natNetworkControl);
+            if (message.getResponse() != null) {
+                PortDeleteResponse response = message.getResponse();
+                response.setPorts(deletedPorts);
+                trigger(response, natNetworkControl);
+            }
         }
     };
 }

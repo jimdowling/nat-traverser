@@ -1,8 +1,8 @@
 package se.sics.gvod.nat.hp.client;
 
-import java.util.Set;
 import se.sics.gvod.config.HpClientConfiguration;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListSet;
 import se.sics.gvod.common.Self;
 import se.sics.kompics.Init;
 
@@ -11,23 +11,23 @@ public final class HpClientInit extends Init {
     private final Self self;
     private final ConcurrentHashMap<Integer, OpenedConnection> openedConnections;
     private final HpClientConfiguration config;
-    private final ConcurrentHashMap<Integer,Set<Integer>> parentPorts;
+    private final ConcurrentSkipListSet<Integer> boundPorts;
     
     public HpClientInit(Self self,
             ConcurrentHashMap<Integer,OpenedConnection> openedConnections,
             HpClientConfiguration config,
-            ConcurrentHashMap<Integer,Set<Integer>> parentPorts) {
+            ConcurrentSkipListSet<Integer> parentPorts) {
         assert self != null;
         assert openedConnections != null;
         assert parentPorts != null;
         this.self = self;
         this.openedConnections = openedConnections;
         this.config = config;
-        this.parentPorts = parentPorts;
+        this.boundPorts = parentPorts;
     }
 
-    public ConcurrentHashMap<Integer, Set<Integer>> getParentPorts() {
-        return parentPorts;
+    public ConcurrentSkipListSet<Integer> getBoundPorts() {
+        return boundPorts;
     }
     
     public HpClientConfiguration getConfig() {
