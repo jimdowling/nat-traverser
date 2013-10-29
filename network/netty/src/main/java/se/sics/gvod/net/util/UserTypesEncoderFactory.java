@@ -97,7 +97,7 @@ public class UserTypesEncoderFactory {
     
     public static void writeUnsignedintAsOneByte(ByteBuf buffer, int value) throws MessageEncodingException {
         if ((value >= Math.pow(2, 8)) || (value < 0)) {
-            throw new MessageEncodingException("Integer value < 0 or " + value + " is larger than 2^15");
+            throw new MessageEncodingException("writeUnsignedintAsOneByte: Integer value < 0 or " + value + " is larger than 2^15");
         }
         buffer.writeByte((byte) (value & 0xFF));
     }
@@ -105,7 +105,7 @@ public class UserTypesEncoderFactory {
     public static void writeUnsignedintAsTwoBytes(ByteBuf buffer, int value) throws MessageEncodingException {
         byte[] result = new byte[2];
         if ((value >= Math.pow(2, 16)) || (value < 0)) {
-            throw new MessageEncodingException("Integer value < 0 or " + value + " is larger than 2^31");
+            throw new MessageEncodingException("writeUnsignedintAsTwoBytes: + Integer value < 0 or " + value + " is larger than 2^31");
         }
         result[0] = (byte) ((value >>> 8) & 0xFF);
         result[1] = (byte) (value & 0xFF);
@@ -235,7 +235,7 @@ public class UserTypesEncoderFactory {
             UserTypesEncoderFactory.writeUnsignedintAsTwoBytes(buffer, 0);
         } else {
             if (longs.size() > 65535) {
-                throw new IllegalArgumentException("Max size of a collection is 65535");
+                throw new IllegalArgumentException("writeLongSet: Max size of a collection is 65535");
             }
             UserTypesEncoderFactory.writeUnsignedintAsTwoBytes(buffer, longs.size());
             for (Long l : longs) {

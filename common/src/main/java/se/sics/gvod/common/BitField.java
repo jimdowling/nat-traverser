@@ -273,7 +273,9 @@ public class BitField {
         // we don't need to synchronize access to piecefield here, as it
         // is only the GVod thread that is calling this code - it is a reader.
         // the sender thread also only reads, so we shouldnt get a concurrent
-        // modication exception.
+        // modication exception. Although we would get one if we read what we
+        // are writing, which shouldn't happen - would be a wierd fast-forward bug,
+        // where you fast foward to a piece being written.
         int pieceFieldLength = getPieceFieldLength();
         if (piecefield[index] == -1 || index == pieceFieldLength - 1) {
             index = index - (index % NUM_SUBPIECES_PER_PIECE);

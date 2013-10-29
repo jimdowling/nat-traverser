@@ -1099,8 +1099,8 @@ public class NatTraverser extends ComponentDefinition {
             } else {
                 retryStun(event.getStunServer());
             }
-
             trigger(event, natTraverserPort);
+
         }
     };
 

@@ -18,7 +18,9 @@ import se.sics.gvod.net.util.UserTypesEncoderFactory;
 import se.sics.gvod.timer.TimeoutId;
 
 /**
- *
+ * TODO: Encode the advertisement of available chunks and pieces in a more
+ * efficient format.
+ * 
  * @author jdowling
  */
 public class ConnectMsg {

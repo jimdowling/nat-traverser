@@ -80,7 +80,7 @@ public abstract class MsgRetryComponent extends AutoSubscribeComponent
      * Map is static, so that timeouts can be created in one component, but
      * cancelled in another component.
      */
-    protected static ConcurrentHashMap<TimeoutId, Retry> mapMessageRetry =
+    protected ConcurrentHashMap<TimeoutId, Retry> mapMessageRetry =
             new ConcurrentHashMap<TimeoutId, Retry>();
 
     /**
@@ -385,12 +385,13 @@ public abstract class MsgRetryComponent extends AutoSubscribeComponent
     protected Object getContext(TimeoutId timeoutId) {
         Object request = null;
         logger.trace("Cancelling timer " + timeoutId);
-        if (this.mapMessageRetry.containsKey(timeoutId)) {
+        if (mapMessageRetry.containsKey(timeoutId)) {
             Retry r = this.mapMessageRetry.get(timeoutId);
             request = r.getContext();
         }
         return request;
     }
+    
 
     /**
      * Called by handler in base class

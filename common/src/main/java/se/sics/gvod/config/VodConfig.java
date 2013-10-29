@@ -159,7 +159,7 @@ public class VodConfig extends BaseCommandLineConfig {
     public static final int GRADIENT_CONVERGENCE_TEST_ROUNDS = 20;
     public static final int GRADIENT_UTILITY_SET_FILLING_RATE = 10;
     // NAT-TRAVERSER'S DEFAULTS
-    public final static int NT_STUN_RETRIES = 5;
+    public final static int NT_STUN_RETRIES = 1000;
     public final static int NT_MAX_NUM_OPENED_CONNECTIONS = 5000;
     public final static int DEFAULT_NT_CONNECTION_ESTABLISHMENT_TIMEOUT = 10 * 1000;
     public final static int NT_SERVER_INIT_RETRY_PERIOD = 1000;

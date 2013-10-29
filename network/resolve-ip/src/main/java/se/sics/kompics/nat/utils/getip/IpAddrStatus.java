@@ -4,6 +4,7 @@
  */
 package se.sics.kompics.nat.utils.getip;
 
+import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 
@@ -97,4 +98,5 @@ public class IpAddrStatus {
         // ignore MTU and networkprefix length values
         return res;
     }
+
 }

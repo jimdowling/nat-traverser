@@ -14,6 +14,7 @@ import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.SortedSet;
 import java.util.logging.Level;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,6 +63,25 @@ public final class ResolveIp extends ComponentDefinition {
             if (obj1 == obj2 || obj1.equals(obj2)) {
                 return 0;
             }
+
+            if (obj1.getAddr() instanceof Inet6Address) {
+                return -1;
+            }
+            if (obj2.getAddr() instanceof Inet6Address) {
+                return 1;
+            }
+            if (obj2.isUp() && !obj1.isUp()) {
+                return -1;
+            }
+            if (obj1.isUp() && !obj2.isUp()) {
+                return -1;
+            }
+            if (obj1.getNetworkPrefixLength() < obj2.getNetworkPrefixLength()) {
+                return 1;
+            }
+            if (obj1.getNetworkPrefixLength() > obj2.getNetworkPrefixLength()) {
+                return -1;
+            }
             try {
                 InetAddress loopbackIp = InetAddress.getByName("127.0.0.1");
                 if (obj1.getAddr().equals(loopbackIp)) {
@@ -79,7 +99,6 @@ public final class ResolveIp extends ComponentDefinition {
             } catch (UnknownHostException ex) {
                 java.util.logging.Logger.getLogger(ResolveIp.class.getName()).log(Level.SEVERE, null, ex);
             }
-
 
             if (obj1.isUp() == true && obj2.isUp() == false) {
                 return -1;
@@ -124,6 +143,7 @@ public final class ResolveIp extends ComponentDefinition {
     }
 
     public ResolveIp() {
+        System.setProperty("java.net.preferIPv4Stack", "true");
         subscribe(handleGetIpRequest, resolveIpPort);
         subscribe(handleRecheckIpTimeout, timerPort);
     }
@@ -185,6 +205,10 @@ public final class ResolveIp extends ComponentDefinition {
                         continue;
                     }
                     InetAddress addr = ifaceAddr.getAddress();
+                    // ignore ipv6 addresses
+                    if (addr instanceof Inet6Address) {
+                        continue;
+                    }
                     int networkPrefixLength = ifaceAddr.getNetworkPrefixLength();
                     String textualPrefixAddr = addr.getHostAddress();
                     String textual2PartAddr = addr.getHostAddress();
@@ -207,8 +231,8 @@ public final class ResolveIp extends ComponentDefinition {
                                             || textual2PartAddr.compareTo("192.168") != 0) {
                                         int mtu = ni.getMTU();
                                         boolean isUp = ni.isUp();
-                                        IpAddrStatus ipAddr =
-                                                new IpAddrStatus(ni, addr, isUp, networkPrefixLength, mtu);
+                                        IpAddrStatus ipAddr
+                                                = new IpAddrStatus(ni, addr, isUp, networkPrefixLength, mtu);
                                         addresses.add(ipAddr);
                                     }
                                 }
@@ -243,9 +267,9 @@ public final class ResolveIp extends ComponentDefinition {
             boolean filterLoopback = event.isFilterLoopback();
 
             if (initialized == false && checkNetIfs == true) {
-                SchedulePeriodicTimeout st =
-                        new SchedulePeriodicTimeout(RECHECK_NETWORK_INTERFACES_PERIOD,
-                        RECHECK_NETWORK_INTERFACES_PERIOD);
+                SchedulePeriodicTimeout st
+                        = new SchedulePeriodicTimeout(RECHECK_NETWORK_INTERFACES_PERIOD,
+                                RECHECK_NETWORK_INTERFACES_PERIOD);
                 RecheckIpTimeout msgTimeout = new RecheckIpTimeout(st, filterTenDot,
                         filterPrivateIps, filterLoopback);
                 st.setTimeoutEvent(msgTimeout);
