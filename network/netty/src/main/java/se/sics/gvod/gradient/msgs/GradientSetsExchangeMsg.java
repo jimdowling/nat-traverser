@@ -82,7 +82,7 @@ public class GradientSetsExchangeMsg {
         @Override
         public int getSize() {
             return super.getSize()
-                    + UserTypesEncoderFactory.getListGVodNodeDescriptorSize(similarPeers);
+                    + UserTypesEncoderFactory.getListVodNodeDescriptorSize(similarPeers);
         }
 
         @Override

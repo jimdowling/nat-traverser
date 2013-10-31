@@ -108,8 +108,8 @@ public class SetsExchangeMsg {
         @Override
         public int getSize() {
             return super.getSize()
-                   + UserTypesEncoderFactory.getListGVodNodeDescriptorSize(utilitySet)
-                   + UserTypesEncoderFactory.getListGVodNodeDescriptorSize(upperSet)
+                   + UserTypesEncoderFactory.getListVodNodeDescriptorSize(utilitySet)
+                   + UserTypesEncoderFactory.getListVodNodeDescriptorSize(upperSet)
                     ;
         }
 

@@ -564,7 +564,7 @@ public class UserTypesEncoderFactory {
         return sz;
     }
 
-    public static int getListGVodNodeDescriptorSize(List<VodDescriptor> nodes) {
+    public static int getListVodNodeDescriptorSize(List<VodDescriptor> nodes) {
         if (nodes == null) {
             return 2;
         }

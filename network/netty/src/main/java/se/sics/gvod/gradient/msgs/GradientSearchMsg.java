@@ -115,7 +115,7 @@ public class GradientSearchMsg {
         @Override
         public int getSize() {
             return super.getSize()
-                    + UserTypesEncoderFactory.getListGVodNodeDescriptorSize(getSimilarPeers());
+                    + UserTypesEncoderFactory.getListVodNodeDescriptorSize(getSimilarPeers());
         }
 
         @Override
