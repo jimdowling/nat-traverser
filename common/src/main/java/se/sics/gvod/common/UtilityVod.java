@@ -51,7 +51,7 @@ public class UtilityVod implements Utility {
 
     /**
      *
-     * @return download position, -10 means I'm a seeder - whole file downloaded.
+     * @return download position, VodConfig.SEEDER_UTILITY (previously -10) means I'm a seeder - whole file downloaded.
      */
     public int getChunk() {
         return chunk;
