@@ -173,7 +173,7 @@ public final class NtTesterMain extends ComponentDefinition {
                 System.exit(-3);
             }
             VodConfig.setBoostrapServerIp(bootIp);
-            
+
         } catch (IOException ex) {
             java.util.logging.Logger.getLogger(NtTesterMain.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -200,7 +200,6 @@ public final class NtTesterMain extends ComponentDefinition {
             return dest;
         }
     }
-        
 
     public static class PangTimeout extends Timeout {
 
@@ -208,7 +207,7 @@ public final class NtTesterMain extends ComponentDefinition {
         private final VodAddress dest;
 
         public PangTimeout(ScheduleTimeout st, int id, VodAddress dest) {
-            super(st); 
+            super(st);
             this.id = id;
             this.dest = dest;
         }
@@ -246,7 +245,7 @@ public final class NtTesterMain extends ComponentDefinition {
 
         if (natType == null) {
             connect(natTraverser.getNegative(Timer.class), timer.getPositive(Timer.class));
-            connect(natTraverser.getNegative(VodNetwork.class), network.getPositive(VodNetwork.class), 
+            connect(natTraverser.getNegative(VodNetwork.class), network.getPositive(VodNetwork.class),
                     new MsgDestFilterNodeId(myId));
             connect(natTraverser.getNegative(NatNetworkControl.class), network.getPositive(NatNetworkControl.class));
         } else {
@@ -283,17 +282,13 @@ public final class NtTesterMain extends ComponentDefinition {
     private Handler<Start> handleStart = new Handler<Start>() {
         @Override
         public void handle(Start event) {
-            if (pickIp != 0) {
+            if (VodConfig.isTenDot()) {
                 trigger(new GetIpRequest(false, EnumSet.of(
-                        GetIpRequest.NetworkInterfacesMask.IGNORE_LOCAL_ADDRESSES)),
-                        resolveIp.getPositive(ResolveIpPort.class));
+                        GetIpRequest.NetworkInterfacesMask.IGNORE_LOCAL_ADDRESSES,
+                        GetIpRequest.NetworkInterfacesMask.IGNORE_PRIVATE,
+                        GetIpRequest.NetworkInterfacesMask.IGNORE_PUBLIC)), resolveIp.getPositive(ResolveIpPort.class));
             } else {
-                trigger(new GetIpRequest(false, EnumSet.of(
-                        GetIpRequest.NetworkInterfacesMask.IGNORE_LOCAL_ADDRESSES //, GetIpRequest.NetworkInterfacesMask.IGNORE_TEN_DOT_PRIVATE 
-                        //,GetIpRequest.NetworkInterfacesMask.IGNORE_PRIVATE
-                        )),
-                        resolveIp.getPositive(ResolveIpPort.class));
-
+                trigger(new GetIpRequest(false), resolveIp.getPositive(ResolveIpPort.class));
             }
         }
     };
@@ -381,7 +376,7 @@ public final class NtTesterMain extends ComponentDefinition {
                         natTraverser.getControl());
 
                 trigger(new CroupierInit(self.clone(VodConfig.SYSTEM_OVERLAY_ID),
-                        CroupierConfiguration.build().setShufflePeriod(15*1000)),
+                        CroupierConfiguration.build().setShufflePeriod(15 * 1000)),
                         croupier.getControl());
                 startTimers.put(self.getId(), System.currentTimeMillis());
             } else {

@@ -151,7 +151,7 @@ public abstract class BaseCommandLineConfig {
     protected static final String VAL_PERIOD_MILLISECS = "milliseconds";
     protected InetAddress ip = null;
     protected static boolean SIMULATION = false;
-    protected static boolean PLANET_LAB = false;
+    protected static boolean TEN_DOT = false;
     protected static boolean SKIP_UPNP = true;
     protected static boolean SKIP_GRADIENT = true;
     protected static boolean REPORT_NETTY_EXCEPTIONS = true;
@@ -241,8 +241,8 @@ public abstract class BaseCommandLineConfig {
         Option simulation = new Option("simulation", false, "Simulation mode enabled");
         options.addOption(simulation);
 
-        Option plab = new Option("plab", false, "Planetlab settings");
-        options.addOption(plab);
+        Option tenDot = new Option("tendot", false, "Use only 10.* IP address");
+        options.addOption(tenDot);
 
         Option upnp = new Option("noupnp", false, "Skip UPnP port mapping attempt");
         options.addOption(upnp);
@@ -283,8 +283,8 @@ public abstract class BaseCommandLineConfig {
             SKIP_GRADIENT = true;
         }
 
-        if (line.hasOption(plab.getOpt())) {
-            PLANET_LAB = true;
+        if (line.hasOption(tenDot.getOpt())) {
+            TEN_DOT = true;
         }
 
         int seed = DEFAULT_SEED;
@@ -532,8 +532,8 @@ public abstract class BaseCommandLineConfig {
     }
 
 
-    public static boolean isPlanetLab() {
-        return PLANET_LAB;
+    public static boolean isTenDot() {
+        return TEN_DOT;
     }
 
     public static boolean isSkipUpnp() {

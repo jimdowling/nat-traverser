@@ -119,14 +119,21 @@ public final class ResolveIp extends ComponentDefinition {
         private final boolean filterTenDot;
         private final boolean filterPrivateIps;
         private final boolean filterLoopback;
+        private final boolean filterPublicIps;
 
         public RecheckIpTimeout(SchedulePeriodicTimeout request,
                 boolean filterTenDot,
-                boolean filterPrivateIps, boolean filterLoopback) {
+                boolean filterPrivateIps, boolean filterLoopback,
+                boolean filterPublicIps) {
             super(request);
             this.filterLoopback = filterLoopback;
             this.filterTenDot = filterTenDot;
             this.filterPrivateIps = filterPrivateIps;
+            this.filterPublicIps = filterPublicIps;
+        }
+
+        public boolean isFilterPublicIps() {
+            return filterPublicIps;
         }
 
         public boolean isFilterLoopback() {
@@ -150,7 +157,8 @@ public final class ResolveIp extends ComponentDefinition {
     private Handler<RecheckIpTimeout> handleRecheckIpTimeout = new Handler<RecheckIpTimeout>() {
         @Override
         public void handle(RecheckIpTimeout event) {
-            Set<IpAddrStatus> difference = getLocalNetworkInterfaces(event.isFilterTenDot(), event.isFilterPrivateIps(), event.isFilterLoopback());
+            Set<IpAddrStatus> difference = getLocalNetworkInterfaces(event.isFilterTenDot(), 
+                    event.isFilterPrivateIps(), event.isFilterLoopback(), event.isFilterPublicIps());
 
             getBoundIpAddr();
 
@@ -179,7 +187,7 @@ public final class ResolveIp extends ComponentDefinition {
     }
 
     private Set<IpAddrStatus> getLocalNetworkInterfaces(boolean filterTenDot,
-            boolean filterPrivateIps, boolean filterLoopback) {
+            boolean filterPrivateIps, boolean filterLoopback, boolean filterPublicIps) {
         Set<IpAddrStatus> addresses = new HashSet<IpAddrStatus>();
 
         Enumeration<NetworkInterface> nis = null;
@@ -229,11 +237,14 @@ public final class ResolveIp extends ComponentDefinition {
                                         || textualPrefixAddr.compareTo("10") != 0) {
                                     if (filterPrivateIps == false
                                             || textual2PartAddr.compareTo("192.168") != 0) {
-                                        int mtu = ni.getMTU();
-                                        boolean isUp = ni.isUp();
-                                        IpAddrStatus ipAddr
-                                                = new IpAddrStatus(ni, addr, isUp, networkPrefixLength, mtu);
-                                        addresses.add(ipAddr);
+                                        if (filterPublicIps == false || textual2PartAddr.compareTo("127.0") == 0
+                                                || textualPrefixAddr.compareTo("10") == 0
+                                                || textual2PartAddr.compareTo("192.168") == 0) {
+                                            int mtu = ni.getMTU();
+                                            boolean isUp = ni.isUp();
+                                            IpAddrStatus ipAddr = new IpAddrStatus(ni, addr, isUp, networkPrefixLength, mtu);
+                                            addresses.add(ipAddr);
+                                        }
                                     }
                                 }
                             }
@@ -265,19 +276,19 @@ public final class ResolveIp extends ComponentDefinition {
             boolean filterTenDot = event.isFilterTenDotIps();
             boolean filterPrivateIps = event.isFilterPrivateIps();
             boolean filterLoopback = event.isFilterLoopback();
+            boolean filterPublicIps = event.isFilterPublicIps();
 
             if (initialized == false && checkNetIfs == true) {
-                SchedulePeriodicTimeout st
-                        = new SchedulePeriodicTimeout(RECHECK_NETWORK_INTERFACES_PERIOD,
-                                RECHECK_NETWORK_INTERFACES_PERIOD);
+                SchedulePeriodicTimeout st = new SchedulePeriodicTimeout(RECHECK_NETWORK_INTERFACES_PERIOD,
+                        RECHECK_NETWORK_INTERFACES_PERIOD);
                 RecheckIpTimeout msgTimeout = new RecheckIpTimeout(st, filterTenDot,
-                        filterPrivateIps, filterLoopback);
+                        filterPrivateIps, filterLoopback, filterPublicIps);
                 st.setTimeoutEvent(msgTimeout);
                 trigger(st, timerPort);
                 initialized = true;
             }
 
-            getLocalNetworkInterfaces(filterTenDot, filterPrivateIps, filterLoopback);
+            getLocalNetworkInterfaces(filterTenDot, filterPrivateIps, filterLoopback, filterPublicIps);
 
             List<IpAddrStatus> listAddrs = new ArrayList<IpAddrStatus>(addrs);
             Collections.sort(listAddrs, new IpComparator());
