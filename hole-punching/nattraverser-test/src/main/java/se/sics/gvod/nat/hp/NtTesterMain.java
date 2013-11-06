@@ -155,14 +155,14 @@ public final class NtTesterMain extends ComponentDefinition {
         if (args.length > 4) {
             openServer = Boolean.parseBoolean(args[4]);
         }
-        if (args.length > 5 && args[5].compareTo(" ") != 0) {
-            natType = Nat.parseToNat(args[5]);
-            if (natType == null) {
-                System.err.println("Invalid nat type: " + args[5]);
-                System.err.println("Example Nat format:  m(EI)_a(PP)_f(PD)");
-                System.exit(-6);
-            }
-        }
+//        if (args.length > 5 && args[5].compareTo(" ") != 0) {
+//            natType = Nat.parseToNat(args[5]);
+//            if (natType == null) {
+//                System.err.println("Invalid nat type: " + args[5]);
+//                System.err.println("Example Nat format:  m(EI)_a(PP)_f(PD)");
+//                System.exit(-6);
+//            }
+//        }
 
         System.setProperty("java.net.preferIPv4Stack", "true");
         try {
