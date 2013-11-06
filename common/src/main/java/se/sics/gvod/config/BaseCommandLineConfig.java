@@ -44,7 +44,6 @@ public abstract class BaseCommandLineConfig {
      */
     public final static int MIN_MTU = 540;
     public static final String LOCALHOST = "127.0.0.1";
-    public static InetAddress LOCALHOST_IP;
     public static final String USER_HOME;
     public static final String BOOTSTRAP_CONFIG_FILE = "bootstrap.properties";
     public static final String MONITOR_CONFIG_FILE = "monitor.properties";
@@ -122,13 +121,6 @@ public abstract class BaseCommandLineConfig {
                 throw new IllegalStateException("Could not create directory: " + RESULTS_DIR);
             }
         }
-        try {
-            LOCALHOST_IP = InetAddress.getLocalHost();
-        } catch (UnknownHostException ex) {
-            java.util.logging.Logger.getLogger(BaseCommandLineConfig.class.getName()).log(Level.SEVERE, null, ex);
-        }
-
-
     }
 
     public static final int DEFAULT_PORT = 58022;
