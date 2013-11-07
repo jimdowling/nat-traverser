@@ -120,6 +120,12 @@ public final class NtTesterMain extends ComponentDefinition {
 
         System.setProperty("java.net.preferIPv4Stack", "true");
 
+        StringBuilder sb = new StringBuilder();
+        for (String s : args) {
+            sb.append(s).append(", ");
+        }
+        logger.info("<prog>: " + sb.toString());
+        
         if (args.length < 3) {
 
             if (args.length == 1 && (args[0].compareToIgnoreCase("-help") == 0
@@ -128,9 +134,9 @@ public final class NtTesterMain extends ComponentDefinition {
             upnpEnabled = false;
             Random r = new Random(System.currentTimeMillis());
             myId = r.nextInt();
-            pickIp = 0;
-            server = "193.10.64.86"; // cloud3
-            serverId = 3;
+            pickIp = 1;
+            server = "10.138.15.133"; // cloud3
+            serverId = 1;
         } else {
             upnpEnabled = Boolean.parseBoolean(args[0]);
             myId = Integer.parseInt(args[1]);
@@ -155,14 +161,14 @@ public final class NtTesterMain extends ComponentDefinition {
         if (args.length > 4) {
             openServer = Boolean.parseBoolean(args[4]);
         }
-//        if (args.length > 5 && args[5].compareTo(" ") != 0) {
-//            natType = Nat.parseToNat(args[5]);
-//            if (natType == null) {
-//                System.err.println("Invalid nat type: " + args[5]);
-//                System.err.println("Example Nat format:  m(EI)_a(PP)_f(PD)");
-//                System.exit(-6);
-//            }
-//        }
+        if (args.length > 5 && args[5].compareTo(" ") != 0) {
+            natType = Nat.parseToNat(args[5]);
+            if (natType == null) {
+                System.err.println("Invalid nat type: " + args[5]);
+                System.err.println("Example Nat format:  m(EI)_a(PP)_f(PD)");
+                System.exit(-6);
+            }
+        }
 
         System.setProperty("java.net.preferIPv4Stack", "true");
         try {
@@ -282,7 +288,7 @@ public final class NtTesterMain extends ComponentDefinition {
     private Handler<Start> handleStart = new Handler<Start>() {
         @Override
         public void handle(Start event) {
-            if (VodConfig.isTenDot()) {
+            if (VodConfig.isTenDot() || pickIp > 0) {
                 trigger(new GetIpRequest(false, EnumSet.of(
                         GetIpRequest.NetworkInterfacesMask.IGNORE_LOCAL_ADDRESSES,
                         GetIpRequest.NetworkInterfacesMask.IGNORE_PRIVATE,
