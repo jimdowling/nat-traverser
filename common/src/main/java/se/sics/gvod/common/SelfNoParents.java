@@ -23,8 +23,8 @@ public class SelfNoParents extends SelfBase
      * self.getAddress().
      * Only the parents of a GVodAddress may change, i can access
      * any other attribute of GVodAddress using the cached object.
+     * @param addr
      */
-    
     public SelfNoParents(VodAddress addr) {
         this(addr.getNat(), addr.getIp(), addr.getPort(), addr.getId(), addr.getOverlayId());
     }

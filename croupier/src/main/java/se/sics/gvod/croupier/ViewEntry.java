@@ -134,9 +134,13 @@ public class ViewEntry {
         descriptor.setAge(age);
     }
 
-    public void updateUtility(Utility utility) {
-        descriptor.setUtility(utility);
-    }
+//    public void updateUtility(Utility utility) {
+//        descriptor.setUtility(utility);
+//    }
+//    
+//    public void updateVodAddress(VodAddress address) {
+//        descriptor.setVodAddress(address);
+//    }    
 
     @Override
     public String toString() {

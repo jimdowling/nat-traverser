@@ -143,7 +143,7 @@ public class VodConfig extends BaseCommandLineConfig {
     public final static int ACK_TIMEOUT = 10 * 1000; // 5 seconds
     public final static int BUFFERING_WINDOW_NUM_PIECES = 1; // in number of pieces
     public final static int PERCENTAGE_FREERIDERS = 15;
-    public static final int SEEDER_UTILITY_VALUE = 9999;
+    public static final int SEEDER_UTILITY_VALUE = -10;
     // GRADIENT'S DEFAULTS
     public static final int GRADIENT_VIEW_SIZE = 10;
     public static final int GRADIENT_SHUFFLE_TIMEOUT = DEFAULT_RTO;
@@ -172,7 +172,7 @@ public class VodConfig extends BaseCommandLineConfig {
     public final static int HP_SESSION_EXPIRATION = 55 * 1000;
     // LEDBAT Defaults
     public static final int LB_MAX_PIPELINE_SIZE = 100;
-    public static final int LB_DEFAULT_PIPELINE_SIZE = 15;
+    public static final int LB_DEFAULT_PIPELINE_SIZE = 5;
     public static final int LB_MAX_SEGMENT_SIZE = 1500 * LB_DEFAULT_PIPELINE_SIZE; // MTU - 1024?
     public static final int LB_WINDOW_SIZE = 2 * LB_MAX_SEGMENT_SIZE;
     public static final int LB_MAX_WINDOW_SIZE = 64 * LB_MAX_SEGMENT_SIZE; // 64

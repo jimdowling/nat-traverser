@@ -8,7 +8,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
-import org.slf4j.Logger;
 import se.sics.gvod.common.Self;
 import se.sics.gvod.common.VodDescriptor;
 import se.sics.gvod.config.VodConfig;
@@ -167,7 +166,7 @@ public class View {
 
         for (VodDescriptor descriptor : descriptors) {
             VodAddress id = descriptor.getVodAddress();
-            if (self.getDescriptor().getVodAddress().equals(id)) {
+            if (self.getAddress().equals(id)) {
                 // do not keep descriptor of self
                 continue;
             }
@@ -180,7 +179,6 @@ public class View {
                     addEntry(new ViewEntry(descriptor));
                 }
                 continue;
-
             }
             if (entries.size() < size) {
                 // fill an empty slot

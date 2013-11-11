@@ -12,7 +12,7 @@ public class VodDescriptor implements Comparable<VodDescriptor>, Serializable {
 
     private static final Logger logger = LoggerFactory.getLogger(VodDescriptor.class);
     private static final long serialVersionUID = 1906679375438244117L;
-    private final VodAddress vodAddress;
+    private VodAddress vodAddress;
     /**
      * age is 2 bytes in length: 32767
      */
@@ -93,6 +93,9 @@ public class VodDescriptor implements Comparable<VodDescriptor>, Serializable {
             int mtu, long numberOfIndexEntries) {
         assert (vodAddress != null);
 //        assert (utility != null);
+        if (requestPipeline == null) {
+            throw new NullPointerException("Request pipeline cannot be null in VodDescriptor constructor");
+        }
         this.vodAddress = vodAddress;
         this.age = age;
         this.utility = utility;
@@ -250,6 +253,10 @@ public class VodDescriptor implements Comparable<VodDescriptor>, Serializable {
         return vodAddress;
     }
 
+    public void setVodAddress(VodAddress vodAddress) {
+        this.vodAddress = vodAddress;
+    }
+
     public Utility getUtility() {
         return utility;
     }
@@ -330,11 +337,8 @@ public class VodDescriptor implements Comparable<VodDescriptor>, Serializable {
         } else if (other.vodAddress == null) {
             return false;
         }
-        if (!vodAddress.equals(other.getVodAddress())) {
-            return false;
-        }
 
-        return true;
+        return vodAddress.equals(other.getVodAddress());
     }
 
     public void setAge(int age) {

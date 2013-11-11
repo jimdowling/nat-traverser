@@ -463,8 +463,9 @@ public class NatTraverser extends ComponentDefinition {
     };
 
     private void forwardDirectMsgUp(DirectMsgNetty.Base msg) {
-        logger.trace("handleLowerMessage src (" + msg.getSource()
-                + ") message class :" + msg.getClass().getName());
+        logger.info("handleLowerMessage src (" + msg.getSource()
+                + ") message class :" + msg.getClass().getName() + " : " +
+                msg.getVodDestination().getOverlayId() );
         int remoteId = msg.getSource().getId();
         // If the msg is from a private node, and i don't have a cached openConnection to
         // it, store it.
@@ -474,7 +475,8 @@ public class NatTraverser extends ComponentDefinition {
                     false, // this has to be a shared port, if I receive a message here and not in HpClient
                     msg.getSource(), Nat.DEFAULT_RULE_EXPIRATION_TIME, false);
             openedConnections.put(msg.getSource().getId(), oc);
-            logger.debug(compName + " Adding OpenedConnection to " + msg.getSource()
+            logger.info(compName + msg.getClass().getName() 
+                    + " Adding OpenedConnection to " + msg.getSource()
                     + " from Local Port " + msg.getDestination().getPort());
         }
         trigger(msg, upperNet);
@@ -482,6 +484,7 @@ public class NatTraverser extends ComponentDefinition {
     Handler<DirectMsgNetty.Request> handleLowerDirectMsgRequest = new Handler<DirectMsgNetty.Request>() {
         @Override
         public void handle(DirectMsgNetty.Request msg) {
+            
             forwardDirectMsgUp(msg);
         }
     };

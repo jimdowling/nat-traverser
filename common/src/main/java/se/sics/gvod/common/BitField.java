@@ -1,5 +1,7 @@
 package se.sics.gvod.common;
 
+import se.sics.gvod.config.VodConfig;
+
 /**
  * TODO: Rewrite this to use Java's BitSet - more efficient one bit, instead
  * of of byte used
@@ -23,6 +25,7 @@ public class BitField {
 
     /**
      * Creates a new BitField that represents <code>size</code> unset bits.
+     * @param size number of subpieces in the file.
      */
     public BitField(int size) {
         this.size = size;
@@ -75,34 +78,42 @@ public class BitField {
     /**
      * Return the size of the BitField. The returned value is one bigger then
      * the last valid bit number (since bit numbers are counted from zero).
+     * @return number of subpieces in the file
      */
     public int size() {
         return size;
     }
 
-    public int pieceFieldSize() {
-        // this is final, no sync problem with Sender thread.
-        return numPieces;
-    }
 
+    /**
+     * 
+     * @return byte array containing the availability of chunks in the file.
+     */
     public byte[] getChunkfield() {
         return chunkfield;
     }
 
-//    public byte[] getPiecefield() {
-//        return piecefield;
+    public int pieceFieldSize() {
+            return numPieces;
+    }
+    
 //    }
     public int getPieceFieldLength() {
 //        synchronized (piecefield) {
             return piecefield.length;
 //        }
 
-    }
+    }    
 
     public int getChunkFieldSize() {
         return numChunks;
     }
 
+    /**
+     * Gets a 2-d array containing the availability of piecs
+     * @param utility
+     * @return 2-d array containing the availability of piecs
+     */
     public byte[][] getAvailablePieces(UtilityVod utility) {
         byte[][] result = new byte[utility.getOffset()][NUM_SUBPIECES_PER_PIECE];
         for (int i = 0; i < utility.getOffset(); i++) {
@@ -139,8 +150,10 @@ public class BitField {
     }
 
     /**
-     * Sets the given bit to true.
+     * Sets the given bit to true/false.
      * 
+     * @param bit subpiece index in the file.
+     * @param setPiece if true, you have the subpiece, else false (you don't have the subpiece).
      * @exception IndexOutOfBoundsException
      *                if bit is smaller then zero bigger then size (inclusive).
      */
@@ -313,7 +326,7 @@ public class BitField {
     }
 
     /**
-     * Return true if the bit is set or false if it is not.
+     * Return true if the subpiece is set or false if it is not.
      *
      * @exception IndexOutOfBoundsException
      *                if bit is smaller then zero bigger then size (inclusive).
@@ -328,6 +341,11 @@ public class BitField {
         return (subpieceField[index] & mask) != 0;
     }
 
+    /**
+     * Returns whether a given piece has been downloaded or not
+     * @param piece id of piece
+     * @return true if the piece has been downloaded, otherwise false.
+     */
     public boolean getPiece(int piece) {
         if (piece < 0 || piece > (size / NUM_SUBPIECES_PER_PIECE) + 1) {
             int lim = (size / NUM_SUBPIECES_PER_PIECE) + 1;
@@ -347,6 +365,11 @@ public class BitField {
             return res;
     }
 
+    /**
+     * Returns whether a given chunk-id has been downloaded or not.
+     * @param chunk id for a chunk
+     * @return true if the chunk has been downloaded
+     */
     public boolean getChunk(int chunk) {
         if (chunk < 0 || chunk >= chunkfield.length * 8) {
             throw new IndexOutOfBoundsException(Integer.toString(chunk));
@@ -375,9 +398,8 @@ public class BitField {
     }
 
     public String getHumanReadable() {
-        StringBuffer sb = new StringBuffer("BitField[");
-        for (int i = 0; i
-                < size; i++) {
+        StringBuilder sb = new StringBuilder("BitField[");
+        for (int i = 0; i < size; i++) {
             if (get(i)) {
                 sb.append('+');
             } else {
@@ -410,7 +432,7 @@ public class BitField {
     }
 
     public String getHumanReadable2() {
-        StringBuffer sb = new StringBuffer("BitField[");
+        StringBuilder sb = new StringBuilder("BitField[");
         int count = 0;
         for (int i = 0; i
                 < size; i++) {
@@ -420,7 +442,7 @@ public class BitField {
 
         }
         float p = (float) count / size;
-        sb.append(p * 100 + "%]\npiecefield[");
+        sb.append(p * 100).append("%]\npiecefield[");
         count =
                 0;
         int limite;
@@ -436,7 +458,7 @@ public class BitField {
 
         }
         p = (float) count / (size / NUM_SUBPIECES_PER_PIECE);
-        sb.append(p * 100 + "%]\nchunkfield[");
+        sb.append(p * 100).append("%]\nchunkfield[");
         for (int i = 0; i
                 < (size / 2048) + 1; i++) {
             if (getChunk(i)) {
@@ -451,7 +473,7 @@ public class BitField {
     }
 
     public String getChunkHumanReadable() {
-        StringBuffer sb = new StringBuffer("ChunkField[");
+        StringBuilder sb = new StringBuilder("ChunkField[");
         for (int i = 0; i < (size / 2048) + 1; i++) {
             if (getChunk(i)) {
                 sb.append('+');
@@ -465,7 +487,7 @@ public class BitField {
     }
 
     public String getPiecesHummanRedable(int utility, int marge) {
-        StringBuffer sb = new StringBuffer("PiecesField[");
+        StringBuilder sb = new StringBuilder("PiecesField[");
         for (int i = 0; i < marge; i++) {
             for (int j = 0; j < NUM_PIECES_PER_CHUNK; j++) {
                 if ((utility + i) * NUM_PIECES_PER_CHUNK + j >= numPieces) {
@@ -525,7 +547,7 @@ public class BitField {
             firstUncompletedBit++;
         }
         if (firstUncompletedChunk >= numChunks) {
-            return -10;
+            return VodConfig.SEEDER_UTILITY_VALUE;
         } else {
             return firstUncompletedChunk;
         }

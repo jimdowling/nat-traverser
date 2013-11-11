@@ -20,7 +20,6 @@
  */
 package se.sics.gvod.common;
 
-import java.lang.Integer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -47,7 +46,8 @@ public class RTTStore {
     protected static final int DECAY_PERIOD = 10000;
     protected static final int SAMPLE_VALIDITY_PERIOD = 10000;
     protected static final int MINIMUM_SAMPLES_TO_KEEP = 5;
-    private static ConcurrentHashMap<Integer, ConcurrentHashMap<Address, RTT>> publicRtts = new ConcurrentHashMap<Integer, ConcurrentHashMap<Address, RTT>>();
+    private static final ConcurrentHashMap<Integer, ConcurrentHashMap<Integer, RTT>> publicRtts 
+            = new ConcurrentHashMap<Integer, ConcurrentHashMap<Integer, RTT>>();
 
     static {
         Timer timer = new Timer();
@@ -87,9 +87,9 @@ public class RTTStore {
                 }
             };
         }
-        private VodAddress address;
-        private Long time;
-        private Long value;
+        private final VodAddress address;
+        private final Long time;
+        private final Long value;
 
         public Sample(VodAddress address, Long time, Long value) {
             this.address = address;
@@ -115,7 +115,7 @@ public class RTTStore {
      */
     public static final class RTT {
 
-        private static Logger log = LoggerFactory.getLogger(RTT.class);
+        private static final Logger log = LoggerFactory.getLogger(RTT.class);
 
         public static enum Order implements Comparator<RTT> {
 
@@ -269,7 +269,8 @@ public class RTTStore {
                 return false;
             }
             final RTT other = (RTT) obj;
-            if (this.address != other.address && (this.address == null || !this.address.equals(other.address))) {
+            if (this.address != other.address && (this.address == null 
+                    || !this.address.equals(other.address))) {
                 return false;
             }
             return true;
@@ -296,19 +297,18 @@ public class RTTStore {
     public static RTT addSample(int nodeId, VodAddress address, long rttValue) {
         if (address.isOpen()) {
             RTT rtt;
-            Address peerAddress = address.getPeerAddress();
             if (!publicRtts.containsKey(nodeId)) {
-                ConcurrentHashMap<Address, RTT> m = new ConcurrentHashMap<Address, RTT>();
+                ConcurrentHashMap<Integer, RTT> m = new ConcurrentHashMap<Integer, RTT>();
                 publicRtts.put(nodeId, m);
             }
-            ConcurrentHashMap<Address, RTT> m = publicRtts.get(nodeId);
+            ConcurrentHashMap<Integer, RTT> m = publicRtts.get(nodeId);
 
-            if (!m.containsKey(peerAddress)) {
+            if (!m.containsKey(address.getId())) {
                 rtt = new RTT(address, 10 /*minRto*/);
-                m.put(peerAddress, rtt);
+                m.put(address.getId(), rtt);
                 rtt.addSample(rttValue);
             } else {
-                rtt = m.get(peerAddress);
+                rtt = m.get(address.getId());
                 rtt.addSample(rttValue);
             }
             return rtt;
@@ -324,9 +324,9 @@ public class RTTStore {
      */
     public static void removeSamples(int nodeId, VodAddress failedNode) {
 
-        ConcurrentHashMap<Address, RTT> m = publicRtts.get(nodeId);
+        ConcurrentHashMap<Integer, RTT> m = publicRtts.get(nodeId);
         if (m != null) {
-            m.remove(failedNode.getPeerAddress());
+            m.remove(failedNode.getId());
         }
     }
 
@@ -341,13 +341,12 @@ public class RTTStore {
         if (!publicRtts.containsKey(nodeId)) {
             return null;
         }
-        ConcurrentHashMap<Address, RTT> m = publicRtts.get(nodeId);
+        ConcurrentHashMap<Integer, RTT> m = publicRtts.get(nodeId);
 
-        Address peerAddress = address.getPeerAddress();
-        if (!m.containsKey(peerAddress)) {
+        if (!m.containsKey(address.getId())) {
             return null;
         } else {
-            return m.get(peerAddress);
+            return m.get(address.getId());
         }
     }
 
@@ -357,8 +356,8 @@ public class RTTStore {
             if (!publicRtts.containsKey(nodeId)) {
                 return false;
             }
-            ConcurrentHashMap<Address, RTT> m = publicRtts.get(nodeId);
-            return m.containsKey(address.getPeerAddress());
+            ConcurrentHashMap<Integer, RTT> m = publicRtts.get(nodeId);
+            return m.containsKey(address.getId());
         }
         return false;
     }
@@ -377,17 +376,19 @@ public class RTTStore {
      */
     public static List<RTT> getOnAvgBest(int nodeId, int numNodes,
             Set<Address> ignoreSet) {
-        ConcurrentHashMap<Address, RTT> m = publicRtts.get(nodeId);
+        ConcurrentHashMap<Integer, RTT> m = publicRtts.get(nodeId);
         if (m == null) {
-                m = new ConcurrentHashMap<Address, RTT>();
+                m = new ConcurrentHashMap<Integer, RTT>();
                 publicRtts.put(nodeId, m);
         }
         
         List<RTT> rtts = new ArrayList<RTT>(m.values());
         List<RTT> remove = new ArrayList<RTT>();
         for (RTT r : rtts) {
-            if (ignoreSet.contains(r.getAddress().getPeerAddress())) {
-                remove.add(r);
+            for (Address ignoreAddr : ignoreSet) {
+                if (ignoreAddr.getId() == r.getAddress().getId()) {
+                    remove.add(r);
+                }
             }
         }
         rtts.removeAll(remove);
@@ -409,9 +410,9 @@ public class RTTStore {
 
     public static List<RTT> getOnAvgBetterRtts(int nodeId, int numNodes, 
             long value, long tolerance) {
-        ConcurrentHashMap<Address, RTT> m = publicRtts.get(nodeId);
+        ConcurrentHashMap<Integer, RTT> m = publicRtts.get(nodeId);
         if (m == null) {
-                m = new ConcurrentHashMap<Address, RTT>();
+                m = new ConcurrentHashMap<Integer, RTT>();
                 publicRtts.put(nodeId, m);
         }
         List<RTT> rtts = new ArrayList<RTT>(m.values());
