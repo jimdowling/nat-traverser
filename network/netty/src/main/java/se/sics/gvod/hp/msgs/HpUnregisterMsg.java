@@ -131,7 +131,7 @@ public class HpUnregisterMsg {
         private final Request unregisterFromRendezvousServerRequest;
 
         public RequestRetryTimeout(ScheduleRetryTimeout st, Request requestMsg, Request registerWithRendezvousServerRequest) {
-            super(st, requestMsg);
+            super(st, requestMsg, requestMsg.getVodSource().getOverlayId());
             this.requestMsg = requestMsg;
             this.unregisterFromRendezvousServerRequest = registerWithRendezvousServerRequest;
         }

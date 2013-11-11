@@ -121,7 +121,7 @@ public class Interleaved_PRC_OpenHoleMsg
 
         public RequestRetryTimeout(ScheduleRetryTimeout st, Request requestMsg)
         {
-            super(st, requestMsg);
+            super(st, requestMsg, requestMsg.getVodSource().getOverlayId());
             this.requestMsg = requestMsg;
         }
 

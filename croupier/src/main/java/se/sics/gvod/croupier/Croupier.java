@@ -24,7 +24,6 @@ import java.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import se.sics.gvod.common.*;
-import se.sics.gvod.common.RTTStore.RTT;
 import se.sics.gvod.common.msgs.RelayMsgNetty;
 import se.sics.gvod.config.CroupierConfiguration;
 import se.sics.gvod.croupier.events.*;
@@ -78,7 +77,7 @@ public class Croupier extends MsgRetryComponent {
 
             SchedulePeriodicTimeout spt = new SchedulePeriodicTimeout(config.getShufflePeriod(),
                     config.getShufflePeriod());
-            spt.setTimeoutEvent(new CroupierShuffleCycle(spt));
+            spt.setTimeoutEvent(new CroupierShuffleCycle(spt, self.getOverlayId()));
             delegator.doTrigger(spt, timer);
         }
     };
@@ -163,7 +162,8 @@ public class Croupier extends MsgRetryComponent {
                 config.getRtoRetries(), config.getRtoScale());
         ShuffleMsg.Request msg = new ShuffleMsg.Request(self.getAddress(), node,
                 buffer, self.getDescriptor());
-        ShuffleMsg.RequestTimeout retryRequest = new ShuffleMsg.RequestTimeout(st, msg);
+        ShuffleMsg.RequestTimeout retryRequest = 
+                new ShuffleMsg.RequestTimeout(st, msg, self.getOverlayId());
         TimeoutId id = delegator.doRetry(retryRequest);
 
         shuffleTimes.put(id.getId(), System.currentTimeMillis());
@@ -177,14 +177,14 @@ public class Croupier extends MsgRetryComponent {
 
             // If I don't have any references to any public nodes, use RTT to see if I can
             // find any
-            if (publicView.isEmpty()) {
-                List<RTT> n = RTTStore.getOnAvgBest(self.getId(), 5);
-                Set<VodDescriptor> nodes = new HashSet<VodDescriptor>();
-                for (RTT r : n) {
-                    nodes.add(new VodDescriptor(r.getAddress()));
-                }
-                publicView.initialize(nodes);
-            }
+//            if (publicView.isEmpty()) {
+//                List<RTT> n = RTTStore.getOnAvgBest(self.getId(), 5);
+//                Set<VodDescriptor> nodes = new HashSet<VodDescriptor>();
+//                for (RTT r : n) {
+//                    nodes.add(new VodDescriptor(r.getAddress()));
+//                }
+//                publicView.initialize(nodes);
+//            }
             VodAddress peer = selectPeerToShuffleWith();
 
             if (peer != null) {

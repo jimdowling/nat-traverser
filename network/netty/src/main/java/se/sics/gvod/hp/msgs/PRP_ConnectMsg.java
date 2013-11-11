@@ -161,7 +161,7 @@ public class PRP_ConnectMsg
 
         public RequestRetryTimeout(ScheduleRetryTimeout st, Request requestMsg)
         {
-            super(st, requestMsg);
+            super(st, requestMsg, requestMsg.getVodSource().getOverlayId());
             this.requestMsg = requestMsg;
         }
 

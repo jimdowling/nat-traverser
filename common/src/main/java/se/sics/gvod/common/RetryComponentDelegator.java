@@ -6,8 +6,8 @@ package se.sics.gvod.common;
 
 import java.util.Set;
 import se.sics.gvod.address.Address;
-import se.sics.gvod.net.msgs.RewriteableMsg;
 import se.sics.gvod.net.msgs.RewriteableRetryTimeout;
+import se.sics.gvod.net.msgs.RewriteableMsg;
 import se.sics.gvod.timer.TimeoutId;
 
 /**
@@ -18,17 +18,18 @@ public interface RetryComponentDelegator extends ComponentDelegator {
 
     public void doAutoSubscribe();
 
-    public TimeoutId doMulticast(RewriteableRetryTimeout timeout, Set<Address> multicastAddrs);
-    public TimeoutId doMulticast(RewriteableRetryTimeout timeout, Set<Address> multicastAddrs, 
-            Object request);
+    public TimeoutId doMulticast(RewriteableRetryTimeout timeout, 
+            Set<Address> multicastAddrs);
+    public TimeoutId doMulticast(RewriteableRetryTimeout timeout, 
+            Set<Address> multicastAddrs, Object request);
     public TimeoutId doMulticast(RewriteableMsg msg, Set<Address> multicastAddrs, 
-            long timeoutInMilliSecs, int rtoRetries);
+            long timeoutInMilliSecs, int rtoRetries, int overlayId);
     public TimeoutId doMulticast(RewriteableMsg msg, Set<Address> multicastAddrs, 
-            long timeoutInMilliSecs, int rtoRetries,  Object request);
+            long timeoutInMilliSecs, int rtoRetries,  Object request, int overlayId);
     public TimeoutId doMulticast(RewriteableMsg msg, Set<Address> multicastAddrs, 
-            long timeoutInMilliSecs, int rtoRetries, double rtoScaleAfterRetry);
+            long timeoutInMilliSecs, int rtoRetries, double rtoScaleAfterRetry, int overlayId);
     public TimeoutId doMulticast(RewriteableMsg msg, Set<Address> multicastAddrs, 
-            long timeoutInMilliSecs, int rtoRetries, double rtoScaleAfterRetry, Object request);
+            long timeoutInMilliSecs, int rtoRetries, double rtoScaleAfterRetry, Object request, int overlayId);
     
     /*
      * This retry method retries the message a number of times, and
@@ -46,14 +47,14 @@ public interface RetryComponentDelegator extends ComponentDelegator {
      * timeoutId is then used to discard duplicates in NatTraverser.
      * You can't call cancelRetry() on the timeoutId returned by this method.
      */
-    public TimeoutId doRetry(RewriteableMsg msg);
-    public TimeoutId doRetry(RewriteableMsg msg, long timeoutInMilliSecs, int rtoRetries);
+    public TimeoutId doRetry(RewriteableMsg msg, int overlayId);
+    public TimeoutId doRetry(RewriteableMsg msg, long timeoutInMilliSecs, int rtoRetries, int overlayId);
     public TimeoutId doRetry(RewriteableMsg msg, long timeoutInMilliSecs, int rtoRetries, 
-            Object request);
+            Object request, int overlayId);
     public TimeoutId doRetry(RewriteableMsg msg, long timeoutInMilliSecs, int rtoRetries, 
-            double rtoScaleAfterRetry);
+            double rtoScaleAfterRetry, int overlayId);
     public TimeoutId doRetry(RewriteableMsg msg, long timeoutInMilliSecs, int rtoRetries, 
-            double rtoScaleAfterRetry, Object request);
+            double rtoScaleAfterRetry, Object request, int overlayId);
 
     /**
      * 

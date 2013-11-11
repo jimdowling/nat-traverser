@@ -201,10 +201,10 @@ public class ConnectMsg {
         private final VodAddress dest;
         private final boolean toUtilitySet;
 
-        public RequestTimeout(ScheduleRetryTimeout timeout, ConnectMsg.Request request, 
+        public RequestTimeout(ScheduleRetryTimeout timeout, ConnectMsg.Request requestMsg, 
                 boolean toUtilitySet) {
-            super(timeout, request);
-            this.dest = request.getVodDestination();
+            super(timeout, requestMsg, requestMsg.getVodSource().getOverlayId());
+            this.dest = requestMsg.getVodDestination();
             this.toUtilitySet = toUtilitySet;
         }
 

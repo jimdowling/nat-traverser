@@ -141,7 +141,7 @@ public class HpRegisterMsg {
     public static final class RequestRetryTimeout extends RewriteableRetryTimeout {
 
         public RequestRetryTimeout(ScheduleRetryTimeout st, HpRegisterMsg.Request requestMsg) {
-            super(st, requestMsg);
+            super(st, requestMsg, requestMsg.getVodSource().getOverlayId());
         }
 
         public HpRegisterMsg.Request getRequest() {

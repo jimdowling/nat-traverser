@@ -1618,9 +1618,9 @@ public class HpClient extends MsgRetryComponent {
                     // to open two consecutive holes on the nat (if mapping != EI)
                     delegator.doRetry(requestRetryTimeout);
                     if (session.getHolePunchingMechanism() == HPMechanism.PRP_PRC) {
-                        delegator.doRetry(dummyMessage, 10, 3, 1.5d);
+                        delegator.doRetry(dummyMessage, 10, 3, 1.5d, self.getOverlayId());
                     } else {
-                        delegator.doRetry(dummyMessage);
+                        delegator.doRetry(dummyMessage, self.getOverlayId());
                     }
 
                 }
@@ -2011,9 +2011,9 @@ public class HpClient extends MsgRetryComponent {
                                 + " dest id:port " + response.getRemoteClientDummyPublicAddress().getId()
                                 + ":" + response.getRemoteClientDummyPublicAddress().getPort());
                         if (session.getHolePunchingMechanism() == HPMechanism.PRP_PRC) {
-                            delegator.doRetry(dummyHolePunchingMsg, 500, 5, 1.2d);
+                            delegator.doRetry(dummyHolePunchingMsg, 500, 5, 1.2d, self.getOverlayId());
                         } else {
-                            delegator.doRetry(dummyHolePunchingMsg);
+                            delegator.doRetry(dummyHolePunchingMsg, self.getOverlayId());
                         }
                     } else {
                         Address a = new Address(self.getIp(), response.getPortToUse(), self.getId());
@@ -2046,9 +2046,9 @@ public class HpClient extends MsgRetryComponent {
             if (response.getStatus() == PRP_DummyMsgPortResponse.Status.SUCCESS
                     || response.getStatus() == PRP_DummyMsgPortResponse.Status.PORT_ALREADY_BOUND) {
                 if (response.isPrcPrp()) {
-                    delegator.doRetry(msg, 500, 5, 1.2d);
+                    delegator.doRetry(msg, 500, 5, 1.2d, self.getOverlayId());
                 } else {
-                    delegator.doRetry(msg);
+                    delegator.doRetry(msg, self.getOverlayId());
                 }
             } else if (response.getStatus() == PRP_DummyMsgPortResponse.Status.FAIL) {
                 removeAndUnbindPort(msg.getDestport(), false);

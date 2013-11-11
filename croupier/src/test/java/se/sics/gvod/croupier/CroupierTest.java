@@ -139,7 +139,7 @@ public class CroupierTest extends VodRetryComponentTestCase {
     @Test
     public void testCycle() {
         ScheduleTimeout st = new ScheduleTimeout(100);
-        CroupierShuffleCycle csc = new CroupierShuffleCycle(st);
+        CroupierShuffleCycle csc = new CroupierShuffleCycle(st, getOverlayId());
         croupier.handleCycle.handle(csc);
         assert (croupier.publicView.isEmpty());
         assert (croupier.privateView.isEmpty());

@@ -398,7 +398,7 @@ public class ParentMaker extends MsgRetryComponent {
                 // unregister from z-server
                 HpUnregisterMsg.Request req = new HpUnregisterMsg.Request(self.getAddress(),
                         parent, config.getChildRemoveTimeout(), HpRegisterMsg.RegisterStatus.BETTER_PARENT);
-                delegator.doRetry(req, config.getRto(), config.getRtoRetries());
+                delegator.doRetry(req, config.getRto(), config.getRtoRetries(), self.getOverlayId());
             }
             connections.remove(parent);
             // free-up any PRP ports cached at the parent

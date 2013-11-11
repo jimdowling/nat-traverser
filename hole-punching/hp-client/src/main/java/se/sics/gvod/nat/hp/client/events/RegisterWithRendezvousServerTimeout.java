@@ -15,16 +15,13 @@ import se.sics.gvod.net.msgs.ScheduleRetryTimeout;
  */
 public class RegisterWithRendezvousServerTimeout extends RewriteableRetryTimeout
 {
-
-//    public static final class RequestRetryTimeout extends RewriteableRetryTimeout {
-
         private final HpRegisterMsg.Request requestMsg;
         private final RegisterWithRendezvousServerRequest  registerWithRendezvousServerRequest;
 
         public RegisterWithRendezvousServerTimeout(ScheduleRetryTimeout st,
                 HpRegisterMsg.Request requestMsg,
                 RegisterWithRendezvousServerRequest registerWithRendezvousServerRequest) {
-            super(st, requestMsg);
+            super(st, requestMsg, requestMsg.getVodSource().getOverlayId());
             this.requestMsg = requestMsg;
             this.registerWithRendezvousServerRequest = registerWithRendezvousServerRequest;
         }

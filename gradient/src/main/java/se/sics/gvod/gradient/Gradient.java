@@ -276,7 +276,7 @@ public class Gradient extends MsgRetryComponent {
                 self.getUtility().getValue());
 
         // No need for cleanup event to be caught, if connect fails, it fails silently
-        delegator.doRetry(request, 3000, 1, 1.5);
+        delegator.doRetry(request, 3000, 1, 1.5, self.getOverlayId());
 
         logger.debug(compName + "trigger LeaderProposeMsg.Request from {} to {}", self, dest);
     }

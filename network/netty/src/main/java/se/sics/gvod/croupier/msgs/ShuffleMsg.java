@@ -133,8 +133,8 @@ public class ShuffleMsg {
 
         private final VodAddress peer;
 
-        public RequestTimeout(ScheduleRetryTimeout timout, Request request) {
-            super(timout, request);
+        public RequestTimeout(ScheduleRetryTimeout timout, Request request, int overlayId) {
+            super(timout, request, overlayId);
             this.peer = request.getVodDestination();
         }
 

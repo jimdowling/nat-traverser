@@ -11,9 +11,9 @@ import se.sics.kompics.ChannelFilter;
  *
  * @author Jim Dowling<jdowling@sics.se>
  */
-public final class TimeoutFilterOverlayId extends ChannelFilter<OverlayTimeout, Integer> {
+public final class TimeoutOverlayIdFilter extends ChannelFilter<OverlayTimeout, Integer> {
 
-    public TimeoutFilterOverlayId(int id) {
+    public TimeoutOverlayIdFilter(int id) {
         super(OverlayTimeout.class, id, true);
     }
 

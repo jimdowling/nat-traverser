@@ -121,7 +121,7 @@ public class EchoChangeIpAndPortMsg {
         private final Request requestMsg;
 
         public RequestRetryTimeout(ScheduleRetryTimeout st, Request requestMsg) {
-            super(st, requestMsg);
+            super(st, requestMsg, requestMsg.getVodSource().getOverlayId());
             this.requestMsg = requestMsg;
         }
 

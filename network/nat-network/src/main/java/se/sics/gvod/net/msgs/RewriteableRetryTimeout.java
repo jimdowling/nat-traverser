@@ -4,20 +4,21 @@
  */
 package se.sics.gvod.net.msgs;
 
-import se.sics.gvod.timer.Timeout;
+import se.sics.gvod.timer.OverlayTimeout;
 
 
 /**
  *
  * @author jdowling
  */
-public class RewriteableRetryTimeout extends Timeout {
+public class RewriteableRetryTimeout extends OverlayTimeout{
 
     private final RewriteableMsg retryMessage;
     private final ScheduleRetryTimeout scheduleRetryTimeout;
 
-    public RewriteableRetryTimeout(ScheduleRetryTimeout st, RewriteableMsg retryMessage) {
-        super(st.getScheduleTimeout());
+    public RewriteableRetryTimeout(ScheduleRetryTimeout st, RewriteableMsg retryMessage,
+            int overlayId) {
+        super(st.getScheduleTimeout(), overlayId);
         st.getScheduleTimeout().setTimeoutEvent(this);
         this.retryMessage = retryMessage;
         this.scheduleRetryTimeout = st;

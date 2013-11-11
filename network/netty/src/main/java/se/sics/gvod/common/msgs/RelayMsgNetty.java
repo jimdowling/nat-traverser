@@ -211,8 +211,8 @@ public class RelayMsgNetty {
 
     public static class RequestTimeout extends RewriteableRetryTimeout {
 
-        public RequestTimeout(ScheduleRetryTimeout request, Request msg) {
-            super(request, msg);
+        public RequestTimeout(ScheduleRetryTimeout request, Request requestMsg) {
+            super(request, requestMsg, requestMsg.getVodSource().getOverlayId());
         }
     }
 }

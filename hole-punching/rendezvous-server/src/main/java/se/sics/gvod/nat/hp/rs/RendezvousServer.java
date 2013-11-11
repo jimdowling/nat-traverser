@@ -290,7 +290,7 @@ public class RendezvousServer extends MsgRetryComponent {
                     if (rtt + THRESHOLD_SWAP_PARENT < worstChildRtt) {
                         registeredClients.remove(worstChild.getId());
                         delegator.doRetry(new HpUnregisterMsg.Request(self.getAddress(),
-                                worstChild, 0, HpRegisterMsg.RegisterStatus.BETTER_CHILD));
+                                worstChild, 0, HpRegisterMsg.RegisterStatus.BETTER_CHILD), self.getOverlayId());
                         
                         registerClientRecord(peer, request.getSource().getId(), rtt,
                                 request.getPrpPorts(), false);
@@ -641,7 +641,7 @@ public class RendezvousServer extends MsgRetryComponent {
                         new HpUnregisterMsg.Request(self.getAddress(),
                         ping.getVodSource(),
                         0, HpRegisterMsg.RegisterStatus.NOT_CHILD);
-                delegator.doRetry(msg);
+                delegator.doRetry(msg, self.getOverlayId());
             }
         }
     };
@@ -1670,7 +1670,7 @@ public class RendezvousServer extends MsgRetryComponent {
                 registeredClients.remove(childId);
                 delegator.doRetry(new HpUnregisterMsg.Request(self.getAddress(),
                         event.getRequestMsg().getVodDestination(), 0,
-                        HpRegisterMsg.RegisterStatus.PARENT_REQUEST_FAILED));
+                        HpRegisterMsg.RegisterStatus.PARENT_REQUEST_FAILED), self.getOverlayId());
                 logger.warn(compName + " Child didn't allocate requested ports. Disconnecting child.");
             }
         }

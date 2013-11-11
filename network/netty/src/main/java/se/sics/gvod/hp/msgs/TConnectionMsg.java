@@ -170,7 +170,7 @@ public class TConnectionMsg {
         private final Ping requestMsg;
 
         public RequestRetryTimeout(ScheduleRetryTimeout st, Ping requestMsg) {
-            super(st, requestMsg);
+            super(st, requestMsg, requestMsg.getVodSource().getOverlayId());
             this.requestMsg = requestMsg;
         }
 

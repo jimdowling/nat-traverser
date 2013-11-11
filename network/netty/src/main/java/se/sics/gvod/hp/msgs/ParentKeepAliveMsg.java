@@ -89,7 +89,7 @@ public class ParentKeepAliveMsg {
         private final Ping requestMsg;
 
         public PingTimeout(ScheduleRetryTimeout st, Ping requestMsg) {
-            super(st, requestMsg);
+            super(st, requestMsg, requestMsg.getVodSource().getOverlayId());
             this.requestMsg = requestMsg;
         }
 

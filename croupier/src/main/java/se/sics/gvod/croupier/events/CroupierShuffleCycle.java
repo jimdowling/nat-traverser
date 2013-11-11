@@ -20,21 +20,21 @@
  */
 package se.sics.gvod.croupier.events;
 
+import se.sics.gvod.timer.OverlayTimeout;
 import se.sics.gvod.timer.SchedulePeriodicTimeout;
 import se.sics.gvod.timer.ScheduleTimeout;
-import se.sics.gvod.timer.Timeout;
 
 
 /**
  *
  */
-public class CroupierShuffleCycle extends Timeout{
-    	public CroupierShuffleCycle(SchedulePeriodicTimeout request) {
-		super(request);
+public class CroupierShuffleCycle extends OverlayTimeout {
+    	public CroupierShuffleCycle(SchedulePeriodicTimeout request, int overlayId) {
+		super(request, overlayId);
 	}
 
-	public CroupierShuffleCycle(ScheduleTimeout request) {
-		super(request);
+	public CroupierShuffleCycle(ScheduleTimeout request, int overlayId) {
+		super(request, overlayId);
 	}
 
 }

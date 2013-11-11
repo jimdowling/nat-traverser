@@ -91,9 +91,9 @@ public class DisconnectMsg {
 
         private final VodAddress peer;
 
-        public RequestTimeout(ScheduleRetryTimeout request, Request msg) {
-            super(request, msg);
-            this.peer = msg.getVodDestination();
+        public RequestTimeout(ScheduleRetryTimeout request, Request requestMsg) {
+            super(request, requestMsg, requestMsg.getVodSource().getOverlayId());
+            this.peer = requestMsg.getVodDestination();
         }
 
         public VodAddress getPeer() {

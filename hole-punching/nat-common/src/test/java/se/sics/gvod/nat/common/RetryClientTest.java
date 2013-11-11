@@ -16,6 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import se.sics.gvod.common.RetryComponentDelegator;
 import se.sics.gvod.common.util.ToVodAddr;
+import se.sics.gvod.config.VodConfig;
 import se.sics.gvod.net.VodAddress;
 import se.sics.gvod.net.VodNetwork;
 import se.sics.gvod.net.msgs.DirectMsg;
@@ -73,7 +74,7 @@ public class RetryClientTest
     public static class SimpleTimeout extends RewriteableRetryTimeout {
 
         public SimpleTimeout(ScheduleRetryTimeout st, DirectMsg retryMsg) {
-            super(st,retryMsg);
+            super(st, retryMsg, retryMsg.getVodSource().getOverlayId());
         }
     }
 
@@ -133,7 +134,7 @@ public class RetryClientTest
                 // Try to send the message 3 times, and if timeout, then
                 // do nothing - silent
                 TestMsg req = new TestMsg(src, dest);
-                retry(req, TIMEOUT, 3, 1.2);
+                retry(req, TIMEOUT, 3, 1.2, VodConfig.SYSTEM_OVERLAY_ID);
             }
         };
         private Handler<TestMsg> handleTestMessage = new Handler<TestMsg>() {
@@ -143,7 +144,7 @@ public class RetryClientTest
                if  (cancelRetry(event.getTimeoutId()) == true)
                {
                 TestMsgId req = new TestMsgId(src, dest);
-                retry(req, TIMEOUT, 4, 1.5);
+                retry(req, TIMEOUT, 4, 1.5, VodConfig.SYSTEM_OVERLAY_ID);
                }
                else {
                    testObj.fail();

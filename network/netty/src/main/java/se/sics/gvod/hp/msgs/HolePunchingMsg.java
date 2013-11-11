@@ -151,9 +151,9 @@ public class HolePunchingMsg {
 
         private final Request requestMsg;
 
-        public RequestTimeout(ScheduleRetryTimeout st, Request requestMsg) {
-            super(st, requestMsg);
-            this.requestMsg = requestMsg;
+        public RequestTimeout(ScheduleRetryTimeout st, Request msg) {
+            super(st, msg, msg.getVodSource().getOverlayId());
+            this.requestMsg = msg;
         }
 
         public Request getRequestMsg() {
@@ -165,9 +165,9 @@ public class HolePunchingMsg {
 
         private final Response responseMsg;
 
-        public ResponseTimeout(ScheduleRetryTimeout st, Response ResponseMsg) {
-            super(st, ResponseMsg);
-            this.responseMsg = ResponseMsg;
+        public ResponseTimeout(ScheduleRetryTimeout st, Response requestMsg) {
+            super(st, requestMsg, requestMsg.getVodSource().getOverlayId());
+            this.responseMsg = requestMsg;
         }
 
         public Response getResponseMsg() {

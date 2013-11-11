@@ -1,6 +1,6 @@
 #!/bin/bash
 
-declare -a hosts=(1 2 5 6 7)
+declare -a hosts=(1 2 3 6 7)
 declare -a nats=(
                  'NAT_EI_PP_PD'
                  'NAT_EI_PC_EI'

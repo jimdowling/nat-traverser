@@ -58,7 +58,7 @@ public class TMessage {
         private final RequestMsg requestMsg;
 
         public RequestRetryTimeout(ScheduleRetryTimeout st, RequestMsg requestMsg) {
-            super(st, requestMsg);
+            super(st, requestMsg, requestMsg.getVodSource().getOverlayId());
             this.requestMsg = requestMsg;
         }
 
