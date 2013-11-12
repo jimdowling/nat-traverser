@@ -484,7 +484,6 @@ public class NatTraverser extends ComponentDefinition {
     Handler<DirectMsgNetty.Request> handleLowerDirectMsgRequest = new Handler<DirectMsgNetty.Request>() {
         @Override
         public void handle(DirectMsgNetty.Request msg) {
-            
             forwardDirectMsgUp(msg);
         }
     };
