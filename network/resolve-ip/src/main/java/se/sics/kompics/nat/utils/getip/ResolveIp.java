@@ -76,12 +76,7 @@ public final class ResolveIp extends ComponentDefinition {
             if (obj1.isUp() && !obj2.isUp()) {
                 return -1;
             }
-            if (obj1.getNetworkPrefixLength() < obj2.getNetworkPrefixLength()) {
-                return 1;
-            }
-            if (obj1.getNetworkPrefixLength() > obj2.getNetworkPrefixLength()) {
-                return -1;
-            }
+
             try {
                 InetAddress loopbackIp = InetAddress.getByName("127.0.0.1");
                 if (obj1.getAddr().equals(loopbackIp)) {
@@ -99,6 +94,23 @@ public final class ResolveIp extends ComponentDefinition {
             } catch (UnknownHostException ex) {
                 java.util.logging.Logger.getLogger(ResolveIp.class.getName()).log(Level.SEVERE, null, ex);
             }
+            
+            String prefix1 = getTwoDotPrefix(obj1.getAddr());
+            String prefix2 = getTwoDotPrefix(obj2.getAddr());
+            
+            if (prefix1.compareTo("192.168") == 0 && prefix2.compareTo("192.168") != 0) {
+                return 1;
+            } else if (prefix2.compareTo("192.168") == 0 && prefix1.compareTo("192.168") != 0) {
+                return -1;
+            }
+            prefix1 = getOneDotPrefix(obj1.getAddr());
+            prefix2 = getOneDotPrefix(obj2.getAddr());            
+            if (prefix1.compareTo("10") == 0 && prefix2.compareTo("10") != 0) {
+                return 1;
+            } else if (prefix2.compareTo("10") == 0 && prefix1.compareTo("10") != 0) {
+                return -1;
+            }            
+            
 
             if (obj1.isUp() == true && obj2.isUp() == false) {
                 return -1;
@@ -267,6 +279,24 @@ public final class ResolveIp extends ComponentDefinition {
 
         return difference;
     }
+    
+    public static String getOneDotPrefix(InetAddress addr) {
+                    String textualPrefixAddr = addr.getHostAddress();
+                    int firstDot = textualPrefixAddr.indexOf(".");
+                    textualPrefixAddr = textualPrefixAddr.substring(0, firstDot);
+                    return textualPrefixAddr;
+    }    
+    
+    public static String getTwoDotPrefix(InetAddress addr) {
+                    String textualPrefixAddr = addr.getHostAddress();
+                    int firstDot = textualPrefixAddr.indexOf(".");
+                    int secondDot = textualPrefixAddr.indexOf(".", firstDot + 1);
+                    if (firstDot > 0) {
+                        textualPrefixAddr = textualPrefixAddr.substring(0, secondDot);
+                    }        
+                    return textualPrefixAddr;
+    }
+    
     private Handler<GetIpRequest> handleGetIpRequest = new Handler<GetIpRequest>() {
         @Override
         public void handle(GetIpRequest event) {

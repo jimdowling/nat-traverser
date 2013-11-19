@@ -897,8 +897,6 @@ public class StunClient extends MsgRetryComponent {
             // OPEN-IP
             // now, check there is no firewall filtering incoming 
             // echo from another host/port.
-
-
             // don't need to check for these, node is open.
             session.setMapAllocState(MappingAllocState.FINISHED);
             openIp = true;

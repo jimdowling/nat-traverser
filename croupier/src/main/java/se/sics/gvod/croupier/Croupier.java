@@ -70,7 +70,7 @@ public class Croupier extends MsgRetryComponent {
         @Override
         public void handle(CroupierInit init) {
             self = init.getSelf();
-            compName = "(" + self.getId() + ") ";
+            compName = "(" + self.getId() + ", " + self.getOverlayId() + ") ";
             config = init.getConfig();
             publicView = new View(self, config.getViewSize(), config.getSeed());
             privateView = new View(self, config.getViewSize(), config.getSeed());

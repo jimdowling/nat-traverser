@@ -50,7 +50,6 @@ public abstract class BaseCommandLineConfig {
     public static final String POM_FILENAME = "pom.xml";
     public static String GVOD_HOME;
     public static final String MAVEN_REPO_LOCAL;
-    public static final String RESULTS_DIR;
     public static final String PROP_PORT = "port";
     public static final String PROP_MEDIA_PORT = "web.port";
     public static final String PROP_SEED = "seed";
@@ -72,7 +71,7 @@ public abstract class BaseCommandLineConfig {
         if (isOperatingSystemWindows()) {
             GVOD_HOME = "gvod";
         } else {
-            GVOD_HOME = ".config/gvod";
+            GVOD_HOME = ".config/nattraverser";
         }
 
         String kHome = System.getProperty(PROP_GVOD_HOME);
@@ -110,17 +109,6 @@ public abstract class BaseCommandLineConfig {
             }
         }
 
-
-        RESULTS_DIR = GVOD_HOME + File.separator + "res";
-        File resDir = new File(RESULTS_DIR);
-        if (resDir.exists() == false) {
-            if (new File(RESULTS_DIR).mkdirs() == false) {
-                logger.warn("You need to log on to the machine with an account that create a '" + GVOD_HOME
-                        + File.separator + RESULTS_DIR
-                        + "' directory in the account's home directory");
-                throw new IllegalStateException("Could not create directory: " + RESULTS_DIR);
-            }
-        }
     }
 
     public static final int DEFAULT_PORT = 58022;
@@ -135,7 +123,7 @@ public abstract class BaseCommandLineConfig {
     public static final int DEFAULT_WEB_REQUEST_TIMEOUT_MS = 30 * 1000;
     public static final int DEFAULT_WEB_THREADS = 2;
     public static final int DEFAULT_SEED = 123;
-    protected static final int DEFAULT_NUM_WORKERS = 2;
+    protected static final int DEFAULT_NUM_WORKERS = 4;
     protected static final String VAL_ADDRESS = "address";
     protected static final String VAL_NUMBER = "number";
     protected static final String VAL_PERIOD_SECS = "seconds";

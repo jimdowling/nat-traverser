@@ -150,17 +150,16 @@ public class NatTraverser extends ComponentDefinition {
     private boolean stunTypeDetermined = false;
     private Set<Address> failedStunServers = new HashSet<Address>();
     private List<VodAddress> croupierSamples = new ArrayList<VodAddress>();
-
     /**
-     * For PRP, PRP_PRP nat traversal, we send pre-allocated ports to our parents.
-     * Pre-allocated ports are ports that we bind to locally using Netty::PortBind() or Netty::PortAllocate().
-     * We need to keep track of which ports have been assigned to which parents, and
-     * when parents allocate them to clients to talk to this node.
-     * This data structure is used to garbage-collect those ports and clean-up.
+     * For PRP, PRP_PRP nat traversal, we send pre-allocated ports to our
+     * parents. Pre-allocated ports are ports that we bind to locally using
+     * Netty::PortBind() or Netty::PortAllocate(). We need to keep track of
+     * which ports have been assigned to which parents, and when parents
+     * allocate them to clients to talk to this node. This data structure is
+     * used to garbage-collect those ports and clean-up.
      */
-    private ConcurrentSkipListSet<Integer> parentPorts 
-            = new ConcurrentSkipListSet<Integer>();
-    
+    private ConcurrentSkipListSet<Integer> parentPorts = new ConcurrentSkipListSet<Integer>();
+
     class ServersInitTimeout extends Timeout {
 
         public ServersInitTimeout(ScheduleTimeout st) {
@@ -319,33 +318,33 @@ public class NatTraverser extends ComponentDefinition {
                     stunServers.add(new Address(a.getIp(), BaseCommandLineConfig.DEFAULT_STUN_PORT, a.getId()));
                 }
 
-//                CachedNatType sc = VodConfig.getSavedNatType();
-//                boolean runStun = true;
-//                if (sc.getNatBean().getNumTimesUnchanged() > 2 && 
-//                        sc.getNatBean().getNumTimesSinceStunLastRun() < 5) {
-//                    if (!sc.getNatBean().isUpnpSupported()) {
-//                        VodAddress va = sc.getNatBean().getVodAddress();
-//                        self.setNat(va.getNat());
-//                        if (!self.isOpen()) {
-//                            for (Address p : va.getParents()) {
-//                                self.addParent(p);
-//                            }
-//                        }
-//                        runStun = false;
-//                        List<Address> l = new ArrayList<Address>();
-//                        l.addAll(init.getPublicNodes());
-//                        sendGetNatTypeResponse(l);
-//                    }
-//                }
-//                if (runStun) {
-                trigger(new GetNatTypeRequest(stunServers,
-                        0 /*timeout before starting stun*/,
-                        init.getStunClientConfig().isMeasureNatBindingTimeout(),
-                        init.getStunClientConfig().getRto(),
-                        init.getStunClientConfig().getRtoRetries(),
-                        init.getStunClientConfig().getRtoScale()),
-                        stunClient.getPositive(StunPort.class));
-//                }
+                CachedNatType sc = VodConfig.getSavedNatType();
+                boolean runStun = true;
+                if (sc != null && sc.getNatBean().getNumTimesUnchanged() > 1
+                        && sc.getNatBean().getNumTimesSinceStunLastRun() < 5) {
+                    if (!sc.getNatBean().isUpnpSupported()) {
+                        VodAddress va = sc.getNatBean().getVodAddress();
+                        self.setNat(va.getNat());
+                        if (!self.isOpen()) {
+                            for (Address p : va.getParents()) {
+                                self.addParent(p);
+                            }
+                        }
+                        runStun = false;
+                        List<Address> l = new ArrayList<Address>();
+                        l.addAll(init.getPublicNodes());
+                        sendGetNatTypeResponse(l);
+                    }
+                }
+                if (runStun) {
+                    trigger(new GetNatTypeRequest(stunServers,
+                            0 /*timeout before starting stun*/,
+                            init.getStunClientConfig().isMeasureNatBindingTimeout(),
+                            init.getStunClientConfig().getRto(),
+                            init.getStunClientConfig().getRtoRetries(),
+                            init.getStunClientConfig().getRtoScale()),
+                            stunClient.getPositive(StunPort.class));
+                }
             }
 
             //initialize the hole punching client
@@ -464,8 +463,8 @@ public class NatTraverser extends ComponentDefinition {
 
     private void forwardDirectMsgUp(DirectMsgNetty.Base msg) {
         logger.info("handleLowerMessage src (" + msg.getSource()
-                + ") message class :" + msg.getClass().getName() + " : " +
-                msg.getVodDestination().getOverlayId() );
+                + ") message class :" + msg.getClass().getName() + " : "
+                + msg.getVodDestination().getOverlayId());
         int remoteId = msg.getSource().getId();
         // If the msg is from a private node, and i don't have a cached openConnection to
         // it, store it.
@@ -475,7 +474,7 @@ public class NatTraverser extends ComponentDefinition {
                     false, // this has to be a shared port, if I receive a message here and not in HpClient
                     msg.getSource(), Nat.DEFAULT_RULE_EXPIRATION_TIME, false);
             openedConnections.put(msg.getSource().getId(), oc);
-            logger.info(compName + msg.getClass().getName() 
+            logger.info(compName + msg.getClass().getName()
                     + " Adding OpenedConnection to " + msg.getSource()
                     + " from Local Port " + msg.getDestination().getPort());
         }

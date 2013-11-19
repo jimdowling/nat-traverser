@@ -172,7 +172,7 @@ public class VodConfig extends BaseCommandLineConfig {
     public final static int HP_SESSION_EXPIRATION = 55 * 1000;
     // LEDBAT Defaults
     public static final int LB_MAX_PIPELINE_SIZE = 100;
-    public static final int LB_DEFAULT_PIPELINE_SIZE = 5;
+    public static final int LB_DEFAULT_PIPELINE_SIZE = 10;
     public static final int LB_MAX_SEGMENT_SIZE = 1500 * LB_DEFAULT_PIPELINE_SIZE; // MTU - 1024?
     public static final int LB_WINDOW_SIZE = 2 * LB_MAX_SEGMENT_SIZE;
     public static final int LB_MAX_WINDOW_SIZE = 64 * LB_MAX_SEGMENT_SIZE; // 64
@@ -223,33 +223,6 @@ public class VodConfig extends BaseCommandLineConfig {
 
         if (singleton != null) {
             return (VodConfig) singleton;
-        }
-
-        XMLDecoder decoder = null;
-        try {
-            decoder = new XMLDecoder(
-                    //                    new GZIPInputStream(
-                    new BufferedInputStream(new FileInputStream(
-                    STARTUP_CONFIG_FILE)) //                    )
-                    );
-
-            Object obj = decoder.readObject();
-            if (obj == null) {
-                System.err.println("Configuration was null. Initializing new config.");
-                savedNatType = new CachedNatType(new NatBean());
-            } else {
-                savedNatType = (CachedNatType) obj;
-            }
-        } catch (FileNotFoundException e) {
-            logger.warn("No configuration found: " + STARTUP_CONFIG_FILE);
-            savedNatType = new CachedNatType(new NatBean());
-        } catch (Throwable e) {
-            logger.warn(e.toString());
-            savedNatType = new CachedNatType(new NatBean());
-        } finally {
-            if (decoder != null) {
-                decoder.close();
-            }
         }
 
         singleton = new VodConfig(args);
@@ -498,8 +471,7 @@ public class VodConfig extends BaseCommandLineConfig {
 
         try {
             encoder = new XMLEncoder(
-            new BufferedOutputStream(new FileOutputStream(STARTUP_CONFIG_FILE, false))
-                    );
+                    new BufferedOutputStream(new FileOutputStream(STARTUP_CONFIG_FILE, false)));
             encoder.writeObject(savedNatType);
             encoder.flush();
             isSaved = true;
@@ -523,9 +495,36 @@ public class VodConfig extends BaseCommandLineConfig {
     }
 
     public static CachedNatType getSavedNatType() {
+        XMLDecoder decoder = null;
+        try {
+            decoder = new XMLDecoder( new BufferedInputStream(
+                        new FileInputStream(STARTUP_CONFIG_FILE)));
+            Object obj = decoder.readObject();
+            if (obj == null) {
+                System.err.println("Configuration was null. Initializing new config.");
+                savedNatType = new CachedNatType(new NatBean());
+            } else {
+                savedNatType = (CachedNatType) obj;
+            }
+        } catch (FileNotFoundException e) {
+            logger.warn("No configuration found: " + STARTUP_CONFIG_FILE);
+        } catch (Throwable e) {
+            logger.warn(e.toString());
+        } finally {
+            if (decoder != null) {
+                decoder.close();
+            }
+            if (savedNatType == null) {
+                savedNatType = new CachedNatType(new NatBean());
+            }
+        }
+
+
+
         if (savedNatType == null) {
             savedNatType = new CachedNatType(new NatBean());
         }
+
         return savedNatType;
     }
 
