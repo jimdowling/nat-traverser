@@ -168,7 +168,7 @@ public class VodConfig extends BaseCommandLineConfig {
     public final static int HP_SESSION_EXPIRATION = 55 * 1000;
     // LEDBAT Defaults
     public static final int LB_MAX_PIPELINE_SIZE = 100;
-    public static final int LB_DEFAULT_PIPELINE_SIZE = 10;
+    public static final int LB_DEFAULT_PIPELINE_SIZE = 15;
     public static final int LB_MAX_SEGMENT_SIZE = 1500 * LB_DEFAULT_PIPELINE_SIZE; // MTU - 1024?
     public static final int LB_WINDOW_SIZE = 2 * LB_MAX_SEGMENT_SIZE;
     public static final int LB_MAX_WINDOW_SIZE = 64 * LB_MAX_SEGMENT_SIZE; // 64
@@ -463,7 +463,7 @@ public class VodConfig extends BaseCommandLineConfig {
         } catch (FileNotFoundException e) {
             logger.warn(e.toString(), e);
             isSaved = false;
-        } catch (IOException e) {
+        } catch (Throwable e) {
             logger.warn(e.toString(), e);
             isSaved = false;
         } finally {
@@ -480,6 +480,10 @@ public class VodConfig extends BaseCommandLineConfig {
     }
 
     public static CachedNatType getSavedNatType() {
+        if (savedNatType != null) {
+            return savedNatType;
+        }
+        
         XMLDecoder decoder = null;
         try {
             decoder = new XMLDecoder( new BufferedInputStream(
@@ -498,6 +502,12 @@ public class VodConfig extends BaseCommandLineConfig {
             logger.warn("No configuration found: " + STARTUP_CONFIG_FILE);
         } catch (Throwable e) {
             logger.warn(e.toString());
+            savedNatType = null;
+            // File is corrupt - delete it.
+            File f = new File(STARTUP_CONFIG_FILE);
+            if (f.exists()) {
+                f.delete();
+            }
         } finally {
             if (decoder != null) {
                 decoder.close();
