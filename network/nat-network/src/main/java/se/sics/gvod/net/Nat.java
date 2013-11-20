@@ -7,6 +7,7 @@ package se.sics.gvod.net;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
 import se.sics.gvod.address.Address;
 
@@ -283,8 +284,8 @@ public class Nat implements Serializable, Comparable {
     public static String natToStr(Type type, MappingPolicy mappingPolicy,
             AllocationPolicy allocationPolicy, FilteringPolicy filteringPolicy) {
         StringBuilder msg = new StringBuilder();
+        msg.append(type.toString());
         if (type != Type.NAT) {
-            msg.append(type.toString());
             return msg.toString();
         } else {
             if (type == Type.NAT) {
@@ -318,7 +319,7 @@ public class Nat implements Serializable, Comparable {
                 } else {
                     fp = "f(??)";
                 }
-                msg.append(mp).append("_").append(ap).append("_").append(fp);
+                msg.append("_").append(mp).append("_").append(ap).append("_").append(fp);
             } else {
                 msg.append("OPEN");
             }
@@ -386,25 +387,31 @@ public class Nat implements Serializable, Comparable {
     }
 
     public static Nat parseToNat(String natType) {
-        StringTokenizer stz = new StringTokenizer(natType, "_");
-        String token = stz.nextToken();
-        Nat.Type type = Nat.Type.decode(token);
-        Nat.MappingPolicy mappingPolicy = Nat.MappingPolicy.decode((String) stz.nextElement());
-        Nat.AllocationPolicy allocationPolicy = Nat.AllocationPolicy.decode((String) stz.nextElement());
-        Nat.FilteringPolicy filteringPolicy = Nat.FilteringPolicy.decode((String) stz.nextElement());
-        Nat.AlternativePortAllocationPolicy alternativePortAllocationPolicy = null;
-        if (stz.hasMoreElements()) {
-            alternativePortAllocationPolicy = Nat.AlternativePortAllocationPolicy.decode((String) stz.nextElement());
-            if (alternativePortAllocationPolicy == null) {
+        try {
+            StringTokenizer stz = new StringTokenizer(natType, "_");
+            String token = stz.nextToken();
+            Nat.Type type = Nat.Type.decode(token);
+            Nat.MappingPolicy mappingPolicy = Nat.MappingPolicy.decode((String) stz.nextElement());
+            Nat.AllocationPolicy allocationPolicy = Nat.AllocationPolicy.decode((String) stz.nextElement());
+            Nat.FilteringPolicy filteringPolicy = Nat.FilteringPolicy.decode((String) stz.nextElement());
+            Nat.AlternativePortAllocationPolicy alternativePortAllocationPolicy = null;
+            if (stz.hasMoreElements()) {
+                alternativePortAllocationPolicy = Nat.AlternativePortAllocationPolicy.decode((String) stz.nextElement());
+                if (alternativePortAllocationPolicy == null) {
+                    return null;
+                }
+            }
+            if (type == null || mappingPolicy == null || allocationPolicy == null || filteringPolicy == null) {
                 return null;
             }
-        }
-        if (type == null || mappingPolicy == null || allocationPolicy == null || filteringPolicy == null) {
-            return null;
-        }
 
-        return new Nat(type, mappingPolicy, allocationPolicy, filteringPolicy,
-                0, 3000);
+            return new Nat(type, mappingPolicy, allocationPolicy, filteringPolicy,
+                    0, 3000);
+        } catch (NoSuchElementException ex) {
+            System.err.println("Invalid nat type: " + natType);
+            // do nothing
+        }
+        return null;
     }
 
     public void setBindingTimeout(long bindingTimeout) {
@@ -416,11 +423,12 @@ public class Nat implements Serializable, Comparable {
      * A node that requires PRP-PRP or PRP-PRC or PRP (with PD filtering) will
      * need to allocate a new port for each new connection. Pre-allocated ports
      * are sent to the zServer.
-     * @return 
+     *
+     * @return
      */
     public boolean preallocatePorts() {
-        return this.allocationPolicy == AllocationPolicy.PORT_PRESERVATION &&
-                (this.filteringPolicy != FilteringPolicy.ENDPOINT_INDEPENDENT
+        return this.allocationPolicy == AllocationPolicy.PORT_PRESERVATION
+                && (this.filteringPolicy != FilteringPolicy.ENDPOINT_INDEPENDENT
                 || this.mappingPolicy != MappingPolicy.ENDPOINT_INDEPENDENT);
     }
 

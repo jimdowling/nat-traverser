@@ -33,7 +33,8 @@ public class NatBean implements Serializable {
     private int numTimesSinceStunLastRun=0;
     
     public NatBean() {
-        this.addressBean = new AddressBean();
+        this.addressBean = new AddressBean(VodConfig.getNodeId(), 
+                VodConfig.getIp().getHostAddress(), VodConfig.getPort());
         this.parentsBeanAddress = new ArrayList<AddressBean>();
     }
 
@@ -84,8 +85,11 @@ public class NatBean implements Serializable {
     }
 
     public VodAddress getVodAddress() {
-        return new VodAddress(addressBean.getAddress(), VodConfig.SYSTEM_OVERLAY_ID,
-                Nat.parseToNat(natPolicy));
+        Nat n = Nat.parseToNat(natPolicy);
+        if (n == null) {
+            n = new Nat(Nat.Type.OPEN);
+        }
+        return new VodAddress(addressBean.getAddress(), VodConfig.SYSTEM_OVERLAY_ID, n);
     }
     
     /**
@@ -174,6 +178,14 @@ public class NatBean implements Serializable {
             return false;
         }
         return true;
+    }
+
+    public void setNumTimesSinceStunLastRun(int numTimesSinceStunLastRun) {
+        this.numTimesSinceStunLastRun = numTimesSinceStunLastRun;
+    }
+
+    public void setNumTimesUnchanged(int numTimesUnchanged) {
+        this.numTimesUnchanged = numTimesUnchanged;
     }
     
 }

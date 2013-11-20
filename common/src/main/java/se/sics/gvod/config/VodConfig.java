@@ -13,12 +13,9 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
-import java.util.logging.Level;
 import org.apache.commons.cli.Option;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,7 +56,6 @@ public class VodConfig extends BaseCommandLineConfig {
     protected static final int DEFAULT_MEDIA_PLAYER = 0;
     protected static final int DEFAULT_VIDEO_WIDTH = 640;
     protected static final int DEFAULT_VIDEO_HEIGHT = 360;
-    protected static final String DEFAULT_SERVER = "b00t.info";
     protected static final String DEFAULT_TORRENT_URL = "";
     protected static String DEFAULT_TORRENT_DIR;
     protected static String DEFAULT_VIDEO_DIR;
@@ -429,25 +425,11 @@ public class VodConfig extends BaseCommandLineConfig {
                 BOOTSTRAP_REFRESH_PERIOD);
     }
 
-    public static Address getServer() {
-        baseInitialized();
-        String server = singleton.compositeConfig.getString(PROP_SERVER, DEFAULT_SERVER);
-        InetAddress serverIp = null;
-        try {
-            serverIp = InetAddress.getByName(server);
-        } catch (UnknownHostException ex) {
-            java.util.logging.Logger.getLogger(BaseCommandLineConfig.class.getName()).log(Level.SEVERE, null, ex);
-            return null;
-        }
-        return null;
-//        Address addr = new Address(serverIp, DEFAULT_BOOTSTRAP_ID);
-    }
-
-    public static boolean saveNatType(Self self, boolean wasStunRun,
-            boolean wasConfigUnchanged) {
+    public static boolean saveNatType(Self self, boolean wasStunRun) {
+        boolean wasConfigUnchanged = false;
         boolean isSaved;
         XMLEncoder encoder = null;
-        NatBean vab = savedNatType.getNatBean();
+        NatBean vab = getSavedNatType().getNatBean();
         vab.setAddressBean(new AddressBean(self.getAddress().getPeerAddress()));
         List<AddressBean> pb = new ArrayList<AddressBean>();
         for (Address a : self.getParents()) {
@@ -455,6 +437,9 @@ public class VodConfig extends BaseCommandLineConfig {
         }
         vab.setParentsBeanAddress(pb);
         String oldNat = vab.getNatPolicy();
+        if (oldNat.compareTo(vab.getNatPolicy()) == 0) {
+            wasConfigUnchanged = true;
+        }
         vab.setNatPolicy(self.getNat().toString());
 
         if (wasStunRun) {
@@ -472,7 +457,7 @@ public class VodConfig extends BaseCommandLineConfig {
         try {
             encoder = new XMLEncoder(
                     new BufferedOutputStream(new FileOutputStream(STARTUP_CONFIG_FILE, false)));
-            encoder.writeObject(savedNatType);
+            encoder.writeObject(getSavedNatType());
             encoder.flush();
             isSaved = true;
         } catch (FileNotFoundException e) {
@@ -501,10 +486,13 @@ public class VodConfig extends BaseCommandLineConfig {
                         new FileInputStream(STARTUP_CONFIG_FILE)));
             Object obj = decoder.readObject();
             if (obj == null) {
-                System.err.println("Configuration was null. Initializing new config.");
+                // no existing configuration, create a new one
                 savedNatType = new CachedNatType(new NatBean());
             } else {
                 savedNatType = (CachedNatType) obj;
+                if (savedNatType.getNatBean() == null) {
+                    savedNatType.setNatBean(new NatBean());
+                }
             }
         } catch (FileNotFoundException e) {
             logger.warn("No configuration found: " + STARTUP_CONFIG_FILE);
@@ -518,13 +506,6 @@ public class VodConfig extends BaseCommandLineConfig {
                 savedNatType = new CachedNatType(new NatBean());
             }
         }
-
-
-
-        if (savedNatType == null) {
-            savedNatType = new CachedNatType(new NatBean());
-        }
-
         return savedNatType;
     }
 

@@ -102,10 +102,10 @@ public class SelfFactory {
     static Nat getNat(int nodeId) {
         if (nats.containsKey(nodeId) == false) {
             // assume it's open, unless you find out otherwise
-            setNat(nodeId, new Nat(Nat.Type.OPEN));
-//            setNat(nodeId, new Nat(Nat.Type.NAT, Nat.MappingPolicy.PORT_DEPENDENT,
-//                    Nat.AllocationPolicy.RANDOM, Nat.FilteringPolicy.PORT_DEPENDENT,
-//                    0, Nat.DEFAULT_RULE_EXPIRATION_TIME));
+//            setNat(nodeId, new Nat(Nat.Type.OPEN));
+            setNat(nodeId, new Nat(Nat.Type.NAT, Nat.MappingPolicy.PORT_DEPENDENT,
+                    Nat.AllocationPolicy.RANDOM, Nat.FilteringPolicy.PORT_DEPENDENT,
+                    0, Nat.DEFAULT_RULE_EXPIRATION_TIME));
         }
         // return a reference, as the object should be immutable (with the 
         // exception of bindingTimeout that is anyways, not updated).

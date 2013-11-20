@@ -56,7 +56,7 @@ public class SaveConfigurationTest {
                 self.addParent(a);
             }
             
-            if (!VodConfig.saveNatType(self, true, true)) {
+            if (!VodConfig.saveNatType(self, true)) {
                 Assert.fail("Saving configuration failed.");
             }            
             
@@ -72,7 +72,7 @@ public class SaveConfigurationTest {
             self.setUpnp(true);
             addr = new Address(InetAddress.getByName("192.168.1.1"), 8081, 7);
             self.setUpnpIp(InetAddress.getByName("192.168.1.1"));
-            if (!VodConfig.saveNatType(self, false, true)) {
+            if (!VodConfig.saveNatType(self, false)) {
                 Assert.fail("Saving configuration failed.");
             }
 

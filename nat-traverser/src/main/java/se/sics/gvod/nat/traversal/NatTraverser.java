@@ -319,24 +319,25 @@ public class NatTraverser extends ComponentDefinition {
                 }
 
                 CachedNatType sc = VodConfig.getSavedNatType();
-                boolean runStun = true;
-                if (sc != null && sc.getNatBean().getNumTimesUnchanged() > 1
-                        && sc.getNatBean().getNumTimesSinceStunLastRun() < 5) {
-                    if (!sc.getNatBean().isUpnpSupported()) {
+//                boolean runStun = true;
+//                        && sc.getNatBean().getNumTimesUnchanged() > 0
+//                        && sc.getNatBean().getNumTimesSinceStunLastRun() < 5
+//                    if (!sc.getNatBean().isUpnpSupported()) {
                         VodAddress va = sc.getNatBean().getVodAddress();
-                        self.setNat(va.getNat());
-                        if (!self.isOpen()) {
-                            for (Address p : va.getParents()) {
-                                self.addParent(p);
+                        if (va != null) {
+                            self.setNat(va.getNat());
+                            if (!self.isOpen()) {
+                                for (Address p : va.getParents()) {
+                                    self.addParent(p);
+                                }
                             }
+    //                        runStun = false;
+                            List<Address> l = new ArrayList<Address>();
+                            l.addAll(init.getPublicNodes());
+                            sendGetNatTypeResponse(l);
                         }
-                        runStun = false;
-                        List<Address> l = new ArrayList<Address>();
-                        l.addAll(init.getPublicNodes());
-                        sendGetNatTypeResponse(l);
-                    }
-                }
-                if (runStun) {
+//                    }
+//                if (runStun) {
                     trigger(new GetNatTypeRequest(stunServers,
                             0 /*timeout before starting stun*/,
                             init.getStunClientConfig().isMeasureNatBindingTimeout(),
@@ -344,7 +345,7 @@ public class NatTraverser extends ComponentDefinition {
                             init.getStunClientConfig().getRtoRetries(),
                             init.getStunClientConfig().getRtoScale()),
                             stunClient.getPositive(StunPort.class));
-                }
+//                }
             }
 
             //initialize the hole punching client
@@ -1088,10 +1089,10 @@ public class NatTraverser extends ComponentDefinition {
         @Override
         public void handle(GetNatTypeResponse event) {
             logger.info(compName + " Nat type is " + event.getStatus() + " - " + event.getNat());
-            self.setNat(event.getNat());
-            self.setUpnp(event.getNat().isUpnp());
 
             if (event.getStatus() == GetNatTypeResponse.Status.SUCCEED) {
+                self.setNat(event.getNat());
+                self.setUpnp(event.getNat().isUpnp());
                 List<Address> l = new ArrayList<Address>();
                 if (event.getStunServer() != null) {
                     l.add(event.getStunServer());
@@ -1104,17 +1105,6 @@ public class NatTraverser extends ComponentDefinition {
 
         }
     };
-
-    private void cacheStunResults() {
-        CachedNatType sc = VodConfig.getSavedNatType();
-        VodAddress va = sc.getNatBean().getVodAddress();
-        boolean unchanged = false;
-        if (va.getPeerAddress().equals(self.getAddress().getPeerAddress())
-                && va.getNat().equals(self.getNat())) {
-            unchanged = true;
-        }
-        VodConfig.saveNatType(self, true, unchanged);
-    }
 
     private void retryStun(Address failedStunServer) {
         if (stunRetries > 0) {

@@ -49,7 +49,6 @@ public abstract class BaseCommandLineConfig {
     public static final String MONITOR_CONFIG_FILE = "monitor.properties";
     public static final String POM_FILENAME = "pom.xml";
     public static String GVOD_HOME;
-    public static final String MAVEN_REPO_LOCAL;
     public static final String PROP_PORT = "port";
     public static final String PROP_MEDIA_PORT = "web.port";
     public static final String PROP_SEED = "seed";
@@ -95,20 +94,6 @@ public abstract class BaseCommandLineConfig {
                 throw new IllegalStateException("Could not create directory: " + BaseCommandLineConfig.GVOD_HOME);
             }
         }
-
-        String mavenHome = System.getProperty("maven.repo.local");
-        if (mavenHome == null) {
-            System.setProperty("maven.repo.local", new File(USER_HOME
-                    + File.separator + ".m2" + File.separator + "repository").getAbsolutePath());
-        }
-        MAVEN_REPO_LOCAL = System.getProperty("maven.repo.local");
-
-        if (new File(BaseCommandLineConfig.MAVEN_REPO_LOCAL).exists() == false) {
-            if ((new File(BaseCommandLineConfig.MAVEN_REPO_LOCAL).mkdirs()) == false) {
-                throw new IllegalStateException("Couldn't set directory for Maven Local Repository: " + BaseCommandLineConfig.MAVEN_REPO_LOCAL + "\nCheck file permissions for this directory.");
-            }
-        }
-
     }
 
     public static final int DEFAULT_PORT = 58022;
@@ -390,7 +375,17 @@ public abstract class BaseCommandLineConfig {
 
     public static InetAddress getIp() {
         baseInitialized();
-        return singleton.ip;
+        try {
+            return singleton.ip == null ? InetAddress.getLocalHost() : singleton.ip;
+        } catch (UnknownHostException ex) {
+            java.util.logging.Logger.getLogger(BaseCommandLineConfig.class.getName()).log(Level.SEVERE, null, ex);
+            try {
+                return InetAddress.getLocalHost();
+            } catch (UnknownHostException ex1) {
+                java.util.logging.Logger.getLogger(BaseCommandLineConfig.class.getName()).log(Level.SEVERE, null, ex1);
+            }
+        }
+        return null;
     }
 
     public static void setIp(InetAddress nodeIp) {
