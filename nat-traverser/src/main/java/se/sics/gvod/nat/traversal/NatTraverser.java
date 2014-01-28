@@ -1083,7 +1083,6 @@ public class NatTraverser extends ComponentDefinition {
             trigger(new Join(bootstrappers),
                     parentMaker.getPositive(ParentMakerPort.class));
         }
-//        cacheStunResults();
     }
     private Handler<GetNatTypeResponse> handleGetNatTypeResponse = new Handler<GetNatTypeResponse>() {
         @Override

@@ -34,6 +34,8 @@ public class VodConfig extends BaseCommandLineConfig {
 
     private static final Logger logger = LoggerFactory.getLogger(VodConfig.class);
     public static boolean GUI = true;
+    public static boolean CLOUD_HELPER = false;
+    public static boolean OPEN_IP = false;
     public static final String TORRENT_FILE_POSTFIX = ".data";
     public static final String TORRENT_INDEX_FILE = "activeStreams";
     public static final String NODE_CACHE_FILE = "node.cache";
@@ -67,6 +69,8 @@ public class VodConfig extends BaseCommandLineConfig {
     protected Option torrentDirOption;
     protected Option serverOption;
     protected Option noGuiOption;
+    protected Option cloudHelperOption;
+    protected Option openIpOption;
     protected Option torrentOption;
     protected Option widthOption;
     protected Option heightOption;
@@ -130,7 +134,8 @@ public class VodConfig extends BaseCommandLineConfig {
     public static final int VERIFY_PERIOD = 10 * 1000;
     public static final int OFFSET = 3;
     public static final int DATA_OFFER_PERIOD = 1 * 1000;
-    public static final int READING_PERIOD = 1410 /*readingPeriod  misfits 1048kbps*/;
+    public static final int READING_PERIOD = 200 /*readingPeriod  misfits 1048kbps*/;
+//    public static final int READING_PERIOD = 1410 /*readingPeriod  misfits 1048kbps*/;
     public static final int LIM_READING_WINDOW = 11;
     public static final int INF_UTIL_FREC = 63;
     public static final int PERCENT_BACK = 70;
@@ -265,6 +270,14 @@ public class VodConfig extends BaseCommandLineConfig {
                 "Launch without a GUI");
         options.addOption(noGuiOption);
 
+        cloudHelperOption = new Option("cloudhelper", false,
+                "Launch as a helper node in the cloud");
+        options.addOption(cloudHelperOption);
+        
+        openIpOption = new Option("openip", false,
+                "Start node assuming it has an open IP");
+        options.addOption(openIpOption);
+        
         torrentOption = new Option("torrent", true,
                 "Url to torrent file to start loading immediately");
         torrentOption.setArgName("torrentFile");
@@ -325,6 +338,14 @@ public class VodConfig extends BaseCommandLineConfig {
 
         if (line.hasOption(noGuiOption.getOpt())) {
             VodConfig.GUI = false;
+        }
+        
+        if (line.hasOption(cloudHelperOption.getOpt())) {
+            VodConfig.CLOUD_HELPER = true;
+        }
+        
+        if (line.hasOption(openIpOption.getOpt())) {
+            VodConfig.OPEN_IP = true;
         }
 
         if (line.hasOption(torrentOption.getOpt())) {
@@ -558,5 +579,13 @@ public class VodConfig extends BaseCommandLineConfig {
     public static int getControlPort() {
         baseInitialized();
         return singleton.compositeConfig.getInt(PROP_CONTROL_PORT, DEFAULT_CONTROL_PORT);
+    }
+    
+    public static boolean isCloudHelper() {
+        return VodConfig.CLOUD_HELPER;
+    }
+    
+    public static boolean isOpenIp() {
+        return VodConfig.OPEN_IP;
     }
 }

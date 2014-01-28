@@ -73,15 +73,15 @@ public abstract class BaseCommandLineConfig {
             GVOD_HOME = ".config/nattraverser";
         }
 
-        String kHome = System.getProperty(PROP_GVOD_HOME);
+        String gvodHome = System.getProperty(PROP_GVOD_HOME);
         USER_HOME = System.getProperty("user.home");
 
-        if (USER_HOME != null && kHome == null) {
+        if (USER_HOME != null && gvodHome == null) {
             System.setProperty(PROP_GVOD_HOME, new File(USER_HOME + File.separator
                     + ".config" + File.separator + "nattraverser").getAbsolutePath());
-        } else if (USER_HOME == null && kHome == null) {
+        } else if (USER_HOME == null && gvodHome == null) {
             throw new IllegalStateException(
-                    "kompics.home and user.home environment variables not set.");
+                    "user.home environment variables not set.");
         }
         GVOD_HOME = System.getProperty(PROP_GVOD_HOME);
 
