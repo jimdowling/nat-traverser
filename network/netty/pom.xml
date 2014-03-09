@@ -47,5 +47,33 @@
         </dependency>-->
 
     </dependencies>
+
+<distributionManagement>
+                <repository>
+                        <id>sics-release-repository</id>
+                        <name>SICS Repository</name>
+                        <url>scpexe://kompics.i.sics.se/home/maven/repository</url>
+                </repository>
+                <snapshotRepository>
+                        <id>sics-snapshot-repository</id>
+                        <name>SICS Snapshot Repository</name>
+                        <url>scpexe://kompics.i.sics.se/home/maven/snapshotrepository</url>
+                </snapshotRepository>
+                <site>
+                        <id>kompics-site</id>
+                        <url>scpexe://kompics.i.sics.se/var/www/kompics/report/trunk</url>
+                </site>
+                <downloadUrl>http://kompics.i.sics.se/maven/repository</downloadUrl>
+</distributionManagement>
+
+    <build>
+        <extensions>
+      <extension>
+        <groupId>org.apache.maven.wagon</groupId>
+        <artifactId>wagon-ssh-external</artifactId>
+        <version>1.0</version>
+      </extension>
+        </extensions>
+    </build>
 </project>
 

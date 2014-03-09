@@ -46,6 +46,24 @@
     </modules>
 
     <build>
+    <extensions>
+      <extension>
+        <groupId>org.apache.maven.wagon</groupId>
+         <artifactId>wagon-ssh-external</artifactId>
+         <version>2.6</version>
+      </extension>
+      <extension>
+        <groupId>org.apache.maven.wagon</groupId>
+         <artifactId>wagon-scm</artifactId>
+         <version>2.6</version>
+      </extension>
+      <extension>
+        <groupId>org.apache.maven.wagon</groupId>
+        <artifactId>wagon-ssh-external</artifactId>
+        <version>1.0</version>
+      </extension>
+
+    </extensions>
         <plugins>
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -55,9 +73,25 @@
                     <target>${java.compiler.version}</target>
                 </configuration>
             </plugin>
+	    <!-- <plugin> -->
+	    <!--   <groupId>org.codehaus.mojo</groupId> -->
+	    <!--   <artifactId>wagon-maven-plugin</artifactId> -->
+	    <!--   <version>1.0-beta-4</version> -->
+	    <!--   <configuration> -->
+	    <!-- 	<fromFile>${project.build.directory}/${project.build.finalName}.jar</fromFile>  -->
+	    <!-- 	<url>scp:///</url> -->
+	    <!-- 	<toDir>.</toDir> -->
+	    <!--   </configuration> -->
+	    <!-- </plugin> -->
+
         </plugins>
     </build>
 
+  <scm>
+    <connection>scm:git:http://github.com/gvod.git</connection>
+    <developerConnection>scm:git:ssh://jdowling@github.com/jimdowling/gvod.git</developerConnection>
+    <url>https://github.com/jimdowling/gvod.git</url>
+  </scm>
 
     <reporting>
         <plugins>
@@ -122,36 +156,12 @@
         </plugins>
     </reporting>
 
-    <scm>
-        <connection>scm:https:https://svn.sics.se/gvod</connection>
-        <url>http://trac.sics.se/gvod</url>
-        <developerConnection>scm:https:https://svn.sics.se/gvod/trunk</developerConnection>
-    </scm>
-
-    <distributionManagement>
-        <repository>
-            <id>sics-release-repository</id>
-            <name>SICS Repository</name>
-            <url>scpexe://kompics.sics.se/home/maven2/repository</url>
-        </repository>
-        <snapshotRepository>
-            <id>sics-snapshot-repository</id>
-            <name>SICS Snapshot Repository</name>
-            <url>scpexe://kompics.sics.se/home/maven2/snapshotrepository</url>
-        </snapshotRepository>
-        <site>
-            <id>kompics-site</id>
-            <url>scpexe://kompics.sics.se/var/www/kompics/report/trunk</url>
-        </site>
-        <downloadUrl>http://kompics.sics.se/maven/repository</downloadUrl>
-    </distributionManagement>
-
     <mailingLists>
         <mailingList>
             <name>Mailing List</name>
             <subscribe>https://list.sics.se/sympa/subscribe/gvod</subscribe>
             <unsubscribe>https://list.sics.se/sympa/sigrequest/gvod</unsubscribe>
-            <post>nattraverser@sics.se</post>
+            <post>gvod@sics.se</post>
             <archive>https://list.sics.se/sympa/arc/gvod</archive>
         </mailingList>
     </mailingLists>
@@ -194,4 +204,23 @@
             </snapshots>
         </repository>
     </repositories>
+
+<distributionManagement>
+                <repository>
+                        <id>sics-release-repository</id>
+                        <name>SICS Repository</name>
+                        <url>scpexe://kompics.i.sics.se/home/maven/repository</url>
+                </repository>
+                <snapshotRepository>
+                        <id>sics-snapshot-repository</id>
+                        <name>SICS Snapshot Repository</name>
+                        <url>scpexe://kompics.i.sics.se/home/maven/snapshotrepository</url>
+                </snapshotRepository>
+                <site>
+                        <id>kompics-site</id>
+                        <url>scpexe://kompics.i.sics.se/var/www/kompics/report/trunk</url>
+                </site>
+                <downloadUrl>http://kompics.i.sics.se/maven/repository</downloadUrl>
+</distributionManagement>
+
 </project>
