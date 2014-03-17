@@ -174,10 +174,10 @@ public abstract class BaseCommandLineConfig {
         options.addOption(mediaPortOption);
 
 
-        Option ipOption = new Option("ip", true,
-                "hostname/ip for Gvod");
-        ipOption.setArgName("address");
-        options.addOption(ipOption);
+//        Option ipOption = new Option("ip", true,
+//                "hostname/ip for Gvod");
+//        ipOption.setArgName("address");
+//        options.addOption(ipOption);
 
         Option portOption = new Option("port", true, "port for gvod");
         portOption.setArgName(VAL_NUMBER);

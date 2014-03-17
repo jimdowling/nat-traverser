@@ -22,9 +22,6 @@ public class VodDescriptor implements Comparable<VodDescriptor>, Serializable {
      */
     private Utility utility;
     /**
-     * 2 bytes
-     */
-    /**
      * don't serialize
      */
     private transient int refs;
@@ -92,11 +89,13 @@ public class VodDescriptor implements Comparable<VodDescriptor>, Serializable {
             CommunicationWindow window, int pipeSize, 
             int mtu, long numberOfIndexEntries) {
         assert (vodAddress != null);
-//        assert (utility != null);
         if (requestPipeline == null) {
             throw new NullPointerException("Request pipeline cannot be null in VodDescriptor constructor");
         }
         this.vodAddress = vodAddress;
+        if (age > 655535 || age < 0) {
+            throw new IllegalArgumentException("Age value is out-of-range. Should be >0 and < 65536. Age was: " + age);
+        }
         this.age = age;
         this.utility = utility;
         this.refs = refs;

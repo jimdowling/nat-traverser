@@ -823,6 +823,7 @@ public final class NettyNetwork extends ComponentDefinition {
             channel.writeAndFlush(new DatagramPacket(((Encodable) msg).toByteArray(), dest));
             totalWrittenBytes += msg.getSize();
         } catch (Exception ex) {
+            ex.printStackTrace();
             logger.warn("Problem trying to send msg of type: "
                     + msg.getClass().getCanonicalName() + " with src address: "
                     + src.toString() + " and dest address: " + msg.getDestination() 
@@ -876,6 +877,7 @@ public final class NettyNetwork extends ComponentDefinition {
             channel.writeAndFlush(msg);
             totalWrittenBytes += msg.getSize();
         } catch (Exception ex) {
+            ex.printStackTrace();
             logger.warn("Problem trying to write msg of type: "
                     + msg.getClass().getCanonicalName() + " with dst address: "
                     + dst.toString());
@@ -912,6 +914,7 @@ public final class NettyNetwork extends ComponentDefinition {
             channel.writeAndFlush(msg);
             totalWrittenBytes += msg.getSize();
         } catch (Exception ex) {
+            ex.printStackTrace();
             logger.warn("Problem trying to write msg of type: "
                     + msg.getClass().getCanonicalName() + " with dst address: "
                     + dst.toString());
