@@ -93,8 +93,8 @@ public class VodDescriptor implements Comparable<VodDescriptor>, Serializable {
             throw new NullPointerException("Request pipeline cannot be null in VodDescriptor constructor");
         }
         this.vodAddress = vodAddress;
-        if (age > 655535 || age < 0) {
-            throw new IllegalArgumentException("Age value is out-of-range. Should be >0 and < 65536. Age was: " + age);
+        if (age > 65535 || age < 0) {
+            age = 65535;
         }
         this.age = age;
         this.utility = utility;
@@ -340,9 +340,9 @@ public class VodDescriptor implements Comparable<VodDescriptor>, Serializable {
         return vodAddress.equals(other.getVodAddress());
     }
 
-    public void setAge(int age) {
-        this.age = age;
-    }
+//    public void setAge(int age) {
+//        this.age = age;
+//    }
 
     public int getWindowSize() {
         return window.getSize();
