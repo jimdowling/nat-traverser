@@ -97,7 +97,10 @@ public class VodConfig extends BaseCommandLineConfig {
             return null;
         }
     };
+
+   // Default node selection policy in croupier
     public static final CroupierSelectionPolicy CROUPIER_SELECTION_POLICY = CroupierSelectionPolicy.HEALER;
+    
     //Stun parameters
     static int STUN_MIN_RTT = 250;
     static int STUN_RTO = 2500;

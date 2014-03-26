@@ -463,7 +463,7 @@ public class NatTraverser extends ComponentDefinition {
     };
 
     private void forwardDirectMsgUp(DirectMsgNetty.Base msg) {
-        logger.info("handleLowerMessage src (" + msg.getSource()
+        logger.debug("handleLowerMessage src (" + msg.getSource()
                 + ") message class :" + msg.getClass().getName() + " : "
                 + msg.getVodDestination().getOverlayId());
         int remoteId = msg.getSource().getId();
