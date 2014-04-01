@@ -18,9 +18,9 @@ public class BitField {
     private final byte[] piecefield;
     private final byte[] chunkfield;
     private final int size, numPieces, numChunks;
-    private int firstUncompletedBit = 0;
-    private int firstUncompletedPiece = 0;
-    private int firstUncompletedChunk = 0;
+    private int nextUncompletedBit = 0;
+    private int nextUncompletedPiece = 0;
+    private int nextUncompletedChunk = 0;
     private int total = 0;
 
     /**
@@ -93,7 +93,7 @@ public class BitField {
         return chunkfield;
     }
 
-    public int pieceFieldSize() {
+    public int numberPieces() {
             return numPieces;
     }
     
@@ -165,8 +165,8 @@ public class BitField {
         int mask = NUM_PIECES_PER_CHUNK >> (bit % 8);
         subpieceField[index] |= mask;
 
-        while (firstUncompletedBit < size && get(firstUncompletedBit)) {
-            firstUncompletedBit++;
+        while (nextUncompletedBit < size && get(nextUncompletedBit)) {
+            nextUncompletedBit++;
         }
 
         if (setPiece) {
@@ -183,8 +183,8 @@ public class BitField {
             int index = bit / 8;
             int mask = NUM_PIECES_PER_CHUNK >> (bit % 8);
             subpieceField[index] ^= mask;
-            if (firstUncompletedBit > bit) {
-                firstUncompletedBit = bit;
+            if (nextUncompletedBit > bit) {
+                nextUncompletedBit = bit;
             }
             removePiece(index);
         }
@@ -199,8 +199,8 @@ public class BitField {
 //            synchronized (piecefield) {
                 piecefield[index] ^= mask;
 //            }
-            if (firstUncompletedPiece > piece) {
-                firstUncompletedPiece = piece;
+            if (nextUncompletedPiece > piece) {
+                nextUncompletedPiece = piece;
             }
             removeChunk(index);
         }
@@ -209,12 +209,12 @@ public class BitField {
     public void removeChunk(int index) {
         index = index - (index % NUM_SUBPIECES_PER_PIECE);
         int chunk = index / NUM_SUBPIECES_PER_PIECE;
-        if (getChunk(chunk)) {
+        if (hasChunk(chunk)) {
             int mask = NUM_PIECES_PER_CHUNK >> ((index / NUM_SUBPIECES_PER_PIECE) % 8);
             index = index / NUM_PIECES_PER_CHUNK;
             chunkfield[index] |= mask;
-            if (firstUncompletedChunk > chunk) {
-                firstUncompletedChunk = chunk;
+            if (nextUncompletedChunk > chunk) {
+                nextUncompletedChunk = chunk;
             }
         }
     }
@@ -266,8 +266,8 @@ public class BitField {
                     limite = (size / NUM_SUBPIECES_PER_PIECE) + 1;
                 }
 
-                while (firstUncompletedPiece < limite && getPiece(firstUncompletedPiece)) {
-                    firstUncompletedPiece++;
+                while (nextUncompletedPiece < limite && getPiece(nextUncompletedPiece)) {
+                    nextUncompletedPiece++;
                 }
                 completeChunkfield(index);
             }
@@ -317,8 +317,8 @@ public class BitField {
                 int mask = NUM_PIECES_PER_CHUNK >> ((index / NUM_SUBPIECES_PER_PIECE) % 8);
                 index = index / NUM_PIECES_PER_CHUNK;
                 chunkfield[index] |= mask;
-                while (firstUncompletedChunk < chunkfield.length * 8 && getChunk(firstUncompletedChunk)) {
-                    firstUncompletedChunk++;
+                while (nextUncompletedChunk < chunkfield.length * 8 && hasChunk(nextUncompletedChunk)) {
+                    nextUncompletedChunk++;
                 }
             }
 
@@ -370,7 +370,7 @@ public class BitField {
      * @param chunk id for a chunk
      * @return true if the chunk has been downloaded
      */
-    public boolean getChunk(int chunk) {
+    public boolean hasChunk(int chunk) {
         if (chunk < 0 || chunk >= chunkfield.length * 8) {
             throw new IndexOutOfBoundsException(Integer.toString(chunk));
         }
@@ -420,7 +420,7 @@ public class BitField {
         sb.append("]\nchunkfield[");
         for (int i = 0; i
                 < (size / 2048) + 1; i++) {
-            if (getChunk(i)) {
+            if (hasChunk(i)) {
                 sb.append('+');
             } else {
                 sb.append('-');
@@ -461,7 +461,7 @@ public class BitField {
         sb.append(p * 100).append("%]\nchunkfield[");
         for (int i = 0; i
                 < (size / 2048) + 1; i++) {
-            if (getChunk(i)) {
+            if (hasChunk(i)) {
                 sb.append('+');
             } else {
                 sb.append('-');
@@ -475,7 +475,7 @@ public class BitField {
     public String getChunkHumanReadable() {
         StringBuilder sb = new StringBuilder("ChunkField[");
         for (int i = 0; i < (size / 2048) + 1; i++) {
-            if (getChunk(i)) {
+            if (hasChunk(i)) {
                 sb.append('+');
             } else {
                 sb.append('-');
@@ -505,51 +505,49 @@ public class BitField {
         return sb.toString();
     }
 
-    public int getFirstUncompletedBit() {
-        return firstUncompletedBit;
+    public int getNextUncompletedBit() {
+        return nextUncompletedBit;
     }
 
-    public int getFirstUncompletedPiece() {
-        return firstUncompletedPiece;
+    public int getNextUncompletedPiece() {
+        return nextUncompletedPiece;
     }
 
-    public int getFirstUncompletedChunk() {
-        return firstUncompletedChunk;
+    public int getNextUncompletedChunk() {
+        return nextUncompletedChunk;
     }
 
-    public void setFirstUncompletedPiece(int firstUncompletedPiece) {
-        this.firstUncompletedPiece = firstUncompletedPiece;
-        this.firstUncompletedBit = firstUncompletedPiece * NUM_SUBPIECES_PER_PIECE;
+    public void setNextUncompletedPiece(int nextUncompletedPiece) {
+        this.nextUncompletedPiece = nextUncompletedPiece;
+        this.nextUncompletedBit = nextUncompletedPiece * NUM_SUBPIECES_PER_PIECE;
     }
 
-
-
-    public int setFirstUncompletedChunk(int utility) {
-        firstUncompletedChunk = utility;
-        while (firstUncompletedChunk < chunkfield.length * 8
-                && getChunk(firstUncompletedChunk)) {
-            firstUncompletedChunk++;
+    public int setNextUncompletedChunk(int utility) {
+        nextUncompletedChunk = utility;
+        while (nextUncompletedChunk < chunkfield.length * 8
+                && hasChunk(nextUncompletedChunk)) {
+            nextUncompletedChunk++;
         }
 
-        firstUncompletedPiece = firstUncompletedChunk * NUM_PIECES_PER_CHUNK;
-        if (firstUncompletedPiece > numPieces) {
-            firstUncompletedPiece = numPieces;
+        nextUncompletedPiece = nextUncompletedChunk * NUM_PIECES_PER_CHUNK;
+        if (nextUncompletedPiece > numPieces) {
+            nextUncompletedPiece = numPieces;
         }
-        while (firstUncompletedPiece < getPieceFieldLength() * 8 && getPiece(firstUncompletedPiece)) {
-            firstUncompletedPiece++;
+        while (nextUncompletedPiece < getPieceFieldLength() * 8 && getPiece(nextUncompletedPiece)) {
+            nextUncompletedPiece++;
         }
 
-        firstUncompletedBit = firstUncompletedPiece * NUM_SUBPIECES_PER_PIECE;
-        if (firstUncompletedBit > size) {
-            firstUncompletedBit = size;
+        nextUncompletedBit = nextUncompletedPiece * NUM_SUBPIECES_PER_PIECE;
+        if (nextUncompletedBit > size) {
+            nextUncompletedBit = size;
         }
-        while (firstUncompletedBit < size && get(firstUncompletedBit)) {
-            firstUncompletedBit++;
+        while (nextUncompletedBit < size && get(nextUncompletedBit)) {
+            nextUncompletedBit++;
         }
-        if (firstUncompletedChunk >= numChunks) {
+        if (nextUncompletedChunk >= numChunks) {
             return VodConfig.SEEDER_UTILITY_VALUE;
         } else {
-            return firstUncompletedChunk;
+            return nextUncompletedChunk;
         }
     }
 }
