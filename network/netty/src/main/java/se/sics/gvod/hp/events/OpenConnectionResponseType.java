@@ -1,0 +1,19 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package se.sics.gvod.hp.events;
+
+/**
+ *
+ * @author Owner
+ */
+public enum OpenConnectionResponseType {
+
+    OK, HP_WILL_START, ALREADY_REGISTERED, REGISTRATION_FAILED, NO_RENDEZVOUS_SERVERS_SUPPLIED,
+    RENDEZVOUS_SERVER_FAILED, NAT_COMBINATION_NOT_TRAVERSABLE, 
+    REMOTE_PEER_NOT_REGISTERED, REGISTER_FIRST_THEN_CHECK_FEASIBILITY, 
+    REMOTE_PEER_FAILED, RENDEZVOUS_SERVER_ERROR, HP_TIMEOUT, 
+    LOOKUP_FAILED, HP_SESSION_NOT_FOUND, HP_ALREADY_ONGOING, PING_TIMEOUT,
+    NO_FREE_PORTS_LOCALLY
+}

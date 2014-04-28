@@ -1,4 +1,11 @@
-nat-traverser
-=============
+Nat Traverser 
+===
 
-A nat traversal library for Kompics, built using Netty
+install the maven jar:
+
+mvn install:install-local
+
+
+to deploy the artifact, see:
+
+http://howto.praqma.net/maven/release
