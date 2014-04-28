@@ -1,11 +1,6 @@
-Nat Traverser 
+Authors: Jim Dowling, Salman Niazi
+
+
+Nat Traverser component for Kompics/Netty
 ===
 
-install the maven jar:
-
-mvn install:install-local
-
-
-to deploy the artifact, see:
-
-http://howto.praqma.net/maven/release
