@@ -47,6 +47,7 @@ public class AbstractConfiguration<T extends AbstractConfiguration> {
         p.setProperty("seed", "" + seed);
         for (Field f : getClass().getDeclaredFields()) {
             try {
+                f.setAccessible(true);
                 p.setProperty(f.getName(), "" + f.get(this));
             } catch (IllegalAccessException ex) {
                 Logger.getLogger(AbstractConfiguration.class.getName()).log(Level.SEVERE, null, ex);
@@ -65,37 +66,36 @@ public class AbstractConfiguration<T extends AbstractConfiguration> {
         Properties p = new Properties();
         Reader reader = new FileReader(file);
         p.load(reader);
-        Constructor<T> c = (Constructor<T>) t.getConstructors()[1];
-        Class<?>[] paramTypes = c.getParameterTypes();
 
-        Object[] initargs = new Object[paramTypes.length];
         String seedStr = p.getProperty("seed");
         int loadedSeed = Integer.parseInt(seedStr);
-        int i = 0;
-        for (Field f : getClass().getDeclaredFields()) {
-            String val = p.getProperty(f.getName());
-            if (val == null) {
-                throw new NullPointerException("In class " + getClass() + " "
-                        + f.getName() + " was null.");
-            }
-            Class<?> pt = paramTypes[i];
-            if (pt.getSimpleName().compareTo("int") == 0) {
-                initargs[i] = Integer.parseInt(val);
-            } else if (pt.getSimpleName().compareTo("long") == 0) {
-                initargs[i] = Long.parseLong(val);
-            } else if (pt.getSimpleName().compareTo("boolean") == 0) {
-                initargs[i] = Boolean.parseBoolean(val);
-            } else if (pt.getSimpleName().compareTo("double") == 0) {
-                initargs[i] = Double.parseDouble(val);
-            } else if (pt.getSimpleName().compareTo("String") == 0) {
-                initargs[i] = val;
-            } else {
-                throw new IllegalStateException("Couldn't find parameter type to decode: " + f.getName());
-            }
-            i++;
-        }
         try {
-            T obj = c.newInstance(initargs);
+            Constructor<T> c = (Constructor<T>) t.getConstructor(new Class[]{});
+            T obj = c.newInstance();
+            for (Field f : getClass().getDeclaredFields()) {
+                f.setAccessible(true);
+                String val = p.getProperty(f.getName());
+                if (val == null) {
+                    throw new NullPointerException("In class " + getClass() + " "
+                            + f.getName() + " was null.");
+                }
+
+                Class<?> pt = f.getType();
+                if (pt.getSimpleName().compareTo("int") == 0) {
+                    f.set(obj, Integer.parseInt(val));
+                } else if (pt.getSimpleName().compareTo("long") == 0) {
+                    f.set(obj, Long.parseLong(val));
+                } else if (pt.getSimpleName().compareTo("boolean") == 0) {
+                    f.set(obj, Boolean.parseBoolean(val));
+                } else if (pt.getSimpleName().compareTo("double") == 0) {
+                    f.set(obj, Double.parseDouble(val));
+                } else if (pt.getSimpleName().compareTo("String") == 0) {
+                    f.set(obj, val); 
+                } else {
+                    throw new IllegalStateException("Couldn't find parameter type to decode: " + f.getName());
+                }
+            }
+
             obj.setSeed(loadedSeed);
             return obj;
         } catch (InstantiationException ex) {
@@ -110,6 +110,12 @@ public class AbstractConfiguration<T extends AbstractConfiguration> {
         } catch (InvocationTargetException ex) {
             Logger.getLogger(AbstractConfiguration.class.getName()).log(Level.SEVERE, null, ex);
             throw new IOException(t.getCanonicalName() + " - " + ex.getMessage());
+        } catch (NoSuchMethodException ex) {
+            Logger.getLogger(AbstractConfiguration.class.getName()).log(Level.SEVERE, null, ex);
+            throw new IOException(t.getCanonicalName() + " - " + ex.getMessage());
+        } catch (SecurityException ex) {
+            Logger.getLogger(AbstractConfiguration.class.getName()).log(Level.SEVERE, null, ex);
+            throw new IOException(t.getCanonicalName() + " - " + ex.getMessage());
         }
     }
 
@@ -121,8 +127,8 @@ public class AbstractConfiguration<T extends AbstractConfiguration> {
             AbstractConfiguration ac = instance.loadP(type,
                     System.getProperty(type.getCanonicalName()));
             if (ac == null) {
-                throw new NullPointerException("Could not load configuration successfully: " +
-                        type.getCanonicalName());
+                throw new NullPointerException("Could not load configuration successfully: "
+                        + type.getCanonicalName());
             }
             return ac;
         } catch (InstantiationException ex) {
