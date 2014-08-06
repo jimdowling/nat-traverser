@@ -7,23 +7,23 @@ package se.sics.gvod.stun.client;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Set;
-import se.sics.gvod.timer.TimeoutId;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import se.sics.gvod.address.Address;
+import se.sics.gvod.common.VodRetryComponentTestCase;
+import se.sics.gvod.config.StunClientConfiguration;
 import se.sics.gvod.net.Nat;
 import se.sics.gvod.net.msgs.ScheduleRetryTimeout;
+import static se.sics.gvod.stun.client.StunClientTest.StunClientComponentTester.ruleLifeTime;
 import se.sics.gvod.stun.client.events.GetNatTypeRequest;
 import se.sics.gvod.stun.client.events.GetNatTypeResponse;
 import se.sics.gvod.stun.client.events.StunClientInit;
 import se.sics.gvod.stun.msgs.EchoChangeIpAndPortMsg;
 import se.sics.gvod.stun.msgs.EchoChangePortMsg;
 import se.sics.gvod.stun.msgs.EchoMsg;
-import se.sics.gvod.common.VodRetryComponentTestCase;
-import se.sics.gvod.config.StunClientConfiguration;
-import static se.sics.gvod.stun.client.StunClientTest.StunClientComponentTester.ruleLifeTime;
-import se.sics.kompics.Event;
+import se.sics.gvod.timer.TimeoutId;
+import se.sics.kompics.KompicsEvent;
 
 /**
  *
@@ -32,7 +32,7 @@ import se.sics.kompics.Event;
 public class StunUnitTest extends VodRetryComponentTestCase {
 
     StunClient stunClient = null;
-    LinkedList<Event> events;
+    LinkedList<KompicsEvent> events;
     Set<Address> stunServers;
 
     public StunUnitTest() {
@@ -42,18 +42,18 @@ public class StunUnitTest extends VodRetryComponentTestCase {
     @Override
     public void setUp() {
         super.setUp();
-        stunClient = new StunClient(this);
-        stunClient.handleInit.handle(new StunClientInit(this,
-                0,
-                StunClientConfiguration.build().
-                setRandTolerance(1).
-                setRuleExpirationMinWait(ruleLifeTime).
-                setRuleExpirationIncrement(ruleLifeTime).
-                setUpnpEnable(false).
-                setUpnpTimeout(500).
-                setMinimumRtt(500).
-                setRto(500).
-                setRtoRetries(0)));
+        stunClient = new StunClient(this,
+                new StunClientInit(this,
+                        0,
+                        StunClientConfiguration.build().
+                        setRandTolerance(1).
+                        setRuleExpirationMinWait(ruleLifeTime).
+                        setRuleExpirationIncrement(ruleLifeTime).
+                        setUpnpEnable(false).
+                        setUpnpTimeout(500).
+                        setMinimumRtt(500).
+                        setRto(500).
+                        setRtoRetries(0)));
         stunServers = new HashSet<Address>();
     }
 
@@ -119,10 +119,9 @@ public class StunUnitTest extends VodRetryComponentTestCase {
         assertSequence(events, EchoChangeIpAndPortMsg.Request.class);
         EchoChangeIpAndPortMsg.Request ecip = (EchoChangeIpAndPortMsg.Request) events.get(0);
 
-
         ScheduleRetryTimeout st = new ScheduleRetryTimeout(1000, 2);
-        EchoChangeIpAndPortMsg.RequestRetryTimeout changIpResp =
-                (EchoChangeIpAndPortMsg.RequestRetryTimeout) timeouts.get(ecip.getTimeoutId());
+        EchoChangeIpAndPortMsg.RequestRetryTimeout changIpResp
+                = (EchoChangeIpAndPortMsg.RequestRetryTimeout) timeouts.get(ecip.getTimeoutId());
         st.setTimeoutEvent(changIpResp);
         stunClient.handleEchoChangeIpAndPortTimeout.handle(changIpResp);
         events = pollEvent(1);

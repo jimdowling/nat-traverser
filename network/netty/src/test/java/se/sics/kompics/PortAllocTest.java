@@ -57,8 +57,8 @@ public class PortAllocTest
         private Address self;
 
         public TestStClientComponent() {
-            timer = create(JavaTimer.class);
-            netty = create(NettyNetwork.class);
+            timer = create(JavaTimer.class, Init.NONE);
+            netty = create(NettyNetwork.class, new NettyInit(132, true, BaseMsgFrameDecoder.class));
 
             subscribe(handleStart, control);
             subscribe(handleMsgTimeout, timer.getPositive(Timer.class));
@@ -77,10 +77,6 @@ public class PortAllocTest
             }
 
             self = new Address(addr, port, 1);
-
-
-            trigger(new NettyInit(132, true, BaseMsgFrameDecoder.class), netty.getControl());
-
         }
         public Handler<Start> handleStart = new Handler<Start>() {
 

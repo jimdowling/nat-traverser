@@ -27,7 +27,7 @@ import se.sics.kompics.Init;
  * 
  * @author Jim Dowling <jdowling@sics.se>
  */
-public final class NettyInit extends Init {
+public final class NettyInit extends Init<NettyNetwork> {
 
     private final int seed;
     private final int maxPacketSize;

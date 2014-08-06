@@ -31,7 +31,7 @@ import se.sics.kompics.p2p.experiment.dsl.SimulationScenario;
  * @author Cosmin Arad <cosmin@sics.se>
  * @version $Id: P2pOrchestratorInit.java 1103 2009-08-31 13:27:58Z Cosmin $
  */
-public final class DistributedOrchestratorInit extends Init {
+public final class DistributedOrchestratorInit extends Init<DistributedOrchestratorNat> {
 
     private final SimulationScenario scenario;
     private final NetworkModel networkModel;

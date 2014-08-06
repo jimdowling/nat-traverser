@@ -1,39 +1,43 @@
 /**
  * This file is part of the Kompics P2P Framework.
- * 
- * Copyright (C) 2009 Swedish Institute of Computer Science (SICS)
- * Copyright (C) 2009 Royal Institute of Technology (KTH)
  *
- * Kompics is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
+ * Copyright (C) 2009 Swedish Institute of Computer Science (SICS) Copyright (C)
+ * 2009 Royal Institute of Technology (KTH)
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * Kompics is free software; you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software
+ * Foundation; either version 2 of the License, or (at your option) any later
+ * version.
  *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * this program; if not, write to the Free Software Foundation, Inc., 59 Temple
+ * Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 package se.sics.gvod.p2p.simulator;
 
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Random;
-import se.sics.gvod.timer.TimeoutId;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import se.sics.gvod.net.VodNetwork;
 import se.sics.gvod.net.msgs.RewriteableMsg;
 import se.sics.gvod.network.model.common.NetworkModel;
-
+import se.sics.gvod.timer.CancelPeriodicTimeout;
+import se.sics.gvod.timer.CancelTimeout;
+import se.sics.gvod.timer.SchedulePeriodicTimeout;
+import se.sics.gvod.timer.ScheduleTimeout;
+import se.sics.gvod.timer.Timeout;
+import se.sics.gvod.timer.TimeoutId;
+import se.sics.gvod.timer.Timer;
 import se.sics.kompics.ComponentDefinition;
-import se.sics.kompics.Event;
 import se.sics.kompics.Handler;
+import se.sics.kompics.KompicsEvent;
 import se.sics.kompics.Negative;
 import se.sics.kompics.PortType;
 import se.sics.kompics.p2p.experiment.dsl.SimulationScenario;
@@ -46,22 +50,16 @@ import se.sics.kompics.p2p.experiment.dsl.events.StochasticProcessStartEvent;
 import se.sics.kompics.p2p.experiment.dsl.events.StochasticProcessTerminatedEvent;
 import se.sics.kompics.p2p.experiment.dsl.events.TakeSnapshotEvent;
 import se.sics.kompics.p2p.experiment.dsl.events.TerminateExperiment;
-import se.sics.kompics.simulation.SimulatorSystem;
-import se.sics.gvod.timer.CancelPeriodicTimeout;
-import se.sics.gvod.timer.CancelTimeout;
-import se.sics.gvod.timer.SchedulePeriodicTimeout;
-import se.sics.gvod.timer.ScheduleTimeout;
-import se.sics.gvod.timer.Timeout;
-import se.sics.gvod.timer.Timer;
 import se.sics.kompics.simulation.Simulator;
 import se.sics.kompics.simulation.SimulatorScheduler;
+import se.sics.kompics.simulation.SimulatorSystem;
 
 /**
  * The <code>P2pSimulator</code> class.
- * 
+ *
  * @author Cosmin Arad <cosmin@sics.se>
  * @version $Id: P2pSimulator.java 3724 2010-09-20 09:45:16Z jdowling $
- * 
+ *
  */
 public final class P2pSimulator extends ComponentDefinition implements
         Simulator {
@@ -89,7 +87,7 @@ public final class P2pSimulator extends ComponentDefinition implements
     // time statistics
     private long simulationStartTime = 0;
 
-    public P2pSimulator() {
+    public P2pSimulator(P2pSimulatorInit init) {
         // set myself as the simulated time provider
         SimulatorSystem.setSimulator(this);
 
@@ -97,14 +95,34 @@ public final class P2pSimulator extends ComponentDefinition implements
         futureEventList = new FutureEventList();
         activeTimers = new HashMap<TimeoutId, KompicsSimulatorEvent>();
         activePeriodicTimers = new HashMap<TimeoutId, PeriodicSimulatorEvent>();
+        doInit(init);
 
-        subscribe(handleInit, control);
         subscribe(handleMessage, network);
         subscribe(handleST, timer);
         subscribe(handleSPT, timer);
         subscribe(handleCT, timer);
         subscribe(handleCPT, timer);
         subscribe(handleTerminate, simulationPort);
+    }
+
+    public void doInit(P2pSimulatorInit init) {
+        scheduler = init.getScheduler();
+        scheduler.setSimulator(thisSimulator);
+        scenario = init.getScenario();
+        random = scenario.getRandom();
+
+        CLOCK = 0;
+        simulationStartTime = System.currentTimeMillis();
+
+        // generate initial future events from the scenario
+        LinkedList<SimulatorEvent> events = scenario.generateEventList();
+        for (SimulatorEvent simulatorEvent : events) {
+            futureEventList.scheduleFutureEvent(CLOCK, simulatorEvent);
+        }
+
+        networkModel = init.getNetworkModel();
+
+        logger.info("Simulation started");
     }
 
     @Override
@@ -235,7 +253,7 @@ public final class P2pSimulator extends ComponentDefinition implements
     }
 
     private void executeStochasticProcessEvent(StochasticProcessEvent event) {
-        Event e = event.generateOperation(random);
+        KompicsEvent e = event.generateOperation(random);
 
         trigger(e, simulationPort);
         logger.debug("{}: {}", pName(event), e);
@@ -252,12 +270,12 @@ public final class P2pSimulator extends ComponentDefinition implements
         }
     }
 
-    private void executeKompicsEvent(Event kompicsEvent) {
+    private void executeKompicsEvent(KompicsEvent kompicsEvent) {
         // trigger Messages on the Network port
         if (RewriteableMsg.class.isAssignableFrom(kompicsEvent.getClass())) {
             RewriteableMsg message = (RewriteableMsg) kompicsEvent;
             logger.debug("Delivered Message: {} from {} to {} ", new Object[]{
-                        message, message.getSource(), message.getDestination()});
+                message, message.getSource(), message.getDestination()});
             trigger(kompicsEvent, network);
             return;
         }
@@ -306,29 +324,6 @@ public final class P2pSimulator extends ComponentDefinition implements
         }
         return true;
     }
-    Handler<P2pSimulatorInit> handleInit = new Handler<P2pSimulatorInit>() {
-
-        @Override
-        public void handle(P2pSimulatorInit init) {
-            scheduler = init.getScheduler();
-            scheduler.setSimulator(thisSimulator);
-            scenario = init.getScenario();
-            random = scenario.getRandom();
-
-            CLOCK = 0;
-            simulationStartTime = System.currentTimeMillis();
-
-            // generate initial future events from the scenario
-            LinkedList<SimulatorEvent> events = scenario.generateEventList();
-            for (SimulatorEvent simulatorEvent : events) {
-                futureEventList.scheduleFutureEvent(CLOCK, simulatorEvent);
-            }
-
-            networkModel = init.getNetworkModel();
-
-            logger.info("Simulation started");
-        }
-    };
     Handler<RewriteableMsg> handleMessage = new Handler<RewriteableMsg>() {
 
         @Override
@@ -339,7 +334,7 @@ public final class P2pSimulator extends ComponentDefinition implements
                 long latency = networkModel.getLatencyMs(event);
 
                 logger.info("Message send (" + latency + ") src:{} dest:{} class:{}",
-                    new Object[]{event.getSource(), event.getDestination(), event.getClass().getSimpleName()});
+                        new Object[]{event.getSource(), event.getDestination(), event.getClass().getSimpleName()});
                 futureEventList.scheduleFutureEvent(CLOCK,
                         new KompicsSimulatorEvent(event, CLOCK + latency));
             } else {
@@ -353,9 +348,9 @@ public final class P2pSimulator extends ComponentDefinition implements
         @Override
         public void handle(ScheduleTimeout event) {
             logger.debug("ScheduleTimeout@{} : {} {} AT={}", new Object[]{
-                        event.getDelay(), event.getTimeoutEvent(),
-                        event.getTimeoutEvent().getTimeoutId(),
-                        activeTimers.keySet()});
+                event.getDelay(), event.getTimeoutEvent(),
+                event.getTimeoutEvent().getTimeoutId(),
+                activeTimers.keySet()});
 
             if (event.getDelay() < 0) {
                 throw new RuntimeException(

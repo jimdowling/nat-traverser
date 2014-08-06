@@ -4,13 +4,13 @@
  */
 package se.sics.gvod.nat.common;
 
-import se.sics.gvod.common.RetryComponentDelegator;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import org.apache.commons.lang.NotImplementedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import se.sics.gvod.address.Address;
+import se.sics.gvod.common.RetryComponentDelegator;
 import se.sics.gvod.common.msgs.DirectMsgNetty;
 import se.sics.gvod.common.msgs.RelayMsgNetty;
 import se.sics.gvod.net.VodNetwork;
@@ -28,8 +28,8 @@ import se.sics.kompics.Channel;
 import se.sics.kompics.ChannelFilter;
 import se.sics.kompics.Component;
 import se.sics.kompics.ComponentDefinition;
-import se.sics.kompics.Event;
 import se.sics.kompics.Handler;
+import se.sics.kompics.KompicsEvent;
 import se.sics.kompics.Negative;
 import se.sics.kompics.Port;
 import se.sics.kompics.PortType;
@@ -512,7 +512,7 @@ public abstract class MsgRetryComponent extends AutoSubscribeComponent
     }
 
     @Override
-    public <P extends PortType> void doTrigger(Event event, Port<P> port) {
+    public <P extends PortType> void doTrigger(KompicsEvent event, Port<P> port) {
         if (event == null || port == null) {
             throw new NullPointerException("Null event or null port when calling trigger.");
         }
@@ -555,7 +555,7 @@ public abstract class MsgRetryComponent extends AutoSubscribeComponent
     }
 
     @Override
-    public <E extends Event, P extends PortType> void doSubscribe(Handler<E> handler, Port<P> port) {
+    public <E extends KompicsEvent, P extends PortType> void doSubscribe(Handler<E> handler, Port<P> port) {
         subscribe(handler, port);
     }
 

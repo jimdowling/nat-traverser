@@ -4,7 +4,6 @@
  */
 package se.sics.gvod.nat.hp.client;
 
-import se.sics.gvod.config.HpClientConfiguration;
 import java.util.LinkedList;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
@@ -13,7 +12,12 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import se.sics.gvod.common.VodRetryComponentTestCase;
 import se.sics.gvod.common.evts.GarbageCleanupTimeout;
+import se.sics.gvod.common.hp.HPRole;
+import se.sics.gvod.common.hp.HolePunching;
+import se.sics.gvod.common.hp.HpFeasability;
+import se.sics.gvod.config.HpClientConfiguration;
 import se.sics.gvod.hp.events.OpenConnectionResponseType;
 import se.sics.gvod.hp.msgs.DeleteConnectionMsg;
 import se.sics.gvod.hp.msgs.HolePunchingMsg;
@@ -21,12 +25,9 @@ import se.sics.gvod.hp.msgs.HpConnectMsg;
 import se.sics.gvod.nat.hp.client.events.DeleteConnection;
 import se.sics.gvod.nat.hp.client.events.OpenConnectionRequest;
 import se.sics.gvod.nat.hp.client.events.OpenConnectionResponse;
-import se.sics.gvod.common.VodRetryComponentTestCase;
 import se.sics.gvod.timer.UUID;
-import se.sics.kompics.Event;
-import se.sics.gvod.common.hp.HPRole;
-import se.sics.gvod.common.hp.HolePunching;
-import se.sics.gvod.common.hp.HpFeasability;
+import se.sics.kompics.KompicsEvent;
+import se.sics.kompics.Start;
 
 /**
  *
@@ -38,7 +39,7 @@ public class HpClientUnitTest extends VodRetryComponentTestCase {
     int scanRetries = 1;
     boolean scanningEnabled = true;
     ConcurrentHashMap<Integer, OpenedConnection> connections;
-    LinkedList<Event> events;
+    LinkedList<KompicsEvent> events;
 
     public HpClientUnitTest() {
         super();
@@ -56,16 +57,17 @@ public class HpClientUnitTest extends VodRetryComponentTestCase {
     @Override
     public void setUp() {
         super.setUp();
-        hpClient = new HpClient(this);
-
         connections = new ConcurrentHashMap<Integer, OpenedConnection>();
-        hpClient.handleInit.handle(new HpClientInit(this, connections, 
+        hpClient = new HpClient(this,
+                new HpClientInit(this,
+                        connections,
                         HpClientConfiguration.build().
                         setScanRetries(scanRetries).
                         setScanningEnabled(scanningEnabled).
-                        setSessionExpirationTime(30*1000).
-                        setRto(4000), new ConcurrentSkipListSet<Integer>()             
+                        setSessionExpirationTime(30 * 1000).
+                        setRto(4000), new ConcurrentSkipListSet<Integer>()
                 ));
+        hpClient.handleStart.handle(Start.event);
         events = pollEvent(1);
         assertSequence(events, GarbageCleanupTimeout.class);
     }
@@ -81,7 +83,7 @@ public class HpClientUnitTest extends VodRetryComponentTestCase {
         privAddrs.get(0).addParent(pubAddrs.get(0).getPeerAddress());
         hpClient.handleOpenConnectionRequest.handle(
                 new OpenConnectionRequest(privAddrs.get(0), true, true,
-                UUID.nextUUID()));
+                        UUID.nextUUID()));
         assert (hpClient.openedConnections.isEmpty());
         assert (hpClient.hpSessions.size() == 1);
 //        events = pollEvent(1);
@@ -140,21 +142,20 @@ public class HpClientUnitTest extends VodRetryComponentTestCase {
         assertSequence(events, HpConnectMsg.Request.class);
 
         hpClient.handleHolePunchingMsgRequest.handle(
-                new HolePunchingMsg.Request(privAddrs.get(0), getAddress(), 
+                new HolePunchingMsg.Request(privAddrs.get(0), getAddress(),
                         UUID.nextUUID()));
         assert (hpClient.openedConnections.size() == 1);
         events = pollEvent(2);
-        assertSequence(events, 
-                HolePunchingMsg.Response.class
-                , OpenConnectionResponse.class);
+        assertSequence(events,
+                HolePunchingMsg.Response.class, OpenConnectionResponse.class);
         HolePunchingMsg.Response r = (HolePunchingMsg.Response) events.get(0);
         hpClient.handleHolePunchingResponseAck.handle(
-                new HolePunchingMsg.ResponseAck(privAddrs.get(0), getAddress(), 
-                r.getTimeoutId(), UUID.nextUUID()));
+                new HolePunchingMsg.ResponseAck(privAddrs.get(0), getAddress(),
+                        r.getTimeoutId(), UUID.nextUUID()));
         assert (hpClient.openedConnections.size() == 1);
 
         OpenConnectionResponse ocr = (OpenConnectionResponse) events.get(1);
-        assert(ocr.getResponseType() == OpenConnectionResponseType.OK);
+        assert (ocr.getResponseType() == OpenConnectionResponseType.OK);
 
         Integer k = privAddrs.get(0).getId();
         hpClient.handleDeleteConnectionRequest.handle(new DeleteConnection(k));
@@ -162,12 +163,10 @@ public class HpClientUnitTest extends VodRetryComponentTestCase {
         assertSequence(events, DeleteConnectionMsg.class);
         assert (hpClient.openedConnections.isEmpty());
 
-
     }
 
     @Test
     public void testResponderHp() {
-
 
         HolePunching hp = HpFeasability.isPossible(getAddress(), privAddrs.get(0));
 //        if (hp != null) {

@@ -81,7 +81,12 @@ public abstract class Timeout extends Response implements Cloneable {
      */
     @Override
     public final Object clone() {
-        Timeout timeout = (Timeout) super.clone();
+        Timeout timeout;
+        try {
+            timeout = (Timeout) super.clone();
+        } catch (CloneNotSupportedException ex) {
+            throw new RuntimeException(ex);
+        }
         timeout.timeoutId = timeoutId;
         return timeout;
     }

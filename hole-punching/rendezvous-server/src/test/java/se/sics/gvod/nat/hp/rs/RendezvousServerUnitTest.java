@@ -4,26 +4,24 @@
  */
 package se.sics.gvod.nat.hp.rs;
 
-import se.sics.gvod.config.RendezvousServerConfiguration;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import se.sics.gvod.config.VodConfig;
-import se.sics.gvod.common.VodRetryComponentTestCase;
-import se.sics.gvod.nat.hp.rs.RendezvousServer.NoPortsException;
-import se.sics.gvod.net.VodAddress;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import se.sics.gvod.common.NatFactory;
 import se.sics.gvod.common.SelfNoUtility;
+import se.sics.gvod.common.VodRetryComponentTestCase;
 import se.sics.gvod.common.evts.GarbageCleanupTimeout;
+import se.sics.gvod.config.RendezvousServerConfiguration;
+import se.sics.gvod.config.VodConfig;
 import se.sics.gvod.hp.events.OpenConnectionResponseType;
 import se.sics.gvod.hp.msgs.GoMsg;
 import se.sics.gvod.hp.msgs.HpConnectMsg;
@@ -37,9 +35,12 @@ import se.sics.gvod.hp.msgs.PRC_ServerRequestForConsecutiveMsg;
 import se.sics.gvod.hp.msgs.PRP_ConnectMsg;
 import se.sics.gvod.hp.msgs.PRP_PreallocatedPortsMsg;
 import se.sics.gvod.hp.msgs.SHP_OpenHoleMsg;
+import se.sics.gvod.nat.hp.rs.RendezvousServer.NoPortsException;
 import se.sics.gvod.nat.hp.rs.events.UnregisterTimeout;
+import se.sics.gvod.net.VodAddress;
 import se.sics.gvod.timer.UUID;
-import se.sics.kompics.Event;
+import se.sics.kompics.KompicsEvent;
+import se.sics.kompics.Start;
 
 /**
  *
@@ -67,20 +68,20 @@ public class RendezvousServerUnitTest extends VodRetryComponentTestCase {
     @Override
     public void setUp() {
         super.setUp();
-        zServer = new RendezvousServer(this);
         try {
             VodConfig.init(new String[]{});
         } catch (IOException ex) {
             logger.error(null, ex);
         }
+        zServer = new RendezvousServer(this,
+                new RendezvousServerInit(new SelfNoUtility(getAddress()),
+                        new ConcurrentHashMap<Integer, RendezvousServer.RegisteredClientRecord>(),
+                        RendezvousServerConfiguration.build().
+                        setSessionExpirationTime(30 * 1000).
+                        setNumChildren(1)));
 
-        zServer.handleInit.handle(new RendezvousServerInit(new SelfNoUtility(getAddress()),
-                new ConcurrentHashMap<Integer, RendezvousServer.RegisteredClientRecord>(),
-                RendezvousServerConfiguration.build().
-                setSessionExpirationTime(30*1000).
-                setNumChildren(1)));
-
-        LinkedList<Event> events = pollEvent(1);
+        zServer.handleStart.handle(Start.event);
+        LinkedList<KompicsEvent> events = pollEvent(1);
         assertSequence(events, GarbageCleanupTimeout.class);
 
     }
@@ -97,7 +98,7 @@ public class RendezvousServerUnitTest extends VodRetryComponentTestCase {
         HpRegisterMsg.Request req = new HpRegisterMsg.Request(client, getAddress(),
                 rtt, prpPorts);
         zServer.handleHpRegisterRequest.handle(req);
-        LinkedList<Event> events = pollEvent(1);
+        LinkedList<KompicsEvent> events = pollEvent(1);
         assertSequence(events, HpRegisterMsg.Response.class);
         HpRegisterMsg.Response res = (HpRegisterMsg.Response) events.get(0);
         assert (res.getResponseType() == expectedStatus);
@@ -111,7 +112,6 @@ public class RendezvousServerUnitTest extends VodRetryComponentTestCase {
         VodAddress src = privAddrs.get(0);
         addPrivateChild(src, HpRegisterMsg.RegisterStatus.ACCEPT, 1000, null);
 
-
         // send a request from a node with too high RTT, which will
         // not replace the existing registered client.
         VodAddress src1 = privAddrs.get(1);
@@ -122,7 +122,7 @@ public class RendezvousServerUnitTest extends VodRetryComponentTestCase {
         VodAddress src2 = privAddrs.get(2);
         HpRegisterMsg.Request req2 = new HpRegisterMsg.Request(src2, getAddress(), 500);
         zServer.handleHpRegisterRequest.handle(req2);
-        LinkedList<Event> events = pollEvent(2);
+        LinkedList<KompicsEvent> events = pollEvent(2);
         assertSequence(events, HpUnregisterMsg.Request.class, HpRegisterMsg.Response.class);
         HpRegisterMsg.Response res = (HpRegisterMsg.Response) events.get(1);
         assert (res.getResponseType() == HpRegisterMsg.RegisterStatus.ACCEPT);
@@ -154,10 +154,10 @@ public class RendezvousServerUnitTest extends VodRetryComponentTestCase {
         HpConnectMsg.Request c = new HpConnectMsg.Request(client, getAddress(), responder.getId(),
                 1, 1000, UUID.nextUUID());
         zServer.handleHpConnect.handle(c);
-        LinkedList<Event> events = popEvents();
+        LinkedList<KompicsEvent> events = popEvents();
         assertSequence(events, HpConnectMsg.Response.class, GoMsg.Request.class);
         HpConnectMsg.Response e1 = (HpConnectMsg.Response) events.get(0);
-        assert(e1.getVodDestination().equals(client));
+        assert (e1.getVodDestination().equals(client));
         assert (e1.getResponseType() == OpenConnectionResponseType.HP_WILL_START);
         GoMsg.Request e2 = (GoMsg.Request) events.get(1);
         assert (e2.getRemoteId() == client.getId());
@@ -171,19 +171,19 @@ public class RendezvousServerUnitTest extends VodRetryComponentTestCase {
         addPrivateChild(client, HpRegisterMsg.RegisterStatus.ACCEPT, 1000, null);
         VodAddress responder = new VodAddress(privAddrs.get(1).getPeerAddress(),
                 VodConfig.SYSTEM_OVERLAY_ID, nf.getPdPcHd());
-        
+
         HpConnectMsg.Request c = new HpConnectMsg.Request(responder, getAddress(), client.getId(),
                 1, 1000, UUID.nextUUID());
         zServer.handleHpConnect.handle(c);
-        
-        LinkedList<Event> events = popEvents();
+
+        LinkedList<KompicsEvent> events = popEvents();
         assertSequence(events, HpConnectMsg.Response.class, SHP_OpenHoleMsg.Initiator.class,
                 GoMsg.Request.class);
-        
+
         HpConnectMsg.Response e0 = (HpConnectMsg.Response) events.get(0);
-        assert(e0.getVodDestination().equals(responder));
-        assert(e0.getResponseType() == OpenConnectionResponseType.HP_WILL_START);
-        
+        assert (e0.getVodDestination().equals(responder));
+        assert (e0.getResponseType() == OpenConnectionResponseType.HP_WILL_START);
+
         SHP_OpenHoleMsg.Initiator e1 = (SHP_OpenHoleMsg.Initiator) events.get(1);
         assert (e1.getVodDestination().equals(client));
 
@@ -197,7 +197,7 @@ public class RendezvousServerUnitTest extends VodRetryComponentTestCase {
         VodAddress responder = new VodAddress(privAddrs.get(1).getPeerAddress(),
                 VodConfig.SYSTEM_OVERLAY_ID, nf.getHdPpEi());
         addPrivateChild(responder, HpRegisterMsg.RegisterStatus.ACCEPT, 1000, null);
-        LinkedList<Event> events;
+        LinkedList<KompicsEvent> events;
 
         VodAddress client = new VodAddress(privAddrs.get(0).getPeerAddress(),
                 VodConfig.SYSTEM_OVERLAY_ID, nf.getPdPcHd());
@@ -222,7 +222,7 @@ public class RendezvousServerUnitTest extends VodRetryComponentTestCase {
         VodAddress client = new VodAddress(privAddrs.get(0).getPeerAddress(),
                 VodConfig.SYSTEM_OVERLAY_ID, nf.getEiPpHd());
         addPrivateChild(client, HpRegisterMsg.RegisterStatus.ACCEPT, 1000, prpPorts);
-        LinkedList<Event> events;
+        LinkedList<KompicsEvent> events;
         try {
             assert (zServer.registeredClients.get(privAddrs.get(0).getId()).popPrpPort() == 55555);
         } catch (NoPortsException ex) {
@@ -252,7 +252,7 @@ public class RendezvousServerUnitTest extends VodRetryComponentTestCase {
         VodAddress responder = new VodAddress(privAddrs.get(1).getPeerAddress(),
                 VodConfig.SYSTEM_OVERLAY_ID, nf.getPdRdPd());
         addPrivateChild(responder, HpRegisterMsg.RegisterStatus.ACCEPT, 1000, null);
-        LinkedList<Event> events;
+        LinkedList<KompicsEvent> events;
 
         VodAddress client = new VodAddress(privAddrs.get(0).getPeerAddress(),
                 VodConfig.SYSTEM_OVERLAY_ID, nf.getEiPpHd());
@@ -278,9 +278,9 @@ public class RendezvousServerUnitTest extends VodRetryComponentTestCase {
         VodAddress remote = privAddrs.get(1);
         Set<Integer> setPorts = new HashSet<Integer>();
         setPorts.add(55555);
-        PRP_ConnectMsg.Request req =
-                new PRP_ConnectMsg.Request(getAddress(), client,
-                remote.getId(), setPorts, UUID.nextUUID());
+        PRP_ConnectMsg.Request req
+                = new PRP_ConnectMsg.Request(getAddress(), client,
+                        remote.getId(), setPorts, UUID.nextUUID());
     }
 
     @Test
@@ -291,7 +291,7 @@ public class RendezvousServerUnitTest extends VodRetryComponentTestCase {
         VodAddress client = new VodAddress(privAddrs.get(0).getPeerAddress(),
                 VodConfig.SYSTEM_OVERLAY_ID, nf.getEiPpPd());
         addPrivateChild(client, HpRegisterMsg.RegisterStatus.ACCEPT, 1000, prpPorts);
-        LinkedList<Event> events;
+        LinkedList<KompicsEvent> events;
         try {
             assert (zServer.registeredClients.get(privAddrs.get(0).getId()).popPrpPort() == 55555);
         } catch (NoPortsException ex) {
@@ -303,9 +303,9 @@ public class RendezvousServerUnitTest extends VodRetryComponentTestCase {
         prpPorts2.add(21212);
         VodAddress responder = new VodAddress(privAddrs.get(1).getPeerAddress(),
                 VodConfig.SYSTEM_OVERLAY_ID, nf.getPdPpPd());
-        Interleaved_PRP_ConnectMsg.Request reqMsg =
-                new Interleaved_PRP_ConnectMsg.Request(responder, getAddress(),
-                client.getId(), prpPorts2, UUID.nextUUID());
+        Interleaved_PRP_ConnectMsg.Request reqMsg
+                = new Interleaved_PRP_ConnectMsg.Request(responder, getAddress(),
+                        client.getId(), prpPorts2, UUID.nextUUID());
         zServer.handle_Interleaved_PRP_ConnectRequest.handle(reqMsg);
         events = popEvents();
         assertSequence(events, Interleaved_PRP_ConnectMsg.Response.class,
@@ -324,7 +324,7 @@ public class RendezvousServerUnitTest extends VodRetryComponentTestCase {
         VodAddress client = new VodAddress(privAddrs.get(0).getPeerAddress(),
                 VodConfig.SYSTEM_OVERLAY_ID, nf.getPdPcPd());
         addPrivateChild(client, HpRegisterMsg.RegisterStatus.ACCEPT, 1000, null);
-        LinkedList<Event> events;
+        LinkedList<KompicsEvent> events;
         VodAddress responder = new VodAddress(privAddrs.get(1).getPeerAddress(),
                 VodConfig.SYSTEM_OVERLAY_ID, nf.getEiPcHd());
 
@@ -336,7 +336,6 @@ public class RendezvousServerUnitTest extends VodRetryComponentTestCase {
                 PRC_ServerRequestForConsecutiveMsg.Request.class);
         HpConnectMsg.Response e1 = (HpConnectMsg.Response) events.get(0);
         assert (e1.getResponseType() == OpenConnectionResponseType.HP_WILL_START);
-
 
         PRC_OpenHoleMsg.Request openHoleReqMsg = new PRC_OpenHoleMsg.Request(responder,
                 getAddress(), client.getId(), UUID.nextUUID());
@@ -353,7 +352,7 @@ public class RendezvousServerUnitTest extends VodRetryComponentTestCase {
         VodAddress client = new VodAddress(privAddrs.get(0).getPeerAddress(),
                 VodConfig.SYSTEM_OVERLAY_ID, nf.getEiPcHd());
         addPrivateChild(client, HpRegisterMsg.RegisterStatus.ACCEPT, 1000, null);
-        LinkedList<Event> events;
+        LinkedList<KompicsEvent> events;
 
         VodAddress responder = new VodAddress(privAddrs.get(1).getPeerAddress(),
                 VodConfig.SYSTEM_OVERLAY_ID, nf.getPdPcPd());
@@ -366,7 +365,6 @@ public class RendezvousServerUnitTest extends VodRetryComponentTestCase {
                 PRC_ServerRequestForConsecutiveMsg.Request.class);
         HpConnectMsg.Response e1 = (HpConnectMsg.Response) events.get(0);
         assert (e1.getResponseType() == OpenConnectionResponseType.HP_WILL_START);
-
 
         PRC_OpenHoleMsg.Request openHoleReqMsg = new PRC_OpenHoleMsg.Request(client,
                 getAddress(), responder.getId(), UUID.nextUUID());
@@ -383,7 +381,7 @@ public class RendezvousServerUnitTest extends VodRetryComponentTestCase {
         VodAddress client = new VodAddress(privAddrs.get(0).getPeerAddress(),
                 VodConfig.SYSTEM_OVERLAY_ID, nf.getPdPcHd());
         addPrivateChild(client, HpRegisterMsg.RegisterStatus.ACCEPT, 1000, null);
-        LinkedList<Event> events;
+        LinkedList<KompicsEvent> events;
         VodAddress responder = new VodAddress(privAddrs.get(1).getPeerAddress(),
                 VodConfig.SYSTEM_OVERLAY_ID, nf.getPdPcPd());
 
@@ -396,7 +394,6 @@ public class RendezvousServerUnitTest extends VodRetryComponentTestCase {
                 Interleaved_PRC_ServersRequestForPredictionMsg.Request.class);
         HpConnectMsg.Response e1 = (HpConnectMsg.Response) events.get(0);
         assert (e1.getResponseType() == OpenConnectionResponseType.HP_WILL_START);
-
 
         Interleaved_PRC_OpenHoleMsg.Request open1 = new Interleaved_PRC_OpenHoleMsg.Request(client,
                 getAddress(), responder.getId(), UUID.nextUUID());
@@ -426,7 +423,7 @@ public class RendezvousServerUnitTest extends VodRetryComponentTestCase {
         VodAddress client = new VodAddress(privAddrs.get(0).getPeerAddress(),
                 VodConfig.SYSTEM_OVERLAY_ID, nf.getEiPpPd());
         addPrivateChild(client, HpRegisterMsg.RegisterStatus.ACCEPT, 1000, ports);
-        LinkedList<Event> events;        
+        LinkedList<KompicsEvent> events;
         VodAddress responder = new VodAddress(privAddrs.get(1).getPeerAddress(),
                 VodConfig.SYSTEM_OVERLAY_ID, nf.getEiPcPd());
         HpConnectMsg.Request c = new HpConnectMsg.Request(responder, getAddress(), client.getId(),

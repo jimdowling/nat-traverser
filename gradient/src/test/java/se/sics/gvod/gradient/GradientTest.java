@@ -24,7 +24,7 @@ import se.sics.gvod.config.VodConfig;
 import se.sics.gvod.gradient.events.GradientSetsExchangeCycle;
 import se.sics.gvod.gradient.msgs.GradientSetsExchangeMsg;
 import se.sics.gvod.net.VodAddress;
-import se.sics.kompics.Event;
+import se.sics.kompics.KompicsEvent;
 import se.sics.gvod.timer.SchedulePeriodicTimeout;
 
 /**
@@ -82,7 +82,6 @@ public class GradientTest extends VodRetryComponentTestCase {
                 similarPeers.add(new VodDescriptor(p[i], new UtilityVod(u[i]), 1, 1));
             }
             
-            gradient = new Gradient(this);
             GradientConfiguration config = GradientConfiguration.build()
                     .setSimilarSetSize(10)
                     .setShufflePeriod(setsExchangePeriod)
@@ -91,9 +90,8 @@ public class GradientTest extends VodRetryComponentTestCase {
                     .setSearchTtl(probeTtl)
                     .setUtilityThreshold(utilityThreshold)
                     .setNumParallelSearches(numOfProbes)
-                    .setTemperature(0.8d)
-                    ;
-            gradient.handleInit.handle(new GradientInit(this, config));
+                    .setTemperature(0.8d);
+            gradient = new Gradient(this, new GradientInit(this, config));
             gradient.similarSet.addSimilarPeers(similarPeers);
         
         } catch (IOException ex) {
@@ -111,7 +109,7 @@ public class GradientTest extends VodRetryComponentTestCase {
         GradientSetsExchangeCycle e = new GradientSetsExchangeCycle(new SchedulePeriodicTimeout(0, 0));
         gradient.handleCycle.handle(e);
 
-        Event event = eventList.peekLast();
+        KompicsEvent event = eventList.peekLast();
         assert (event.getClass().equals(GradientSetsExchangeMsg.Request.class));
         GradientSetsExchangeMsg.Request request = (GradientSetsExchangeMsg.Request) event;
         assert (request.getDestination() != null);

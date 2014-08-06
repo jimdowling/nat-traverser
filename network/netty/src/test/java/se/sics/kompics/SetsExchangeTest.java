@@ -92,9 +92,11 @@ public class SetsExchangeTest extends TestCase {
         }
 
         public TestStClientComponent() {
-            timer = create(JavaTimer.class);
-            client = create(NettyNetwork.class);
-            server = create(NettyNetwork.class);
+            timer = create(JavaTimer.class, Init.NONE);
+            client = create(NettyNetwork.class, 
+                    new NettyInit(132, true, BaseMsgFrameDecoder.class));
+            server = create(NettyNetwork.class,
+                    new NettyInit(132, true, BaseMsgFrameDecoder.class));
 
             InetAddress ip = null;
             int clientPort = 54644;
@@ -127,10 +129,6 @@ public class SetsExchangeTest extends TestCase {
             subscribe(handleClientPortDeletionResponse, client.getPositive(NatNetworkControl.class));
             subscribe(handleServerPortDeletionResponse, server.getPositive(NatNetworkControl.class));
 
-            trigger(new NettyInit(132, true,
-                    BaseMsgFrameDecoder.class), client.getControl());
-            trigger(new NettyInit(132, true,
-                    BaseMsgFrameDecoder.class), server.getControl());
         }
         public Handler<Start> handleStart = new Handler<Start>() {
             public void handle(Start event) {

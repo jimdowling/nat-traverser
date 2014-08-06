@@ -1,7 +1,5 @@
 package se.sics.gvod.nat.traversal;
 
-import se.sics.gvod.config.NatTraverserConfiguration;
-import se.sics.gvod.nat.traversal.events.NatTraverserInit;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -12,12 +10,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
-import se.sics.gvod.timer.TimeoutId;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
-import se.sics.kompics.Negative;
-import se.sics.kompics.Positive;
-import se.sics.gvod.timer.Timer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import se.sics.gvod.address.Address;
@@ -25,68 +19,75 @@ import se.sics.gvod.common.RTTStore;
 import se.sics.gvod.common.RTTStore.RTT;
 import se.sics.gvod.common.Self;
 import se.sics.gvod.common.VodDescriptor;
-import se.sics.gvod.config.VodConfig;
 import se.sics.gvod.common.evts.GarbageCleanupTimeout;
 import se.sics.gvod.common.evts.Join;
+import se.sics.gvod.common.hp.HPMechanism;
+import se.sics.gvod.common.hp.HPSessionKey;
+import se.sics.gvod.common.msgs.DirectMsgNetty;
 import se.sics.gvod.common.msgs.RelayMsgNetty;
+import se.sics.gvod.common.util.CachedNatType;
+import se.sics.gvod.common.util.NatStr;
 import se.sics.gvod.common.util.ToVodAddr;
-import se.sics.gvod.filters.MsgDestFilterOverlayId;
-import se.sics.gvod.nat.hp.client.HpClient;
+import se.sics.gvod.config.BaseCommandLineConfig;
 import se.sics.gvod.config.HpClientConfiguration;
+import se.sics.gvod.config.NatTraverserConfiguration;
+import se.sics.gvod.config.ParentMakerConfiguration;
+import se.sics.gvod.config.RendezvousServerConfiguration;
+import se.sics.gvod.config.StunClientConfiguration;
+import se.sics.gvod.config.StunServerConfiguration;
+import se.sics.gvod.config.VodConfig;
+import se.sics.gvod.croupier.PeerSamplePort;
+import se.sics.gvod.croupier.events.CroupierSample;
+import se.sics.gvod.filters.MsgDestFilterOverlayId;
+import se.sics.gvod.hp.events.OpenConnectionResponseType;
+import se.sics.gvod.nat.hp.client.HpClient;
 import se.sics.gvod.nat.hp.client.HpClientInit;
 import se.sics.gvod.nat.hp.client.HpClientPort;
 import se.sics.gvod.nat.hp.client.OpenedConnection;
 import se.sics.gvod.nat.hp.client.events.DeleteConnection;
-import se.sics.gvod.nat.hp.client.events.OpenConnectionResponse;
-import se.sics.gvod.hp.events.OpenConnectionResponseType;
 import se.sics.gvod.nat.hp.client.events.OpenConnectionRequest;
+import se.sics.gvod.nat.hp.client.events.OpenConnectionResponse;
 import se.sics.gvod.nat.hp.rs.RendezvousServer;
 import se.sics.gvod.nat.hp.rs.RendezvousServer.RegisteredClientRecord;
-import se.sics.gvod.config.RendezvousServerConfiguration;
 import se.sics.gvod.nat.hp.rs.RendezvousServerInit;
 import se.sics.gvod.nat.traversal.events.ConnectionEstablishmentTimeout;
 import se.sics.gvod.nat.traversal.events.DisconnectNeighbour;
+import se.sics.gvod.nat.traversal.events.HpFailed;
+import se.sics.gvod.nat.traversal.events.NatTraverserInit;
 import se.sics.gvod.nat.traversal.events.StartServices;
 import se.sics.gvod.net.Nat;
-import se.sics.gvod.net.VodAddress;
 import se.sics.gvod.net.NatNetworkControl;
+import se.sics.gvod.net.VodAddress;
 import se.sics.gvod.net.VodNetwork;
 import se.sics.gvod.net.msgs.DirectMsg;
 import se.sics.gvod.net.msgs.RelayMsg;
 import se.sics.gvod.net.msgs.RewriteableMsg;
 import se.sics.gvod.parentmaker.ParentMaker;
-import se.sics.gvod.config.ParentMakerConfiguration;
 import se.sics.gvod.parentmaker.ParentMakerInit;
+import se.sics.gvod.parentmaker.ParentMakerPort;
 import se.sics.gvod.stun.client.StunClient;
-import se.sics.gvod.config.StunClientConfiguration;
-import se.sics.gvod.croupier.PeerSamplePort;
-import se.sics.gvod.croupier.events.CroupierSample;
-import se.sics.gvod.nat.traversal.events.HpFailed;
 import se.sics.gvod.stun.client.StunPort;
 import se.sics.gvod.stun.client.events.GetNatTypeRequest;
 import se.sics.gvod.stun.client.events.GetNatTypeResponse;
 import se.sics.gvod.stun.client.events.GetNatTypeResponseRuleExpirationTime;
 import se.sics.gvod.stun.client.events.StunClientInit;
+import se.sics.gvod.stun.msgs.EchoChangePortMsg;
 import se.sics.gvod.stun.server.StunServer;
 import se.sics.gvod.stun.server.events.StunServerInit;
-import se.sics.kompics.Component;
-import se.sics.kompics.Handler;
-import se.sics.kompics.Stop;
-import se.sics.gvod.common.hp.HPMechanism;
 import se.sics.gvod.timer.CancelTimeout;
 import se.sics.gvod.timer.SchedulePeriodicTimeout;
 import se.sics.gvod.timer.ScheduleTimeout;
 import se.sics.gvod.timer.Timeout;
-import se.sics.gvod.common.hp.HPSessionKey;
-import se.sics.gvod.common.msgs.DirectMsgNetty;
-import se.sics.gvod.common.util.NatStr;
-import se.sics.gvod.common.util.CachedNatType;
-import se.sics.gvod.config.BaseCommandLineConfig;
-import se.sics.gvod.config.StunServerConfiguration;
-import se.sics.gvod.parentmaker.ParentMakerPort;
-import se.sics.gvod.stun.msgs.EchoChangePortMsg;
+import se.sics.gvod.timer.TimeoutId;
+import se.sics.gvod.timer.Timer;
+import se.sics.kompics.Component;
 import se.sics.kompics.ComponentDefinition;
 import se.sics.kompics.Fault;
+import se.sics.kompics.Handler;
+import se.sics.kompics.Negative;
+import se.sics.kompics.Positive;
+import se.sics.kompics.Start;
+import se.sics.kompics.Stop;
 
 /**
  *
@@ -159,6 +160,8 @@ public class NatTraverser extends ComponentDefinition {
      * used to garbage-collect those ports and clean-up.
      */
     private ConcurrentSkipListSet<Integer> parentPorts = new ConcurrentSkipListSet<Integer>();
+    private boolean isOpenServer;
+    private Set<Address> stunServers;
 
     class ServersInitTimeout extends Timeout {
 
@@ -216,12 +219,10 @@ public class NatTraverser extends ComponentDefinition {
         }
     }
 
-    public NatTraverser() {
+    public NatTraverser(NatTraverserInit init) {
         super();
 
-        hpClient = create(HpClient.class);
-
-        subscribe(handleInit, control);
+        subscribe(handleStart, control);
         subscribe(handleStop, control);
 
         subscribe(handleDisconnectNeighbour, natTraverserPort);
@@ -251,37 +252,51 @@ public class NatTraverser extends ComponentDefinition {
 
         subscribe(handleCroupierSample, globalCroupierPort);
 
-        subscribe(handleOpenConnectionResponse, hpClient.getPositive(HpClientPort.class));
-
-        subscribe(handleFault, hpClient.getControl());
-
-
-
 //        subscribe(handleRTO, timer);
+    }
 
+    private void doInit(NatTraverserInit init) {
+        self = init.getSelf();
+        compName = "NT(" + self.getId() + ") ";
+
+        logger.debug(compName + " Starting  " + self.getAddress());
+
+        natTraverserConfig = init.getNatTraverserConfig();
+        hpClientConfig = init.getHpClientConfig();
+        rendezvousServerConfig = init.getRendezvousServerConfig();
+        parentMakerConfig = init.getParentMakerConfig();
+        stunClientConfiguration = init.getStunClientConfig();
+        stunServerConfiguration = init.getStunServerConfig();
+        connectionEstablishmentWaitTime = natTraverserConfig.getConnectionEstablishmentWaitTime();
+        maxOpenedConnections = natTraverserConfig.getMaxOpenedConnections();
+        stunRetries = natTraverserConfig.getStunRetries();
+        isOpenServer = init.isOpenServer();
+
+        hpClient = create(HpClient.class, new HpClientInit(self.clone(VodConfig.SYSTEM_OVERLAY_ID),
+                openedConnections, hpClientConfig, parentPorts));
         connect(hpClient.getNegative(Timer.class), timer);
         connect(hpClient.getNegative(VodNetwork.class), network,
                 new MsgDestFilterOverlayId(VodConfig.SYSTEM_OVERLAY_ID));
         connect(hpClient.getNegative(NatNetworkControl.class), lowerNetControl);
+        subscribe(handleOpenConnectionResponse, hpClient.getPositive(HpClientPort.class));
+        subscribe(handleFault, hpClient.getControl());
+
+        for (Address addr : init.getPublicNodes()) {
+            RTTStore.addSample(self.getId(), ToVodAddr.hpServer(addr), 5000);
+            RTTStore.addSample(self.getId(), ToVodAddr.stunServer(addr), 5000);
+        }
+
+        stunServers = new HashSet<Address>();
+        if (!init.getPublicNodes().isEmpty()) {
+            Address a = init.getPublicNodes().iterator().next();
+            stunServers.add(new Address(a.getIp(), BaseCommandLineConfig.DEFAULT_STUN_PORT, a.getId()));
+        }
     }
-    Handler<NatTraverserInit> handleInit = new Handler<NatTraverserInit>() {
+
+    public Handler<Start> handleStart = new Handler<Start>() {
+
         @Override
-        public void handle(NatTraverserInit init) {
-            self = init.getSelf();
-            compName = "NT(" + self.getId() + ") ";
-
-            logger.debug(compName + " Starting  " + self.getAddress());
-
-            natTraverserConfig = init.getNatTraverserConfig();
-            hpClientConfig = init.getHpClientConfig();
-            rendezvousServerConfig = init.getRendezvousServerConfig();
-            parentMakerConfig = init.getParentMakerConfig();
-            stunClientConfiguration = init.getStunClientConfig();
-            stunServerConfiguration = init.getStunServerConfig();
-            connectionEstablishmentWaitTime = natTraverserConfig.getConnectionEstablishmentWaitTime();
-            maxOpenedConnections = natTraverserConfig.getMaxOpenedConnections();
-            stunRetries = natTraverserConfig.getStunRetries();
-
+        public void handle(Start event) {
             // initialization is complete start a periodic timer for controlling the
             // number of connections
             if (maxOpenedConnections > 0) {
@@ -291,68 +306,43 @@ public class NatTraverser extends ComponentDefinition {
                 trigger(st, timer);
             }
 
-            for (Address addr : init.getPublicNodes()) {
-                RTTStore.addSample(self.getId(), ToVodAddr.hpServer(addr), 5000);
-                RTTStore.addSample(self.getId(), ToVodAddr.stunServer(addr), 5000);
-            }
-
-            if (init.isOpenServer()) {
+            if (isOpenServer) {
                 retryStartServerComponents();
             } else {
-                stunClient = create(StunClient.class);
+                stunClient = create(StunClient.class, new StunClientInit(self, VodConfig.getSeed(), stunClientConfiguration));
 
                 subscribe(handleGetNatTypeResponse, stunClient.getPositive(StunPort.class));
                 subscribe(handleNatTypeResponseRuleTimeout, stunClient.getPositive(StunPort.class));
                 subscribe(handleFault, stunClient.getControl());
 
                 connect(stunClient.getNegative(Timer.class), timer);
-                connect(stunClient.getNegative(VodNetwork.class), network //                        , new MsgDestFilterOverlayId(VodConfig.SYSTEM_OVERLAY_ID)
-                        );
+                connect(stunClient.getNegative(VodNetwork.class), network
+                // new MsgDestFilterOverlayId(VodConfig.SYSTEM_OVERLAY_ID)
+                );
                 connect(stunClient.getNegative(NatNetworkControl.class), lowerNetControl);
 
-                trigger(new StunClientInit(self, VodConfig.getSeed(), stunClientConfiguration), stunClient.getControl());
-
-                Set<Address> stunServers = new HashSet<Address>();
-                if (!init.getPublicNodes().isEmpty()) {
-                    Address a = init.getPublicNodes().iterator().next();
-                    stunServers.add(new Address(a.getIp(), BaseCommandLineConfig.DEFAULT_STUN_PORT, a.getId()));
-                }
-
                 CachedNatType sc = VodConfig.getSavedNatType();
-//                boolean runStun = true;
-//                        && sc.getNatBean().getNumTimesUnchanged() > 0
-//                        && sc.getNatBean().getNumTimesSinceStunLastRun() < 5
-//                    if (!sc.getNatBean().isUpnpSupported()) {
-                        VodAddress va = sc.getNatBean().getVodAddress();
-                        if (va != null) {
-                            self.setNat(va.getNat());
-                            if (!self.isOpen()) {
-                                for (Address p : va.getParents()) {
-                                    self.addParent(p);
-                                }
-                            }
-    //                        runStun = false;
-                            List<Address> l = new ArrayList<Address>();
-                            l.addAll(init.getPublicNodes());
-                            sendGetNatTypeResponse(l);
+                VodAddress va = sc.getNatBean().getVodAddress();
+                if (va != null) {
+                    self.setNat(va.getNat());
+                    if (!self.isOpen()) {
+                        for (Address p : va.getParents()) {
+                            self.addParent(p);
                         }
-//                    }
-//                if (runStun) {
-                    trigger(new GetNatTypeRequest(stunServers,
-                            0 /*timeout before starting stun*/,
-                            init.getStunClientConfig().isMeasureNatBindingTimeout(),
-                            init.getStunClientConfig().getRto(),
-                            init.getStunClientConfig().getRtoRetries(),
-                            init.getStunClientConfig().getRtoScale()),
-                            stunClient.getPositive(StunPort.class));
-//                }
+                    }
+                    List<Address> l = new ArrayList<Address>();
+                    l.addAll(stunServers);
+                    sendGetNatTypeResponse(l);
+                }
+                trigger(Start.event, stunClient.getControl());
+                trigger(new GetNatTypeRequest(stunServers,
+                        0 /*timeout before starting stun*/,
+                        stunClientConfiguration.isMeasureNatBindingTimeout(),
+                        stunClientConfiguration.getRto(),
+                        stunClientConfiguration.getRtoRetries(),
+                        stunClientConfiguration.getRtoScale()),
+                        stunClient.getPositive(StunPort.class));
             }
-
-            //initialize the hole punching client
-            trigger(new HpClientInit(
-                    self.clone(VodConfig.SYSTEM_OVERLAY_ID), openedConnections,
-                    hpClientConfig, parentPorts), hpClient.getControl());
-
         }
     };
     Handler<OpenConnectionResponse> handleOpenConnectionResponse = new Handler<OpenConnectionResponse>() {
@@ -508,15 +498,15 @@ public class NatTraverser extends ComponentDefinition {
                     null, timeout.getMsgTimeoutId());
         }
     };
-    Handler<EchoChangePortMsg.Response> handleEchoChangePortResponse =
-            new Handler<EchoChangePortMsg.Response>() {
-        @Override
-        public void handle(EchoChangePortMsg.Response event) {
-            // TODO - this is a kompics bug. 
-            // EchoChangePortMsg.Response doesn't get forwarded to StunClient,
-            // if i don't have this handler subscribed here.
-        }
-    };
+    Handler<EchoChangePortMsg.Response> handleEchoChangePortResponse
+            = new Handler<EchoChangePortMsg.Response>() {
+                @Override
+                public void handle(EchoChangePortMsg.Response event) {
+                    // TODO - this is a kompics bug. 
+                    // EchoChangePortMsg.Response doesn't get forwarded to StunClient,
+                    // if i don't have this handler subscribed here.
+                }
+            };
 
     private void retryStartServerComponents() {
         ScheduleTimeout st = new ScheduleTimeout(VodConfig.NT_SERVER_INIT_RETRY_PERIOD);
@@ -790,13 +780,12 @@ public class NatTraverser extends ComponentDefinition {
     };
 
     private Set<Integer> oldestConnections(int number/**
-             * number of old connections
-             */
-            ) {
+     * number of old connections
+     */
+    ) {
         List<Integer> keysList = new ArrayList<Integer>(openedConnections.keySet());
         List<OpenedConnection> valuesList = new ArrayList<OpenedConnection>(openedConnections.values());
         TreeSet<OpenedConnection> sortedSet = new TreeSet<OpenedConnection>(new NatTraverser.ConnectionTSComparator());
-
 
         for (int i = 0; i < valuesList.size(); i++) {
             sortedSet.add(valuesList.get(i));
@@ -846,14 +835,19 @@ public class NatTraverser extends ComponentDefinition {
             return false;
         }
 
-        stunServer = create(StunServer.class);
-        zServer = create(RendezvousServer.class);
+        List<VodAddress> partners = new ArrayList<VodAddress>();
+        for (VodAddress a : nodes) {
+            partners.add(ToVodAddr.stunServer(a.getPeerAddress()));
+        }
+
+        stunServer = create(StunServer.class,
+                new StunServerInit(self.clone(VodConfig.SYSTEM_OVERLAY_ID), partners, stunServerConfiguration));
+        zServer = create(RendezvousServer.class,
+                new RendezvousServerInit(self.clone(VodConfig.SYSTEM_OVERLAY_ID), registeredClients, rendezvousServerConfig));
 
         connect(zServer.getNegative(Timer.class), timer);
         connect(zServer.getNegative(VodNetwork.class), network,
                 new MsgDestFilterOverlayId(VodConfig.SYSTEM_OVERLAY_ID));
-        trigger(new RendezvousServerInit(self.clone(VodConfig.SYSTEM_OVERLAY_ID),
-                registeredClients, rendezvousServerConfig), zServer.getControl());
 
         connect(stunServer.getNegative(Timer.class), timer);
         connect(stunServer.getNegative(VodNetwork.class), network, new MsgDestFilterOverlayId(VodConfig.SYSTEM_OVERLAY_ID));
@@ -862,14 +856,9 @@ public class NatTraverser extends ComponentDefinition {
         subscribe(handleFault, stunServer.getControl());
         subscribe(handleFault, zServer.getControl());
 
-        List<VodAddress> partners = new ArrayList<VodAddress>();
-        for (VodAddress a : nodes) {
-            partners.add(ToVodAddr.stunServer(a.getPeerAddress()));
-        }
-
-        StunServerInit stunServerInit = new StunServerInit(self.clone(VodConfig.SYSTEM_OVERLAY_ID), partners, stunServerConfiguration);
-        trigger(stunServerInit, stunServer.getControl());
         initializedServerComponents = true;
+        trigger(Start.event, stunServer.getControl());
+        trigger(Start.event, zServer.getControl());
 
         return true;
     }
@@ -978,7 +967,6 @@ public class NatTraverser extends ComponentDefinition {
             trigger(new HpFailed(msgTimeoutId, flag, destAddress), natTraverserPort);
         }
 
-
         logger.debug(compName + "HP Failed. "
                 + "client/Remote client ID ({}/{}): "
                 + NatStr.pairAsStr(self.getNat(), destAddress.getNat())
@@ -1017,8 +1005,8 @@ public class NatTraverser extends ComponentDefinition {
                         // remove the connection
 
                         logger.debug(compName + " deleting the connection " + connectionKey);
-                        DeleteConnection request =
-                                new DeleteConnection(connectionKey);
+                        DeleteConnection request
+                                = new DeleteConnection(connectionKey);
                         trigger(request, hpClient.getPositive(HpClientPort.class));
                     }
                 }
@@ -1066,20 +1054,20 @@ public class NatTraverser extends ComponentDefinition {
                 trigger(new Stop(), parentMaker.getControl());
             }
         } else { // behind a NAT
-            parentMaker = create(ParentMaker.class);
+            parentMaker = create(ParentMaker.class,
+                    new ParentMakerInit(self.clone(VodConfig.SYSTEM_OVERLAY_ID), parentMakerConfig, parentPorts));
             // TODO - do i need a filter for timer msgs too?
             connect(parentMaker.getNegative(Timer.class), timer);
             connect(parentMaker.getNegative(VodNetwork.class), network // TODO - This filter is causing msgs to be dropped.
-                    //                    , new MsgDestFilterOverlayId(VodConfig.SYSTEM_OVERLAY_ID)
-                    );
+            //                    , new MsgDestFilterOverlayId(VodConfig.SYSTEM_OVERLAY_ID)
+            );
             // TODO - do i need a filter for natNetworkControl msgs too?
             connect(parentMaker.getNegative(NatNetworkControl.class), lowerNetControl);
-            trigger(new ParentMakerInit(self.clone(VodConfig.SYSTEM_OVERLAY_ID),
-                    parentMakerConfig, parentPorts), parentMaker.control());
             List<VodAddress> bootstrappers = new ArrayList<VodAddress>();
             for (Address va : stunServers) {
                 bootstrappers.add(ToVodAddr.hpServer(va));
             }
+            trigger(Start.event, parentMaker.getControl());
             trigger(new Join(bootstrappers),
                     parentMaker.getPositive(ParentMakerPort.class));
         }
@@ -1179,14 +1167,14 @@ public class NatTraverser extends ComponentDefinition {
             logger.trace(sb.toString());
         }
     };
-    public Handler<Fault> handleFault =
-            new Handler<Fault>() {
-        @Override
-        public void handle(Fault ex) {
-            logger.error(ex.getFault().toString());
-            trigger(ex, control);
-        }
-    };
+    public Handler<Fault> handleFault
+            = new Handler<Fault>() {
+                @Override
+                public void handle(Fault ex) {
+                    logger.error(ex.getFault().toString());
+                    trigger(ex, control);
+                }
+            };
     public Handler<Stop> handleStop = new Handler<Stop>() {
         @Override
         public void handle(Stop event) {

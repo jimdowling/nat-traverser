@@ -44,14 +44,12 @@ import se.sics.kompics.Fault;
 import se.sics.kompics.Positive;
 
 /**
- * A partner is required to provide the stun service.
- * Only nodes with the same polarity can be partners -
- * even or odd IDs can be partners.
- * The reason is that clients can then send 2 echo requests to 2 servers
- * in parallel, knowing that it won't mess up the NAT type identification
- * by creating a NAT binding to a partner as a side-effect of parallelizing
- * the first Echo test.
- * 
+ * A partner is required to provide the stun service. Only nodes with the same
+ * polarity can be partners - even or odd IDs can be partners. The reason is
+ * that clients can then send 2 echo requests to 2 servers in parallel, knowing
+ * that it won't mess up the NAT type identification by creating a NAT binding
+ * to a partner as a side-effect of parallelizing the first Echo test.
+ *
  * @author jdowling
  */
 public final class StunServer extends MsgRetryComponent {
@@ -80,44 +78,43 @@ public final class StunServer extends MsgRetryComponent {
         }
     }
 
-    public StunServer() {
-        this(null);
+    public StunServer(StunServerInit init) {
+        this(null, init);
     }
 
 //------------------------------------------------------------------------    
-    public StunServer(RetryComponentDelegator delegator) {
+    public StunServer(RetryComponentDelegator delegator, StunServerInit init) {
         super(delegator);
         this.delegator.doAutoSubscribe();
+        doInit(init);
     }
 //------------------------------------------------------------------------    
-    Handler<StunServerInit> handleInit = new Handler<StunServerInit>() {
-        @Override
-        public void handle(StunServerInit init) {
-            Self s = init.getSelf();
-            self = new SelfImpl(new Nat(Nat.Type.OPEN),
-                    s.getIp(), VodConfig.DEFAULT_STUN_PORT, s.getId(), s.getOverlayId());
-            compName = "(" + self.getId() + ") ";
-            config = init.getConfig();
 
-            StringBuilder sb = new StringBuilder();
-            sb.append(compName).append("Starting SunServer: ").append(self.getAddress()).append("\n");
-            sb.append(compName).append(self.getAddress().getPeerAddress().getId()).append(" - partners: ");
-            for (VodAddress p : init.getPartners()) {
-                addPartner(p);
-                sb.append(p.getPeerAddress().getId()).append(", ");
-            }
+    public void doInit(StunServerInit init) {
+        Self s = init.getSelf();
+        self = new SelfImpl(new Nat(Nat.Type.OPEN),
+                s.getIp(), VodConfig.DEFAULT_STUN_PORT, s.getId(), s.getOverlayId());
+        compName = "(" + self.getId() + ") ";
+        config = init.getConfig();
 
-            SchedulePeriodicTimeout spt = new SchedulePeriodicTimeout(config.getPartnerHeartbeatPeriod(),
-                    config.getPartnerHeartbeatPeriod());
-            PingPartnersTimeout ppt = new PingPartnersTimeout(spt);
-            spt.setTimeoutEvent(ppt);
-            delegator.doTrigger(spt, timer);
-            logger.info(sb.toString());
-
-            bindPort(VodConfig.DEFAULT_STUN_PORT);
-            bindPort(VodConfig.DEFAULT_STUN_PORT_2);
+        StringBuilder sb = new StringBuilder();
+        sb.append(compName).append("Starting SunServer: ").append(self.getAddress()).append("\n");
+        sb.append(compName).append(self.getAddress().getPeerAddress().getId()).append(" - partners: ");
+        for (VodAddress p : init.getPartners()) {
+            addPartner(p);
+            sb.append(p.getPeerAddress().getId()).append(", ");
         }
-    };
+
+        SchedulePeriodicTimeout spt = new SchedulePeriodicTimeout(config.getPartnerHeartbeatPeriod(),
+                config.getPartnerHeartbeatPeriod());
+        PingPartnersTimeout ppt = new PingPartnersTimeout(spt);
+        spt.setTimeoutEvent(ppt);
+        delegator.doTrigger(spt, timer);
+        logger.info(sb.toString());
+
+        bindPort(VodConfig.DEFAULT_STUN_PORT);
+        bindPort(VodConfig.DEFAULT_STUN_PORT_2);
+    }
 
     private void bindPort(int port) {
         Address a = new Address(self.getIp(), port, self.getId());
@@ -126,16 +123,16 @@ public final class StunServer extends MsgRetryComponent {
         allocReq1.setResponse(allocResp1);
         delegator.doTrigger(allocReq1, netControl);
     }
-    Handler<StunPortBindResponse> handleStunPortResponse =
-            new Handler<StunPortBindResponse>() {
-        @Override
-        public void handle(StunPortBindResponse response) {
-            if (response.getStatus() != StunPortBindResponse.Status.SUCCESS) {
-                throw new IllegalStateException(compName + " couldn't allocate stun server port: " +
-                        response.getPort() + " . Response status = " + response.getStatus());
-            }
-        }
-    };
+    Handler<StunPortBindResponse> handleStunPortResponse
+            = new Handler<StunPortBindResponse>() {
+                @Override
+                public void handle(StunPortBindResponse response) {
+                    if (response.getStatus() != StunPortBindResponse.Status.SUCCESS) {
+                        throw new IllegalStateException(compName + " couldn't allocate stun server port: "
+                                + response.getPort() + " . Response status = " + response.getStatus());
+                    }
+                }
+            };
 //------------------------------------------------------------------------    
     Handler<PingPartnersTimeout> handlePingPartnersTimeout = new Handler<PingPartnersTimeout>() {
         @Override
@@ -330,9 +327,9 @@ public final class StunServer extends MsgRetryComponent {
                 // reply to the client is lost. In this case, the client will believe it has a more
                 // restrictive nat than it actually has (it's Filtering will be HD or PD, instead
                 // of EI
-                 long worstCaseRto  = config.getRto() * VodConfig.STUN_PARTNER_RTO_MULTIPLIER
-                         + config.getMinimumRtt();
-                 
+                long worstCaseRto = config.getRto() * VodConfig.STUN_PARTNER_RTO_MULTIPLIER
+                        + config.getMinimumRtt();
+
                 logger.debug(compName + "ServerHostChangeMsg.Request sent to " + p.getAddress().getId()
                         + " , src=" + clientPublicIp.getId() + " privSrc="
                         + clientPublicIp.getId() + " rto = " + worstCaseRto);
@@ -343,8 +340,8 @@ public final class StunServer extends MsgRetryComponent {
                         dest, clientPublicIp.getPeerAddress(), transactionId, originalTimeoutId);
                 ScheduleRetryTimeout st = new ScheduleRetryTimeout(worstCaseRto,
                         config.getRtoRetries(), config.getRtoScale());
-                ServerHostChangeMsg.RequestTimeout shct =
-                        new ServerHostChangeMsg.RequestTimeout(st, req);
+                ServerHostChangeMsg.RequestTimeout shct
+                        = new ServerHostChangeMsg.RequestTimeout(st, req);
                 TimeoutId timeoutId = delegator.doRetry(shct);
                 partnerRTTs.put(timeoutId, System.currentTimeMillis());
             }
@@ -484,6 +481,8 @@ public final class StunServer extends MsgRetryComponent {
 //------------------------------------------------------------------------    
     @Override
     public void stop(Stop event) {
-        handleStop.handle(event);
+        //handleStop is the one that call stop() - calling handleStop() again will end up in an endless loop
+        //handleStop.handle(event);
+        
     }
 }

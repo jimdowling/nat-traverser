@@ -10,9 +10,10 @@ import se.sics.gvod.config.NatTraverserConfiguration;
 import se.sics.gvod.config.ParentMakerConfiguration;
 import se.sics.gvod.config.StunClientConfiguration;
 import se.sics.gvod.config.StunServerConfiguration;
+import se.sics.gvod.nat.traversal.NatTraverser;
 import se.sics.kompics.Init;
 
-public final class NatTraverserInit extends Init {
+public final class NatTraverserInit extends Init<NatTraverser> {
 
     private final Self self;
     private final long seed;

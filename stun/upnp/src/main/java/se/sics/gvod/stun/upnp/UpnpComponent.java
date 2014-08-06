@@ -11,11 +11,6 @@ import org.cybergarage.upnp.UPnP;
 import org.cybergarage.upnp.ssdp.SSDPPacket;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import se.sics.kompics.ComponentDefinition;
-import se.sics.kompics.Handler;
-import se.sics.kompics.Negative;
-import se.sics.kompics.Stop;
 import se.sics.gvod.stun.upnp.events.MapPortRequest;
 import se.sics.gvod.stun.upnp.events.MapPortsRequest;
 import se.sics.gvod.stun.upnp.events.MapPortsResponse;
@@ -26,13 +21,18 @@ import se.sics.gvod.stun.upnp.events.UnmapPortsResponse;
 import se.sics.gvod.stun.upnp.events.UpnpGetPublicIpRequest;
 import se.sics.gvod.stun.upnp.events.UpnpGetPublicIpResponse;
 import se.sics.gvod.stun.upnp.events.UpnpInit;
+import se.sics.kompics.ComponentDefinition;
+import se.sics.kompics.Handler;
+import se.sics.kompics.Negative;
+import se.sics.kompics.Start;
+import se.sics.kompics.Stop;
 
 public final class UpnpComponent extends ComponentDefinition
         implements ForwardPortCallback {
 
     private static final Logger logger = LoggerFactory.getLogger(UpnpComponent.class);
-    private Negative<UpnpPort> upnpPort =
-            negative(UpnpPort.class);
+    private Negative<UpnpPort> upnpPort
+            = negative(UpnpPort.class);
     private int discoveryTimeout = 3000; // ms
     private int rootDeviceTimeout = 2500; // ms
     private Cybergarage upnp;
@@ -40,9 +40,10 @@ public final class UpnpComponent extends ComponentDefinition
     private UpnpComponent component;
     private boolean upnpSetup = false;
 
-    public UpnpComponent() {
+    public UpnpComponent(UpnpInit init) {
         component = this;
-        subscribe(handleInit, control);
+        doInit(init);
+        subscribe(handleStart, control);
         subscribe(handleStop, control);
 
 //        subscribe(handleMapPortRequest, upnpPort);
@@ -51,24 +52,28 @@ public final class UpnpComponent extends ComponentDefinition
         subscribe(handleUpnpGetPublicIpRequest, upnpPort);
         subscribe(handleShutdownUpnp, upnpPort);
     }
-    public Handler<UpnpInit> handleInit = new Handler<UpnpInit>() {
+
+    private void doInit(UpnpInit init) {
+        upnpSetup = true;
+        discoveryTimeout = init.getDiscoveryTimeout();
+        rootDeviceTimeout = init.getRootDeviceTimeout();
+        UPnP.setEnable(UPnP.USE_ONLY_IPV4_ADDR);
+        Random r = new Random(System.currentTimeMillis());
+        int multicastPort = 50000 + r.nextInt(100);
+        upnp = new Cybergarage(component, multicastPort);
+    }
+
+    public Handler<Start> handleStart = new Handler<Start>() {
 
         @Override
-        public void handle(UpnpInit init) {
-            upnpSetup = true;
-            discoveryTimeout = init.getDiscoveryTimeout();
-            rootDeviceTimeout = init.getRootDeviceTimeout();
-            UPnP.setEnable(UPnP.USE_ONLY_IPV4_ADDR);
-            Random r = new Random(System.currentTimeMillis());
-            int multicastPort = 50000 + r.nextInt(100);
-            upnp = new Cybergarage(component, multicastPort);
+        public void handle(Start event) {
             try {
                 upnp.init();
             } catch (RuntimeException e) {
                 logger.warn(e.toString());
                 upnpSetup = false;
             }
-            
+
             try {
                 Thread.currentThread().sleep(discoveryTimeout);
             } catch (InterruptedException ex) {
@@ -101,7 +106,6 @@ public final class UpnpComponent extends ComponentDefinition
             Map<Integer, Integer> mapPorts = event.getPrivatePublicPorts();
             Set<Integer> privatePorts = mapPorts.keySet();
 
-
             logger.debug("MapPortsRequest for ports recvd: " + privatePorts.size());
             if (upnpSetup == false) {
                 trigger(new MapPortsResponse(event, mapPorts,
@@ -129,7 +133,7 @@ public final class UpnpComponent extends ComponentDefinition
                 portsToForwardNow.add(fp);
                 registerCallbackChangeMappedPort(mappingName, requestedPort, protocolType);
             }
-            Map<ForwardPort,Boolean> res = upnp.registerPorts(portsToForwardNow);
+            Map<ForwardPort, Boolean> res = upnp.registerPorts(portsToForwardNow);
             boolean status = true;
             for (ForwardPort fp : res.keySet()) {
                 if (res.get(fp) == false) {
@@ -172,7 +176,6 @@ public final class UpnpComponent extends ComponentDefinition
 //
 //        return res;
 //    }
-
 //    public Handler<MapPortRequest> handleMapPortRequest = new Handler<MapPortRequest>() {
 //
 //        @Override
@@ -200,8 +203,8 @@ public final class UpnpComponent extends ComponentDefinition
         ports.add(new ForwardPort(name, false, protocol, port));
 //        upnp.onChangePublicPorts(ports, this);
     }
-    public Handler<UnmapPortsRequest> handleUnmapPortRequest =
-            new Handler<UnmapPortsRequest>() {
+    public Handler<UnmapPortsRequest> handleUnmapPortRequest
+            = new Handler<UnmapPortsRequest>() {
 
                 public void handle(UnmapPortsRequest event) {
                     logger.debug("Unmapping UpnP Ports");
@@ -217,8 +220,8 @@ public final class UpnpComponent extends ComponentDefinition
 
                 }
             };
-    public Handler<UpnpGetPublicIpRequest> handleUpnpGetPublicIpRequest =
-            new Handler<UpnpGetPublicIpRequest>() {
+    public Handler<UpnpGetPublicIpRequest> handleUpnpGetPublicIpRequest
+            = new Handler<UpnpGetPublicIpRequest>() {
 
                 @Override
                 public void handle(UpnpGetPublicIpRequest event) {
@@ -230,8 +233,8 @@ public final class UpnpComponent extends ComponentDefinition
                     }
                 }
             };
-    public Handler<ShutdownUpnp> handleShutdownUpnp =
-            new Handler<ShutdownUpnp>() {
+    public Handler<ShutdownUpnp> handleShutdownUpnp
+            = new Handler<ShutdownUpnp>() {
 
                 @Override
                 public void handle(ShutdownUpnp event) {
@@ -245,7 +248,6 @@ public final class UpnpComponent extends ComponentDefinition
     public void deviceNotifyReceived(SSDPPacket ssdpPacket) {
 
         // TODO trigger some results back to client
-
         logger.debug("Device notified: " + ssdpPacket.toString());
 //        trigger(new , upnp);
 
@@ -253,8 +255,8 @@ public final class UpnpComponent extends ComponentDefinition
 
     @Override
     public void portForwardStatus(Map statuses) {
-        Map<Integer, ForwardPortStatus> changedPorts =
-                new HashMap<Integer, ForwardPortStatus>();
+        Map<Integer, ForwardPortStatus> changedPorts
+                = new HashMap<Integer, ForwardPortStatus>();
         Set keys = statuses.keySet();
         for (Object key : keys) {
             ForwardPort fp = (ForwardPort) key;
@@ -263,10 +265,7 @@ public final class UpnpComponent extends ComponentDefinition
 
 //          trigger(new MapPortResponse(event, event.getPrivatePort(),
 //                    requestedPort, publicIp, 0/*fake id*/, res), upnpPort);
-        
         }
-
-
 
         trigger(new MappedPortsChanged(changedPorts), upnpPort);
     }

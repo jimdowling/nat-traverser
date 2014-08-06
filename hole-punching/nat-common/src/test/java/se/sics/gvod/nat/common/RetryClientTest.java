@@ -6,14 +6,9 @@ import java.util.concurrent.Semaphore;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
-import se.sics.kompics.Stop;
-import se.sics.gvod.address.Address;
-import se.sics.gvod.timer.ScheduleTimeout;
-import se.sics.gvod.timer.Timeout;
-import se.sics.gvod.timer.Timer;
-import se.sics.gvod.timer.java.JavaTimer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import se.sics.gvod.address.Address;
 import se.sics.gvod.common.RetryComponentDelegator;
 import se.sics.gvod.common.util.ToVodAddr;
 import se.sics.gvod.config.VodConfig;
@@ -23,19 +18,28 @@ import se.sics.gvod.net.msgs.DirectMsg;
 import se.sics.gvod.net.msgs.RewriteableMsg;
 import se.sics.gvod.net.msgs.RewriteableRetryTimeout;
 import se.sics.gvod.net.msgs.ScheduleRetryTimeout;
+import se.sics.gvod.timer.ScheduleTimeout;
+import se.sics.gvod.timer.Timeout;
+import se.sics.gvod.timer.Timer;
+import se.sics.gvod.timer.java.JavaTimer;
 import se.sics.kompics.Component;
 import se.sics.kompics.ComponentDefinition;
 import se.sics.kompics.Handler;
 import se.sics.kompics.Init;
 import se.sics.kompics.Kompics;
+import se.sics.kompics.Start;
+import se.sics.kompics.Stop;
+
 /**
  * Unit test for simple App.
  */
 public class RetryClientTest
         extends TestCase {
-        private static Logger logger = LoggerFactory.getLogger(RetryClientTest.class.toString());
-        
-        public static int TIMEOUT=100;
+
+    private static Logger logger = LoggerFactory.getLogger(RetryClientTest.class.toString());
+
+    public static int TIMEOUT = 100;
+
     /**
      * Create the test case
      *
@@ -56,13 +60,12 @@ public class RetryClientTest
         TestRetryClientComponent.testObj = testObj;
     }
 
-    public static class RetryInit extends Init {
+    public static class RetryInit extends Init<TestRetryClientComponent> {
 
         public RetryInit() {
         }
 
     }
-
 
     public static class ClassicTimeout extends Timeout {
 
@@ -78,7 +81,6 @@ public class RetryClientTest
         }
     }
 
-
     public static class MainComponent extends ComponentDefinition {
 
         private Component javaTimer;
@@ -86,69 +88,67 @@ public class RetryClientTest
         private Component server;
 
         public MainComponent() {
-            javaTimer = create(JavaTimer.class);
+            javaTimer = create(JavaTimer.class, Init.NONE);
 
-            server = create(Server.class);
+            server = create(Server.class, Init.NONE);
 
-            testRetryClient = create(TestRetryClientComponent.class);
+            testRetryClient = create(TestRetryClientComponent.class, new RetryInit());
             connect(testRetryClient.getNegative(Timer.class),
                     javaTimer.getPositive(Timer.class));
 
             connect(testRetryClient.getNegative(VodNetwork.class), server.getPositive(VodNetwork.class));
 
-            trigger(new RetryInit(), testRetryClient.getControl());
         }
     }
-
-
 
     public static class TestRetryClientComponent extends MsgRetryComponent {
 
         private static RetryClientTest testObj = null;
         private VodAddress src, dest;
 
-        public TestRetryClientComponent()
-        {
-            this(null);
+        public TestRetryClientComponent(RetryInit init) {
+            this(null, init);
         }
-        public TestRetryClientComponent(RetryComponentDelegator delegator) {
+
+        public TestRetryClientComponent(RetryComponentDelegator delegator, RetryInit init) {
             super(delegator);
-            try
-            {
+            try {
                 Address s = new Address(InetAddress.getLocalHost(), 2222, 0);
                 Address d = new Address(InetAddress.getLocalHost(), 2223, 1);
                 src = ToVodAddr.systemAddr(s);
                 dest = ToVodAddr.systemAddr(d);
-            }
-            catch (UnknownHostException ex)
-            {
+            } catch (UnknownHostException ex) {
 //                Logger.getLogger(RetryClientTest.class.getName()).log(Level.SEVERE, null, ex);
             }
             this.delegator.doAutoSubscribe();
+            doInit(init);
         }
-        public Handler<RetryInit> handleRetryInit = new Handler<RetryInit>() {
+
+        private void doInit(RetryInit event) {
+
+        }
+
+        public Handler<Start> handleStart = new Handler<Start>() {
 
             @Override
-            public void handle(RetryInit event) {
-
-                // Try to send the message 3 times, and if timeout, then
+            public void handle(Start event) {
+            // Try to send the message 3 times, and if timeout, then
                 // do nothing - silent
                 TestMsg req = new TestMsg(src, dest);
                 retry(req, TIMEOUT, 3, 1.2, VodConfig.SYSTEM_OVERLAY_ID);
             }
         };
+
         private Handler<TestMsg> handleTestMessage = new Handler<TestMsg>() {
 
             @Override
             public void handle(TestMsg event) {
-               if  (cancelRetry(event.getTimeoutId()) == true)
-               {
-                TestMsgId req = new TestMsgId(src, dest);
-                retry(req, TIMEOUT, 4, 1.5, VodConfig.SYSTEM_OVERLAY_ID);
-               }
-               else {
-                   testObj.fail();
-               }
+                if (cancelRetry(event.getTimeoutId()) == true) {
+                    TestMsgId req = new TestMsgId(src, dest);
+                    retry(req, TIMEOUT, 4, 1.5, VodConfig.SYSTEM_OVERLAY_ID);
+                } else {
+                    testObj.fail();
+                }
             }
         };
         private Handler<TestMsgId> handleTestIdMessage = new Handler<TestMsgId>() {
@@ -159,9 +159,9 @@ public class RetryClientTest
 
                 // Retry TestMsgId twice, and if timeout, then SimpleTimeout handler is called
                 TestMsgId req = new TestMsgId(src, dest);
-                ScheduleRetryTimeout st =
-                        new ScheduleRetryTimeout(TIMEOUT, 3, 1.5d);
-                retry(new SimpleTimeout(st, req));              
+                ScheduleRetryTimeout st
+                        = new ScheduleRetryTimeout(TIMEOUT, 3, 1.5d);
+                retry(new SimpleTimeout(st, req));
             }
         };
         public Handler<SimpleTimeout> handleSimpleTimeout = new Handler<SimpleTimeout>() {
@@ -188,11 +188,9 @@ public class RetryClientTest
 
         @Override
         public void stop(Stop event) {
-            throw new UnsupportedOperationException("Not supported yet.");
+            System.out.println("Stopping - not implemented");
         }
 
-        
-    
     }
     final int EVENT_COUNT = 1;
     private static Semaphore semaphore = new Semaphore(0);
@@ -206,8 +204,7 @@ public class RetryClientTest
             System.out.println("Exiting unit test....");
         } catch (InterruptedException e) {
             assert (false);
-        }
-        finally {
+        } finally {
             Kompics.shutdown();
         }
     }

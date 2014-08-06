@@ -31,7 +31,6 @@ import java.util.Map.Entry;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListSet;
-import se.sics.gvod.timer.TimeoutId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import se.sics.gvod.address.Address;
@@ -41,19 +40,19 @@ import se.sics.gvod.common.RetryComponentDelegator;
 import se.sics.gvod.common.Self;
 import se.sics.gvod.common.VodDescriptor;
 import se.sics.gvod.common.evts.Join;
-import se.sics.gvod.config.VodConfig;
 import se.sics.gvod.common.util.ToVodAddr;
 import se.sics.gvod.config.ParentMakerConfiguration;
+import se.sics.gvod.config.VodConfig;
 import se.sics.gvod.croupier.PeerSamplePort;
 import se.sics.gvod.croupier.events.CroupierSample;
-import se.sics.gvod.croupier.snapshot.Stats;
 import se.sics.gvod.croupier.snapshot.CroupierStats;
+import se.sics.gvod.croupier.snapshot.Stats;
 import se.sics.gvod.hp.msgs.HpRegisterMsg;
 import se.sics.gvod.hp.msgs.HpRegisterMsg.RegisterStatus;
 import se.sics.gvod.hp.msgs.HpUnregisterMsg;
-import se.sics.gvod.hp.msgs.ParentKeepAliveMsg;
-import se.sics.gvod.hp.msgs.PRP_PreallocatedPortsMsg;
 import se.sics.gvod.hp.msgs.PRP_ConnectMsg;
+import se.sics.gvod.hp.msgs.PRP_PreallocatedPortsMsg;
+import se.sics.gvod.hp.msgs.ParentKeepAliveMsg;
 import se.sics.gvod.nat.common.MsgRetryComponent;
 import se.sics.gvod.net.NatNetworkControl;
 import se.sics.gvod.net.Transport;
@@ -66,10 +65,12 @@ import se.sics.gvod.net.util.NatReporter;
 import se.sics.gvod.parentmaker.evts.PrpMorePortsResponse;
 import se.sics.gvod.parentmaker.evts.PrpPortsResponse;
 import se.sics.gvod.timer.*;
+import se.sics.gvod.timer.TimeoutId;
 import se.sics.kompics.Handler;
 import se.sics.kompics.Negative;
-import se.sics.kompics.Stop;
 import se.sics.kompics.Positive;
+import se.sics.kompics.Start;
+import se.sics.kompics.Stop;
 
 /**
  * Private nodes (behind a NAT) require 'k' parent nodes so that other nodes are
@@ -188,24 +189,30 @@ public class ParentMaker extends MsgRetryComponent {
         }
     }
 
-    public ParentMaker() {
-        this(null);
+    public ParentMaker(ParentMakerInit init) {
+        this(null, init);
     }
 
-    public ParentMaker(RetryComponentDelegator delegator) {
+    public ParentMaker(RetryComponentDelegator delegator, ParentMakerInit init) {
         super(delegator);
         this.delegator.doAutoSubscribe();
+        doInit(init);
     }
-    Handler<ParentMakerInit> handleInit = new Handler<ParentMakerInit>() {
+
+    private void doInit(ParentMakerInit init) {
+        self = init.getSelf();
+        compName = "PM(" + self.getId() + ") ";
+        config = init.getConfig();
+        portsInUse = init.getBoundPorts();
+        VodConfig.PM_NUM_PARENTS = config.getNumParents();
+    }
+
+    public Handler<Start> handleStart = new Handler<Start>() {
+
         @Override
-        public void handle(ParentMakerInit init) {
-            self = init.getSelf();
-            compName = "PM(" + self.getId() + ") ";
-            config = init.getConfig();
-            portsInUse = init.getBoundPorts();
-            VodConfig.PM_NUM_PARENTS = config.getNumParents();
+        public void handle(Start event) {
             if (!self.isOpen()) {
-                needParentsRoundTimeout = init.getConfig().getParentUpdatePeriod();
+                needParentsRoundTimeout = config.getParentUpdatePeriod();
                 ScheduleTimeout spt = new ScheduleTimeout(0);
                 spt.setTimeoutEvent(new ParentMakerCycle(spt));
                 delegator.doTrigger(spt, timer);
