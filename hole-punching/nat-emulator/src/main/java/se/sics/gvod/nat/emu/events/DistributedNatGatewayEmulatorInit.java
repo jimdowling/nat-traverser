@@ -1,6 +1,7 @@
 package se.sics.gvod.nat.emu.events;
 
 import java.net.InetAddress;
+import se.sics.gvod.nat.emu.DistributedNatGatewayEmulator;
 import se.sics.gvod.net.Nat;
 import se.sics.kompics.Init;
 
@@ -8,7 +9,7 @@ import se.sics.kompics.Init;
 /**
  * @author Jim Dowling <jdowling@sics.se>
  */
-public class DistributedNatGatewayEmulatorInit extends Init {
+public class DistributedNatGatewayEmulatorInit extends Init<DistributedNatGatewayEmulator> {
 
     private final Nat.MappingPolicy mp;
     private final Nat.AllocationPolicy ap;

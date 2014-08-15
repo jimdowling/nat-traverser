@@ -50,7 +50,7 @@ public final class BootstrapConfiguration
     /**
      * Default constructor comes first.
      */
-    BootstrapConfiguration() {
+    public BootstrapConfiguration() {
         this(
                 BaseCommandLineConfig.getBootstrapServer().getIp().getHostAddress(),
                 BaseCommandLineConfig.getBootstrapServer().getPort(),

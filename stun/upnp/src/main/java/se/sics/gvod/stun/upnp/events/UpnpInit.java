@@ -1,8 +1,9 @@
 package se.sics.gvod.stun.upnp.events;
 
+import se.sics.gvod.stun.upnp.UpnpComponent;
 import se.sics.kompics.Init;
 
-public final class UpnpInit extends Init {
+public final class UpnpInit extends Init<UpnpComponent> {
 
     public static final int DEFAULT_UPNP_DISCOVERY_TIMEOUT = 1 * 1200;
     public static final int DEFAULT_ROOT_DEVICE_TIMEOUT = 1 * 1200;

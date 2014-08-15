@@ -36,14 +36,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import se.sics.gvod.address.Address;
 import se.sics.gvod.config.VodConfig;
-import se.sics.gvod.net.VodAddress;
 import se.sics.gvod.net.Nat;
-import se.sics.kompics.Event;
-import se.sics.kompics.Handler;
-import se.sics.kompics.Negative;
-import se.sics.kompics.Port;
-import se.sics.kompics.PortType;
-import se.sics.kompics.Positive;
+import se.sics.gvod.net.VodAddress;
 import se.sics.gvod.timer.SchedulePeriodicTimeout;
 import se.sics.gvod.timer.ScheduleTimeout;
 import se.sics.ipasdistances.AsIpGenerator;
@@ -51,6 +45,12 @@ import se.sics.kompics.Channel;
 import se.sics.kompics.ChannelFilter;
 import se.sics.kompics.Component;
 import se.sics.kompics.ComponentDefinition;
+import se.sics.kompics.Handler;
+import se.sics.kompics.KompicsEvent;
+import se.sics.kompics.Negative;
+import se.sics.kompics.Port;
+import se.sics.kompics.PortType;
+import se.sics.kompics.Positive;
 
 /**
  *
@@ -62,7 +62,7 @@ public abstract class VodComponentTestCase extends Assert implements ComponentDe
     protected InetAddress selfAddress;
     protected VodAddress self;
     protected VodDescriptor selfDesc;
-    protected LinkedList<Event> eventList;
+    protected LinkedList<KompicsEvent> eventList;
     protected Semaphore eventSemaphore;
     protected Utility utility;
     private int nodeId = 0;
@@ -75,7 +75,7 @@ public abstract class VodComponentTestCase extends Assert implements ComponentDe
 
     protected VodComponentTestCase() {
         int overlayId = 1;
-        eventList = new LinkedList<Event>();
+        eventList = new LinkedList<KompicsEvent>();
         eventSemaphore = new Semaphore(0);
         utility = new UtilityVod(0);
         selfAddress = ipGenerator.generateIP();
@@ -117,7 +117,7 @@ public abstract class VodComponentTestCase extends Assert implements ComponentDe
     }
 
     @Override
-    public <P extends PortType> void doTrigger(Event event, Port<P> port) {
+    public <P extends PortType> void doTrigger(KompicsEvent event, Port<P> port) {
         if (event instanceof SchedulePeriodicTimeout) {
             SchedulePeriodicTimeout timeout = (SchedulePeriodicTimeout) event;
             event = timeout.getTimeoutEvent();
@@ -130,8 +130,8 @@ public abstract class VodComponentTestCase extends Assert implements ComponentDe
     }
 
     @Override
-    public <E extends Event, P extends PortType> void doSubscribe(Handler<E> handler, Port<P> port) {
-    }
+    public <E extends KompicsEvent, P extends PortType> void doSubscribe(Handler<E> handler, Port<P> port) {
+     }
 
     @Override
     public <P extends PortType> Negative<P> getNegative(Class<P> portType) {
@@ -148,7 +148,7 @@ public abstract class VodComponentTestCase extends Assert implements ComponentDe
      * @param num the number of events to pull
      * @return a list containing the events
      */
-    protected LinkedList<Event> pollEvent(int num) {
+    protected LinkedList<KompicsEvent> pollEvent(int num) {
         try {
             if (!eventSemaphore.tryAcquire(num, 1, TimeUnit.SECONDS)) {
                 logger.error("Number of expected messages was not generated.");
@@ -158,7 +158,7 @@ public abstract class VodComponentTestCase extends Assert implements ComponentDe
             logger.error(null, ex);
         }
 
-        LinkedList<Event> events = new LinkedList<Event>();
+        LinkedList<KompicsEvent> events = new LinkedList<KompicsEvent>();
 
         for (int i = 0; i < num; i++) {
             events.add(eventList.poll());
@@ -167,11 +167,11 @@ public abstract class VodComponentTestCase extends Assert implements ComponentDe
         return events;
     }
 
-    protected LinkedList<Event> popEvents() {
+    protected LinkedList<KompicsEvent> popEvents() {
 
         int numEvts = eventSemaphore.drainPermits();
 
-        LinkedList<Event> events = new LinkedList<Event>();
+        LinkedList<KompicsEvent> events = new LinkedList<KompicsEvent>();
 
         for (int i = 0; i < numEvts; i++) {
             events.add(eventList.poll());
@@ -180,10 +180,10 @@ public abstract class VodComponentTestCase extends Assert implements ComponentDe
         return events;
     }
 
-    public void assertSequence(LinkedList<Event> events, Class... eventTypes) {
+    public void assertSequence(LinkedList<KompicsEvent> events, Class... eventTypes) {
         for (int i = 0; i < eventTypes.length; i++) {
-            Class<? extends Event> clazz = events.get(i).getClass();
-            Class<? extends Event> eventClass = eventTypes[i];
+            Class<? extends KompicsEvent> clazz = events.get(i).getClass();
+            Class<? extends KompicsEvent> eventClass = eventTypes[i];
             if (clazz != eventClass) {
                 System.err.println("Expected event " + eventClass.getName() + " while it is " + clazz.getName());
                 assert (false);

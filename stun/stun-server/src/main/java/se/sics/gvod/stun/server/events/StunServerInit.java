@@ -1,12 +1,13 @@
 package se.sics.gvod.stun.server.events;
 
 import java.util.List;
-import se.sics.gvod.net.VodAddress;
-import se.sics.kompics.Init;
 import se.sics.gvod.common.Self;
 import se.sics.gvod.config.StunServerConfiguration;
+import se.sics.gvod.net.VodAddress;
+import se.sics.gvod.stun.server.StunServer;
+import se.sics.kompics.Init;
 
-public final class StunServerInit extends Init {
+public final class StunServerInit extends Init<StunServer> {
 
     private final List<VodAddress> partners;
     private final Self self;

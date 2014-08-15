@@ -29,7 +29,7 @@ import se.sics.kompics.Init;
  * @author Jim Dowling <jdowling@sics.se>
  * @version $Id: MinaNetworkInit.java -1   $
  */
-public final class PortInit extends Init {
+public final class PortInit extends Init<PortReservoirComp> {
 
     private final long seed;
     private final int startRange;

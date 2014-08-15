@@ -8,7 +8,7 @@ import se.sics.kompics.Channel;
 import se.sics.kompics.ChannelFilter;
 import se.sics.kompics.Component;
 import se.sics.kompics.ComponentDefinition;
-import se.sics.kompics.Event;
+import se.sics.kompics.KompicsEvent;
 import se.sics.kompics.Handler;
 import se.sics.kompics.Negative;
 import se.sics.kompics.Port;
@@ -22,10 +22,10 @@ import se.sics.kompics.Positive;
 public interface ComponentDelegator {
 
     public Component doCreate(Class<? extends ComponentDefinition> definition);
-    
-    public <P extends PortType> void doTrigger(Event event, Port<P> port);
 
-    public <E extends Event, P extends PortType> void doSubscribe(Handler<E> handler, Port<P> port);
+    public <P extends PortType> void doTrigger(KompicsEvent event, Port<P> port);
+
+    public <E extends KompicsEvent, P extends PortType> void doSubscribe(Handler<E> handler, Port<P> port);
 
     public <P extends PortType> Negative<P> getNegative(Class<P> portType);
 

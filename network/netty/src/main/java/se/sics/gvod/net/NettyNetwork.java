@@ -59,8 +59,7 @@ import se.sics.gvod.common.util.ToVodAddr;
 import se.sics.gvod.config.BaseCommandLineConfig;
 
 /**
- * The
- * <code>NettyNetwork</code> class.
+ * The <code>NettyNetwork</code> class.
  *
  * @author Jim Dowling <jdowling@sics.se>
  * @author Steffen Grohsschmiedt
@@ -125,7 +124,7 @@ public final class NettyNetwork extends ComponentDefinition {
     /**
      * Instantiates a new Netty network component.
      */
-    public NettyNetwork() {
+    public NettyNetwork(NettyInit init) {
         this.component = this;
         // IPv4 addresses over IPv6 addresses when querying DNS
         // For java, Linux is still a dual IPv6/v4 address stack, while windows
@@ -138,27 +137,31 @@ public final class NettyNetwork extends ComponentDefinition {
         subscribe(handlePortDeleteRequest, netControl);
         subscribe(handleCloseConnectionRequest, netControl);
         subscribe(handleByteCounterTimeout, timer);
-        subscribe(handleInit, control);
+        subscribe(handleStart, control);
         subscribe(handleStop, control);
+
+        doInit(init);
     }
-    /**
-     * The handle init.
-     */
-    Handler<NettyInit> handleInit = new Handler<NettyInit>() {
+
+    private void doInit(NettyInit init) {
+        rand = new Random(init.getSeed());
+        maxPacketSize = init.getMTU();
+        if (maxPacketSize <= 0) {
+            throw new IllegalArgumentException(
+                    "Netty problem: max Packet Size must be set to greater than zero.");
+        }
+
+        msgDecoderClass = init.getMsgDecoderClass();
+        DirectMsgNettyFactory.Base.setMsgFrameDecoder(msgDecoderClass);
+
+        enableBandwidthStats = init.isEnableBandwidthStats();
+
+    }
+
+    public Handler<Start> handleStart = new Handler<Start>() {
+
         @Override
-        public void handle(NettyInit init) {
-            rand = new Random(init.getSeed());
-            maxPacketSize = init.getMTU();
-            if (maxPacketSize <= 0) {
-                throw new IllegalArgumentException(
-                        "Netty problem: max Packet Size must be set to greater than zero.");
-            }
-
-            msgDecoderClass = init.getMsgDecoderClass();
-            DirectMsgNettyFactory.Base.setMsgFrameDecoder(msgDecoderClass);
-
-            enableBandwidthStats = init.isEnableBandwidthStats();
-
+        public void handle(Start event) {
             if (enableBandwidthStats) {
                 SchedulePeriodicTimeout spt = new SchedulePeriodicTimeout(0, 1000);
                 ByteCounterTimeout bct = new ByteCounterTimeout(spt);
@@ -207,7 +210,7 @@ public final class NettyNetwork extends ComponentDefinition {
             }
 
             trigger(new BandwidthStats((int) lastSecRead.longValue(),
-                    (int) lastSecWritten.longValue(), 
+                    (int) lastSecWritten.longValue(),
                     (int) totalReadBytes), netControl);
         }
     };
@@ -431,7 +434,9 @@ public final class NettyNetwork extends ComponentDefinition {
 
         EventLoopGroup group = new NioEventLoopGroup();
         Bootstrap bootstrap = new Bootstrap();
-        bootstrap.group(group).channel(NioDatagramChannel.class)
+        bootstrap
+                .group(group).channel(NioDatagramChannel.class
+                )
                 .handler(new NettyMsgHandler(component, Transport.UDP, msgDecoderClass));
 
         // Allow packets as large as up to 1600 bytes (default is 768).
@@ -444,14 +449,17 @@ public final class NettyNetwork extends ComponentDefinition {
         // certain size, depending on router configuration. IPv4 routers
         // truncate and IPv6 routers drop a large packet. That's why it is
         // safe to send small packets in UDP.
-        bootstrap.option(ChannelOption.RCVBUF_ALLOCATOR, new FixedRecvByteBufAllocator(1500));
+        bootstrap.option(ChannelOption.RCVBUF_ALLOCATOR,
+                new FixedRecvByteBufAllocator(1500));
         bootstrap.option(ChannelOption.SO_RCVBUF, RECV_BUFFER_SIZE);
+
         bootstrap.option(ChannelOption.SO_SNDBUF, SEND_BUFFER_SIZE);
         // bootstrap.setOption("trafficClass", trafficClass);
         // bootstrap.setOption("soTimeout", soTimeout);
         // bootstrap.setOption("broadcast", broadcast);
         bootstrap.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, CONNECT_TIMEOUT_MS);
-        bootstrap.option(ChannelOption.SO_REUSEADDR, true);
+        bootstrap.option(ChannelOption.SO_REUSEADDR,
+                true);
 
         try {
             DatagramChannel c;
@@ -472,7 +480,8 @@ public final class NettyNetwork extends ComponentDefinition {
             return false;
         }
 
-        udpSocketsToBootstraps.put(new InetSocketAddress(addr, port), bootstrap);
+        udpSocketsToBootstraps.put(
+                new InetSocketAddress(addr, port), bootstrap);
 
         return true;
     }
@@ -496,7 +505,9 @@ public final class NettyNetwork extends ComponentDefinition {
         EventLoopGroup workerGroup = new NioEventLoopGroup();
         NettyTcpServerHandler handler = new NettyTcpServerHandler(component);
         ServerBootstrap bootstrap = new ServerBootstrap();
-        bootstrap.group(bossGroup, workerGroup).channel(NioServerSocketChannel.class)
+        bootstrap
+                .group(bossGroup, workerGroup).channel(NioServerSocketChannel.class
+                )
                 .childHandler((new NettyInitializer<SocketChannel>(handler, msgDecoderClass)))
                 .option(ChannelOption.SO_REUSEADDR, true);
 
@@ -588,7 +599,9 @@ public final class NettyNetwork extends ComponentDefinition {
         EventLoopGroup group = new NioEventLoopGroup();
         NettyStreamHandler handler = new NettyStreamHandler(component, Transport.TCP);
         Bootstrap bootstrap = new Bootstrap();
-        bootstrap.group(group).channel(NioSocketChannel.class)
+        bootstrap
+                .group(group).channel(NioSocketChannel.class
+                )
                 .handler(new NettyInitializer<SocketChannel>(handler, msgDecoderClass))
                 .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, CONNECT_TIMEOUT_MS)
                 .option(ChannelOption.SO_REUSEADDR, true);
@@ -826,7 +839,7 @@ public final class NettyNetwork extends ComponentDefinition {
             ex.printStackTrace();
             logger.warn("Problem trying to send msg of type: "
                     + msg.getClass().getCanonicalName() + " with src address: "
-                    + src.toString() + " and dest address: " + msg.getDestination() 
+                    + src.toString() + " and dest address: " + msg.getDestination()
                     + " Exception: " + ex.getMessage() + " " + ex.getClass());
             if (BaseCommandLineConfig.reportNettyExceptions()) {
                 try {

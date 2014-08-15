@@ -13,29 +13,25 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.atomic.AtomicInteger;
-import se.sics.kompics.Handler;
-import se.sics.gvod.address.Address;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import se.sics.gvod.address.Address;
 import se.sics.gvod.common.RTTStore;
 import se.sics.gvod.common.RetryComponentDelegator;
 import se.sics.gvod.common.Self;
 import se.sics.gvod.common.evts.GarbageCleanupTimeout;
-import se.sics.gvod.common.util.PortSelector;
-import se.sics.gvod.common.util.ToVodAddr;
-import se.sics.gvod.hp.msgs.HolePunchingMsg;
-import se.sics.kompics.Negative;
-import se.sics.kompics.Positive;
-import se.sics.gvod.net.NatNetworkControl;
-import se.sics.gvod.net.Nat;
-import se.sics.gvod.nat.hp.client.events.OpenConnectionRequest;
-import se.sics.gvod.nat.hp.client.events.OpenConnectionResponse;
-import se.sics.kompics.Stop;
 import se.sics.gvod.common.hp.HPMechanism;
 import se.sics.gvod.common.hp.HPRole;
+import se.sics.gvod.common.hp.HolePunching;
+import se.sics.gvod.common.hp.HpFeasability;
+import se.sics.gvod.common.util.PortSelector;
+import se.sics.gvod.common.util.ToVodAddr;
+import se.sics.gvod.config.HpClientConfiguration;
+import se.sics.gvod.config.VodConfig;
 import se.sics.gvod.hp.events.OpenConnectionResponseType;
 import se.sics.gvod.hp.msgs.DeleteConnectionMsg;
 import se.sics.gvod.hp.msgs.GoMsg;
+import se.sics.gvod.hp.msgs.HolePunchingMsg;
 import se.sics.gvod.hp.msgs.HpConnectMsg;
 import se.sics.gvod.hp.msgs.HpKeepAliveMsg;
 import se.sics.gvod.hp.msgs.HpMsg;
@@ -52,29 +48,34 @@ import se.sics.gvod.nat.hp.client.events.DeleteConnection;
 import se.sics.gvod.nat.hp.client.events.GoMsg_PortResponse;
 import se.sics.gvod.nat.hp.client.events.InterleavedPRC_PortResponse;
 import se.sics.gvod.nat.hp.client.events.InterleavedPRP_PortResponse;
-import se.sics.gvod.nat.hp.client.events.PRP_PortResponse;
+import se.sics.gvod.nat.hp.client.events.OpenConnectionRequest;
+import se.sics.gvod.nat.hp.client.events.OpenConnectionResponse;
 import se.sics.gvod.nat.hp.client.events.PRC_PortResponse;
+import se.sics.gvod.nat.hp.client.events.PRP_DummyMsgPortResponse;
+import se.sics.gvod.nat.hp.client.events.PRP_PortResponse;
+import se.sics.gvod.nat.hp.client.util.NatConnection;
+import se.sics.gvod.net.Nat;
+import se.sics.gvod.net.NatNetworkControl;
+import se.sics.gvod.net.Transport;
 import se.sics.gvod.net.VodAddress;
 import se.sics.gvod.net.events.PortAllocRequest;
 import se.sics.gvod.net.events.PortBindRequest;
 import se.sics.gvod.net.events.PortBindResponse;
-import se.sics.gvod.net.msgs.ScheduleRetryTimeout;
-import se.sics.gvod.timer.TimeoutId;
-import se.sics.gvod.common.hp.HolePunching;
-import se.sics.gvod.common.hp.HpFeasability;
-import se.sics.gvod.config.HpClientConfiguration;
-import se.sics.gvod.config.VodConfig;
-import se.sics.gvod.nat.hp.client.events.PRP_DummyMsgPortResponse;
-import se.sics.gvod.nat.hp.client.util.NatConnection;
-import se.sics.gvod.net.Transport;
 import se.sics.gvod.net.events.PortDeleteRequest;
 import se.sics.gvod.net.events.PortDeleteResponse;
+import se.sics.gvod.net.msgs.ScheduleRetryTimeout;
 import se.sics.gvod.net.util.NatReporter;
 import se.sics.gvod.timer.CancelTimeout;
 import se.sics.gvod.timer.SchedulePeriodicTimeout;
 import se.sics.gvod.timer.ScheduleTimeout;
 import se.sics.gvod.timer.Timeout;
+import se.sics.gvod.timer.TimeoutId;
 import se.sics.gvod.timer.UUID;
+import se.sics.kompics.Handler;
+import se.sics.kompics.Negative;
+import se.sics.kompics.Positive;
+import se.sics.kompics.Start;
+import se.sics.kompics.Stop;
 
 /**
  * Protocols: CR, SHP, PRP, PRC, PRP-PRP, PRP-PRC See 'NatCracker: Combinations
@@ -388,27 +389,31 @@ public class HpClient extends MsgRetryComponent {
         }
     }
 
-    public HpClient() {
-        this(null);
+    public HpClient(HpClientInit init) {
+        this(null, init);
     }
 
-    public HpClient(RetryComponentDelegator delegator) {
+    public HpClient(RetryComponentDelegator delegator, HpClientInit init) {
         super(delegator);
         this.delegator.doAutoSubscribe();
+        doInit(init);
     }
-    Handler<HpClientInit> handleInit = new Handler<HpClientInit>() {
+
+    private void doInit(HpClientInit init) {
+        self = init.getSelf();
+        config = init.getConfig();
+
+        openedConnections = init.getOpenedConnections();
+        portsInUse = init.getBoundPorts();
+
+        compName = "(" + self.getId() + ") ";
+    }
+
+    public Handler<Start> handleStart = new Handler<Start>() {
+
         @Override
-        public void handle(HpClientInit init) {
-            self = init.getSelf();
-            config = init.getConfig();
-
-            openedConnections = init.getOpenedConnections();
-            portsInUse = init.getBoundPorts();
-
-            compName = "(" + self.getId() + ") ";
-
+        public void handle(Start event) {
             // initialize the garbage collection
-            // initialize grabage collection
             SchedulePeriodicTimeout st = new SchedulePeriodicTimeout(1000, 1000);
             GarbageCleanupTimeout msgTimeout = new GarbageCleanupTimeout(st);
             st.setTimeoutEvent(msgTimeout);
@@ -937,17 +942,21 @@ public class HpClient extends MsgRetryComponent {
     Handler<HolePunchingMsg.RequestTimeout> handleHolePunchingRequestTimeout
             = new Handler<HolePunchingMsg.RequestTimeout>() {
                 @Override
-                public void handle(HolePunchingMsg.RequestTimeout event) {
+                public
+                void handle(HolePunchingMsg.RequestTimeout event) {
                     String compName = HpClient.this.compName + " - "
-                    + HolePunchingMsg.RequestTimeout.class.getCanonicalName() + " "
+                    + HolePunchingMsg.RequestTimeout.class
+                    .getCanonicalName() + " "
                     + event.getRequestMsg().getMsgTimeoutId() + " - ";
 
-                    logger.trace(compName + event.getClass().getCanonicalName() + " - "
+                    logger.trace(compName
+                            + event.getClass().getCanonicalName() + " - "
                             + event.getRequestMsg().getMsgTimeoutId());
                     int remoteId = event.getRequestMsg().getRemoteClientId();
                     // hole punching failed
                     // get the session and inform the upper layer
-                    logger.debug(compName + "Hole Punching Message request timeout remote client ID ("
+                    logger.debug(compName
+                            + "Hole Punching Message request timeout remote client ID ("
                             + remoteId + ") zServer ID ("
                             + event.getRequestMsg().getRemoteClientId() + ") "
                             + " timeout ID " + event.getTimeoutId());

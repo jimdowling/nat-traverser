@@ -22,12 +22,13 @@ package se.sics.gvod.croupier.events;
 
 import se.sics.gvod.common.Self;
 import se.sics.gvod.config.CroupierConfiguration;
+import se.sics.gvod.croupier.Croupier;
 import se.sics.kompics.Init;
 
 /**
  *
  */
-public class CroupierInit extends Init {
+public class CroupierInit extends Init<Croupier> {
 
     private Self self;
     private CroupierConfiguration config;

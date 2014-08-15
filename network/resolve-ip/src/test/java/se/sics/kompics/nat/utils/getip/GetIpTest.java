@@ -12,6 +12,7 @@ import se.sics.gvod.timer.java.JavaTimer;
 import se.sics.kompics.Component;
 import se.sics.kompics.ComponentDefinition;
 import se.sics.kompics.Handler;
+import se.sics.kompics.Init;
 import se.sics.kompics.Kompics;
 import se.sics.kompics.Start;
 import se.sics.kompics.nat.utils.getip.events.GetIpRequest.NetworkInterfacesMask;
@@ -52,8 +53,8 @@ public class GetIpTest
         private int count = 0;
 
         public TestResolveIpComponent() {
-            resolveIp = create(ResolveIp.class);
-            timer = create(JavaTimer.class);
+            resolveIp = create(ResolveIp.class, Init.NONE);
+            timer = create(JavaTimer.class, Init.NONE);
 
             connect(resolveIp.getNegative(Timer.class), timer.getPositive(Timer.class));
 

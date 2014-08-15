@@ -6,7 +6,7 @@ import se.sics.gvod.common.Self;
 import se.sics.gvod.nat.hp.rs.RendezvousServer.RegisteredClientRecord;
 import se.sics.kompics.Init;
 
-public final class RendezvousServerInit extends Init {
+public final class RendezvousServerInit extends Init<RendezvousServer> {
 
     private final Self self;
     private final ConcurrentHashMap<Integer, RegisteredClientRecord> registeredClients;

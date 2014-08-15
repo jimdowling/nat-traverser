@@ -17,6 +17,7 @@ import se.sics.kompics.Start;
 import se.sics.gvod.address.Address;
 import se.sics.gvod.timer.Timer;
 import se.sics.gvod.timer.java.JavaTimer;
+import se.sics.kompics.Init;
 
 /**
  * Unit test for simple App.
@@ -55,8 +56,8 @@ public class PingTest
         private InetAddress ip;
 
         public TestStClientComponent() {
-            timer = create(JavaTimer.class);
-            ping = create(Ping.class);
+            timer = create(JavaTimer.class, Init.NONE);
+            ping = create(Ping.class, Init.NONE);
 
             ip = null;
 

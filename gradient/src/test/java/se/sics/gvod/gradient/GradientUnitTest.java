@@ -24,7 +24,8 @@ import se.sics.gvod.gradient.msgs.GradientSetsExchangeMsg;
 import se.sics.gvod.net.VodAddress;
 import se.sics.gvod.timer.SchedulePeriodicTimeout;
 import se.sics.gvod.timer.TimeoutId;
-import se.sics.kompics.Event;
+import se.sics.kompics.KompicsEvent;
+import se.sics.kompics.Start;
 
 /**
  *
@@ -33,7 +34,7 @@ import se.sics.kompics.Event;
 public class GradientUnitTest extends VodRetryComponentTestCase {
 
     Gradient gradient = null;
-    LinkedList<Event> events;
+    LinkedList<KompicsEvent> events;
     List<VodDescriptor> nodes;
     List<VodDescriptor> updates;
     VodDescriptor n1, n2, n3, n4;
@@ -54,8 +55,8 @@ public class GradientUnitTest extends VodRetryComponentTestCase {
     @Override
     public void setUp() {
         super.setUp();
-        gradient = new Gradient(this);
-        gradient.handleInit.handle(new GradientInit(this, GradientConfiguration.build()));
+        gradient = new Gradient(this, new GradientInit(this, GradientConfiguration.build()));
+        gradient.handleStart.handle(Start.event);
         events = pollEvent(1);
         assertSequence(events, GradientSetsExchangeCycle.class);
 

@@ -1,22 +1,22 @@
 /**
  * This file is part of the Kompics P2P Framework.
- * 
- * Copyright (C) 2009 Swedish Institute of Computer Science (SICS)
- * Copyright (C) 2009 Royal Institute of Technology (KTH)
  *
- * Kompics is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
+ * Copyright (C) 2009 Swedish Institute of Computer Science (SICS) Copyright (C)
+ * 2009 Royal Institute of Technology (KTH)
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * Kompics is free software; you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software
+ * Foundation; either version 2 of the License, or (at your option) any later
+ * version.
  *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * this program; if not, write to the Free Software Foundation, Inc., 59 Temple
+ * Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 package se.sics.gvod.p2p.orchestrator.distributed;
 
@@ -24,21 +24,27 @@ import java.net.InetAddress;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Random;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import se.sics.gvod.net.VodNetwork;
 import se.sics.gvod.net.msgs.DirectMsg;
 import se.sics.gvod.net.msgs.RewriteableMsg;
 import se.sics.gvod.network.model.common.NetworkModel;
-
+import se.sics.gvod.timer.CancelPeriodicTimeout;
+import se.sics.gvod.timer.CancelTimeout;
+import se.sics.gvod.timer.SchedulePeriodicTimeout;
+import se.sics.gvod.timer.ScheduleTimeout;
+import se.sics.gvod.timer.Timeout;
+import se.sics.gvod.timer.TimeoutId;
+import se.sics.gvod.timer.Timer;
 import se.sics.kompics.ComponentDefinition;
-import se.sics.kompics.Event;
 import se.sics.kompics.Handler;
 import se.sics.kompics.Kompics;
+import se.sics.kompics.KompicsEvent;
 import se.sics.kompics.Negative;
 import se.sics.kompics.PortType;
 import se.sics.kompics.Positive;
+import se.sics.kompics.Start;
 import se.sics.kompics.p2p.experiment.dsl.SimulationScenario;
 import se.sics.kompics.p2p.experiment.dsl.events.KompicsSimulatorEvent;
 import se.sics.kompics.p2p.experiment.dsl.events.SimulationTerminatedEvent;
@@ -58,6 +64,12 @@ import se.sics.gvod.timer.Timer;
 /**
  * The <code>P2pOrchestrator</code> class.
  * 
+=======
+
+/**
+ * The <code>P2pOrchestrator</code> class.
+ *
+>>>>>>> ghettoNat/workAlex
  * @author Cosmin Arad <cosmin@sics.se>
  * @version $Id: P2pOrchestrator.java 1251 2009-09-09 13:25:13Z Cosmin $
  */
@@ -85,14 +97,15 @@ public final class DistributedOrchestratorNat extends ComponentDefinition {
     private InetAddress myIp;
     private int myPort;
 
-    public DistributedOrchestratorNat() {
+    public DistributedOrchestratorNat(DistributedOrchestratorInit init) {
         activeTimers = new HashMap<TimeoutId, TimerSignalTaskNat>();
         activePeriodicTimers = new HashMap<TimeoutId, PeriodicTimerSignalTaskNat>();
         javaTimer = new java.util.Timer("JavaTimer@"
                 + Integer.toHexString(this.hashCode()));
         thisOrchestrator = this;
+        doInit(init);
 
-        subscribe(handleInit, control);
+        subscribe(handleStart, control);
         subscribe(handleUpperMessage, upperNet);
         subscribe(handleLowerMessage, lowerNet);
         subscribe(handleST, timer);
@@ -101,6 +114,38 @@ public final class DistributedOrchestratorNat extends ComponentDefinition {
         subscribe(handleCPT, timer);
     }
 
+    public void doInit(DistributedOrchestratorInit init) {
+        scenario = init.getScenario();
+        random = scenario.getRandom();
+
+        myIp = init.getIp();
+        myPort = init.getPort();
+
+        networkModel = init.getNetworkModel();
+
+    }
+
+    public Handler<Start> handleStart = new Handler<Start>() {
+
+        @Override
+        public void handle(Start event) {
+            // generate initial future events from the scenario
+            LinkedList<SimulatorEvent> events = scenario.generateEventList();
+            for (SimulatorEvent simulatorEvent : events) {
+                long time = simulatorEvent.getTime();
+                if (time == 0) {
+                    handleSimulatorEvent(simulatorEvent);
+                } else {
+                    SimulatorEventTaskNat task = new SimulatorEventTaskNat(
+                            thisOrchestrator, simulatorEvent);
+                    javaTimer.schedule(task, simulatorEvent.getTime());
+                }
+            }
+
+            logger.info("Orchestration started");
+        }
+    };
+    
     private String pName(SimulatorEvent event) {
         if (event instanceof StochasticProcessEvent) {
             return ((StochasticProcessEvent) event).getProcessName();
@@ -188,7 +233,7 @@ public final class DistributedOrchestratorNat extends ComponentDefinition {
     }
 
     private void executeStochasticProcessEvent(StochasticProcessEvent event) {
-        Event e = event.generateOperation(random);
+        KompicsEvent e = event.generateOperation(random);
 
         trigger(e, simulationPort);
         logger.debug("{}: {}", pName(event), e);
@@ -208,7 +253,7 @@ public final class DistributedOrchestratorNat extends ComponentDefinition {
         }
     }
 
-    private void executeKompicsEvent(Event kompicsEvent) {
+    private void executeKompicsEvent(KompicsEvent kompicsEvent) {
         // trigger other Kompics events on the simulation port
         logger.debug("KOMPICS_EVENT {}", kompicsEvent.getClass());
         trigger(kompicsEvent, simulationPort);
@@ -228,33 +273,6 @@ public final class DistributedOrchestratorNat extends ComponentDefinition {
         }
         return true;
     }
-    Handler<DistributedOrchestratorInit> handleInit = new Handler<DistributedOrchestratorInit>() {
-
-        @Override
-        public void handle(DistributedOrchestratorInit init) {
-            scenario = init.getScenario();
-            random = scenario.getRandom();
-
-            myIp = init.getIp();
-            myPort = init.getPort();
-
-            // generate initial future events from the scenario
-            LinkedList<SimulatorEvent> events = scenario.generateEventList();
-            for (SimulatorEvent simulatorEvent : events) {
-                long time = simulatorEvent.getTime();
-                if (time == 0) {
-                    handleSimulatorEvent(simulatorEvent);
-                } else {
-                    SimulatorEventTaskNat task = new SimulatorEventTaskNat(
-                            thisOrchestrator, simulatorEvent);
-                    javaTimer.schedule(task, simulatorEvent.getTime());
-                }
-            }
-            networkModel = init.getNetworkModel();
-
-            logger.info("Orchestration started");
-        }
-    };
     Handler<DirectMsg> handleUpperMessage = new Handler<DirectMsg>() {
 
         @Override

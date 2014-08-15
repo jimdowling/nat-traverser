@@ -60,16 +60,12 @@ public class UpnpTest extends TestCase {
         private long startTime;
 
         public TestUpnpComponent() {
-            upnp = create(UpnpComponent.class);
+            upnp = create(UpnpComponent.class, new UpnpInit(5000, 1500));
 
             subscribe(handleStart, control);
-
             subscribe(handleUpnpDeletePortResponse, upnp.getPositive(UpnpPort.class));
             subscribe(handleUpnpAddPortResponse, upnp.getPositive(UpnpPort.class));
             subscribe(handleUpnpGetPublicIpResponse, upnp.getPositive(UpnpPort.class));
-
-
-            trigger(new UpnpInit(5000, 1500), upnp.getControl());
         }
         public Handler<Start> handleStart = new Handler<Start>() {
 

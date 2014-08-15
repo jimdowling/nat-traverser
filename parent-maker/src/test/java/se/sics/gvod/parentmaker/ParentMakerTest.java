@@ -37,9 +37,10 @@ import se.sics.gvod.net.Nat;
 import se.sics.gvod.net.events.PortAllocRequest;
 import se.sics.gvod.parentmaker.ParentMaker.KeepBindingOpenTimeout;
 import se.sics.gvod.parentmaker.evts.PrpPortsResponse;
-import se.sics.kompics.Event;
 import se.sics.gvod.timer.SchedulePeriodicTimeout;
 import se.sics.gvod.timer.ScheduleTimeout;
+import se.sics.kompics.KompicsEvent;
+import se.sics.kompics.Start;
 
 public class ParentMakerTest extends VodRetryComponentTestCase {
 
@@ -69,32 +70,35 @@ public class ParentMakerTest extends VodRetryComponentTestCase {
             java.util.logging.Logger.getLogger(ParentMakerTest.class.getName()).log(Level.SEVERE, null, ex);
         }
 
-        parentMaker = new ParentMaker(this);
-
         Nat eiPpPd = new NatFactory(1).getEiPpPd();
         setNat(eiPpPd);
-        parentMaker.handleInit.handle(new ParentMakerInit(this,
-                ParentMakerConfiguration.build().
-                setParentUpdatePeriod(30 * 1000)
-                .setRto(5 * 1000)
-                .setRtoScale(1.5)
-                .setRtoRetries(4)
-                .setKeepParentRttRange(200),
-                new ConcurrentSkipListSet<Integer>()
-        ));
+        parentMaker = new ParentMaker(this,
+                new ParentMakerInit(this,
+                        ParentMakerConfiguration.build().
+                        setParentUpdatePeriod(30 * 1000)
+                        .setRto(5 * 1000)
+                        .setRtoScale(1.5)
+                        .setRtoRetries(4)
+                        .setKeepParentRttRange(200),
+                        new ConcurrentSkipListSet<Integer>()
+                ));
+        parentMaker.handleStart.handle(Start.event);
 
         mySelf = new SelfNoUtility(privAddrs.get(2));
         mySelf.setNat(eiPpPd);
-        parentMaker.handleInit.handle(new ParentMakerInit(mySelf,
-                ParentMakerConfiguration.build().
-                setParentUpdatePeriod(30 * 1000)
-                .setRto(5 * 1000)
-                .setRtoScale(1.5)
-                .setRtoRetries(4)
-                .setKeepParentRttRange(200),
-                new ConcurrentSkipListSet<Integer>()
-        ));
-        LinkedList<Event> events = pollEvent(1);
+        parentMaker = new ParentMaker(this,
+                new ParentMakerInit(mySelf,
+                        ParentMakerConfiguration.build().
+                        setParentUpdatePeriod(30 * 1000)
+                        .setRto(5 * 1000)
+                        .setRtoScale(1.5)
+                        .setRtoRetries(4)
+                        .setKeepParentRttRange(200),
+                        new ConcurrentSkipListSet<Integer>()
+                ));
+        parentMaker.handleStart.handle(Start.event);
+        
+        LinkedList<KompicsEvent> events = pollEvent(1);
         assertSequence(events, ParentMakerCycle.class);
     }
 
@@ -115,10 +119,10 @@ public class ParentMakerTest extends VodRetryComponentTestCase {
         timeoutId = spt.getTimeoutEvent().getTimeoutId();
         parentMaker.handleCycle.handle(new ParentMakerCycle(spt));
 
-        LinkedList<Event> events = popEvents();
+        LinkedList<KompicsEvent> events = popEvents();
         List<PrpPortsResponse> pars = new ArrayList<PrpPortsResponse>();
         Random random = new Random(System.currentTimeMillis());
-        for (int j=1; j<3; j++) {
+        for (int j = 1; j < 3; j++) {
             PortAllocRequest par = (PortAllocRequest) events.get(j);
             pars.add((PrpPortsResponse) par.getResponse());
         }
@@ -153,8 +157,8 @@ public class ParentMakerTest extends VodRetryComponentTestCase {
                             RegisterStatus.BETTER_PARENT));
 
             popEvents();
-            assert(parentMaker.portsAssignedToParent.isEmpty());
-            assert(parentMaker.portsInUse.isEmpty());
+            assert (parentMaker.portsAssignedToParent.isEmpty());
+            assert (parentMaker.portsInUse.isEmpty());
         }
 
         assert (parentMaker.connections.isEmpty());

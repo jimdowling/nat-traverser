@@ -6,7 +6,7 @@ import java.util.concurrent.ConcurrentSkipListSet;
 import se.sics.gvod.common.Self;
 import se.sics.kompics.Init;
 
-public final class HpClientInit extends Init {
+public final class HpClientInit extends Init<HpClient> {
 
     private final Self self;
     private final ConcurrentHashMap<Integer, OpenedConnection> openedConnections;
