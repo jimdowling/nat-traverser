@@ -39,6 +39,7 @@ import se.sics.gvod.timer.SchedulePeriodicTimeout;
 import se.sics.gvod.timer.TimeoutId;
 import se.sics.kompics.Handler;
 import se.sics.kompics.Negative;
+import se.sics.kompics.Start;
 import se.sics.kompics.Stop;
 
 /**
@@ -58,25 +59,31 @@ public class Croupier extends MsgRetryComponent {
     String compName;
     private Map<Integer, Long> shuffleTimes = new HashMap<Integer, Long>();
 
-    public Croupier() {
-        this(null);
+    public Croupier(CroupierInit init) {
+        this(null, init);
     }
 
-    public Croupier(RetryComponentDelegator delegator) {
+    public Croupier(RetryComponentDelegator delegator, CroupierInit init) {
         super(delegator);
         this.delegator.doAutoSubscribe();
+        doInit(init);
     }
-    Handler<CroupierInit> handleInit = new Handler<CroupierInit>() {
-        @Override
-        public void handle(CroupierInit init) {
-            self = init.getSelf();
-            compName = "(" + self.getId() + ", " + self.getOverlayId() + ") ";
-            config = init.getConfig();
-            publicView = new View(self, config.getViewSize(), config.getSeed());
-            privateView = new View(self, config.getViewSize(), config.getSeed());
-            self.updateUtility(new UtilityVod(0));
-            CroupierStats.addNode(self.getAddress());
 
+    public void doInit(CroupierInit init) {
+        self = init.getSelf();
+        compName = "(" + self.getId() + ", " + self.getOverlayId() + ") ";
+        config = init.getConfig();
+        publicView = new View(self, config.getViewSize(), config.getSeed());
+        privateView = new View(self, config.getViewSize(), config.getSeed());
+        self.updateUtility(new UtilityVod(0));
+        CroupierStats.addNode(self.getAddress());
+
+    }
+
+    public Handler<Start> handleStart = new Handler<Start>() {
+
+        @Override
+        public void handle(Start event) {
             SchedulePeriodicTimeout spt = new SchedulePeriodicTimeout(config.getShufflePeriod(),
                     config.getShufflePeriod());
             spt.setTimeoutEvent(new CroupierShuffleCycle(spt, self.getOverlayId()));
@@ -145,10 +152,10 @@ public class Croupier extends MsgRetryComponent {
             throw new IllegalStateException(" Sending shuffle to myself");
         }
 
-        List<VodDescriptor> publicDescriptors =
-                publicView.selectToSendAtInitiator(shuffleSize, node);
-        List<VodDescriptor> privateDescriptors =
-                privateView.selectToSendAtInitiator(shuffleSize, node);
+        List<VodDescriptor> publicDescriptors
+                = publicView.selectToSendAtInitiator(shuffleSize, node);
+        List<VodDescriptor> privateDescriptors
+                = privateView.selectToSendAtInitiator(shuffleSize, node);
 
         if (self.isOpen()) {
             publicDescriptors.add(self.getDescriptor());
@@ -159,13 +166,13 @@ public class Croupier extends MsgRetryComponent {
         DescriptorBuffer buffer = new DescriptorBuffer(self.getAddress(),
                 publicDescriptors, privateDescriptors);
 
-        ScheduleRetryTimeout st =
-                new ScheduleRetryTimeout(config.getRto(),
-                config.getRtoRetries(), config.getRtoScale());
+        ScheduleRetryTimeout st
+                = new ScheduleRetryTimeout(config.getRto(),
+                        config.getRtoRetries(), config.getRtoScale());
         ShuffleMsg.Request msg = new ShuffleMsg.Request(self.getAddress(), node,
                 buffer, self.getDescriptor());
-        ShuffleMsg.RequestTimeout retryRequest = 
-                new ShuffleMsg.RequestTimeout(st, msg, self.getOverlayId());
+        ShuffleMsg.RequestTimeout retryRequest
+                = new ShuffleMsg.RequestTimeout(st, msg, self.getOverlayId());
         TimeoutId id = delegator.doRetry(retryRequest);
 
         shuffleTimes.put(id.getId(), System.currentTimeMillis());
@@ -228,8 +235,8 @@ public class Croupier extends MsgRetryComponent {
             List<VodDescriptor> toSendPrivateDescs = privateView.selectToSendAtReceiver(
                     recPrivateDescs.size(), srcAddress);
 
-            DescriptorBuffer toSendBuffer =
-                    new DescriptorBuffer(self.getAddress(), toSendPublicDescs, toSendPrivateDescs);
+            DescriptorBuffer toSendBuffer
+                    = new DescriptorBuffer(self.getAddress(), toSendPublicDescs, toSendPrivateDescs);
 
             publicView.selectToKeep(srcAddress, recBuffer.getPublicDescriptors());
             privateView.selectToKeep(srcAddress, recBuffer.getPrivateDescriptors());
@@ -284,7 +291,6 @@ public class Croupier extends MsgRetryComponent {
                     logger.warn(sb.toString());
                 }
                 shuffleTimes.remove(event.getTimeoutId().getId());
-                
                 if (!firstSuccessfulShuffle) {
                     firstSuccessfulShuffle = true;
                     delegator.doTrigger(new CroupierJoinCompleted(), croupierPort);

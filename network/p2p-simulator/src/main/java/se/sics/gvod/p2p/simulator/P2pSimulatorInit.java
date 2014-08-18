@@ -31,7 +31,7 @@ import se.sics.kompics.simulation.SimulatorScheduler;
  * @author Cosmin Arad <cosmin@sics.se>
  * @version $Id: P2pSimulatorInit.java 1102 2009-08-31 13:23:16Z Cosmin $
  */
-public final class P2pSimulatorInit extends Init {
+public final class P2pSimulatorInit extends Init<P2pSimulator> {
 
 	private final SimulatorScheduler scheduler;
 	private final SimulationScenario scenario;

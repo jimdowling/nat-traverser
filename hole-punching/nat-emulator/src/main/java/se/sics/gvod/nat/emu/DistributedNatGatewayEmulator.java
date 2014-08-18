@@ -115,12 +115,13 @@ public class DistributedNatGatewayEmulator extends ComponentDefinition {
         }
     }
 
-    public DistributedNatGatewayEmulator() {
+    public DistributedNatGatewayEmulator(DistributedNatGatewayEmulatorInit init) {
+        doInit(init);
+
         subscribe(handleStart, control);
         subscribe(handleStop, control);
         subscribe(handleUpperMessage, upperNet);
         subscribe(handleLowerMessage, network);
-        subscribe(handleInit, control);
         subscribe(handleUpnpGetPublicIpRequest, upnpPort);
         subscribe(handleMapPortsRequest, upnpPort);
         subscribe(handleUnmapPortRequest, upnpPort);
@@ -136,30 +137,34 @@ public class DistributedNatGatewayEmulator extends ComponentDefinition {
         // handler in super class
 //        subscribe(handleRTO, timer);
     }
-    Handler<DistributedNatGatewayEmulatorInit> handleInit = new Handler<DistributedNatGatewayEmulatorInit>() {
-        @Override
-        public void handle(DistributedNatGatewayEmulatorInit init) {
-            startPortRange = init.getStartPortRange();
-            endPortRange = init.getEndPortRange();
-            natType = init.getNatType();
-            mappingPolicy = init.getMp();
-            allocationPolicy = init.getAp();
-            filteringPolicy = init.getFp();
-            alternativePortAllocationPolicy = init.getAltAp();
-            ruleCleanupPeriod = init.getRuleCleanupPeriod();
-            natPublicAddress = init.getNatIP();
-            clashingOverrides = init.isClashingOverrides();
-            ruleLifeTime = init.getRuleLifeTime();
-            randomPortSeed = init.getRandomPortSeed();
-            reset();
-            compName = "Nat(" + init.getNatIP() + ":" + 
-                    Nat.natToStr(natType, mappingPolicy, allocationPolicy, filteringPolicy)
-                    + ") ";
 
-            logger.debug(compName + "NatGateway: " + natPublicAddress + " - "
-                    + mappingPolicy + " - "
-                    + " - " + allocationPolicy
-                    + " - " + filteringPolicy);
+    private void doInit(DistributedNatGatewayEmulatorInit init) {
+        startPortRange = init.getStartPortRange();
+        endPortRange = init.getEndPortRange();
+        natType = init.getNatType();
+        mappingPolicy = init.getMp();
+        allocationPolicy = init.getAp();
+        filteringPolicy = init.getFp();
+        alternativePortAllocationPolicy = init.getAltAp();
+        ruleCleanupPeriod = init.getRuleCleanupPeriod();
+        natPublicAddress = init.getNatIP();
+        clashingOverrides = init.isClashingOverrides();
+        ruleLifeTime = init.getRuleLifeTime();
+        randomPortSeed = init.getRandomPortSeed();
+        reset();
+        compName = "Nat(" + init.getNatIP() + ":"
+                + Nat.natToStr(natType, mappingPolicy, allocationPolicy, filteringPolicy)
+                + ") ";
+
+        logger.debug(compName + "NatGateway: " + natPublicAddress + " - "
+                + mappingPolicy + " - "
+                + " - " + allocationPolicy
+                + " - " + filteringPolicy);
+    }
+    
+    Handler<Start> handleStart = new Handler<Start>() {
+        @Override
+        public void handle(Start event) {
             SchedulePeriodicTimeout st = new SchedulePeriodicTimeout(ruleCleanupPeriod, ruleCleanupPeriod);
             RuleCleanupTimeout msgTimeout = new RuleCleanupTimeout(st);
             st.setTimeoutEvent(msgTimeout);
@@ -258,22 +263,22 @@ public class DistributedNatGatewayEmulator extends ComponentDefinition {
             trigger(event, upperNetControl);
         }
     };
-    Handler<UnmapPortsRequest> handleUnmapPortRequest =
-            new Handler<UnmapPortsRequest>() {
-        @Override
-        public void handle(UnmapPortsRequest event) {
-            logger.trace(compName + "UnmapPortsRequest event");
-            trigger(new UnmapPortsResponse(event, true), upnpPort);
-        }
-    };
-    Handler<ShutdownUpnp> handleShutdownUpnp =
-            new Handler<ShutdownUpnp>() {
-        @Override
-        public void handle(ShutdownUpnp event) {
-            logger.trace(compName + "ShutdownUpnp");
-            // do nothing
-        }
-    };
+    Handler<UnmapPortsRequest> handleUnmapPortRequest
+            = new Handler<UnmapPortsRequest>() {
+                @Override
+                public void handle(UnmapPortsRequest event) {
+                    logger.trace(compName + "UnmapPortsRequest event");
+                    trigger(new UnmapPortsResponse(event, true), upnpPort);
+                }
+            };
+    Handler<ShutdownUpnp> handleShutdownUpnp
+            = new Handler<ShutdownUpnp>() {
+                @Override
+                public void handle(ShutdownUpnp event) {
+                    logger.trace(compName + "ShutdownUpnp");
+                    // do nothing
+                }
+            };
     Handler<MapPortsRequest> handleMapPortsRequest = new Handler<MapPortsRequest>() {
         @Override
         public void handle(MapPortsRequest event) {
@@ -307,19 +312,14 @@ public class DistributedNatGatewayEmulator extends ComponentDefinition {
             }
         }
     };
-    Handler<UpnpGetPublicIpRequest> handleUpnpGetPublicIpRequest =
-            new Handler<UpnpGetPublicIpRequest>() {
-        @Override
-        public void handle(UpnpGetPublicIpRequest event) {
-            logger.trace(compName + "handleUPNPGetPublicIPrequest");
-            trigger(new UpnpGetPublicIpResponse(event, natPublicAddress), upnpPort);
-        }
-    };
-    Handler<Start> handleStart = new Handler<Start>() {
-        @Override
-        public void handle(Start event) {
-        }
-    };
+    Handler<UpnpGetPublicIpRequest> handleUpnpGetPublicIpRequest
+            = new Handler<UpnpGetPublicIpRequest>() {
+                @Override
+                public void handle(UpnpGetPublicIpRequest event) {
+                    logger.trace(compName + "handleUPNPGetPublicIPrequest");
+                    trigger(new UpnpGetPublicIpResponse(event, natPublicAddress), upnpPort);
+                }
+            };
 
     private boolean isUpnp() {
         return natType == Nat.Type.UPNP;
@@ -402,7 +402,6 @@ public class DistributedNatGatewayEmulator extends ComponentDefinition {
                         + msg.getClass().getName());
             }
 
-
             String src = msg.getSource().toString();
             if (msg instanceof RelayMsgNetty.Response) {
                 RelayMsgNetty.Response vm = (RelayMsgNetty.Response) msg;
@@ -440,10 +439,8 @@ public class DistributedNatGatewayEmulator extends ComponentDefinition {
             // Reused endpoints
             Address privateEndPoint = msg.getSource();
 
-
             // JIM - this code is checking whether a new mapping needs to be
             // created or whether an old one can be reused.
-
             if (!privateEndPointToDestinationTable.containsKey(privateEndPoint)) {
                 // Not talking with the host
                 logger.debug(compName + "No existing mapping for Src: " + privateEndPoint + " - " + msg.getClass());
@@ -456,8 +453,8 @@ public class DistributedNatGatewayEmulator extends ComponentDefinition {
                 return;
             } else {
                 // If v is already talking with somebody outside
-                Map<InetAddress, Map<Integer, Integer>> ds =
-                        privateEndPointToDestinationTable.get(privateEndPoint);
+                Map<InetAddress, Map<Integer, Integer>> ds
+                        = privateEndPointToDestinationTable.get(privateEndPoint);
                 logger.trace(compName + "Upper. Src: " + src + " dest: "
                         + msg.getDestination() + " - " + msg.getClass()
                         + "::" + natPublicAddress + "::"
@@ -543,7 +540,6 @@ public class DistributedNatGatewayEmulator extends ComponentDefinition {
             timers.put(mappedPort, System.currentTimeMillis());
 
             // Forward the message the the public address as the source address and mapped port as the source port
-
             Address newSourceAddress = new Address(natPublicAddress, mappedPort,
                     msg.getSource().getId());
 
@@ -567,7 +563,6 @@ public class DistributedNatGatewayEmulator extends ComponentDefinition {
                         + msg.getClass().getCanonicalName() + " - "
                         + msgTimeoutId);
             }
-
 
             logger.trace(compName + "handleLowerMsg in Nat. timeoutId " + msg.getTimeoutId()
                     + " src: " + msg.getSource()
@@ -610,8 +605,8 @@ public class DistributedNatGatewayEmulator extends ComponentDefinition {
                     // Create/Renew Timestamp
                     timers.put(destPort, System.currentTimeMillis());
 
-                    Map<InetAddress, Map<Integer, Integer>> map =
-                            privateEndPointToDestinationTable.get(v);
+                    Map<InetAddress, Map<Integer, Integer>> map
+                            = privateEndPointToDestinationTable.get(v);
                     if (map != null) {
                         logger.debug(compName + "Lower. Found mapping. Src: " + srcIp + ":"
                                 + srcPort + " -> "
@@ -682,7 +677,6 @@ public class DistributedNatGatewayEmulator extends ComponentDefinition {
                                     StringBuilder sb = new StringBuilder();
                                     sb.append("Drop PD-2 ").append(msg.getClass()).append(" - ");
                                     sb.append(mappingPolicy).append(":").append(allocationPolicy).append(":").append(filteringPolicy).append(" - ");
-                                    
                                     if (msg instanceof DirectMsg) {
                                         DirectMsg vm = (DirectMsg) msg;
                                         sb.append(vm.getVodSource());
@@ -696,7 +690,7 @@ public class DistributedNatGatewayEmulator extends ComponentDefinition {
                                         sb.append(vm.getVodSource());
                                         sb.append(vm.getVodDestination());
                                     } else if (msg instanceof HolePunchingMsg.Response) {
-                                        HolePunchingMsg.Response hm 
+                                        HolePunchingMsg.Response hm
                                                 = (HolePunchingMsg.Response) msg;
                                         sb.append(hm.getVodSource());
                                         sb.append(hm.getVodDestination());
@@ -793,7 +787,6 @@ public class DistributedNatGatewayEmulator extends ComponentDefinition {
                             iMap.remove(destPort);
                         }
 
-
                         if (iMap.isEmpty()) {
                             publicIPsToBeRemoved.add(publicEndPoint);
                         }
@@ -852,7 +845,6 @@ public class DistributedNatGatewayEmulator extends ComponentDefinition {
                         logger.warn(compName + "No pubPortToPrivateAddr entry for " + portToMap);
                     }
 
-
                     if (event.getStatus() == NatPortBindResponse.Status.PORT_ALREADY_BOUND) {
                         // Something wrong here.
                         // TODO - change this to a normal PortBindResponse.Failed event
@@ -863,7 +855,6 @@ public class DistributedNatGatewayEmulator extends ComponentDefinition {
                 }
                 return;
             }
-
 
             // after mapPort()
             // Create/Renew Timestamp
@@ -994,8 +985,8 @@ public class DistributedNatGatewayEmulator extends ComponentDefinition {
         int ret = portCounter++;
         if (portCounter > endPortRange) {
             // wrap-around to 30-40,000.
-            ret = portCounter =
-                    rand.nextInt(endPortRange - startPortRange) + startPortRange;
+            ret = portCounter
+                    = rand.nextInt(endPortRange - startPortRange) + startPortRange;
         }
         return ret;
     }

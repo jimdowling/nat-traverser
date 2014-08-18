@@ -4,8 +4,6 @@
  */
 package se.sics.gvod.croupier;
 
-import java.net.InetAddress;
-import se.sics.gvod.config.CroupierConfiguration;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -20,6 +18,7 @@ import org.slf4j.LoggerFactory;
 import se.sics.gvod.common.DescriptorBuffer;
 import se.sics.gvod.common.VodDescriptor;
 import se.sics.gvod.common.VodRetryComponentTestCase;
+import se.sics.gvod.config.CroupierConfiguration;
 import se.sics.gvod.config.VodConfig;
 import se.sics.gvod.croupier.events.CroupierInit;
 import se.sics.gvod.croupier.events.CroupierJoin;
@@ -28,7 +27,8 @@ import se.sics.gvod.croupier.events.CroupierSample;
 import se.sics.gvod.croupier.events.CroupierShuffleCycle;
 import se.sics.gvod.croupier.msgs.ShuffleMsg;
 import se.sics.gvod.timer.ScheduleTimeout;
-import se.sics.kompics.Event;
+import se.sics.kompics.KompicsEvent;
+import se.sics.kompics.Start;
 
 /**
  *
@@ -57,7 +57,6 @@ public class CroupierTest extends VodRetryComponentTestCase {
     @Override
     public void setUp() {
         super.setUp();
-        croupier = new Croupier(this);
         seed = 300;
         neighbours = new ArrayList<VodDescriptor>();
 
@@ -65,7 +64,8 @@ public class CroupierTest extends VodRetryComponentTestCase {
                 CroupierConfiguration.build()
                 .setPolicy(VodConfig.CroupierSelectionPolicy.TAIL.name())
                 .setSeed(seed);
-        croupier.handleInit.handle(new CroupierInit(this, config));
+        croupier = new Croupier(this, new CroupierInit(this, config));
+        croupier.handleStart.handle(Start.event);
     }
 
     @After
@@ -78,7 +78,7 @@ public class CroupierTest extends VodRetryComponentTestCase {
     @Test
     public void testJoinComplete() {
         croupier.handleJoin.handle(new CroupierJoin(neighbours));
-        LinkedList<Event> events = pollEvent(2);
+        LinkedList<KompicsEvent> events = pollEvent(2);
         assertSequence(events, CroupierShuffleCycle.class, CroupierJoinCompleted.class);
     }
 
@@ -119,7 +119,7 @@ public class CroupierTest extends VodRetryComponentTestCase {
                 croupier.handleShuffleRequest.handle(req);
                 pubDescs.clear();
                 privDescs.clear();
-                LinkedList<Event> e = pollEvent(2);
+                LinkedList<KompicsEvent> e = pollEvent(2);
 
                 // check response
                 ShuffleMsg.Response sr = (ShuffleMsg.Response) e.get(0);
@@ -147,7 +147,7 @@ public class CroupierTest extends VodRetryComponentTestCase {
         join();
         popEvents();
         croupier.handleCycle.handle(csc);
-        LinkedList<Event> e = pollEvent(1);
+        LinkedList<KompicsEvent> e = pollEvent(1);
         ShuffleMsg.Request r = (ShuffleMsg.Request) e.getFirst();
         assert(r.getBuffer().getPublicDescriptors().size() > 0);
         assert(r.getBuffer().getPrivateDescriptors().isEmpty());

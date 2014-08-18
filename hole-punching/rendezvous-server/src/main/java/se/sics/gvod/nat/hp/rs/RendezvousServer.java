@@ -4,12 +4,6 @@
  */
 package se.sics.gvod.nat.hp.rs;
 
-import se.sics.gvod.timer.UUID;
-import se.sics.gvod.common.hp.HolePunching;
-import se.sics.gvod.common.hp.HPRole;
-import se.sics.gvod.common.hp.HPMechanism;
-import se.sics.gvod.common.hp.HpFeasability;
-import se.sics.gvod.common.hp.HPSessionKey;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
@@ -20,11 +14,16 @@ import se.sics.gvod.address.Address;
 import se.sics.gvod.common.RTTStore;
 import se.sics.gvod.common.RetryComponentDelegator;
 import se.sics.gvod.common.Self;
-import se.sics.gvod.config.VodConfig;
 import se.sics.gvod.common.evts.GarbageCleanupTimeout;
+import se.sics.gvod.common.hp.HPMechanism;
+import se.sics.gvod.common.hp.HPRole;
+import se.sics.gvod.common.hp.HPSessionKey;
+import se.sics.gvod.common.hp.HolePunching;
+import se.sics.gvod.common.hp.HpFeasability;
 import se.sics.gvod.common.util.PortSelector;
 import se.sics.gvod.common.util.ToVodAddr;
 import se.sics.gvod.config.RendezvousServerConfiguration;
+import se.sics.gvod.config.VodConfig;
 import se.sics.gvod.hp.events.OpenConnectionResponseType;
 import se.sics.gvod.hp.msgs.*;
 import se.sics.gvod.nat.common.MsgRetryComponent;
@@ -33,7 +32,9 @@ import se.sics.gvod.net.Nat;
 import se.sics.gvod.net.VodAddress;
 import se.sics.gvod.net.msgs.ScheduleRetryTimeout;
 import se.sics.gvod.timer.*;
+import se.sics.gvod.timer.UUID;
 import se.sics.kompics.Handler;
+import se.sics.kompics.Start;
 import se.sics.kompics.Stop;
 
 /**
@@ -202,28 +203,34 @@ public class RendezvousServer extends MsgRetryComponent {
         }
     }
 
-    public RendezvousServer() {
-        this(null);
+    public RendezvousServer(RendezvousServerInit init) {
+        this(null, init);
     }
 
-    public RendezvousServer(RetryComponentDelegator delegator) {
+    public RendezvousServer(RetryComponentDelegator delegator, RendezvousServerInit init) {
         super(delegator);
         this.delegator.doAutoSubscribe();
+        doInit(init);
     }
-    Handler<RendezvousServerInit> handleInit = new Handler<RendezvousServerInit>() {
+
+    private void doInit(RendezvousServerInit init) {
+        self = init.getSelf();
+        registeredClients = init.getRegisteredClients();
+
+        config = init.getConfig();
+        compName = "(" + self.getId() + ") ";
+
+        // session epiration time
+        sessionExpirationTime = init.getConfig().getSessionExpirationTime();
+    }
+
+    public Handler<Start> handleStart = new Handler<Start>() {
+
         @Override
-        public void handle(RendezvousServerInit init) {
-            self = init.getSelf();
-            registeredClients = init.getRegisteredClients();
-
-            logger.info("Starting RendezvousServer with support for {} children", 
-                    init.getConfig().getNumChildren());
-            config = init.getConfig();
-            compName = "(" + self.getId() + ") ";
-
-            // session epiration time
-            sessionExpirationTime = init.getConfig().getSessionExpirationTime();
+        public void handle(Start event) {
             // initialize grabage collection
+            logger.info("Starting RendezvousServer with support for {} children",
+                    config.getNumChildren());
             SchedulePeriodicTimeout st = new SchedulePeriodicTimeout(CLEANUP_TIMEOUT, CLEANUP_TIMEOUT);
             GarbageCleanupTimeout msgTimeout = new GarbageCleanupTimeout(st);
             st.setTimeoutEvent(msgTimeout);
@@ -270,7 +277,7 @@ public class RendezvousServer extends MsgRetryComponent {
 
             if (currentSize < config.getNumChildren()) {
                 RTTStore.addSample(self.getId(), peer, rtt);
-                boolean alreadyRegistered = registerClientRecord(peer, 
+                boolean alreadyRegistered = registerClientRecord(peer,
                         request.getSource().getId(), rtt,
                         request.getPrpPorts(), false);
                 if (alreadyRegistered) {
@@ -291,7 +298,6 @@ public class RendezvousServer extends MsgRetryComponent {
                         registeredClients.remove(worstChild.getId());
                         delegator.doRetry(new HpUnregisterMsg.Request(self.getAddress(),
                                 worstChild, 0, HpRegisterMsg.RegisterStatus.BETTER_CHILD), self.getOverlayId());
-                        
                         registerClientRecord(peer, request.getSource().getId(), rtt,
                                 request.getPrpPorts(), false);
                         sendRegisterResponse(peer, timeoutId, HpRegisterMsg.RegisterStatus.ACCEPT,
@@ -436,10 +442,8 @@ public class RendezvousServer extends MsgRetryComponent {
             int client_A_ID = request.getClientId();
             int client_B_ID = request.getRemoteClientId();
 
-
             registerClientRecord(src, client_A_ID, request.getRtt(),
                     null, true);
-
 
             if (registeredClients.containsKey(client_B_ID) != true) {
                 // send negative response
@@ -465,11 +469,11 @@ public class RendezvousServer extends MsgRetryComponent {
 
             HPSessionKey hpSessionKey = new HPSessionKey(client_A_ID, client_B_ID);
 
-            HpConnectMsg.Response responseMsg =
-                    new HpConnectMsg.Response(self.getAddress(),
-                    request.getVodSource(), request.getRemoteClientId(), responseType,
-                    request.getTimeoutId(), hpMechanism, !hpSessions.containsKey(hpSessionKey),
-                    request.getMsgTimeoutId());
+            HpConnectMsg.Response responseMsg
+                    = new HpConnectMsg.Response(self.getAddress(),
+                            request.getVodSource(), request.getRemoteClientId(), responseType,
+                            request.getTimeoutId(), hpMechanism, !hpSessions.containsKey(hpSessionKey),
+                            request.getMsgTimeoutId());
             delegator.doTrigger(responseMsg, network);
 
             if (responseType == OpenConnectionResponseType.HP_WILL_START) {
@@ -602,49 +606,49 @@ public class RendezvousServer extends MsgRetryComponent {
 //
 //        }
 //    };
-    Handler<ParentKeepAliveMsg.Ping> handleParentKeepAliveMsgPing =
-            new Handler<ParentKeepAliveMsg.Ping>() {
-        @Override
-        public void handle(ParentKeepAliveMsg.Ping ping) {
-            // every open peer is running hole punching client and server
-            // if someone sends a ping message to the open peer then
-            // both the client and server component will recv the ping message
-            // solution: hole punching server only listens on 3478 so
-            // ignore the ping if its destination port is not 3478
+    Handler<ParentKeepAliveMsg.Ping> handleParentKeepAliveMsgPing
+            = new Handler<ParentKeepAliveMsg.Ping>() {
+                @Override
+                public void handle(ParentKeepAliveMsg.Ping ping) {
+                    // every open peer is running hole punching client and server
+                    // if someone sends a ping message to the open peer then
+                    // both the client and server component will recv the ping message
+                    // solution: hole punching server only listens on 3478 so
+                    // ignore the ping if its destination port is not 3478
 
-            logger.trace(compName + " received connection keep alive ping message from ("
-                    + ping.getVodSource() + ") ");
+                    logger.trace(compName + " received connection keep alive ping message from ("
+                            + ping.getVodSource() + ") ");
 
-            // update the client record time stamp
-            RegisteredClientRecord record = registeredClients.get(ping.getClientId());
-            if (record != null) {
-                // If a node is behind a NAT that changes the IP address of the client
-                // or its port dynamically, this can potentially happen. Or if the client
-                // changes from WiFi to 3G or something like that.
-                // Or if it changes its set of parents, its VodAddress will change.
-                logger.trace(compName + " Sending Pong back to : " 
-                        + record.getClient().getPeerAddress());
-                logger.trace(compName + " Sending Pong really back to : " 
-                        + ping.getVodSource());
-                record.setClient(ping.getVodSource());
-                record.setLastHeardFrom(System.currentTimeMillis());
+                    // update the client record time stamp
+                    RegisteredClientRecord record = registeredClients.get(ping.getClientId());
+                    if (record != null) {
+                        // If a node is behind a NAT that changes the IP address of the client
+                        // or its port dynamically, this can potentially happen. Or if the client
+                        // changes from WiFi to 3G or something like that.
+                        // Or if it changes its set of parents, its VodAddress will change.
+                        logger.trace(compName + " Sending Pong back to : "
+                                + record.getClient().getPeerAddress());
+                        logger.trace(compName + " Sending Pong really back to : "
+                                + ping.getVodSource());
+                        record.setClient(ping.getVodSource());
+                        record.setLastHeardFrom(System.currentTimeMillis());
 
-                // send back pong
-                ParentKeepAliveMsg.Pong pong = new ParentKeepAliveMsg.Pong(
-                        self.getAddress(), ping.getVodSource(),
-                        ping.getTimeoutId());
-                delegator.doTrigger(pong, network);
-            } else {
-                logger.debug(compName + " Ping recvd from a non-child: : " + ping.getVodSource());
-                // Ping'ing node is not a child, tell it to remove itself as a child
-                HpUnregisterMsg.Request msg =
-                        new HpUnregisterMsg.Request(self.getAddress(),
-                        ping.getVodSource(),
-                        0, HpRegisterMsg.RegisterStatus.NOT_CHILD);
-                delegator.doRetry(msg, self.getOverlayId());
-            }
-        }
-    };
+                        // send back pong
+                        ParentKeepAliveMsg.Pong pong = new ParentKeepAliveMsg.Pong(
+                                self.getAddress(), ping.getVodSource(),
+                                ping.getTimeoutId());
+                        delegator.doTrigger(pong, network);
+                    } else {
+                        logger.debug(compName + " Ping recvd from a non-child: : " + ping.getVodSource());
+                        // Ping'ing node is not a child, tell it to remove itself as a child
+                        HpUnregisterMsg.Request msg
+                        = new HpUnregisterMsg.Request(self.getAddress(),
+                                ping.getVodSource(),
+                                0, HpRegisterMsg.RegisterStatus.NOT_CHILD);
+                        delegator.doRetry(msg, self.getOverlayId());
+                    }
+                }
+            };
     /**
      */
     Handler<PRP_ConnectMsg.Request> handlePRP_ConnectMsgRequest = new Handler<PRP_ConnectMsg.Request>() {
@@ -658,7 +662,7 @@ public class RendezvousServer extends MsgRetryComponent {
                 HPRole myRole = HPRole.PRP_INITIATOR;
                 HPRole yourRole = HPRole.PRP_RESPONDER;
                 registerClientRecord(request.getVodSource(), request.getClientId(),
-                        500 , request.getSetOfAvailablePorts(), true);
+                        500, request.getSetOfAvailablePorts(), true);
 
                 if (session == null) {
                     // create a new session
@@ -673,19 +677,19 @@ public class RendezvousServer extends MsgRetryComponent {
                             yourRole); /*
                      * client B will only repond to messages from A
                      */
+
                     hpSessions.put(key, session);
                 }
 
-
                 if (session.getResponderID() != request.getRemoteClientId()) {
-                    PRP_ConnectMsg.Response responseMsg =
-                            new PRP_ConnectMsg.Response(self.getAddress(),
-                            request.getVodSource(),
-                            request.getTimeoutId(),
-                            PRP_ConnectMsg.ResponseType.RESPONDER_ID_REMOTE_ID_DO_NOT_MATCH,
-                            request.getRemoteClientId(),
-                            null, 0, false,
-                            request.getMsgTimeoutId());
+                    PRP_ConnectMsg.Response responseMsg
+                            = new PRP_ConnectMsg.Response(self.getAddress(),
+                                    request.getVodSource(),
+                                    request.getTimeoutId(),
+                                    PRP_ConnectMsg.ResponseType.RESPONDER_ID_REMOTE_ID_DO_NOT_MATCH,
+                                    request.getRemoteClientId(),
+                                    null, 0, false,
+                                    request.getMsgTimeoutId());
                     delegator.doTrigger(responseMsg, network);
                     return;
                 }
@@ -704,29 +708,28 @@ public class RendezvousServer extends MsgRetryComponent {
                         responderClient.getClient().getNatPolicy(),
                         responderClient.getClient().getParents()); // null
 
-
                 boolean bindFirst = false;
                 if (selectedPort == 0) {
                     bindFirst = true;
                     // ask for more ports from child
-                    PRP_PreallocatedPortsMsg.Request r =
-                            new PRP_PreallocatedPortsMsg.Request(self.getAddress(),
-                            responderClient.getClient(),
-                            UUID.nextUUID());
+                    PRP_PreallocatedPortsMsg.Request r
+                            = new PRP_PreallocatedPortsMsg.Request(self.getAddress(),
+                                    responderClient.getClient(),
+                                    UUID.nextUUID());
                     ScheduleRetryTimeout st = new ScheduleRetryTimeout(3000, 1, 2d);
-                    PRP_PreallocatedPortsMsg.RequestRetryTimeout t =
-                            new PRP_PreallocatedPortsMsg.RequestRetryTimeout(st, r);
+                    PRP_PreallocatedPortsMsg.RequestRetryTimeout t
+                            = new PRP_PreallocatedPortsMsg.RequestRetryTimeout(st, r);
                     delegator.doRetry(t);
                 }
-                PRP_ConnectMsg.Response responseMsg =
-                        new PRP_ConnectMsg.Response(self.getAddress(),
-                        request.getVodSource(),
-                        request.getTimeoutId(),
-                        PRP_ConnectMsg.ResponseType.OK,
-                        request.getRemoteClientId(),
-                        remoteClientDummyPublicAddress,
-                        selectedPort, bindFirst,
-                        request.getMsgTimeoutId());
+                PRP_ConnectMsg.Response responseMsg
+                        = new PRP_ConnectMsg.Response(self.getAddress(),
+                                request.getVodSource(),
+                                request.getTimeoutId(),
+                                PRP_ConnectMsg.ResponseType.OK,
+                                request.getRemoteClientId(),
+                                remoteClientDummyPublicAddress,
+                                selectedPort, bindFirst,
+                                request.getMsgTimeoutId());
                 delegator.doTrigger(responseMsg, network);
 
                 // inform the other client about the hole that will be opened on the initiators nat
@@ -751,11 +754,11 @@ public class RendezvousServer extends MsgRetryComponent {
                         + request.getRemoteClientId() + ") is dead");
 
                 // send nack to the the client
-                PRP_ConnectMsg.Response responseMsg =
-                        new PRP_ConnectMsg.Response(self.getAddress(), request.getVodSource(),
-                        request.getTimeoutId(),
-                        PRP_ConnectMsg.ResponseType.FAILED, request.getRemoteClientId(),
-                        null, 0, false, request.getMsgTimeoutId());
+                PRP_ConnectMsg.Response responseMsg
+                        = new PRP_ConnectMsg.Response(self.getAddress(), request.getVodSource(),
+                                request.getTimeoutId(),
+                                PRP_ConnectMsg.ResponseType.FAILED, request.getRemoteClientId(),
+                                null, 0, false, request.getMsgTimeoutId());
                 delegator.doTrigger(responseMsg, network);
 
                 //delete the hp session
@@ -768,18 +771,19 @@ public class RendezvousServer extends MsgRetryComponent {
     /**
      * This handler is where the client has PRP, and has allocated a port
      * locally and now wants to connect to another PRP or PRC node.
-     * 
-     * This ZServer should give out the first port supplied by the initiatingClient
-     * to the remoteClient. The zServer may also have a pre-allocated port from the
-     * remoteClient that it immediately returns to the initiatingClient. If the
-     * zServer doesn't have a pre-allocated port for the initiatingClient, it picks
-     * a random port (50000+) and hopes that the initiatingClient is not already using
-     * it. It then tells the remoteClient to use that when connecting, and it tells
-     * the remoteClient to bind to it and try and connect to the initiatingClient with
-     * it. The port may already be bound at the remoteClient, in which case it should
-     * bind a new port, and tell the zServer to tell the initiatingClient to use the
-     * new port.
-     * 
+     *
+     * This ZServer should give out the first port supplied by the
+     * initiatingClient to the remoteClient. The zServer may also have a
+     * pre-allocated port from the remoteClient that it immediately returns to
+     * the initiatingClient. If the zServer doesn't have a pre-allocated port
+     * for the initiatingClient, it picks a random port (50000+) and hopes that
+     * the initiatingClient is not already using it. It then tells the
+     * remoteClient to use that when connecting, and it tells the remoteClient
+     * to bind to it and try and connect to the initiatingClient with it. The
+     * port may already be bound at the remoteClient, in which case it should
+     * bind a new port, and tell the zServer to tell the initiatingClient to use
+     * the new port.
+     *
      */
     Handler<Interleaved_PRP_ConnectMsg.Request> handle_Interleaved_PRP_ConnectRequest = new Handler<Interleaved_PRP_ConnectMsg.Request>() {
         /**
@@ -858,22 +862,21 @@ public class RendezvousServer extends MsgRetryComponent {
                                 HPRole.PRC_INTERLEAVED); /*
                          * client B will do PRC
                          */
+
                     }
                     hpSessions.put(key, session);
                 } else {
-                    clientInterleavedPort =
-                            session.get_Interleaved_PRP_Port(request.getClientId());
+                    clientInterleavedPort
+                            = session.get_Interleaved_PRP_Port(request.getClientId());
                     session.setSesssionStartTime(System.currentTimeMillis());
                 }
 
                 registerClientRecord(request.getVodSource(), request.getClientId(),
-                         1500, request.getSetOfAvailablePorts(), true);
+                        1500, request.getSetOfAvailablePorts(), true);
 
                 // selecting an available port - if there was already an existing session
                 // then use the old PRP port from that session - not one of the newly supplied ones.
                 // TODO is that desired behaviour?
-
-
                 logger.debug(compName + "Found PRP Interleaved port: " + clientInterleavedPort
                         + " for " + request.getSource().getId());
 
@@ -893,25 +896,24 @@ public class RendezvousServer extends MsgRetryComponent {
 
                         // 1st request PRC port
                         // Then send GoMsg for PRP
-
                         Address dummyPublicAddress = new Address(
                                 request.getVodSource().getIp(),
                                 session.get_Interleaved_PRP_Port(request.getClientId()),
                                 request.getClientId());
 
-                        VodAddress prpResponderAddr =
-                                new VodAddress(dummyPublicAddress,
-                                request.getVodSource().getId(),
-                                request.getVodSource().getNatPolicy(),
-                                request.getVodSource().getParents());
+                        VodAddress prpResponderAddr
+                                = new VodAddress(dummyPublicAddress,
+                                        request.getVodSource().getId(),
+                                        request.getVodSource().getNatPolicy(),
+                                        request.getVodSource().getParents());
 
-                        Interleaved_PRC_ServersRequestForPredictionMsg.Request requestMsg =
-                                new Interleaved_PRC_ServersRequestForPredictionMsg.Request(
-                                self.getAddress(),
-                                remoteRecord.getClient(),
-                                request.getClientId(), HPMechanism.PRP_PRC,
-                                HPRole.PRC_INTERLEAVED,
-                                prpResponderAddr, request.getMsgTimeoutId());
+                        Interleaved_PRC_ServersRequestForPredictionMsg.Request requestMsg
+                                = new Interleaved_PRC_ServersRequestForPredictionMsg.Request(
+                                        self.getAddress(),
+                                        remoteRecord.getClient(),
+                                        request.getClientId(), HPMechanism.PRP_PRC,
+                                        HPRole.PRC_INTERLEAVED,
+                                        prpResponderAddr, request.getMsgTimeoutId());
 
                         // oneway msg, so ok to call trigger instead of retry
                         delegator.doTrigger(requestMsg, network);
@@ -919,8 +921,8 @@ public class RendezvousServer extends MsgRetryComponent {
                     } else if (session.getHolePunchingMechanism() == HPMechanism.PRP_PRP) {
                         // TODO - client supplieqd PRP ports - tell remote
                         // to connect to it.
-                        int remoteClientInterleavedPort =
-                                session.get_Interleaved_PRP_Port(request.getRemoteClientId());
+                        int remoteClientInterleavedPort
+                                = session.get_Interleaved_PRP_Port(request.getRemoteClientId());
                         Address remoteClientH = new Address(
                                 remoteRecord.getClient().getIp(),
                                 remoteClientInterleavedPort,
@@ -967,7 +969,6 @@ public class RendezvousServer extends MsgRetryComponent {
                         delegator.doTrigger(goMessageForRemoteClient, network);
                     }
 
-
                 } else {
                     logger.warn(compName + "Ask the client to send more available ports to the server. "
                             + "All ports sent by the client are in use by some one else behind the same nat "
@@ -981,12 +982,12 @@ public class RendezvousServer extends MsgRetryComponent {
                 }
                 if (requestNewRemotePorts) {
                     // ask for more ports from child
-                    PRP_PreallocatedPortsMsg.Request r =
-                            new PRP_PreallocatedPortsMsg.Request(self.getAddress(), request.getVodSource(),
-                            request.getMsgTimeoutId());
+                    PRP_PreallocatedPortsMsg.Request r
+                            = new PRP_PreallocatedPortsMsg.Request(self.getAddress(), request.getVodSource(),
+                                    request.getMsgTimeoutId());
                     ScheduleRetryTimeout st = new ScheduleRetryTimeout(2000, 1, 2d);
-                    PRP_PreallocatedPortsMsg.RequestRetryTimeout t =
-                            new PRP_PreallocatedPortsMsg.RequestRetryTimeout(st, r);
+                    PRP_PreallocatedPortsMsg.RequestRetryTimeout t
+                            = new PRP_PreallocatedPortsMsg.RequestRetryTimeout(st, r);
                     delegator.doRetry(t); // retry twice
                 }
 
@@ -1007,21 +1008,21 @@ public class RendezvousServer extends MsgRetryComponent {
             Interleaved_PRP_ConnectMsg.ResponseType response,
             int remoteId, TimeoutId msgTimeoutId) {
         // send ack to the the client
-        Interleaved_PRP_ConnectMsg.Response responseMsg =
-                new Interleaved_PRP_ConnectMsg.Response(self.getAddress(),
-                dest, timeoutId, response, remoteId, msgTimeoutId);
+        Interleaved_PRP_ConnectMsg.Response responseMsg
+                = new Interleaved_PRP_ConnectMsg.Response(self.getAddress(),
+                        dest, timeoutId, response, remoteId, msgTimeoutId);
         delegator.doTrigger(responseMsg, network);
     }
-    Handler<PRC_OpenHoleMsg.Request> handle_PRC_OpenHoleMsg =
-            new Handler<PRC_OpenHoleMsg.Request>() {
-        @Override
-        public void handle(PRC_OpenHoleMsg.Request request) {
-            printMsg(request);
+    Handler<PRC_OpenHoleMsg.Request> handle_PRC_OpenHoleMsg
+            = new Handler<PRC_OpenHoleMsg.Request>() {
+                @Override
+                public void handle(PRC_OpenHoleMsg.Request request) {
+                    printMsg(request);
 
-            prc(request.getVodSource(), request.getTimeoutId(),
-                    request.getRemoteClientId(), request.getMsgTimeoutId());
-        }
-    };
+                    prc(request.getVodSource(), request.getTimeoutId(),
+                            request.getRemoteClientId(), request.getMsgTimeoutId());
+                }
+            };
 
     private void prc(VodAddress client, TimeoutId timeoutId, int remoteId, TimeoutId msgTimeoutId) {
 
@@ -1061,7 +1062,6 @@ public class RendezvousServer extends MsgRetryComponent {
                     VodConfig.SYSTEM_OVERLAY_ID, client.getNatPolicy(),
                     client.getParents());
 
-
             GoMsg.Request goMsg = new GoMsg.Request(self.getAddress(), responder.getClient(),
                     openedHoleOnInitiatorNat,
                     session.getHolePunchingMechanism(),
@@ -1086,224 +1086,224 @@ public class RendezvousServer extends MsgRetryComponent {
         }
 
     }
-    Handler<Interleaved_PRC_OpenHoleMsg.Request> handle_Interleaved_PRC_OpenHoleMsg =
-            new Handler<Interleaved_PRC_OpenHoleMsg.Request>() {
-        @Override
-        public void handle(Interleaved_PRC_OpenHoleMsg.Request request) {
-            printMsg(request);
-            String compName = RendezvousServer.this.compName + " - " + request.getMsgTimeoutId() + " ";
+    Handler<Interleaved_PRC_OpenHoleMsg.Request> handle_Interleaved_PRC_OpenHoleMsg
+            = new Handler<Interleaved_PRC_OpenHoleMsg.Request>() {
+                @Override
+                public void handle(Interleaved_PRC_OpenHoleMsg.Request request) {
+                    printMsg(request);
+                    String compName = RendezvousServer.this.compName + " - " + request.getMsgTimeoutId() + " ";
 
-            RegisteredClientRecord clientRecord = registeredClients.get(request.getClientId());
-            if (clientRecord == null) {
-                String exception = compName + "handle_Interleaved_PRC_OpenHoleMsg msg from ("
+                    RegisteredClientRecord clientRecord = registeredClients.get(request.getClientId());
+                    if (clientRecord == null) {
+                        String exception = compName + "handle_Interleaved_PRC_OpenHoleMsg msg from ("
                         + request.getClientId() + "). Unable to find client registration record. "
                         + "remote client id (" + request.getRemoteClientId() + ")";
-                logger.error(exception);
-                if (throwException) {
-                    throw new NullPointerException(exception);
-                } else {
-                    return;
-                }
-            }
-
-            if (isRemoteClientStillAlive(request.getRemoteClientId())) {
-                // first send back the response
-                Interleaved_PRC_OpenHoleMsg.Response responseMsg =
-                        new Interleaved_PRC_OpenHoleMsg.Response(self.getAddress(),
-                        request.getVodSource(),
-                        request.getTimeoutId(),
-                        Interleaved_PRC_OpenHoleMsg.ResponseType.OK,
-                        request.getRemoteClientId(),
-                        request.getMsgTimeoutId());
-                delegator.doTrigger(responseMsg, network);
-
-                // predict the port opened on the initiator's nat
-                int thisClientInterleavedPort = predictPRCOpenPort(request.getClientId(),
-                        request.getSource()/*
-                         * hole opened on the initiator nat
-                         */);
-                // send go message to the responder
-                // sanity check
-                HPSessionKey key = new HPSessionKey(request.getClientId(), request.getRemoteClientId());
-                HolePunching session = hpSessions.get(key);
-                session.set_Interleaved_PRC_PredictivePort(request.getClientId(), thisClientInterleavedPort);
-
-                // TODO: what if replies arrive at different zServers. 
-                // This will never get executed.
-                if (areBothRepliesRecvd(session)) {
-
-                    // send go message to both the clients
-                    int remoteClientInterleavedPort = 0;
-                    if (session.getHolePunchingRoleOf(request.getRemoteClientId()) == HPRole.PRP_INTERLEAVED) {
-                        remoteClientInterleavedPort = session.get_Interleaved_PRP_Port(request.getRemoteClientId());
-                    } else {
-                        remoteClientInterleavedPort = session.get_Interleaved_PRC_PredictedPort(request.getRemoteClientId());
-                    }
-
-                    RegisteredClientRecord remoteClientRecord = registeredClients.get(request.getRemoteClientId());
-
-                    Address openedHoleOnThisClient = new Address(request.getSource().getIp(),
-                            thisClientInterleavedPort, request.getSource().getId());
-                    VodAddress openedHoleOnThisClientNat = new VodAddress(openedHoleOnThisClient,
-                            VodConfig.SYSTEM_OVERLAY_ID, request.getVodSource().getNatPolicy(),
-                            request.getVodSource().getParents());
-
-                    Address openedHoleOnRemoteClient = new Address(remoteClientRecord.getClient().getIp(),
-                            remoteClientInterleavedPort, remoteClientRecord.getClient().getId());
-                    VodAddress openedHoleOnRemoteClientNat = new VodAddress(openedHoleOnRemoteClient,
-                            VodConfig.SYSTEM_OVERLAY_ID,
-                            remoteClientRecord.getClient().getNatPolicy(),
-                            remoteClientRecord.getClient().getParents());
-
-                    VodAddress remoteAddr = remoteClientRecord.getClient();
-
-                    int numRemoteRetries = (session.getHolePunchingRoleOf(request.getRemoteClientId()) == HPRole.PRP_INTERLEAVED)
-                            ? NUM_RETRIES_PRP_PRP : NUM_RETRIES_PRC_PRC;
-
-                    GoMsg.Request goMsgForRemoteClient;
-                    if (session.getHolePunchingRoleOf(request.getRemoteClientId()) == HPRole.PRP_INTERLEAVED) {
-                        goMsgForRemoteClient = new GoMsg.Request(self.getAddress(),
-                                remoteAddr,
-                                openedHoleOnThisClientNat,
-                                session.getHolePunchingMechanism(),
-                                session.getHolePunchingRoleOf(request.getRemoteClientId()),
-                                numRemoteRetries,
-                                session.get_Interleaved_PRP_Port(request.getRemoteClientId()),
-                                false,
-                                request.getMsgTimeoutId());
-                    } else {
-                        goMsgForRemoteClient = new GoMsg.Request(self.getAddress(),
-                                remoteAddr,
-                                openedHoleOnThisClientNat,
-                                session.getHolePunchingMechanism(),
-                                session.getHolePunchingRoleOf(request.getRemoteClientId()),
-                                numRemoteRetries,
-                                request.getMsgTimeoutId());
-                    }
-
-                    GoMsg.Request goMsgForThisClient;
-                    if (session.getHolePunchingRoleOf(request.getClientId()) == HPRole.PRP_INTERLEAVED) {
-                        goMsgForThisClient = new GoMsg.Request(self.getAddress(),
-                                request.getVodSource(),
-                                openedHoleOnRemoteClientNat,
-                                session.getHolePunchingMechanism(),
-                                session.getHolePunchingRoleOf(request.getClientId()),
-                                NUM_RETRIES_PRP_PRP,
-                                session.get_Interleaved_PRP_Port(request.getClientId()),
-                                false,
-                                request.getMsgTimeoutId());
-                    } else {
-                        goMsgForThisClient = new GoMsg.Request(self.getAddress(),
-                                request.getVodSource(),
-                                openedHoleOnRemoteClientNat,
-                                session.getHolePunchingMechanism(),
-                                session.getHolePunchingRoleOf(request.getClientId()),
-                                NUM_RETRIES_PRC_PRC,
-                                request.getMsgTimeoutId());
-                    }
-
-                    // oneway msgs, so ok to call trigger instead of retry
-                    delegator.doTrigger(goMsgForRemoteClient, network);
-                    delegator.doTrigger(goMsgForThisClient, network);
-
-                }
-            } else {
-                logger.warn(compName + "handle_Interleaved_PRC_OpenHoleMsg HP Failed coz remote client ("
-                        + request.getRemoteClientId() + ") is dead");
-
-                // send nack to the the cleint
-                Interleaved_PRC_OpenHoleMsg.Response responseMsg = new Interleaved_PRC_OpenHoleMsg.Response(self.getAddress(),
-                        request.getVodSource(),
-                        request.getTimeoutId(),
-                        Interleaved_PRC_OpenHoleMsg.ResponseType.FAILED,
-                        request.getRemoteClientId(),
-                        request.getMsgTimeoutId());
-                delegator.doTrigger(responseMsg, network);
-
-                //delete the hp session
-                HPSessionKey key = new HPSessionKey(request.getClientId(), request.getRemoteClientId());
-                hpSessions.remove(key);
-            }
-
-        }
-    };
-    Handler<GarbageCleanupTimeout> handleGarbageCleanupTimeout =
-            new Handler<GarbageCleanupTimeout>() {
-        @Override
-        public void handle(GarbageCleanupTimeout request) {
-            // cleaning registered client records
-            if (!registeredClients.isEmpty()) {
-                Set<Integer> toBeDeleted = new HashSet<Integer>();
-                for (int clientID : registeredClients.keySet()) {
-                    RegisteredClientRecord client = registeredClients.get(clientID);
-                    if ((System.currentTimeMillis() - client.getLastHeardFrom()) > client.getExpirationTime()) {
-                        // open peers are registered withit self
-                        if (client.getClient().getId() != self.getId()) {
-                            toBeDeleted.add(clientID);
+                        logger.error(exception);
+                        if (throwException) {
+                            throw new NullPointerException(exception);
+                        } else {
+                            return;
                         }
                     }
-                }
 
-                for (int clientID : toBeDeleted) {
-                    logger.debug(compName + " Deleting the registration record for " + clientID);
-                    registeredClients.remove(clientID);
-                }
-            }
+                    if (isRemoteClientStillAlive(request.getRemoteClientId())) {
+                        // first send back the response
+                        Interleaved_PRC_OpenHoleMsg.Response responseMsg
+                        = new Interleaved_PRC_OpenHoleMsg.Response(self.getAddress(),
+                                request.getVodSource(),
+                                request.getTimeoutId(),
+                                Interleaved_PRC_OpenHoleMsg.ResponseType.OK,
+                                request.getRemoteClientId(),
+                                request.getMsgTimeoutId());
+                        delegator.doTrigger(responseMsg, network);
 
-            // cleaning stale hp sessions
-            if (!hpSessions.isEmpty()) {
-                Set<HPSessionKey> toBeDeleted = new HashSet<HPSessionKey>();
-                for (HPSessionKey key : hpSessions.keySet()) {
-                    HolePunching session = hpSessions.get(key);
-                    if ((System.currentTimeMillis() - session.getSesssionStartTime()) > sessionExpirationTime) {
-                        toBeDeleted.add(key);
+                        // predict the port opened on the initiator's nat
+                        int thisClientInterleavedPort = predictPRCOpenPort(request.getClientId(),
+                                request.getSource()/*
+                         * hole opened on the initiator nat
+                         */);
+                        // send go message to the responder
+                        // sanity check
+                        HPSessionKey key = new HPSessionKey(request.getClientId(), request.getRemoteClientId());
+                        HolePunching session = hpSessions.get(key);
+                        session.set_Interleaved_PRC_PredictivePort(request.getClientId(), thisClientInterleavedPort);
+
+                        // TODO: what if replies arrive at different zServers. 
+                        // This will never get executed.
+                        if (areBothRepliesRecvd(session)) {
+
+                            // send go message to both the clients
+                            int remoteClientInterleavedPort = 0;
+                            if (session.getHolePunchingRoleOf(request.getRemoteClientId()) == HPRole.PRP_INTERLEAVED) {
+                                remoteClientInterleavedPort = session.get_Interleaved_PRP_Port(request.getRemoteClientId());
+                            } else {
+                                remoteClientInterleavedPort = session.get_Interleaved_PRC_PredictedPort(request.getRemoteClientId());
+                            }
+
+                            RegisteredClientRecord remoteClientRecord = registeredClients.get(request.getRemoteClientId());
+
+                            Address openedHoleOnThisClient = new Address(request.getSource().getIp(),
+                                    thisClientInterleavedPort, request.getSource().getId());
+                            VodAddress openedHoleOnThisClientNat = new VodAddress(openedHoleOnThisClient,
+                                    VodConfig.SYSTEM_OVERLAY_ID, request.getVodSource().getNatPolicy(),
+                                    request.getVodSource().getParents());
+
+                            Address openedHoleOnRemoteClient = new Address(remoteClientRecord.getClient().getIp(),
+                                    remoteClientInterleavedPort, remoteClientRecord.getClient().getId());
+                            VodAddress openedHoleOnRemoteClientNat = new VodAddress(openedHoleOnRemoteClient,
+                                    VodConfig.SYSTEM_OVERLAY_ID,
+                                    remoteClientRecord.getClient().getNatPolicy(),
+                                    remoteClientRecord.getClient().getParents());
+
+                            VodAddress remoteAddr = remoteClientRecord.getClient();
+
+                            int numRemoteRetries = (session.getHolePunchingRoleOf(request.getRemoteClientId()) == HPRole.PRP_INTERLEAVED)
+                            ? NUM_RETRIES_PRP_PRP : NUM_RETRIES_PRC_PRC;
+
+                            GoMsg.Request goMsgForRemoteClient;
+                            if (session.getHolePunchingRoleOf(request.getRemoteClientId()) == HPRole.PRP_INTERLEAVED) {
+                                goMsgForRemoteClient = new GoMsg.Request(self.getAddress(),
+                                        remoteAddr,
+                                        openedHoleOnThisClientNat,
+                                        session.getHolePunchingMechanism(),
+                                        session.getHolePunchingRoleOf(request.getRemoteClientId()),
+                                        numRemoteRetries,
+                                        session.get_Interleaved_PRP_Port(request.getRemoteClientId()),
+                                        false,
+                                        request.getMsgTimeoutId());
+                            } else {
+                                goMsgForRemoteClient = new GoMsg.Request(self.getAddress(),
+                                        remoteAddr,
+                                        openedHoleOnThisClientNat,
+                                        session.getHolePunchingMechanism(),
+                                        session.getHolePunchingRoleOf(request.getRemoteClientId()),
+                                        numRemoteRetries,
+                                        request.getMsgTimeoutId());
+                            }
+
+                            GoMsg.Request goMsgForThisClient;
+                            if (session.getHolePunchingRoleOf(request.getClientId()) == HPRole.PRP_INTERLEAVED) {
+                                goMsgForThisClient = new GoMsg.Request(self.getAddress(),
+                                        request.getVodSource(),
+                                        openedHoleOnRemoteClientNat,
+                                        session.getHolePunchingMechanism(),
+                                        session.getHolePunchingRoleOf(request.getClientId()),
+                                        NUM_RETRIES_PRP_PRP,
+                                        session.get_Interleaved_PRP_Port(request.getClientId()),
+                                        false,
+                                        request.getMsgTimeoutId());
+                            } else {
+                                goMsgForThisClient = new GoMsg.Request(self.getAddress(),
+                                        request.getVodSource(),
+                                        openedHoleOnRemoteClientNat,
+                                        session.getHolePunchingMechanism(),
+                                        session.getHolePunchingRoleOf(request.getClientId()),
+                                        NUM_RETRIES_PRC_PRC,
+                                        request.getMsgTimeoutId());
+                            }
+
+                            // oneway msgs, so ok to call trigger instead of retry
+                            delegator.doTrigger(goMsgForRemoteClient, network);
+                            delegator.doTrigger(goMsgForThisClient, network);
+
+                        }
+                    } else {
+                        logger.warn(compName + "handle_Interleaved_PRC_OpenHoleMsg HP Failed coz remote client ("
+                                + request.getRemoteClientId() + ") is dead");
+
+                        // send nack to the the cleint
+                        Interleaved_PRC_OpenHoleMsg.Response responseMsg = new Interleaved_PRC_OpenHoleMsg.Response(self.getAddress(),
+                                request.getVodSource(),
+                                request.getTimeoutId(),
+                                Interleaved_PRC_OpenHoleMsg.ResponseType.FAILED,
+                                request.getRemoteClientId(),
+                                request.getMsgTimeoutId());
+                        delegator.doTrigger(responseMsg, network);
+
+                        //delete the hp session
+                        HPSessionKey key = new HPSessionKey(request.getClientId(), request.getRemoteClientId());
+                        hpSessions.remove(key);
                     }
+
                 }
+            };
+    Handler<GarbageCleanupTimeout> handleGarbageCleanupTimeout
+            = new Handler<GarbageCleanupTimeout>() {
+                @Override
+                public void handle(GarbageCleanupTimeout request) {
+                    // cleaning registered client records
+                    if (!registeredClients.isEmpty()) {
+                        Set<Integer> toBeDeleted = new HashSet<Integer>();
+                        for (int clientID : registeredClients.keySet()) {
+                            RegisteredClientRecord client = registeredClients.get(clientID);
+                            if ((System.currentTimeMillis() - client.getLastHeardFrom()) > client.getExpirationTime()) {
+                                // open peers are registered withit self
+                                if (client.getClient().getId() != self.getId()) {
+                                    toBeDeleted.add(clientID);
+                                }
+                            }
+                        }
 
-                for (HPSessionKey key : toBeDeleted) {
-                    logger.debug(compName + " Deleting the hp Session for " + key);
-                    hpSessions.remove(key);
+                        for (int clientID : toBeDeleted) {
+                            logger.debug(compName + " Deleting the registration record for " + clientID);
+                            registeredClients.remove(clientID);
+                        }
+                    }
+
+                    // cleaning stale hp sessions
+                    if (!hpSessions.isEmpty()) {
+                        Set<HPSessionKey> toBeDeleted = new HashSet<HPSessionKey>();
+                        for (HPSessionKey key : hpSessions.keySet()) {
+                            HolePunching session = hpSessions.get(key);
+                            if ((System.currentTimeMillis() - session.getSesssionStartTime()) > sessionExpirationTime) {
+                                toBeDeleted.add(key);
+                            }
+                        }
+
+                        for (HPSessionKey key : toBeDeleted) {
+                            logger.debug(compName + " Deleting the hp Session for " + key);
+                            hpSessions.remove(key);
+                        }
+                    }
+
+                    StringBuilder sb = new StringBuilder();
+                    sb.append(compName).append("Registered Clients:  ");
+                    for (int id : registeredClients.keySet()) {
+                        sb.append(id).append(",");
+                    }
+                    logger.trace(compName + sb.toString());
+                    sb.delete(0, sb.length() - 1);
+                    sb.append(compName).append("Registered Sessions:  ");
+                    for (HPSessionKey key : hpSessions.keySet()) {
+                        sb.append(key.getClient_A_ID()).append(":").append(key.getClient_B_ID()).append(",");
+                    }
+                    logger.trace(compName + sb.toString());
+
                 }
-            }
+            };
 
-            StringBuilder sb = new StringBuilder();
-            sb.append(compName).append("Registered Clients:  ");
-            for (int id : registeredClients.keySet()) {
-                sb.append(id).append(",");
-            }
-            logger.trace(compName + sb.toString());
-            sb.delete(0, sb.length() - 1);
-            sb.append(compName).append("Registered Sessions:  ");
-            for (HPSessionKey key : hpSessions.keySet()) {
-                sb.append(key.getClient_A_ID()).append(":").append(key.getClient_B_ID()).append(",");
-            }
-            logger.trace(compName + sb.toString());
+    Handler<RelayRequestMsg.ClientToServer> handleRelayRequestMsg
+            = new Handler<RelayRequestMsg.ClientToServer>() {
+                @Override
+                public void handle(RelayRequestMsg.ClientToServer request) {
+                    printMsg(request);
 
-        }
-    };
+                    logger.trace(compName + "received request to relay message from (" + request.getClientId() + ") "
+                            + "to (" + request.getRemoteClientId() + ")" + " - " + request.getMsgTimeoutId());
+                    RegisteredClientRecord remoteClientRecord = registeredClients.get(request.getRemoteClientId());
+                    if (remoteClientRecord != null) {
+                        RelayRequestMsg.ServerToClient requestServerToClient
+                        = new RelayRequestMsg.ServerToClient(self.getAddress(),
+                                remoteClientRecord.getClient(),
+                                request.getClientId(),
+                                request.getMessage());
 
-    Handler<RelayRequestMsg.ClientToServer> handleRelayRequestMsg =
-            new Handler<RelayRequestMsg.ClientToServer>() {
-        @Override
-        public void handle(RelayRequestMsg.ClientToServer request) {
-            printMsg(request);
+                        // ok to call trigger instead of retry, as it is a response
+                        delegator.doTrigger(requestServerToClient, network);
+                    }
 
-            logger.trace(compName + "received request to relay message from (" + request.getClientId() + ") "
-                    + "to (" + request.getRemoteClientId() + ")" + " - " + request.getMsgTimeoutId());
-            RegisteredClientRecord remoteClientRecord = registeredClients.get(request.getRemoteClientId());
-            if (remoteClientRecord != null) {
-                RelayRequestMsg.ServerToClient requestServerToClient =
-                        new RelayRequestMsg.ServerToClient(self.getAddress(),
-                        remoteClientRecord.getClient(),
-                        request.getClientId(),
-                        request.getMessage());
-
-                // ok to call trigger instead of retry, as it is a response
-                delegator.doTrigger(requestServerToClient, network);
-            }
-
-        }
-    };
+                }
+            };
 
     private boolean areBothRepliesRecvd(HolePunching session) {
         boolean retVal = false;
@@ -1411,7 +1411,6 @@ public class RendezvousServer extends MsgRetryComponent {
             // initiator sends message to Ub and we have a HOLE.
 
             // sending SimpleHolePunching initiation message to Initiator client
-
             int initiatorID = session.getInitiatorID();
             int responderID = session.getResponderID();
             RegisteredClientRecord initiator = registeredClients.get(initiatorID);
@@ -1419,7 +1418,7 @@ public class RendezvousServer extends MsgRetryComponent {
             SHP_OpenHoleMsg.Initiator responseMsg = new SHP_OpenHoleMsg.Initiator(self.getAddress(),
                     initiator.getClient(), responder.getClient(), SHP_OpenHoleMsg.ResponseType.OK,
                     msgTimeoutId);
-                // oneway msg, so ok to call trigger instead of retry
+            // oneway msg, so ok to call trigger instead of retry
             delegator.doTrigger(responseMsg, network);
 
             GoMsg.Request goMessage = new GoMsg.Request(self.getAddress(),
@@ -1444,7 +1443,6 @@ public class RendezvousServer extends MsgRetryComponent {
             RegisteredClientRecord initiator = registeredClients.get(initiatorID);
             RegisteredClientRecord responder = registeredClients.get(responderID);
 
-
             // sending the requests for the ports to the initiator
             Integer prpPort = null;
             boolean bindPort = false;
@@ -1465,15 +1463,15 @@ public class RendezvousServer extends MsgRetryComponent {
             VodAddress dummyVodAddr = ToVodAddr.hpServer(dummyAddr);
 
             // no request needed - just send the response.
-            PRP_ConnectMsg.Response sendDummyMsg =
-                    new PRP_ConnectMsg.Response(self.getAddress(),
-                    initiator.getClient(),
-                    UUID.nextUUID(), // dummy timeoutId
-                    PRP_ConnectMsg.ResponseType.OK,
-                    session.getResponderID(),
-                    dummyVodAddr,
-                    prpPort, bindPort,
-                    msgTimeoutId);
+            PRP_ConnectMsg.Response sendDummyMsg
+                    = new PRP_ConnectMsg.Response(self.getAddress(),
+                            initiator.getClient(),
+                            UUID.nextUUID(), // dummy timeoutId
+                            PRP_ConnectMsg.ResponseType.OK,
+                            session.getResponderID(),
+                            dummyVodAddr,
+                            prpPort, bindPort,
+                            msgTimeoutId);
             delegator.doTrigger(sendDummyMsg, network);
             // inform the other client about the hole that will be opened on the initiators nat
             // making a go message
@@ -1492,7 +1490,7 @@ public class RendezvousServer extends MsgRetryComponent {
                     prpPort,
                     bindPort,
                     msgTimeoutId);
-                // oneway msg, so ok to call trigger instead of retry
+            // oneway msg, so ok to call trigger instead of retry
             delegator.doTrigger(goMessage, network);
 
             if (requestNewPorts) {
@@ -1500,8 +1498,8 @@ public class RendezvousServer extends MsgRetryComponent {
                 PRP_PreallocatedPortsMsg.Request r = new PRP_PreallocatedPortsMsg.Request(
                         self.getAddress(), initiator.getClient(), msgTimeoutId);
                 ScheduleRetryTimeout st = new ScheduleRetryTimeout(2000, 2, 2);
-                PRP_PreallocatedPortsMsg.RequestRetryTimeout t =
-                        new PRP_PreallocatedPortsMsg.RequestRetryTimeout(st, r);
+                PRP_PreallocatedPortsMsg.RequestRetryTimeout t
+                        = new PRP_PreallocatedPortsMsg.RequestRetryTimeout(st, r);
                 delegator.doRetry(t); // retry twice
             }
 
@@ -1515,24 +1513,22 @@ public class RendezvousServer extends MsgRetryComponent {
             VodAddress initiatorPublicAddress = initiator.getClient();
             VodAddress responderPublicAddress = responder.getClient();
 
-
-
             HPRole initiatorRole = session.getHolePunchingRoleOf(initiatorID);
 
             Address dummyPublicAddress = new Address(responderPublicAddress.getIp(),
                     dummyPort, responderPublicAddress.getId());
 
             // TODO - should parents be null in dummy address here?
-            VodAddress dummyPublicAddressOfResponder =
-                    new VodAddress(dummyPublicAddress, responderPublicAddress.getOverlayId(),
-                    responderPublicAddress.getNatPolicy(),
-                    null);
+            VodAddress dummyPublicAddressOfResponder
+                    = new VodAddress(dummyPublicAddress, responderPublicAddress.getOverlayId(),
+                            responderPublicAddress.getNatPolicy(),
+                            null);
 
-            PRC_ServerRequestForConsecutiveMsg.Request requestMsg =
-                    new PRC_ServerRequestForConsecutiveMsg.Request(self.getAddress(),
-                    initiatorPublicAddress,
-                    responderID, hpMechanism, initiatorRole,
-                    dummyPublicAddressOfResponder, msgTimeoutId);
+            PRC_ServerRequestForConsecutiveMsg.Request requestMsg
+                    = new PRC_ServerRequestForConsecutiveMsg.Request(self.getAddress(),
+                            initiatorPublicAddress,
+                            responderID, hpMechanism, initiatorRole,
+                            dummyPublicAddressOfResponder, msgTimeoutId);
 
             // oneway msg, so ok to call trigger instead of retry
             delegator.doTrigger(
@@ -1542,16 +1538,16 @@ public class RendezvousServer extends MsgRetryComponent {
             // ask both the clients to send some available ports
             // making request for client A and B
 
-            Interleaved_PRP_ServerRequestForAvailablePortsMsg.Request reqFor_A =
-                    new Interleaved_PRP_ServerRequestForAvailablePortsMsg.Request(self.getAddress(),
-                    client_A_PublicAddress,
-                    remoteClientFor_A,
-                    hpMechanism, client_A_HPRole, msgTimeoutId);
+            Interleaved_PRP_ServerRequestForAvailablePortsMsg.Request reqFor_A
+                    = new Interleaved_PRP_ServerRequestForAvailablePortsMsg.Request(self.getAddress(),
+                            client_A_PublicAddress,
+                            remoteClientFor_A,
+                            hpMechanism, client_A_HPRole, msgTimeoutId);
 
-            Interleaved_PRP_ServerRequestForAvailablePortsMsg.Request reqFor_B =
-                    new Interleaved_PRP_ServerRequestForAvailablePortsMsg.Request(self.getAddress(), client_B_PublicAddress,
-                    remoteClientFor_B,
-                    hpMechanism, client_B_HPRole, msgTimeoutId);
+            Interleaved_PRP_ServerRequestForAvailablePortsMsg.Request reqFor_B
+                    = new Interleaved_PRP_ServerRequestForAvailablePortsMsg.Request(self.getAddress(), client_B_PublicAddress,
+                            remoteClientFor_B,
+                            hpMechanism, client_B_HPRole, msgTimeoutId);
 
             // oneway msgs, so ok to call trigger instead of retry
             delegator.doTrigger(reqFor_A, network);
@@ -1561,15 +1557,15 @@ public class RendezvousServer extends MsgRetryComponent {
             // from that z will predict hole that will be opened in the future
             // making request for client A and B
 
-            Interleaved_PRC_ServersRequestForPredictionMsg.Request reqFor_A =
-                    new Interleaved_PRC_ServersRequestForPredictionMsg.Request(self.getAddress(), client_A_PublicAddress,
-                    remoteClientFor_A, hpMechanism, client_A_HPRole,
-                    client_B_PublicAddress, msgTimeoutId);
+            Interleaved_PRC_ServersRequestForPredictionMsg.Request reqFor_A
+                    = new Interleaved_PRC_ServersRequestForPredictionMsg.Request(self.getAddress(), client_A_PublicAddress,
+                            remoteClientFor_A, hpMechanism, client_A_HPRole,
+                            client_B_PublicAddress, msgTimeoutId);
 
-            Interleaved_PRC_ServersRequestForPredictionMsg.Request reqFor_B =
-                    new Interleaved_PRC_ServersRequestForPredictionMsg.Request(self.getAddress(), client_B_PublicAddress,
-                    remoteClientFor_B, hpMechanism, client_B_HPRole,
-                    client_A_PublicAddress, msgTimeoutId);
+            Interleaved_PRC_ServersRequestForPredictionMsg.Request reqFor_B
+                    = new Interleaved_PRC_ServersRequestForPredictionMsg.Request(self.getAddress(), client_B_PublicAddress,
+                            remoteClientFor_B, hpMechanism, client_B_HPRole,
+                            client_A_PublicAddress, msgTimeoutId);
             // As hole-punching is executed in parallel across many different rendezvous servers, 
             // It is possible that A will receive a response from the zServer, while
             // B will receive a response from a different zServer first. 
@@ -1600,13 +1596,13 @@ public class RendezvousServer extends MsgRetryComponent {
 
                 if (newPorts) {
                     // ask for more ports from child
-                    PRP_PreallocatedPortsMsg.Request r =
-                            new PRP_PreallocatedPortsMsg.Request(self.getAddress(),
-                            client_B_RegRecord.getClient(),
-                            msgTimeoutId);
+                    PRP_PreallocatedPortsMsg.Request r
+                            = new PRP_PreallocatedPortsMsg.Request(self.getAddress(),
+                                    client_B_RegRecord.getClient(),
+                                    msgTimeoutId);
                     ScheduleRetryTimeout st = new ScheduleRetryTimeout(2000, 1, 2d);
-                    PRP_PreallocatedPortsMsg.RequestRetryTimeout t =
-                            new PRP_PreallocatedPortsMsg.RequestRetryTimeout(st, r);
+                    PRP_PreallocatedPortsMsg.RequestRetryTimeout t
+                            = new PRP_PreallocatedPortsMsg.RequestRetryTimeout(st, r);
                     delegator.doRetry(t);
                 }
 
@@ -1614,11 +1610,10 @@ public class RendezvousServer extends MsgRetryComponent {
 //                GoMsg.Request goMsgToA = new GoMsg.Request(self.getAddress(), client_A_PublicAddress, 
 //                        prpAddr, hpMechanism, client_A_HPRole, 4);
 //                delegator.doTrigger(goMsgToA, network);
-
-                Interleaved_PRC_ServersRequestForPredictionMsg.Request reqFor_A =
-                        new Interleaved_PRC_ServersRequestForPredictionMsg.Request(self.getAddress(),
-                        client_A_PublicAddress,
-                        remoteClientFor_A, hpMechanism, client_A_HPRole, prpAddr, msgTimeoutId);
+                Interleaved_PRC_ServersRequestForPredictionMsg.Request reqFor_A
+                        = new Interleaved_PRC_ServersRequestForPredictionMsg.Request(self.getAddress(),
+                                client_A_PublicAddress,
+                                remoteClientFor_A, hpMechanism, client_A_HPRole, prpAddr, msgTimeoutId);
                 delegator.doTrigger(reqFor_A, network);
                 // do PRP binding from clientA side
 //            } else if (client_B_HPRole == HPRole.PRC_INTERLEAVED && client_A_HPRole == HPRole.PRP_INTERLEAVED) {
@@ -1675,7 +1670,6 @@ public class RendezvousServer extends MsgRetryComponent {
             }
         }
     };
-    
     @Override
     public void stop(Stop stop) {
         if (garbageCleanupTimeoutId != null) {

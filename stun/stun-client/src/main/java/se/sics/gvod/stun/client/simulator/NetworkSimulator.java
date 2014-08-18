@@ -9,42 +9,33 @@ import se.sics.kompics.Handler;
 import se.sics.kompics.Negative;
 import se.sics.kompics.Start;
 
-public class NetworkSimulator extends ComponentDefinition
-{
+public class NetworkSimulator extends ComponentDefinition {
+
     private final Logger logger = LoggerFactory.getLogger(getClass().getName());
     Negative<VodNetwork> upperNet = negative(VodNetwork.class);
 
-    public NetworkSimulator()
-    {
+    public NetworkSimulator(NetworkSimulatorInit init) {
+        doInit(init);
         subscribe(handleStart, control);
         subscribe(handleUpperMessage, upperNet);
-        subscribe(handleSimulatorInit, control);
     }
 
-    private Handler<Start> handleStart = new Handler<Start>()
-    {
+    private void doInit(NetworkSimulatorInit init) {
+    }
+
+    private Handler<Start> handleStart = new Handler<Start>() {
         @Override
-        public void handle(Start event)
-        {
+        public void handle(Start event) {
             logger.trace("Simple Network Simulator Started");
         }
     };
 
-    private Handler<DirectMsg> handleUpperMessage = new Handler<DirectMsg>()
-    {
+    private Handler<DirectMsg> handleUpperMessage = new Handler<DirectMsg>() {
         @Override
-        public void handle(DirectMsg msg)
-        {
-            logger.debug(msg.getClass().getCanonicalName() + " - " + msg.getVodSource()+" dest: "+msg.getVodDestination());
+        public void handle(DirectMsg msg) {
+            logger.debug(msg.getClass().getCanonicalName() + " - " + msg.getVodSource() + " dest: " + msg.getVodDestination());
             trigger(msg, upperNet);
         }
     };
 
-    private Handler<NetworkSimulatorInit> handleSimulatorInit = new Handler<NetworkSimulatorInit>()
-    {
-        @Override
-        public void handle(NetworkSimulatorInit event)
-        {
-        }
-    };
 };

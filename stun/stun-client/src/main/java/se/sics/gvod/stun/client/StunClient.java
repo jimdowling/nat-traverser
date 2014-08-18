@@ -6,7 +6,6 @@ package se.sics.gvod.stun.client;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import se.sics.gvod.stun.client.events.StunClientInit;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -17,11 +16,13 @@ import java.util.Set;
 import java.util.Stack;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import se.sics.gvod.stun.msgs.EchoChangeIpAndPortMsg;
-import se.sics.gvod.stun.msgs.EchoChangePortMsg;
-import se.sics.gvod.stun.msgs.EchoMsg;
-import se.sics.gvod.stun.msgs.EchoMsg.Response;
-import se.sics.gvod.stun.msgs.StunResponseMsg;
+import se.sics.gvod.address.Address;
+import se.sics.gvod.common.RTTStore;
+import se.sics.gvod.common.RetryComponentDelegator;
+import se.sics.gvod.common.Self;
+import se.sics.gvod.common.util.ToVodAddr;
+import se.sics.gvod.config.StunClientConfiguration;
+import se.sics.gvod.config.VodConfig;
 import se.sics.gvod.nat.common.MsgRetryComponent;
 import se.sics.gvod.net.Nat;
 import se.sics.gvod.net.Nat.AllocationPolicy;
@@ -29,27 +30,22 @@ import se.sics.gvod.net.Nat.AlternativePortAllocationPolicy;
 import se.sics.gvod.net.Nat.FilteringPolicy;
 import se.sics.gvod.net.Nat.MappingPolicy;
 import se.sics.gvod.net.NatNetworkControl;
+import se.sics.gvod.net.Transport;
+import se.sics.gvod.net.VodAddress;
 import se.sics.gvod.net.events.PortAllocRequest;
 import se.sics.gvod.net.msgs.ScheduleRetryTimeout;
 import se.sics.gvod.stun.client.events.GetNatTypeRequest;
-import se.sics.kompics.Handler;
-import se.sics.kompics.Negative;
-import se.sics.kompics.Positive;
-import se.sics.kompics.Stop;
-import se.sics.gvod.address.Address;
-import se.sics.gvod.common.RTTStore;
-import se.sics.gvod.common.RetryComponentDelegator;
-import se.sics.gvod.common.Self;
-import se.sics.gvod.config.VodConfig;
-import se.sics.gvod.common.util.ToVodAddr;
-import se.sics.gvod.config.StunClientConfiguration;
-import se.sics.gvod.net.Transport;
-import se.sics.gvod.net.VodAddress;
 import se.sics.gvod.stun.client.events.GetNatTypeResponse;
 import se.sics.gvod.stun.client.events.GetNatTypeResponseRuleExpirationTime;
-import se.sics.gvod.stun.client.events.StunPortAllocResponse;
 import se.sics.gvod.stun.client.events.RequestServerHeartBeatTimer;
+import se.sics.gvod.stun.client.events.StunClientInit;
+import se.sics.gvod.stun.client.events.StunPortAllocResponse;
 import se.sics.gvod.stun.client.events.UpnpTimeout;
+import se.sics.gvod.stun.msgs.EchoChangeIpAndPortMsg;
+import se.sics.gvod.stun.msgs.EchoChangePortMsg;
+import se.sics.gvod.stun.msgs.EchoMsg;
+import se.sics.gvod.stun.msgs.EchoMsg.Response;
+import se.sics.gvod.stun.msgs.StunResponseMsg;
 import se.sics.gvod.stun.upnp.ForwardPortStatus;
 import se.sics.gvod.stun.upnp.UpnpComponent;
 import se.sics.gvod.stun.upnp.UpnpPort;
@@ -67,6 +63,11 @@ import se.sics.gvod.timer.Timeout;
 import se.sics.gvod.timer.TimeoutId;
 import se.sics.gvod.timer.UUID;
 import se.sics.kompics.Component;
+import se.sics.kompics.Handler;
+import se.sics.kompics.Negative;
+import se.sics.kompics.Positive;
+import se.sics.kompics.Start;
+import se.sics.kompics.Stop;
 
 /**
  *
@@ -162,14 +163,14 @@ public class StunClient extends MsgRetryComponent {
         }
     }
 
-    public StunClient() {
-        this(null);
+    public StunClient(StunClientInit init) {
+        this(null, init);
     }
 
-    StunClient(RetryComponentDelegator delegator) {
+    StunClient(RetryComponentDelegator delegator, StunClientInit init) {
         super(delegator);
 
-        upnp = create(UpnpComponent.class);
+        doInit(init);
 
         this.delegator.doSubscribe(handleEchoChangeIpAndPortTimeout, timer);
         this.delegator.doSubscribe(handleEchoChangePortTimeout, timer);
@@ -181,42 +182,44 @@ public class StunClient extends MsgRetryComponent {
         this.delegator.doSubscribe(handleEchoChangeIpAndPortResponse, network);
         this.delegator.doSubscribe(handleEchoChangePortResponse, network);
         this.delegator.doSubscribe(handleEchoResponse, network);
-
         this.delegator.doSubscribe(handlePortAllocResponse, natNetworkControl);
-
-        this.delegator.doSubscribe(handleMappedPortsChanged, upnp.getPositive(UpnpPort.class));
-        this.delegator.doSubscribe(handleMapPortsResponse, upnp.getPositive(UpnpPort.class));
-        this.delegator.doSubscribe(handleUpnpGetPublicIpResponse, upnp.getPositive(UpnpPort.class));
-
-
         this.delegator.doSubscribe(handleGetNatTypeRequest, stunPort);
-        this.delegator.doSubscribe(handleInit, control);
+        this.delegator.doSubscribe(handleStart, control);
         // handler in super class
         this.delegator.doSubscribe(handleRTO, timer);
     }
-    Handler<StunClientInit> handleInit = new Handler<StunClientInit>() {
+
+    private void doInit(StunClientInit init) {
+
+        self = init.getSelf();
+        config = init.getConfig();
+        compName = "(" + self.getId() + ")";
+
+        random = new Random(init.getSeed() + self.getId());
+
+        sessionMap.clear();
+        logger.trace(compName
+                + " local address is " + self.getId() + "@"
+                + self.getIp() + ":" + self.getPort()
+                + " retry delay is " + config.getRto()
+                + " ruleExpirationMinWait " + config.getRuleExpirationMinWait()
+                + " ruleExpirationIncrement " + config.getRuleExpirationIncrement());
+    }
+
+    public Handler<Start> handleStart = new Handler<Start>() {
+
         @Override
-        public void handle(StunClientInit init) {
-
-            self = init.getSelf();
-            config = init.getConfig();
-            compName = "(" + self.getId() + ")";
-
-            random = new Random(init.getSeed() + self.getId());
-
-            sessionMap.clear();
-            logger.trace(compName
-                    + " local address is " + self.getId() + "@"
-                    + self.getIp() + ":" + self.getPort()
-                    + " retry delay is " + config.getRto()
-                    + " ruleExpirationMinWait " + config.getRuleExpirationMinWait()
-                    + " ruleExpirationIncrement " + config.getRuleExpirationIncrement());
-
+        public void handle(Start event) {
             if (config.isUpnpEnable()) {
-                delegator.doTrigger(new UpnpInit(), upnp.getControl());
+                upnp = create(UpnpComponent.class, new UpnpInit());
+                delegator.doSubscribe(handleMappedPortsChanged, upnp.getPositive(UpnpPort.class));
+                delegator.doSubscribe(handleMapPortsResponse, upnp.getPositive(UpnpPort.class));
+                delegator.doSubscribe(handleUpnpGetPublicIpResponse, upnp.getPositive(UpnpPort.class));
+                trigger(Start.event, upnp.getControl());
             }
         }
     };
+
     Handler<GetNatTypeRequest> handleGetNatTypeRequest = new Handler<GetNatTypeRequest>() {
         @Override
         public void handle(GetNatTypeRequest event) {
@@ -305,11 +308,11 @@ public class StunClient extends MsgRetryComponent {
 
         EchoMsg.Request bindingReq = new EchoMsg.Request(self.getAddress(),
                 target, testType, transactionId);
-        ScheduleRetryTimeout st =
-                new ScheduleRetryTimeout(rto, config.getRtoRetries(),
-                config.getRtoScale());
-        EchoMsg.RequestTimeout requestRetryTimeout =
-                new EchoMsg.RequestTimeout(st, bindingReq);
+        ScheduleRetryTimeout st
+                = new ScheduleRetryTimeout(rto, config.getRtoRetries(),
+                        config.getRtoScale());
+        EchoMsg.RequestTimeout requestRetryTimeout
+                = new EchoMsg.RequestTimeout(st, bindingReq);
         delegator.doRetry(requestRetryTimeout);
         logger.debug(compName + "Sending " + testType + " from "
                 + self.getAddress() + " to" + target.getPeerAddress() + " . Rto="
@@ -335,11 +338,11 @@ public class StunClient extends MsgRetryComponent {
                 + transactionId);
         EchoChangeIpAndPortMsg.Request echoChangeIpReq = new EchoChangeIpAndPortMsg.Request(
                 self.getAddress(), target, transactionId);
-        ScheduleRetryTimeout st =
-                new ScheduleRetryTimeout(rto, config.getRtoRetries(),
-                config.getRtoScale());
-        EchoChangeIpAndPortMsg.RequestRetryTimeout requestMsg =
-                new EchoChangeIpAndPortMsg.RequestRetryTimeout(st, echoChangeIpReq);
+        ScheduleRetryTimeout st
+                = new ScheduleRetryTimeout(rto, config.getRtoRetries(),
+                        config.getRtoScale());
+        EchoChangeIpAndPortMsg.RequestRetryTimeout requestMsg
+                = new EchoChangeIpAndPortMsg.RequestRetryTimeout(st, echoChangeIpReq);
         delegator.doRetry(requestMsg);
 
         logger.debug(compName + "Sending EchoChangeIpandPort from :"
@@ -355,9 +358,9 @@ public class StunClient extends MsgRetryComponent {
                 self.getAddress(), target, transactionId);
         RoundTripTime echoRtt = echoRtts.get(target.getPeerAddress());
         long rto = calculateRto(target.getPeerAddress(), 1000);
-        ScheduleRetryTimeout st =
-                new ScheduleRetryTimeout(rto, config.getRtoRetries(),
-                config.getRtoScale());
+        ScheduleRetryTimeout st
+                = new ScheduleRetryTimeout(rto, config.getRtoRetries(),
+                        config.getRtoScale());
         delegator.doRetry(new EchoChangePortMsg.RequestRetryTimeout(st, echoChangePortReq));
 
         logger.debug(compName + "Sending EchoChangePort:"
@@ -418,10 +421,10 @@ public class StunClient extends MsgRetryComponent {
                 + " reply to " + replyTo + " tid: " + transactionId);
         EchoMsg.Request hbRequest = new EchoMsg.Request(self, target, EchoMsg.Test.HEARTBEAT,
                 transactionId, replyTo);
-        ScheduleRetryTimeout st =
-                new ScheduleRetryTimeout(config.getRto(), 0);
-        EchoMsg.RequestTimeout requestRetryTimeout =
-                new EchoMsg.RequestTimeout(st, hbRequest);
+        ScheduleRetryTimeout st
+                = new ScheduleRetryTimeout(config.getRto(), 0);
+        EchoMsg.RequestTimeout requestRetryTimeout
+                = new EchoMsg.RequestTimeout(st, hbRequest);
         delegator.doRetry(requestRetryTimeout);
     }
 
@@ -600,77 +603,76 @@ public class StunClient extends MsgRetryComponent {
         allocReq.setResponse(allocResp);
         delegator.doTrigger(allocReq, natNetworkControl);
     }
-    Handler<StunPortAllocResponse> handlePortAllocResponse =
-            new Handler<StunPortAllocResponse>() {
-        @Override
-        public void handle(StunPortAllocResponse response) {
-            logger.debug(compName + "Received two new ports on client...");
 
-            long transactionId = (Long) response.getKey();
+    Handler<StunPortAllocResponse> handlePortAllocResponse
+            = new Handler<StunPortAllocResponse>() {
+                @Override
+                public void handle(StunPortAllocResponse response) {
+                    logger.debug(compName + "Received two new ports on client...");
 
-            if (response.getAllocatedPorts().size() != 2) {
-                throw new IllegalStateException("ERROR: port allocator "
-                        + " returned wrong number of ports. expecting 2"
-                        + " returned " + response.getAllocatedPorts().size());
-            }
-            Iterator<Integer> iter = response.getAllocatedPorts().iterator();
-            int firstRandPort = iter.next();
-            int secondRandPort = iter.next();
+                    long transactionId = (Long) response.getKey();
 
-            logger.debug(compName + " handle port allocation response. "
-                    + " ports in use " + firstRandPort + ", " + secondRandPort);
+                    if (response.getAllocatedPorts().size() != 2) {
+                        throw new IllegalStateException("ERROR: port allocator "
+                                + " returned wrong number of ports. expecting 2"
+                                + " returned " + response.getAllocatedPorts().size());
+                    }
+                    Iterator<Integer> iter = response.getAllocatedPorts().iterator();
+                    int firstRandPort = iter.next();
+                    int secondRandPort = iter.next();
 
+                    logger.debug(compName + " handle port allocation response. "
+                            + " ports in use " + firstRandPort + ", " + secondRandPort);
 
-            // See the NatCracker paper for more details.
-            // Try 0 to Try 7 to four addresses
-            Session session = sessionMap.get(transactionId);
+                    // See the NatCracker paper for more details.
+                    // Try 0 to Try 7 to four addresses
+                    Session session = sessionMap.get(transactionId);
 
+                    if (session == null) {
+                        StringBuilder sb = new StringBuilder();
+                        for (Long t : sessionMap.keySet()) {
+                            sb.append(t).append(", ");
+                        }
+                        logger.error(compName + " couldn't find session for PortAllocReq. My tid: {}. Existing tids: "
+                                + sb.toString(), response.getKey().toString());
+                        return;
+                    }
 
-            if (session == null) {
-                StringBuilder sb = new StringBuilder();
-                for (Long t : sessionMap.keySet()) {
-                    sb.append(t).append(", ");
+                    VodAddress serverS1Address = session.getServer1();
+                    VodAddress serverS2Address = ToVodAddr.stunServer(
+                            session.getPartnerServer().getPeerAddress());
+                    int s1AlternativePort = VodConfig.DEFAULT_STUN_PORT_2;
+
+                    VodAddress serverS1AddressPrime
+                    = ToVodAddr.stunServer2(new Address(serverS1Address.getIp(),
+                                    s1AlternativePort, serverS1Address.getId()));
+                    VodAddress serverS2AddressPrime = ToVodAddr.stunServer2(
+                            new Address(serverS2Address.getIp(),
+                                    s1AlternativePort, serverS2Address.getId()));
+
+                    session.setClientFirstRandomPort(firstRandPort);
+                    session.setClientSecondRandomPort(secondRandPort);
+
+                    // make two source Addressses
+                    VodAddress sourceAddress1 = ToVodAddr.stunClient(new Address(self.getIp(),
+                                    firstRandPort, self.getId()));
+                    VodAddress sourceAddress2 = ToVodAddr.stunClient(new Address(self.getIp(),
+                                    secondRandPort, self.getId()));
+
+                    // send NUM_PING_TRIES EchoMsg.Reqeuest for diferent source ports.
+                    int tryId = 0;
+
+                    sendPingRequest(sourceAddress1, serverS1Address, transactionId, tryId++);
+                    sendPingRequest(sourceAddress1, serverS1AddressPrime, transactionId, tryId++);
+                    sendPingRequest(sourceAddress1, serverS2Address, transactionId, tryId++);
+                    sendPingRequest(sourceAddress1, serverS2AddressPrime, transactionId, tryId++);
+                    sendPingRequest(sourceAddress2, serverS1Address, transactionId, tryId++);
+                    sendPingRequest(sourceAddress2, serverS1AddressPrime, transactionId, tryId++);
+                    sendPingRequest(sourceAddress2, serverS2Address, transactionId, tryId++);
+                    sendPingRequest(sourceAddress2, serverS2AddressPrime, transactionId, tryId++);
+
                 }
-                logger.error(compName + " couldn't find session for PortAllocReq. My tid: {}. Existing tids: "
-                        + sb.toString(), response.getKey().toString());
-                return;
-            }
-
-            VodAddress serverS1Address = session.getServer1();
-            VodAddress serverS2Address = ToVodAddr.stunServer(
-                    session.getPartnerServer().getPeerAddress());
-            int s1AlternativePort = VodConfig.DEFAULT_STUN_PORT_2;
-
-            VodAddress serverS1AddressPrime =
-                    ToVodAddr.stunServer2(new Address(serverS1Address.getIp(),
-                    s1AlternativePort, serverS1Address.getId()));
-            VodAddress serverS2AddressPrime = ToVodAddr.stunServer2(
-                    new Address(serverS2Address.getIp(),
-                    s1AlternativePort, serverS2Address.getId()));
-
-            session.setClientFirstRandomPort(firstRandPort);
-            session.setClientSecondRandomPort(secondRandPort);
-
-            // make two source Addressses
-            VodAddress sourceAddress1 = ToVodAddr.stunClient(new Address(self.getIp(),
-                    firstRandPort, self.getId()));
-            VodAddress sourceAddress2 = ToVodAddr.stunClient(new Address(self.getIp(),
-                    secondRandPort, self.getId()));
-
-            // send NUM_PING_TRIES EchoMsg.Reqeuest for diferent source ports.
-            int tryId = 0;
-
-            sendPingRequest(sourceAddress1, serverS1Address, transactionId, tryId++);
-            sendPingRequest(sourceAddress1, serverS1AddressPrime, transactionId, tryId++);
-            sendPingRequest(sourceAddress1, serverS2Address, transactionId, tryId++);
-            sendPingRequest(sourceAddress1, serverS2AddressPrime, transactionId, tryId++);
-            sendPingRequest(sourceAddress2, serverS1Address, transactionId, tryId++);
-            sendPingRequest(sourceAddress2, serverS1AddressPrime, transactionId, tryId++);
-            sendPingRequest(sourceAddress2, serverS2Address, transactionId, tryId++);
-            sendPingRequest(sourceAddress2, serverS2AddressPrime, transactionId, tryId++);
-
-        }
-    };
+            };
 
     public void sendRuleTimoutValue(long transactionId, long ruleTimeoutVal) {
         delegator.doTrigger(new GetNatTypeResponseRuleExpirationTime(ruleTimeoutVal), stunPort);
@@ -691,17 +693,17 @@ public class StunClient extends MsgRetryComponent {
 
     private void sendPingRequest(VodAddress source, VodAddress dest,
             long transactionId, int tryId) {
-        EchoMsg.Request pingReq =
-                new EchoMsg.Request(source, dest, EchoMsg.Test.PING, transactionId);
+        EchoMsg.Request pingReq
+                = new EchoMsg.Request(source, dest, EchoMsg.Test.PING, transactionId);
         pingReq.setTryId(tryId);
 
         int rto = calculateRto(dest.getPeerAddress(), 0);
-        ScheduleRetryTimeout st =
-                new ScheduleRetryTimeout(rto,
-                config.getRtoRetries(), config.getRtoScale());
+        ScheduleRetryTimeout st
+                = new ScheduleRetryTimeout(rto,
+                        config.getRtoRetries(), config.getRtoScale());
 
-        EchoMsg.RequestTimeout requestRetryTimeout =
-                new EchoMsg.RequestTimeout(st, pingReq);
+        EchoMsg.RequestTimeout requestRetryTimeout
+                = new EchoMsg.RequestTimeout(st, pingReq);
 
         delegator.doRetry(requestRetryTimeout);
         logger.debug(compName + "Sending Echo Ping " + tryId
@@ -814,47 +816,47 @@ public class StunClient extends MsgRetryComponent {
      * Echo request is not returned to the client. Have retried sending this
      * message, and after all retries, this event handler gets called.
      */
-    Handler<EchoMsg.RequestTimeout> handleEchoRequestTimeout =
-            new Handler<EchoMsg.RequestTimeout>() {
-        @Override
-        public void handle(EchoMsg.RequestTimeout event) {
-            long transactionId = event.getRequestMsg().getTransactionId();
-            logger.debug(compName + " handled EchoMsg.RequestRetryTimeout "
-                    + event.getRequestMsg().getTestType().toString()
-                    + "to " + event.getRequestMsg().getDestination()
-                    + " tid: " + transactionId);
+    Handler<EchoMsg.RequestTimeout> handleEchoRequestTimeout
+            = new Handler<EchoMsg.RequestTimeout>() {
+                @Override
+                public void handle(EchoMsg.RequestTimeout event) {
+                    long transactionId = event.getRequestMsg().getTransactionId();
+                    logger.debug(compName + " handled EchoMsg.RequestRetryTimeout "
+                            + event.getRequestMsg().getTestType().toString()
+                            + "to " + event.getRequestMsg().getDestination()
+                            + " tid: " + transactionId);
 
-            if (delegator.doCancelRetry(event.getTimeoutId())) {
-                Session session = sessionMap.get(transactionId);
-                EchoMsg.Test testType = event.getRequestMsg().getTestType();
+                    if (delegator.doCancelRetry(event.getTimeoutId())) {
+                        Session session = sessionMap.get(transactionId);
+                        EchoMsg.Test testType = event.getRequestMsg().getTestType();
 
-                if (testType == EchoMsg.Test.UDP_BLOCKED) {
-                    VodAddress server = session.getServer1();
-                    echoTimeoutedServers.add(server.getPeerAddress());
-                    echoTimestamps.remove(server.getPeerAddress());
-                    manageHostFailure(session, server.getPeerAddress(), GetNatTypeResponse.Status.FIRST_SERVER_FAILED);
-                } else if (testType == EchoMsg.Test.PING) {
-                    logger.debug(compName + "FAILED: EchoMsg.Test.PING response failed for Try-ID "
-                            + event.getRequestMsg().getTryId() + " tid: " + transactionId);
-                    // server or server' has failed while executing STUN.
-                    session.setTry(event.getRequestMsg().getTryId(), null);
-                    if (session.getTotalTryMessagesFinished() == NUM_PING_TRIES) {
-                        manageTest2Failure(session, session.getServer1().getPeerAddress());
-                    }
-                } else if (testType == EchoMsg.Test.HEARTBEAT) {
-                    long ruleTimeout = System.currentTimeMillis() - session.getRuleDeterminationStartTime()
+                        if (testType == EchoMsg.Test.UDP_BLOCKED) {
+                            VodAddress server = session.getServer1();
+                            echoTimeoutedServers.add(server.getPeerAddress());
+                            echoTimestamps.remove(server.getPeerAddress());
+                            manageHostFailure(session, server.getPeerAddress(), GetNatTypeResponse.Status.FIRST_SERVER_FAILED);
+                        } else if (testType == EchoMsg.Test.PING) {
+                            logger.debug(compName + "FAILED: EchoMsg.Test.PING response failed for Try-ID "
+                                    + event.getRequestMsg().getTryId() + " tid: " + transactionId);
+                            // server or server' has failed while executing STUN.
+                            session.setTry(event.getRequestMsg().getTryId(), null);
+                            if (session.getTotalTryMessagesFinished() == NUM_PING_TRIES) {
+                                manageTest2Failure(session, session.getServer1().getPeerAddress());
+                            }
+                        } else if (testType == EchoMsg.Test.HEARTBEAT) {
+                            long ruleTimeout = System.currentTimeMillis() - session.getRuleDeterminationStartTime()
                             - config.getRuleExpirationIncrement();
-                    session.setRuleLifeTime(ruleTimeout);
-                    sendRuleTimoutValue(transactionId, ruleTimeout);
+                            session.setRuleLifeTime(ruleTimeout);
+                            sendRuleTimoutValue(transactionId, ruleTimeout);
 
+                        }
+                    } else {
+                        logger.debug(compName + "StunClient: cancelRetry FAILED. EchoMsg.RequestRetry "
+                                + "rcvd late. Flag: " + event.getRequestMsg().getTestType()
+                                + " tid: " + transactionId);
+                    }
                 }
-            } else {
-                logger.debug(compName + "StunClient: cancelRetry FAILED. EchoMsg.RequestRetry "
-                        + "rcvd late. Flag: " + event.getRequestMsg().getTestType()
-                        + " tid: " + transactionId);
-            }
-        }
-    };
+            };
 
     private void manageTest2Failure(Session session, Address server) {
         //No server remains that is progressing test II or III, 
@@ -876,14 +878,13 @@ public class StunClient extends MsgRetryComponent {
         } else if (failedHosts.containsAll(initialServers)) {
             logger.debug(compName + " All hosts are identified as failed");
         }
-        if (status == GetNatTypeResponse.Status.FIRST_SERVER_FAILED &&
-                initialServers.isEmpty() == false) {
+        if (status == GetNatTypeResponse.Status.FIRST_SERVER_FAILED
+                && initialServers.isEmpty() == false) {
             // try the next stun server from the list
             startEcho();
         } else {
             sendResponse(session, status);
         }
-        
     }
 
     private void startTest2(EchoMsg.Response event) {
@@ -917,144 +918,144 @@ public class StunClient extends MsgRetryComponent {
         }
 
     }
-    Handler<EchoChangeIpAndPortMsg.Response> handleEchoChangeIpAndPortResponse =
-            new Handler<EchoChangeIpAndPortMsg.Response>() {
-        @Override
-        public void handle(EchoChangeIpAndPortMsg.Response event) {
-            printMsgDetails(event);
+    Handler<EchoChangeIpAndPortMsg.Response> handleEchoChangeIpAndPortResponse
+            = new Handler<EchoChangeIpAndPortMsg.Response>() {
+                @Override
+                public void handle(EchoChangeIpAndPortMsg.Response event) {
+                    printMsgDetails(event);
 
-            // ignore duplicate responses..
-            if (delegator.doCancelRetry(event.getTimeoutId())) {
-                long transactionId = event.getTransactionId();
-                Session session = sessionMap.get(transactionId);
-                VodAddress server1 = session.getServer1();
+                    // ignore duplicate responses..
+                    if (delegator.doCancelRetry(event.getTimeoutId())) {
+                        long transactionId = event.getTransactionId();
+                        Session session = sessionMap.get(transactionId);
+                        VodAddress server1 = session.getServer1();
 
-                logger.debug(compName + "StunClient: EchoChangeIpandPort.ResponseMsg received. from " + event.getSource());
+                        logger.debug(compName + "StunClient: EchoChangeIpandPort.ResponseMsg received. from " + event.getSource());
 
-                if (event.getStatus() == EchoChangeIpAndPortMsg.Response.Status.FAIL) {
-                    logger.debug(compName + " Server " + server1 + " failed because of no remaining alive partner");
-                    manageTest2Failure(session, server1.getPeerAddress());
-                    return;
-                }
+                        if (event.getStatus() == EchoChangeIpAndPortMsg.Response.Status.FAIL) {
+                            logger.debug(compName + " Server " + server1 + " failed because of no remaining alive partner");
+                            manageTest2Failure(session, server1.getPeerAddress());
+                            return;
+                        }
 
-                // TEST II (check for firewall) succeed. Open IP.
-                if (openIp) {
-                    // open-ip, no firewall
-                    sendResponse(session, GetNatTypeResponse.Status.SUCCEED);
-                } else {
-                    // Finished Filtering.
-                    session.setFilteringPolicy(FilteringPolicy.ENDPOINT_INDEPENDENT);
-                    session.setFinishedFilter(true);
+                        // TEST II (check for firewall) succeed. Open IP.
+                        if (openIp) {
+                            // open-ip, no firewall
+                            sendResponse(session, GetNatTypeResponse.Status.SUCCEED);
+                        } else {
+                            // Finished Filtering.
+                            session.setFilteringPolicy(FilteringPolicy.ENDPOINT_INDEPENDENT);
+                            session.setFinishedFilter(true);
 
-                    session.setFilterState(FilterState.CHANGE_IP_RECVD);
+                            session.setFilterState(FilterState.CHANGE_IP_RECVD);
 
-                    determineMappingAndAllocationPolicies(transactionId);
+                            determineMappingAndAllocationPolicies(transactionId);
 
-                    if (session.isFinishedAllocation() && session.isFinishedMapping()) {
-                        sendResponse(session, GetNatTypeResponse.Status.SUCCEED);
+                            if (session.isFinishedAllocation() && session.isFinishedMapping()) {
+                                sendResponse(session, GetNatTypeResponse.Status.SUCCEED);
+                            } else {
+                                logger.debug(compName + "Not finished all branches yet. "
+                                        + event.getTransactionId());
+                            }
+                        }
                     } else {
-                        logger.debug(compName + "Not finished all branches yet. "
-                                + event.getTransactionId());
+                        logger.debug(compName + event.getClass().getName() + " Duplicate response..");
                     }
                 }
-            } else {
-                logger.debug(compName + event.getClass().getName() + " Duplicate response..");
-            }
-        }
-    };
-    Handler<EchoChangeIpAndPortMsg.RequestRetryTimeout> handleEchoChangeIpAndPortTimeout =
-            new Handler<EchoChangeIpAndPortMsg.RequestRetryTimeout>() {
-        @Override
-        public void handle(EchoChangeIpAndPortMsg.RequestRetryTimeout event) {
-            logger.debug(compName + "EchoChangeIpAndPortMsg.Request Timeout "
-                    + event.getRequestMsg().getTransactionId());
-            if (delegator.doCancelRetry(event.getTimeoutId())) {
+            };
+    Handler<EchoChangeIpAndPortMsg.RequestRetryTimeout> handleEchoChangeIpAndPortTimeout
+            = new Handler<EchoChangeIpAndPortMsg.RequestRetryTimeout>() {
+                @Override
+                public void handle(EchoChangeIpAndPortMsg.RequestRetryTimeout event) {
+                    logger.debug(compName + "EchoChangeIpAndPortMsg.Request Timeout "
+                            + event.getRequestMsg().getTransactionId());
+                    if (delegator.doCancelRetry(event.getTimeoutId())) {
 
-                logger.debug(compName + "EchoChangeIpAndPortMsg.Request Cancelled Timeout "
-                        + event.getTimeoutId() + " tid: " + event.getRequestMsg().getTransactionId());
+                        logger.debug(compName + "EchoChangeIpAndPortMsg.Request Cancelled Timeout "
+                                + event.getTimeoutId() + " tid: " + event.getRequestMsg().getTransactionId());
 
-                // TEST III
-                //
-                long transactionId = event.getRequestMsg().getTransactionId();
-                Session session = sessionMap.get(transactionId);
-                if (session == null) {
-                    StringBuilder sb = new StringBuilder();
-                    for (Long t : sessionMap.keySet()) {
-                        sb.append(t).append(", ");
+                        // TEST III
+                        //
+                        long transactionId = event.getRequestMsg().getTransactionId();
+                        Session session = sessionMap.get(transactionId);
+                        if (session == null) {
+                            StringBuilder sb = new StringBuilder();
+                            for (Long t : sessionMap.keySet()) {
+                                sb.append(t).append(", ");
+                            }
+                            logger.error(compName + "Missing entry for " + transactionId + " . Entries are: "
+                                    + sb.toString());
+                        }
+                        sendEchoChangePortRequest(session.getServer1(), transactionId);
+
+                        // if the node is behind a firewall, we have to set its allocation policy.
+                        // the EchoChangePortRequest will check its filtering policy
+                        if (openIp) {
+                            // TODO - is this complete??
+                            openIp = false;
+                            session.setFinishedAllocation(true);
+                            session.setAllocationPolicy(AllocationPolicy.PORT_PRESERVATION);
+                            session.setFinishedMapping(true);
+                            session.setMappingPolicy(MappingPolicy.ENDPOINT_INDEPENDENT);
+                        }
+                    } else {
+                        logger.warn(compName + "Cancel retry EchoChangeIpAndPortMsg failed. Response should have been received."
+                                + " tid: " + event.getRequestMsg().getTransactionId());
                     }
-                    logger.error(compName + "Missing entry for " + transactionId + " . Entries are: "
-                            + sb.toString());
                 }
-                sendEchoChangePortRequest(session.getServer1(), transactionId);
+            };
+    Handler<EchoChangePortMsg.Response> handleEchoChangePortResponse
+            = new Handler<EchoChangePortMsg.Response>() {
+                @Override
+                public void handle(EchoChangePortMsg.Response event) {
+                    printMsgDetails(event);
+                    logger.debug(compName + "EchoChangePortMsg.Response received at "
+                            + event.getDestination() + " from "
+                            + event.getSource() + " tid: " + event.getTransactionId());
 
-                // if the node is behind a firewall, we have to set its allocation policy.
-                // the EchoChangePortRequest will check its filtering policy
-                if (openIp) {
-                    // TODO - is this complete??
-                    openIp = false;
-                    session.setFinishedAllocation(true);
-                    session.setAllocationPolicy(AllocationPolicy.PORT_PRESERVATION);
-                    session.setFinishedMapping(true);
-                    session.setMappingPolicy(MappingPolicy.ENDPOINT_INDEPENDENT);
+                    if (delegator.doCancelRetry(event.getTimeoutId())) {
+
+                        long transactionId = event.getTransactionId();
+                        determineMappingAndAllocationPolicies(transactionId);
+
+                        Session session = sessionMap.get(transactionId);
+                        session.setFilteringPolicy(FilteringPolicy.HOST_DEPENDENT);
+                        session.setFinishedFilter(true);
+                        if (session.isFinishedAllocation() && session.isFinishedMapping()) {
+                            sendResponse(session, GetNatTypeResponse.Status.SUCCEED);
+                        }
+                    } else {
+                        logger.debug(compName + "Stun Client EchoChangePort Response. Cancel Retry FAILED"
+                                + " tid: " + event.getTransactionId());
+                    }
                 }
-            } else {
-                logger.warn(compName + "Cancel retry EchoChangeIpAndPortMsg failed. Response should have been received."
-                        + " tid: " + event.getRequestMsg().getTransactionId());
-            }
-        }
-    };
-    Handler<EchoChangePortMsg.Response> handleEchoChangePortResponse =
-            new Handler<EchoChangePortMsg.Response>() {
-        @Override
-        public void handle(EchoChangePortMsg.Response event) {
-            printMsgDetails(event);
-            logger.debug(compName + "EchoChangePortMsg.Response received at "
-                    + event.getDestination() + " from " +
-                            event.getSource() + " tid: " + event.getTransactionId());
+            };
+    Handler<EchoChangePortMsg.RequestRetryTimeout> handleEchoChangePortTimeout
+            = new Handler<EchoChangePortMsg.RequestRetryTimeout>() {
+                @Override
+                public void handle(EchoChangePortMsg.RequestRetryTimeout event) {
 
-            if (delegator.doCancelRetry(event.getTimeoutId())) {
-
-                long transactionId = event.getTransactionId();
-                determineMappingAndAllocationPolicies(transactionId);
-
-                Session session = sessionMap.get(transactionId);
-                session.setFilteringPolicy(FilteringPolicy.HOST_DEPENDENT);
-                session.setFinishedFilter(true);
-                if (session.isFinishedAllocation() && session.isFinishedMapping()) {
-                    sendResponse(session, GetNatTypeResponse.Status.SUCCEED);
-                }
-            } else {
-                logger.debug(compName + "Stun Client EchoChangePort Response. Cancel Retry FAILED"
-                        + " tid: " + event.getTransactionId());
-            }
-        }
-    };
-    Handler<EchoChangePortMsg.RequestRetryTimeout> handleEchoChangePortTimeout =
-            new Handler<EchoChangePortMsg.RequestRetryTimeout>() {
-        @Override
-        public void handle(EchoChangePortMsg.RequestRetryTimeout event) {
-
-            long transactionId = event.getRequestMsg().getTransactionId();
-            logger.debug(compName + "EchoChangePortMsg.Request Timeout "
-                    + " tid: " + transactionId);
-            if (delegator.doCancelRetry(event.getTimeoutId())) {
-                logger.debug(compName + "EchoChangePortMsg.Request Cancelled Timeout "
-                        + " tid: " + transactionId);
-                determineMappingAndAllocationPolicies(transactionId);
-
-                Session session = sessionMap.get(transactionId);
-                session.setFilteringPolicy(FilteringPolicy.PORT_DEPENDENT);
-                session.setFinishedFilter(true);
-                if (session.isFinishedAllocation() && session.isFinishedMapping()) {
-                    sendResponse(session, GetNatTypeResponse.Status.SUCCEED);
-                } else {
-                    logger.warn(compName + "EchoChangePort: Not finished all branches "
+                    long transactionId = event.getRequestMsg().getTransactionId();
+                    logger.debug(compName + "EchoChangePortMsg.Request Timeout "
                             + " tid: " + transactionId);
-                }
-            }
+                    if (delegator.doCancelRetry(event.getTimeoutId())) {
+                        logger.debug(compName + "EchoChangePortMsg.Request Cancelled Timeout "
+                                + " tid: " + transactionId);
+                        determineMappingAndAllocationPolicies(transactionId);
 
-        }
-    };
+                        Session session = sessionMap.get(transactionId);
+                        session.setFilteringPolicy(FilteringPolicy.PORT_DEPENDENT);
+                        session.setFinishedFilter(true);
+                        if (session.isFinishedAllocation() && session.isFinishedMapping()) {
+                            sendResponse(session, GetNatTypeResponse.Status.SUCCEED);
+                        } else {
+                            logger.warn(compName + "EchoChangePort: Not finished all branches "
+                                    + " tid: " + transactionId);
+                        }
+                    }
+
+                }
+            };
 
     private void sendResponse(GetNatTypeResponse.Status status) {
         sendResponse(null, status);
@@ -1269,7 +1270,8 @@ public class StunClient extends MsgRetryComponent {
 
     @Override
     public void stop(Stop stop) {
-        delegator.doTrigger(new ShutdownUpnp(), upnp.getControl());
-
+        if (config.isUpnpEnable()) {
+            delegator.doTrigger(new ShutdownUpnp(), upnp.getControl());
+        }
     }
 }

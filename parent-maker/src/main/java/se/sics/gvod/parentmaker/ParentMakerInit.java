@@ -20,7 +20,6 @@
  */
 package se.sics.gvod.parentmaker;
 
-import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListSet;
 import se.sics.gvod.config.ParentMakerConfiguration;
 import se.sics.gvod.common.Self;
@@ -29,7 +28,7 @@ import se.sics.kompics.Init;
 /**
  *
  */
-public class ParentMakerInit extends Init {
+public class ParentMakerInit extends Init<ParentMaker> {
     private final Self self;
     private final ParentMakerConfiguration config;
     private final ConcurrentSkipListSet<Integer> boundPorts;    

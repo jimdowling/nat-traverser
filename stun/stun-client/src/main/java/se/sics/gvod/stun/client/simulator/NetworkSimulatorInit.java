@@ -11,7 +11,7 @@ import se.sics.kompics.Init;
  *
  * @author Salman
  */
-public class NetworkSimulatorInit extends Init
+public class NetworkSimulatorInit extends Init<NetworkSimulator>
 {
     public NetworkSimulatorInit()
     {

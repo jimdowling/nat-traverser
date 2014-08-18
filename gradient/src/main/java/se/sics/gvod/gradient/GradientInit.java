@@ -12,7 +12,7 @@ import se.sics.kompics.Init;
  *
  * @author jim
  */
-public class GradientInit extends Init {
+public class GradientInit extends Init<Gradient> {
 
     private Self self;
     private GradientConfiguration config;

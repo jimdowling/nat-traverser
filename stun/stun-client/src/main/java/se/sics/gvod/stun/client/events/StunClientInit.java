@@ -1,10 +1,11 @@
 package se.sics.gvod.stun.client.events;
 
-import se.sics.kompics.Init;
 import se.sics.gvod.common.Self;
 import se.sics.gvod.config.StunClientConfiguration;
+import se.sics.gvod.stun.client.StunClient;
+import se.sics.kompics.Init;
 
-public final class StunClientInit extends Init {
+public final class StunClientInit extends Init<StunClient> {
 
     private final Self self;
     private final long seed;

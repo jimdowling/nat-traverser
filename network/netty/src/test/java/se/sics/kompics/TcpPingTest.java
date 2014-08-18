@@ -74,10 +74,12 @@ public class TcpPingTest extends TestCase {
         private List<VodDescriptor> nodes;
 
         public TestStClientComponent() {
-            timer = create(JavaTimer.class);
-            client = create(NettyNetwork.class);
-            server = create(NettyNetwork.class);
-            resolveIp = create(ResolveIp.class);
+            timer = create(JavaTimer.class, Init.NONE);
+            client = create(NettyNetwork.class, 
+                    new NettyInit(132, true, BaseMsgFrameDecoder.class));
+            server = create(NettyNetwork.class, 
+                    new NettyInit(132, true, BaseMsgFrameDecoder.class));
+            resolveIp = create(ResolveIp.class, Init.NONE);
 
             subscribe(handleStart, control);
             subscribe(handleMsgTimeout, timer.getPositive(Timer.class));
@@ -88,11 +90,6 @@ public class TcpPingTest extends TestCase {
             subscribe(handleGetIpResponse, resolveIp.getPositive(ResolveIpPort.class));
             subscribe(handleCloseConnectionResponse, client.getPositive(NatNetworkControl.class));
             subscribe(handlePortDeletionResponse, server.getPositive(NatNetworkControl.class));
-
-            trigger(new NettyInit(132, true,
-                    BaseMsgFrameDecoder.class), client.getControl());
-            trigger(new NettyInit(132, true,
-                    BaseMsgFrameDecoder.class), server.getControl());
         }
 
         public Handler<Start> handleStart = new Handler<Start>() {
@@ -175,9 +172,9 @@ public class TcpPingTest extends TestCase {
                 CloseConnectionRequest request = new CloseConnectionRequest(0, serverAddr.getPeerAddress(), Transport.TCP);
                 request.setResponse(new CloseConnectionResponse(request));
                 trigger(request, client.getPositive(NatNetworkControl.class));
-                trigger(new Stop(), server.getControl());
             }
         };
+        
         public Handler<CloseConnectionResponse> handleCloseConnectionResponse = new Handler<CloseConnectionResponse>() {
             @Override
             public void handle(CloseConnectionResponse event) {

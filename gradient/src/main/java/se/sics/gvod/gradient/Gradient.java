@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import se.sics.gvod.gradient.events.GradientSetsExchangeCycle;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -18,36 +17,38 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import se.sics.gvod.common.RTTStore;
 import se.sics.gvod.common.RTTStore.RTT;
-import se.sics.gvod.common.VodDescriptor;
 import se.sics.gvod.common.RetryComponentDelegator;
 import se.sics.gvod.common.Self;
 import se.sics.gvod.common.Utility;
+import se.sics.gvod.common.VodDescriptor;
 import se.sics.gvod.common.msgs.RelayMsgNetty;
 import se.sics.gvod.croupier.PeerSamplePort;
 import se.sics.gvod.croupier.events.CroupierSample;
 import se.sics.gvod.gradient.events.FingersRequest;
 import se.sics.gvod.gradient.events.FingersResponse;
 import se.sics.gvod.gradient.events.GradientSample;
+import se.sics.gvod.gradient.events.GradientSetsExchangeCycle;
 import se.sics.gvod.gradient.events.UtilityChanged;
-import se.sics.gvod.gradient.msgs.GradientSetsExchangeMsg;
-import se.sics.gvod.net.VodAddress;
-import se.sics.gvod.gradient.msgs.GradientSetsExchangeMsg.Response;
 import se.sics.gvod.gradient.msgs.GradientSearchMsg;
+import se.sics.gvod.gradient.msgs.GradientSetsExchangeMsg;
 import se.sics.gvod.gradient.msgs.GradientSetsExchangeMsg.RequestRetryTimeout;
+import se.sics.gvod.gradient.msgs.GradientSetsExchangeMsg.Response;
 import se.sics.gvod.gradient.msgs.LeaderProposeMsg;
 import se.sics.gvod.gradient.snapshot.GradientStats;
 import se.sics.gvod.nat.common.MsgRetryComponent;
+import se.sics.gvod.net.VodAddress;
 import se.sics.gvod.net.msgs.ScheduleRetryTimeout;
-import se.sics.kompics.Handler;
-import se.sics.kompics.Negative;
-import se.sics.kompics.Stop;
 import se.sics.gvod.timer.CancelPeriodicTimeout;
 import se.sics.gvod.timer.CancelTimeout;
 import se.sics.gvod.timer.SchedulePeriodicTimeout;
 import se.sics.gvod.timer.ScheduleTimeout;
 import se.sics.gvod.timer.Timeout;
 import se.sics.gvod.timer.TimeoutId;
+import se.sics.kompics.Handler;
+import se.sics.kompics.Negative;
 import se.sics.kompics.Positive;
+import se.sics.kompics.Start;
+import se.sics.kompics.Stop;
 
 /**
  *
@@ -91,51 +92,56 @@ public class Gradient extends MsgRetryComponent {
         }
     };
 
-    public Gradient() {
-        this(null);
+    public Gradient(GradientInit init) {
+        this(null, init);
     }
 
-    public Gradient(RetryComponentDelegator delegator) {
+    public Gradient(RetryComponentDelegator delegator, GradientInit init) {
         super(delegator);
         this.delegator.doAutoSubscribe();
+        doInit(init);
     }
-    Handler<GradientInit> handleInit = new Handler<GradientInit>() {
+
+    private void doInit(GradientInit init) {
+        self = init.getSelf();
+        compName = "(" + self.getId() + ") ";
+        setsExchangeDelay = init.getConfig().getSetsExchangeDelay();
+        setsExchangePeriod = init.getConfig().getSetsExchangePeriod();
+        searchTtl = init.getConfig().getSearchTtl();
+        numberOfBestSimilarPeers = init.getConfig().getNumBestSimilarPeers();
+        probeRequestTimeout = init.getConfig().getSearchRequestTimeout();
+
+        similarSet = new SimilarSet(self, init.getConfig().getViewSize(),
+                init.getConfig().getTemperature());
+
+        // Initialize the gradient fingers
+        int numChunks = init.getConfig().getFingers();
+        int binSize = init.getConfig().getUtilityThreshold();
+        for (int i = 0; i < numChunks; i += binSize) {
+            UtilityRange ur = new UtilityRange(i, i + binSize);
+            fingers.put(ur, new HashSet<VodDescriptor>());
+        }
+    }
+
+    public Handler<Start> handleStart = new Handler<Start>() {
 
         @Override
-        public void handle(GradientInit init) {
-            self = init.getSelf();
-            compName = "(" + self.getId() + ") ";
-            setsExchangeDelay = init.getConfig().getSetsExchangeDelay();
-            setsExchangePeriod = init.getConfig().getSetsExchangePeriod();
-            searchTtl = init.getConfig().getSearchTtl();
-            numberOfBestSimilarPeers = init.getConfig().getNumBestSimilarPeers();
-            probeRequestTimeout = init.getConfig().getSearchRequestTimeout();
-            SchedulePeriodicTimeout periodicTimeout =
-                    new SchedulePeriodicTimeout(0, setsExchangePeriod);
+        public void handle(Start event) {
+            SchedulePeriodicTimeout periodicTimeout
+                    = new SchedulePeriodicTimeout(0, setsExchangePeriod);
             periodicTimeout.setTimeoutEvent(new GradientSetsExchangeCycle(periodicTimeout));
             setsGossipingTimeoutId = periodicTimeout.getTimeoutEvent().getTimeoutId();
             delegator.doTrigger(periodicTimeout, timer);
-            similarSet = new SimilarSet(self, init.getConfig().getViewSize(), 
-                    init.getConfig().getTemperature());
-
-            // Initialize the gradient fingers
-            int numChunks = init.getConfig().getFingers();
-            int binSize = init.getConfig().getUtilityThreshold();
-            for (int i = 0; i < numChunks; i += binSize) {
-                UtilityRange ur = new UtilityRange(i, i + binSize);
-                fingers.put(ur, new HashSet<VodDescriptor>());
-            }
 
             SchedulePeriodicTimeout st = new SchedulePeriodicTimeout(2000, 2000);
             st.setTimeoutEvent(new LeaderSelectionCheck(st));
 
             GradientStats.getStat(self.getAddress());
             // TODO - enable leader selection
-//            trigger(st, timer);
+            // trigger(st, timer);
         }
     };
 
-    
     Handler<LeaderProposeMsg.Request> handleLeaderProposeRequestMsg = new Handler<LeaderProposeMsg.Request>() {
 
         @Override
@@ -178,8 +184,8 @@ public class Gradient extends MsgRetryComponent {
 
         }
     };
-    Handler<LeaderSelectionCheck> handleLeaderSelectionCheckTimeout =
-            new Handler<LeaderSelectionCheck>() {
+    Handler<LeaderSelectionCheck> handleLeaderSelectionCheckTimeout
+            = new Handler<LeaderSelectionCheck>() {
 
                 @Override
                 public void handle(LeaderSelectionCheck event) {
@@ -202,11 +208,11 @@ public class Gradient extends MsgRetryComponent {
                     prevUtilityDiff = utilityDiff;
 
                     if ((converged == true) || (myUtility >= maxUtility
-                            && (utilityDiff - prevUtilityDiff) < threshold)) {
+                    && (utilityDiff - prevUtilityDiff) < threshold)) {
                         converged = true;
                         VodDescriptor maxNeighbour = similarSet.getHighestUtilityPeer();
                         maxUtility = (maxNeighbour == null) ? 0
-                                : maxNeighbour.getUtility().getValue();
+                        : maxNeighbour.getUtility().getValue();
                         if (myUtility >= maxUtility) {
                             leaderProposeAwaitingResponse.clear();
                             iAmTheLeader = true;
@@ -270,10 +276,10 @@ public class Gradient extends MsgRetryComponent {
         assert (dest != null);
         leaderProposeAwaitingResponse.add(dest.getId());
 
-        LeaderProposeMsg.Request request =
-                new LeaderProposeMsg.Request(self.getAddress(), dest,
-                self.getId(), dest.getId(),
-                self.getUtility().getValue());
+        LeaderProposeMsg.Request request
+                = new LeaderProposeMsg.Request(self.getAddress(), dest,
+                        self.getId(), dest.getId(),
+                        self.getUtility().getValue());
 
         // No need for cleanup event to be caught, if connect fails, it fails silently
         delegator.doRetry(request, 3000, 1, 1.5, self.getOverlayId());
@@ -295,9 +301,9 @@ public class Gradient extends MsgRetryComponent {
                 GradientStats.instance(self).setSumNeighbourUtilities(total);
                 GradientStats.instance(self).incSentRequest();
 
-                GradientSetsExchangeMsg.Request request =
-                        new GradientSetsExchangeMsg.Request(self.getAddress(), shuffleDest,
-                        self.getId(), shuffleDest.getId());
+                GradientSetsExchangeMsg.Request request
+                        = new GradientSetsExchangeMsg.Request(self.getAddress(), shuffleDest,
+                                self.getId(), shuffleDest.getId());
                 if (self.getIp().equals(request.getSource().getIp()) == false) {
                     logger.error(compName + "WRONG IP. Addr {}. Ip: {}", self.getAddress(),
                             self.getIp());
@@ -306,18 +312,18 @@ public class Gradient extends MsgRetryComponent {
                 // TODO: get setsExchangeDelay from RTT
                 RTT retryTime = RTTStore.getRtt(self.getId(), shuffleDest);
                 long rt = (retryTime == null) ? 2000 : retryTime.getRTO();
-                ScheduleRetryTimeout schedule =
-                        new ScheduleRetryTimeout(rt, 0); 
-                GradientSetsExchangeMsg.RequestRetryTimeout requestTimeout =
-                        new GradientSetsExchangeMsg.RequestRetryTimeout(schedule, request);
+                ScheduleRetryTimeout schedule
+                        = new ScheduleRetryTimeout(rt, 0);
+                GradientSetsExchangeMsg.RequestRetryTimeout requestTimeout
+                        = new GradientSetsExchangeMsg.RequestRetryTimeout(schedule, request);
                 TimeoutId id = delegator.doRetry(requestTimeout);
 
                 logger.info(compName + "GradientSetsExchange.Request sent. "
-                        + "clientId {} remoteId {} timeoutId" +
-                        id + "\nsrc :" + self.getAddress() + 
-                        " dest: " + shuffleDest +
-                        "#parents: " + shuffleDest.getParents().size(), 
-                        request.getClientId(), request.getRemoteId());            
+                        + "clientId {} remoteId {} timeoutId"
+                        + id + "\nsrc :" + self.getAddress()
+                        + " dest: " + shuffleDest
+                        + "#parents: " + shuffleDest.getParents().size(),
+                        request.getClientId(), request.getRemoteId());
                 similarSet.incrementDescriptorAges();
             } else {
                 logger.warn("No Peer available for Gradient Msg Exchange.");
@@ -329,19 +335,19 @@ public class Gradient extends MsgRetryComponent {
         @Override
         public void handle(GradientSetsExchangeMsg.Request request) {
             GradientStats.instance(self).incRecvdRequest();
-                logger.info(compName + "GradientSetsExchange.Request is received. "
-                        + "clientId {} remoteId {} timeoutId" +
-                        request.getTimeoutId(), request.getClientId(), request.getRemoteId());            
-                if (request.getVodSource().equals(self.getAddress())) {
+            logger.info(compName + "GradientSetsExchange.Request is received. "
+                    + "clientId {} remoteId {} timeoutId"
+                    + request.getTimeoutId(), request.getClientId(), request.getRemoteId());
+            if (request.getVodSource().equals(self.getAddress())) {
                 logger.warn("SetsExchangeRequest is received from itself.");
                 return;
             }
             // TODO - utility is my utility for comparator. It should be the source node's utility.
             List<VodDescriptor> bestNeighbours = similarSet.getSimilarPeers(
                     numberOfBestSimilarPeers);
-            GradientSetsExchangeMsg.Response response =
-                    new GradientSetsExchangeMsg.Response(self.getAddress(), request,
-                    bestNeighbours);
+            GradientSetsExchangeMsg.Response response
+                    = new GradientSetsExchangeMsg.Response(self.getAddress(), request,
+                            bestNeighbours);
             delegator.doTrigger(response, network);
         }
     };
@@ -352,8 +358,8 @@ public class Gradient extends MsgRetryComponent {
             if (delegator.doCancelRetry(event.getTimeoutId())) {
                 GradientStats.instance(self).incResponse();
                 logger.info(compName + "GradientSetsExchange.Response is received. "
-                        + "clientId {} remoteId {} timeoutId" +
-                        event.getTimeoutId(), event.getClientId(), event.getRemoteId());
+                        + "clientId {} remoteId {} timeoutId"
+                        + event.getTimeoutId(), event.getClientId(), event.getRemoteId());
                 if (event.getSimilarPeers() != null) {
                     similarSet.addSimilarPeers(event.getSimilarPeers());
                     delegator.doTrigger(new GradientSample(similarSet.getAllSimilarPeers()),
@@ -374,8 +380,8 @@ public class Gradient extends MsgRetryComponent {
                 GradientStats.instance(self).incTimeouts();
                 logger.info(compName + "GradientSetsExchangeMsg.RequestRetryTimeout "
                         + event.getRequestMsg().getVodSource().toString()
-                        + "to " + event.getRequestMsg().getVodDestination().toString() +
-                        " TimeoutId " + event.getTimeoutId());
+                        + "to " + event.getRequestMsg().getVodDestination().toString()
+                        + " TimeoutId " + event.getTimeoutId());
                 // remove from gradient neighbours
                 similarSet.removeNeighbour(event.getRequestMsg().getVodDestination());
             }
@@ -404,10 +410,10 @@ public class Gradient extends MsgRetryComponent {
             outstandingSearchRequests.put(timeoutId, Math.min(numOfProbes, bestPeers.size()));
 
             for (VodDescriptor desc : bestPeers) {
-                GradientSearchMsg.Request request =
-                        new GradientSearchMsg.Request(self.getAddress(),
-                        desc.getVodAddress(), self.getAddress(),
-                        timeoutId, newUtility, searchTtl);
+                GradientSearchMsg.Request request
+                        = new GradientSearchMsg.Request(self.getAddress(),
+                                desc.getVodAddress(), self.getAddress(),
+                                timeoutId, newUtility, searchTtl);
                 request.setTimeoutId(timeoutId);
                 delegator.doTrigger(request, network);
             }
@@ -422,21 +428,21 @@ public class Gradient extends MsgRetryComponent {
 //                    utilityThreshold) && request.getTtl() > 0) {
             if (request.getTargetUtility().getValue() < self.getUtility().getValue()
                     && request.getTtl() > 0) {
-                List<VodDescriptor> bestPeers =
-                        similarSet.getSimilarPeers(numOfProbes, self.getUtility());
+                List<VodDescriptor> bestPeers
+                        = similarSet.getSimilarPeers(numOfProbes, self.getUtility());
                 for (VodDescriptor desc : bestPeers) {
-                    GradientSearchMsg.Request forwardReq =
-                            new GradientSearchMsg.Request(request.getVodSource(),
-                            desc.getVodAddress(), request.getOrigSrc(), request.getTimeoutId(),
-                            request.getTargetUtility(), (byte) (request.getTtl() - 1));
+                    GradientSearchMsg.Request forwardReq
+                            = new GradientSearchMsg.Request(request.getVodSource(),
+                                    desc.getVodAddress(), request.getOrigSrc(), request.getTimeoutId(),
+                                    request.getTargetUtility(), (byte) (request.getTtl() - 1));
                     delegator.doTrigger(forwardReq, network);
                 }
             } else {
-                List<VodDescriptor> bestPeers =
-                        similarSet.getSimilarPeers(numberOfBestSimilarPeers, self.getUtility());
-                GradientSearchMsg.Response response =
-                        new GradientSearchMsg.Response(self.getAddress(),
-                        request, bestPeers);
+                List<VodDescriptor> bestPeers
+                        = similarSet.getSimilarPeers(numberOfBestSimilarPeers, self.getUtility());
+                GradientSearchMsg.Response response
+                        = new GradientSearchMsg.Response(self.getAddress(),
+                                request, bestPeers);
                 delegator.doTrigger(response, network);
             }
         }

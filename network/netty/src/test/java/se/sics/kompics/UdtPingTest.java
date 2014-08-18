@@ -73,9 +73,11 @@ public class UdtPingTest extends TestCase {
         private List<VodDescriptor> nodes;
 
         public TestStClientComponent() {
-            timer = create(JavaTimer.class);
-            client = create(NettyNetwork.class);
-            server = create(NettyNetwork.class);
+            timer = create(JavaTimer.class, Init.NONE);
+            client = create(NettyNetwork.class,
+                    new NettyInit(132, true, BaseMsgFrameDecoder.class));
+            server = create(NettyNetwork.class,
+                    new NettyInit(132, true, BaseMsgFrameDecoder.class));
 
             InetAddress ip = null;
             int clientPort = 54644;
@@ -104,11 +106,6 @@ public class UdtPingTest extends TestCase {
             subscribe(handlePong, client.getPositive(VodNetwork.class));
             subscribe(handleCloseConnectionResponse, client.getPositive(NatNetworkControl.class));
             subscribe(handlePortDeletionResponse, server.getPositive(NatNetworkControl.class));
-
-            trigger(new NettyInit(132, true, BaseMsgFrameDecoder.class),
-                    client.getControl());
-            trigger(new NettyInit(132, true, BaseMsgFrameDecoder.class),
-                    server.getControl());
         }
 
         public Handler<Start> handleStart = new Handler<Start>() {

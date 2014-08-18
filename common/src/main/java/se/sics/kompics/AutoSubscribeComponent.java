@@ -42,15 +42,15 @@ public abstract class AutoSubscribeComponent extends ComponentDefinition {
 
     protected class HandlerReflection {
 
-        private final Class<? extends Event> eventType;
+        private final Class<? extends KompicsEvent> eventType;
         private final Field handler;
 
-        public HandlerReflection(Class<? extends Event> eventType, Field handler) {
+        public HandlerReflection(Class<? extends KompicsEvent> eventType, Field handler) {
             this.eventType = eventType;
             this.handler = handler;
         }
 
-        public Class<? extends Event> getEventType() {
+        public Class<? extends KompicsEvent> getEventType() {
             return eventType;
         }
 
@@ -153,7 +153,7 @@ public abstract class AutoSubscribeComponent extends ComponentDefinition {
     }
 
     boolean subscribe(Class<? extends PortType> port, Field portField,
-            Class<? extends Event> event, Field handler) {
+            Class<? extends KompicsEvent> event, Field handler) {
         Class portParent = port.getSuperclass();
 
         portField.setAccessible(true);
@@ -169,7 +169,7 @@ public abstract class AutoSubscribeComponent extends ComponentDefinition {
             if (pc == null) {
                 return false;
             }
-            Field portTypeObj = pc.getClass().getDeclaredField("portType");
+            Field portTypeObj = pc.getClass().getSuperclass().getDeclaredField("portType");
             if (portTypeObj == null) {
                 return false;
             }
@@ -219,7 +219,7 @@ public abstract class AutoSubscribeComponent extends ComponentDefinition {
             HandlerReflection ht) {
 
         Field handler = ht.getHandler();
-        Class<? extends Event> event = ht.getEventType();
+        Class<? extends KompicsEvent> event = ht.getEventType();
 
         Class<? extends PortType> port = (Class<? extends PortType>)
                 portStruct.getPortType();

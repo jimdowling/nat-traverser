@@ -125,9 +125,9 @@ public class EventsTest
         private TimeoutId timeoutId;
 
         public TestStClientComponent() {
-            pingPong = create(PingPongComponent.class);
-            pongPing1 = create(PingPongComponent.class);
-            pongPing2 = create(PingPongComponent.class);
+            pingPong = create(PingPongComponent.class, Init.NONE);
+            pongPing1 = create(PingPongComponent.class, Init.NONE);
+            pongPing2 = create(PingPongComponent.class, Init.NONE);
 
             InetAddress ip = null;
             int clientPort = 59658;

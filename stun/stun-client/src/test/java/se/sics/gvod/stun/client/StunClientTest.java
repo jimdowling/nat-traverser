@@ -50,6 +50,7 @@ import se.sics.gvod.timer.ScheduleTimeout;
 import se.sics.gvod.timer.Timeout;
 import se.sics.gvod.timer.Timer;
 import se.sics.gvod.timer.java.JavaTimer;
+import se.sics.kompics.Init;
 
 /**
  * Unit test for simple App.
@@ -88,214 +89,190 @@ public class StunClientTest {
         public static int numberOfSingleServers = 1;
 
         public StunClientComponentTester() {
-            stunClientComp = create(StunClient.class);
-            timer = create(JavaTimer.class);
-            natComp = create(DistributedNatGatewayEmulator.class);
-            networkSimulator = create(NetworkSimulator.class);
-            portReservoir_For_A = create(PortReservoirComp.class);
-            portReservoir_For_B = create(PortReservoirComp.class);
+            doCreateAndConnect();
 
             subscribe(handleStart, control);
             subscribe(handleMsgTimeout, timer.getPositive(Timer.class));
             subscribe(handleGetNatTypeResponse, stunClientComp.getPositive(StunPort.class));
             subscribe(handleNatTypeResponseRuleTimeout, stunClientComp.getPositive(StunPort.class));
         }
+
+        private void doCreateAndConnect() {
+            boolean upnpEnabled = (nat.getType() == Nat.Type.UPNP);
+
+            try {
+                InetAddress clientIp = InetAddress.getByName("192.168.0.1");
+                clientPort = 8081;
+                stunClientAddress = new Address(clientIp, clientPort, clientID++);
+                
+                natID = 100;
+                natIP = InetAddress.getByName("192.168.0.2");
+            } catch (UnknownHostException ex) {
+                testObj.fail("Could not acquire ip addresses");
+            }
+
+            ruleLifeTime = 2 * 1000;
+            VodAddress sca = ToVodAddr.stunClient(stunClientAddress);
+            Self self = new SelfNoParents(sca);
+
+            timer = create(JavaTimer.class, Init.NONE);
+            networkSimulator = create(NetworkSimulator.class, new NetworkSimulatorInit());
+            stunClientComp = create(StunClient.class,
+                    new StunClientInit(self, 0 /* seed */,
+                            StunClientConfiguration.build().
+                            setRandTolerance(1).
+                            setRuleExpirationMinWait(ruleLifeTime).
+                            setRuleExpirationIncrement(ruleLifeTime).
+                            setUpnpEnable(upnpEnabled).
+                            setUpnpTimeout(500).
+                            setMinimumRtt(500).
+                            setRto(500).
+                            setRtoRetries(0)));
+            ruleLifeTime = ruleLifeTime + (ruleLifeTime / 2);
+            natComp = create(DistributedNatGatewayEmulator.class,
+                    new DistributedNatGatewayEmulatorInit(50000,
+                            nat.getMappingPolicy(),
+                            nat.getAllocationPolicy(),
+                            nat.getAlternativePortAllocationPolicy(), /* alternaive policy if there is clash using PP */
+                            nat.getFilteringPolicy(),
+                            nat.getType(), /* types are NAT OPEN and UPNP */
+                            3 * 1000 /* gc */,
+                            natIP /* ip of NAT Gateway*/,
+                            65533,
+                            false, /*mapping overrides*/
+                            ruleLifeTime,
+                            55,
+                            upnpEnabled/* upnp */));
+            portReservoir_For_A = create(PortReservoirComp.class, new PortInit(11));
+            portReservoir_For_B = create(PortReservoirComp.class, new PortInit(2992));
+
+            try {
+                int i = 1;
+                for (; i <= numberOfPairServers; i++) {
+                    String server2Ip = "192.168." + i + ".2";
+                    InetAddress server2Addr = InetAddress.getByName(server2Ip);
+                    String server1Ip = "192.168." + i + ".1";
+                    InetAddress server1Addr = InetAddress.getByName(server1Ip);
+                    
+                    List<VodAddress> altAddrs1 = new ArrayList<VodAddress>();
+                    List<VodAddress> altAddrs2 = new ArrayList<VodAddress>();
+                    int serverS2Port = 3478;
+                    int serverS2Id = Integer.valueOf(i + 100 + "2");
+                    Address serverS2Address = new Address(server2Addr, serverS2Port, serverS2Id);
+                    serverS2Addresses.add(serverS2Address);
+                    VodAddress s2 = ToVodAddr.stunServer(serverS2Address);
+                    altAddrs1.add(s2);
+
+                    int serverS1Port = 3478;
+                    int serverS1Id = Integer.valueOf(i + 100 + "1");
+                    Address serverS1Address = new Address(server1Addr, serverS1Port, serverS1Id);
+                    serverS1Addresses.add(serverS1Address);
+                    VodAddress s1 = ToVodAddr.stunServer(serverS1Address);
+                    altAddrs2.add(s1);
+
+                    Component serverS1Comp = create(StunServer.class, new StunServerInit(new SelfNoParents(s1), altAddrs1, StunServerConfiguration.build()));
+                    Component serverS2Comp = create(StunServer.class, new StunServerInit(new SelfNoParents(s2), altAddrs2, StunServerConfiguration.build()));
+                    serverS1Components.add(serverS1Comp);
+                    serverS2Components.add(serverS2Comp);
+                    connect(serverS1Comp.getNegative(VodNetwork.class), networkSimulator.getPositive(VodNetwork.class), new MessageDestinationFilterBasedOnIp(serverS1Address.getIp()));
+                    connect(serverS1Comp.getNegative(Timer.class), timer.getPositive(Timer.class));
+                    connect(serverS2Comp.getNegative(VodNetwork.class), networkSimulator.getPositive(VodNetwork.class), new MessageDestinationFilterBasedOnIp(serverS2Address.getIp()));
+                    connect(serverS2Comp.getNegative(Timer.class), timer.getPositive(Timer.class));
+
+                }
+
+                for (; i <= numberOfPairServers + numberOfSingleServers; i++) {
+                    List<VodAddress> altAddrs1 = new ArrayList<VodAddress>();
+
+                    String server1Ip = "192.168." + i + ".1";
+                    InetAddress server1Addr = InetAddress.getByName(server1Ip);
+                    int serverS1Port = 3478;
+                    Address serverS1Address = new Address(server1Addr, serverS1Port, 1);
+                    serverS1Addresses.add(serverS1Address);
+                    VodAddress s1 = ToVodAddr.stunServer(serverS1Address);
+
+                    serverS1Components.add(create(StunServer.class, new StunServerInit(new SelfNoParents(s1), altAddrs1, StunServerConfiguration.build())));
+
+                }
+            } catch (UnknownHostException ex) {
+                testObj.fail("Could not acquire ip addresses");
+            }
+
+            connect(natComp.getNegative(VodNetwork.class), networkSimulator.getPositive(VodNetwork.class), new MessageDestinationFilterBasedOnIp(natIP));
+            connect(natComp.getNegative(Timer.class), timer.getPositive(Timer.class));
+            connect(natComp.getNegative(NatNetworkControl.class), portReservoir_For_A.getPositive(NatNetworkControl.class));
+
+            connect(stunClientComp.getNegative(VodNetwork.class), natComp.getPositive(VodNetwork.class),
+                    new MessageDestinationFilterBasedOnIPandID(new IpIntPair(stunClientAddress.getIp(), stunClientAddress.getId())));
+            connect(stunClientComp.getNegative(Timer.class), timer.getPositive(Timer.class));
+            connect(stunClientComp.getNegative(NatNetworkControl.class), natComp.getPositive(NatNetworkControl.class));
+        }
+
         public Handler<Start> handleStart = new Handler<Start>() {
             @Override
             public void handle(Start event) {
-
-                try {
-                    InetAddress clientIp = InetAddress.getByName("192.168.0.1");
-                    clientPort = 8081;
-                    stunClientAddress = new Address(clientIp, clientPort, clientID++);
-
-                    natID = 100;
-                    natIP = InetAddress.getByName("192.168.0.2");;
-
-                    int i = 1;
-
-                    for (; i <= numberOfPairServers; i++) {
-                        String server1Ip = "192.168." + i + ".1";
-                        InetAddress server1Addr = InetAddress.getByName(server1Ip);
-                        int serverS1Port = 3478;
-                        int serverS1Id = Integer.valueOf(i + 100 + "1");
-                        serverS1Addresses.add(new Address(server1Addr, serverS1Port, serverS1Id));
-                        serverS1Components.add(create(StunServer.class));
-
-                        String server2Ip = "192.168." + i + ".2";
-                        InetAddress server2Addr = InetAddress.getByName(server2Ip);
-                        int serverS2Port = 3478;
-                        int serverS2Id = Integer.valueOf(i + 100 + "2");
-                        serverS2Addresses.add(new Address(server2Addr, serverS2Port, serverS2Id));
-                        serverS2Components.add(create(StunServer.class));
-                    }
-
-                    for (; i <= numberOfPairServers + numberOfSingleServers; i++) {
-                        String server1Ip = "192.168." + i + ".1";
-                        InetAddress server1Addr = InetAddress.getByName(server1Ip);
-                        int serverS1Port = 3478;
-                        serverS1Addresses.add(new Address(server1Addr, serverS1Port, 1));
-                        serverS1Components.add(create(StunServer.class));
-                    }
-
-                } catch (UnknownHostException ex) {
-                    testObj.fail("Could not acquire ip addresses");
-                }
-
-                connect(natComp.getNegative(VodNetwork.class), networkSimulator.getPositive(VodNetwork.class), new MessageDestinationFilterBasedOnIp(natIP));
-
-                connect(stunClientComp.getNegative(VodNetwork.class), natComp.getPositive(VodNetwork.class), new MessageDestinationFilterBasedOnIPandID(new IpIntPair(stunClientAddress.getIp(),
-                        stunClientAddress.getId())));
-                connect(natComp.getNegative(Timer.class), timer.getPositive(Timer.class));
-
-
-                for (Address serverS1Address : serverS1Addresses) {
-                    int index = serverS1Addresses.indexOf(serverS1Address);
-
-                    connect(serverS1Components.get(index).getNegative(VodNetwork.class), networkSimulator.getPositive(VodNetwork.class), new MessageDestinationFilterBasedOnIp(serverS1Address.getIp()));
-                    connect(serverS1Components.get(index).getNegative(Timer.class), timer.getPositive(Timer.class));
-
-                    if (index < serverS2Addresses.size()) {
-                        Address serverS2Address = serverS2Addresses.get(index);
-                        connect(serverS2Components.get(index).getNegative(VodNetwork.class), networkSimulator.getPositive(VodNetwork.class), new MessageDestinationFilterBasedOnIp(serverS2Address.getIp()));
-                        connect(serverS2Components.get(index).getNegative(Timer.class), timer.getPositive(Timer.class));
-                    }
-                }
-
-                connect(stunClientComp.getNegative(Timer.class), timer.getPositive(Timer.class));
-
-                connect(stunClientComp.getNegative(NatNetworkControl.class),
-                        natComp.getPositive(NatNetworkControl.class));
-                connect(natComp.getNegative(NatNetworkControl.class),
-                        portReservoir_For_A.getPositive(NatNetworkControl.class));
-
-                trigger(new NetworkSimulatorInit(), networkSimulator.getControl());
-
-
-
-                for (Address serverS1Address : serverS1Addresses) {
-
-                    int index = serverS1Addresses.indexOf(serverS1Address);
-                    List<VodAddress> altAddrs1 = new ArrayList<VodAddress>();
-
-                    if (index < serverS2Addresses.size()) {
-                        Address serverS2Address = serverS2Addresses.get(index);
-                        VodAddress s2 = ToVodAddr.stunServer(serverS2Address);
-                        altAddrs1.add(s2);
-
-                        List<VodAddress> altAddrs2 = new ArrayList<VodAddress>();
-                        VodAddress s1 = ToVodAddr.stunServer(serverS1Address);
-                        altAddrs2.add(s1);
-                        trigger(new StunServerInit(new SelfNoParents(s2), 
-                                altAddrs2, StunServerConfiguration.build()), 
-                                serverS2Components.get(index).getControl());
-
-                    }
-                    VodAddress s1 = ToVodAddr.stunServer(serverS1Address);
-                    trigger(new StunServerInit(new SelfNoParents(s1),
-                            altAddrs1, StunServerConfiguration.build()),
-                            serverS1Components.get(index).getControl());
-                }
-
-
-                boolean upnpEnabled = (nat.getType() == Nat.Type.UPNP);
-
-                ruleLifeTime = 2 * 1000;
-                VodAddress sca = ToVodAddr.stunClient(stunClientAddress);
-                Self self = new SelfNoParents(sca);
-
-
-                trigger(new StunClientInit(self, 0 /* seed */,
-                        StunClientConfiguration.build().
-                        setRandTolerance(1).
-                        setRuleExpirationMinWait(ruleLifeTime).
-                        setRuleExpirationIncrement(ruleLifeTime).
-                        setUpnpEnable(upnpEnabled).
-                        setUpnpTimeout(500).
-                        setMinimumRtt(500).
-                        setRto(500).
-                        setRtoRetries(0)), stunClientComp.getControl());
-                ruleLifeTime = ruleLifeTime + (ruleLifeTime / 2);
-
-
-                trigger(new DistributedNatGatewayEmulatorInit(50000,
-                        nat.getMappingPolicy(),
-                        nat.getAllocationPolicy(),
-                        nat.getAlternativePortAllocationPolicy(), /* alternaive policy if there is clash using PP */
-                        nat.getFilteringPolicy(),
-                        nat.getType(), /* types are NAT OPEN and UPNP */
-                        3 * 1000 /* gc */,
-                        natIP /* ip of NAT Gateway*/,
-                        65533,
-                        false, /*mapping overrides*/
-                        ruleLifeTime,
-                        55,
-                        upnpEnabled/* upnp */), natComp.getControl());
-
-                trigger(new PortInit(11), portReservoir_For_A.getControl());
-                trigger(new PortInit(2992), portReservoir_For_B.getControl());
-
+                logger.info("starting");
                 Set<Address> serverAddresses = new LinkedHashSet<Address>();
                 serverAddresses.addAll(serverS1Addresses);
+                trigger(new GetNatTypeRequest(serverAddresses, true), stunClientComp.getPositive(StunPort.class));
 
-                trigger(new GetNatTypeRequest(serverAddresses, true),
-                        stunClientComp.getPositive(StunPort.class));
                 ScheduleTimeout st = new ScheduleTimeout(ruleLifeTime * 20);
                 MsgTimeout mt = new MsgTimeout(st);
                 st.setTimeoutEvent(mt);
                 trigger(st, timer.getPositive(Timer.class));
             }
         };
-        public Handler<GetNatTypeResponseRuleExpirationTime> handleNatTypeResponseRuleTimeout =
-                new Handler<GetNatTypeResponseRuleExpirationTime>() {
-            @Override
-            public void handle(GetNatTypeResponseRuleExpirationTime event) {
-                logger.info("Rule life time value is " + event.getRuleLifeTime());
-                testObj.pass();
-            }
-        };
-        public Handler<GetNatTypeResponse> handleGetNatTypeResponse =
-                new Handler<GetNatTypeResponse>() {
-            @Override
-            public void handle(GetNatTypeResponse event) {
 
-                Nat determinedNat = event.getNat();
+        public Handler<GetNatTypeResponseRuleExpirationTime> handleNatTypeResponseRuleTimeout
+                = new Handler<GetNatTypeResponseRuleExpirationTime>() {
+                    @Override
+                    public void handle(GetNatTypeResponseRuleExpirationTime event) {
+                        logger.info("Rule life time value is " + event.getRuleLifeTime());
+                        testObj.pass();
+                    }
+                };
+        public Handler<GetNatTypeResponse> handleGetNatTypeResponse
+                = new Handler<GetNatTypeResponse>() {
+                    @Override
+                    public void handle(GetNatTypeResponse event) {
 
-                if (determinedNat != null) {
-                    logger.info("Recvd " + determinedNat);
-                    logger.info("Actual " + nat);
-                    if (nat.getType() == Nat.Type.UPNP) {
-                        if (determinedNat.getType() != Nat.Type.UPNP) {
-                            testObj.fail("Upnp is not discovered correctly!!");
-                        } else {
-                            logger.info("Correct type. UPNP public ip is: " + determinedNat.getPublicUPNPAddress());
-                            testObj.pass();
-                        }
-                    } else {
-                        if (nat.getMappingPolicy() == determinedNat.getMappingPolicy()
+                        Nat determinedNat = event.getNat();
+
+                        if (determinedNat != null) {
+                            logger.info("Recvd " + determinedNat);
+                            logger.info("Actual " + nat);
+                            if (nat.getType() == Nat.Type.UPNP) {
+                                if (determinedNat.getType() != Nat.Type.UPNP) {
+                                    testObj.fail("Upnp is not discovered correctly!!");
+                                } else {
+                                    logger.info("Correct type. UPNP public ip is: " + determinedNat.getPublicUPNPAddress());
+                                    testObj.pass();
+                                }
+                            } else {
+                                if (nat.getMappingPolicy() == determinedNat.getMappingPolicy()
                                 && nat.getAllocationPolicy() == determinedNat.getAllocationPolicy()
                                 && nat.getFilteringPolicy() == determinedNat.getFilteringPolicy()) {
-                            logger.info("Found correct NAT type!");
-                            // Only finish test when rule expiration time has been calculated
+                                    logger.info("Found correct NAT type!");
+                                    // Only finish test when rule expiration time has been calculated
+                                } else {
+                                    testObj.fail("Incorrect Nat type: " + nat.toString() + " was discovered as " + determinedNat.toString());
+                                }
+                            }
                         } else {
-                            testObj.fail("Incorrect Nat type: " + nat.toString() + " was discovered as " + determinedNat.toString());
+                            if (event.getStatus() == GetNatTypeResponse.Status.ALL_HOSTS_TIMED_OUT) {
+                                logger.info("All hosts timed out!!");
+                                testObj.pass();
+                            } else if (event.getStatus() == GetNatTypeResponse.Status.FAIL) {
+                                testObj.fail("General failure getting nat type " + event.getStatus());
+                            } else {
+                                testObj.fail("Some problem with getting nat type. Response is: "
+                                        + event.getStatus());
+                            }
                         }
-                    }
-                } else {
-                    if (event.getStatus() == GetNatTypeResponse.Status.ALL_HOSTS_TIMED_OUT) {
-                        logger.info("All hosts timed out!!");
-                        testObj.pass();
-                    } else if (event.getStatus() == GetNatTypeResponse.Status.FAIL) {
-                        testObj.fail("General failure getting nat type " + event.getStatus());
-                    } else {
-                        testObj.fail("Some problem with getting nat type. Response is: "
-                                + event.getStatus());
-                    }
-                }
 
-                logger.info("Correct nat type");
-            }
-        };
+                        logger.info("Correct nat type");
+                    }
+                };
         public Handler<MsgTimeout> handleMsgTimeout = new Handler<MsgTimeout>() {
             @Override
             public void handle(MsgTimeout event) {
@@ -371,7 +348,6 @@ public class StunClientTest {
             logger.info("\n\n\n\n\n\n\n\n\n\n\n\n" + ++testNumber + ":  " + nat.toString()
                     + "\n********************************************************************");
 
-
             runInstance();
         }
     }
@@ -394,6 +370,7 @@ public class StunClientTest {
     }
 
     public void pass() {
+        logger.info("pass #{}", testNumber);
         StunClientTest.semaphore.release();
     }
 

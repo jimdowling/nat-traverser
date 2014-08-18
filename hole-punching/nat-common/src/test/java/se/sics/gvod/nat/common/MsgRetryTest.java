@@ -49,13 +49,6 @@ public class MsgRetryTest extends VodRetryComponentTestCase {
             
         }
 
-    Handler<TestInit> handleInit = new Handler<TestInit>() {
-
-        @Override
-        public void handle(TestInit init) {
-        }
-    };
-
     Handler<TestMsg> handleTestMsg = new Handler<TestMsg>() {
 
         @Override
@@ -91,7 +84,6 @@ public class MsgRetryTest extends VodRetryComponentTestCase {
             java.util.logging.Logger.getLogger(MsgRetryTest.class.getName()).log(Level.SEVERE, null, ex);
         }
 
-        msgRetry.handleInit.handle(new TestInit());
     }
 
     @After
