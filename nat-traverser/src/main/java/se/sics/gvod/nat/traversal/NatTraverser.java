@@ -222,6 +222,8 @@ public class NatTraverser extends ComponentDefinition {
     public NatTraverser(NatTraverserInit init) {
         super();
 
+        doInit(init);
+        
         subscribe(handleStart, control);
         subscribe(handleStop, control);
 
