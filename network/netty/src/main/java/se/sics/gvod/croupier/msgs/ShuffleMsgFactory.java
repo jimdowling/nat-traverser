@@ -7,9 +7,7 @@ package se.sics.gvod.croupier.msgs;
 import io.netty.buffer.ByteBuf;
 import se.sics.gvod.common.DescriptorBuffer;
 import se.sics.gvod.common.VodDescriptor;
-import se.sics.gvod.common.msgs.MessageDecodingException;
-import se.sics.gvod.common.msgs.RelayMsgNetty;
-import se.sics.gvod.common.msgs.RelayMsgNettyFactory;
+import se.sics.gvod.common.msgs.*;
 import se.sics.gvod.net.util.UserTypesDecoderFactory;
 
 /**
@@ -18,7 +16,7 @@ import se.sics.gvod.net.util.UserTypesDecoderFactory;
 public class ShuffleMsgFactory {
 
     
-    public static class Request extends RelayMsgNettyFactory.Request {
+    public static class Request extends DirectMsgNettyFactory.Request {
 
         public static ShuffleMsg.Request fromBuffer(ByteBuf buffer)
                 throws MessageDecodingException {
@@ -26,17 +24,15 @@ public class ShuffleMsgFactory {
         }
         
         @Override
-        protected RelayMsgNetty.Request process(ByteBuf buffer) throws MessageDecodingException {
+        protected DirectMsgNetty.Request process(ByteBuf buffer) throws MessageDecodingException {
             DescriptorBuffer descBuf = UserTypesDecoderFactory.readDescriptorBuffer(buffer);
             VodDescriptor nodeDescriptor = UserTypesDecoderFactory.readVodNodeDescriptor(buffer);
-            
-            
-            return new ShuffleMsg.Request(gvodSrc, gvodDest, descBuf, nodeDescriptor);
-        }
 
+            return new ShuffleMsg.Request(vodSrc, vodDest, descBuf, nodeDescriptor);
+        }
     }
 
-    public static class Response extends RelayMsgNettyFactory.Response {
+    public static class Response extends DirectMsgNettyFactory.Response {
 
         public static ShuffleMsg.Response fromBuffer(ByteBuf buffer)
                 throws MessageDecodingException {
@@ -44,11 +40,10 @@ public class ShuffleMsgFactory {
         }
         
         @Override
-        protected RelayMsgNetty.Response process(ByteBuf buffer) throws MessageDecodingException {
+        protected DirectMsgNetty.Response process(ByteBuf buffer) throws MessageDecodingException {
             DescriptorBuffer descBuf = UserTypesDecoderFactory.readDescriptorBuffer(buffer);
             VodDescriptor nodeDescriptor = UserTypesDecoderFactory.readVodNodeDescriptor(buffer);
-            return new ShuffleMsg.Response(gvodSrc, gvodDest, clientId, remoteId, nextDest, 
-                    timeoutId, status, descBuf, nodeDescriptor);
+            return new ShuffleMsg.Response(vodSrc, vodDest, timeoutId, descBuf, nodeDescriptor);
         }
     }
 }

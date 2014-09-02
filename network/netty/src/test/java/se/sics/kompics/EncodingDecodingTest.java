@@ -416,8 +416,7 @@ public class EncodingDecodingTest {
             List<VodDescriptor> privateView = new ArrayList<VodDescriptor>();
 
             DescriptorBuffer descBuffer = new DescriptorBuffer(gSrc, publicView, privateView);
-            ShuffleMsg.Response response = new ShuffleMsg.Response(vodAddress1, vodAddress2, 1, 2,
-                    vodAddress2, timeoutId, RelayMsgNetty.Status.OK, descBuffer, nodeDescriptor);
+            ShuffleMsg.Response response = new ShuffleMsg.Response(vodAddress1, vodAddress2, timeoutId,descBuffer, nodeDescriptor);
             response.setTimeoutId(UUID.nextUUID());
             ByteBuf channelBuffer = response.toByteArray();
             opCodeCorrect(channelBuffer, response);
@@ -432,8 +431,7 @@ public class EncodingDecodingTest {
             privateView.add(desc5);
 
 
-            ShuffleMsg.Response response2 = new ShuffleMsg.Response(vodAddress1, vodAddress2, 1, 2,
-                    vodAddress2, timeoutId, RelayMsgNetty.Status.FAIL, descBuffer, nodeDescriptor);
+            ShuffleMsg.Response response2 = new ShuffleMsg.Response(vodAddress1, vodAddress2, timeoutId, descBuffer, nodeDescriptor);
             response2.setTimeoutId(UUID.nextUUID());
             ByteBuf channelBuffer2 = response2.toByteArray();
             opCodeCorrect(channelBuffer2, response2);

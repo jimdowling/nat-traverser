@@ -101,6 +101,7 @@ public class Croupier extends MsgRetryComponent {
             if (self.getId() == n.getVodAddress().getId()) {
                 logger.warn("Trying to add myself to self: {}", self.getId());
             } else {
+                logger.error("_Abhi: Adding node: " + n.getId() +" to the local view for croupier exchange. SelfId : " + self.getId());
                 if (n.getVodAddress().isOpen()) {
                     pub.add(n);
                 } else {
@@ -216,7 +217,7 @@ public class Croupier extends MsgRetryComponent {
     Handler<ShuffleMsg.Request> handleShuffleRequest = new Handler<ShuffleMsg.Request>() {
         @Override
         public void handle(ShuffleMsg.Request msg) {
-            logger.debug(compName + "shuffle_req recvd by {} from {} with timeoutId: " + msg.getTimeoutId(),
+            logger.error("_Abhi: " + compName + "shuffle_req recvd by {} from {} with timeoutId: " + msg.getTimeoutId(),
                     msg.getVodDestination(),
                     msg.getDesc().getVodAddress());
 
@@ -244,12 +245,10 @@ public class Croupier extends MsgRetryComponent {
             logger.trace(compName + "SHUFFLE_REQ from {}. r={} public + {} private s={} public + {} private", new Object[]{srcAddress.getId(),
                 recPublicDescs.size(), recPrivateDescs.size(), toSendPublicDescs.size(), toSendPrivateDescs.size()});
 
-            logger.trace(compName + " Next dest is: " + msg.getNextDest());
+//            logger.trace(compName + " Next dest is: " + msg.getNextDest());
 
             ShuffleMsg.Response response = new ShuffleMsg.Response(self.getAddress(),
-                    msg.getVodSource(), msg.getClientId(), msg.getRemoteId(),
-                    msg.getNextDest(), msg.getTimeoutId(), RelayMsgNetty.Status.OK,
-                    toSendBuffer, self.getDescriptor());
+                    msg.getVodSource(), msg.getTimeoutId(), toSendBuffer, self.getDescriptor());
 
             logger.trace(compName + "sending ShuffleMsg.Response");
 

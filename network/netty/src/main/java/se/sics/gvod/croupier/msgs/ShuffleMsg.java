@@ -5,8 +5,10 @@
 package se.sics.gvod.croupier.msgs;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import se.sics.gvod.common.DescriptorBuffer;
 import se.sics.gvod.common.VodDescriptor;
+import se.sics.gvod.common.msgs.DirectMsgNetty;
 import se.sics.gvod.common.msgs.MessageEncodingException;
 import se.sics.gvod.common.msgs.RelayMsgNetty;
 import se.sics.gvod.net.BaseMsgFrameDecoder;
@@ -22,7 +24,7 @@ import se.sics.gvod.timer.TimeoutId;
  */
 public class ShuffleMsg {
 
-    public static class Request extends RelayMsgNetty.Request {
+    public static class Request extends DirectMsgNetty.Request {
 
         private static final long serialVersionUID = 8493601671018888143L;
         private final DescriptorBuffer buffer;
@@ -31,7 +33,7 @@ public class ShuffleMsg {
         public Request(VodAddress source,
                 VodAddress destination, DescriptorBuffer buffer,
                 VodDescriptor desc) {
-            super(source, destination, source.getId(), destination.getId());
+            super(source, destination);
             this.buffer = buffer;
             this.desc = desc;
         }
@@ -51,11 +53,7 @@ public class ShuffleMsg {
 
         @Override
         public int getSize() {
-            return super.getSize()
-                    + UserTypesEncoderFactory.getDescriptorBufferSize(buffer)
-                    + UserTypesEncoderFactory.GVOD_NODE_DESCRIPTOR_LEN
-                    + 1 // numSamples
-                    ;
+            return getHeaderSize();
         }
 
         @Override
@@ -74,7 +72,7 @@ public class ShuffleMsg {
         }
     }
 
-    public static class Response extends RelayMsgNetty.Response {
+    public static class Response extends DirectMsgNetty.Response {
 
         //<editor-fold defaultstate="collapsed" desc="comment">
         //</editor-fold>
@@ -82,12 +80,9 @@ public class ShuffleMsg {
         private final DescriptorBuffer buffer;
         private final VodDescriptor desc;
 
-        public Response(VodAddress source, VodAddress destination,
-                int clientId, int remoteId,
-                VodAddress nextDest, TimeoutId timeoutId,
-                RelayMsgNetty.Status status, DescriptorBuffer buffer,
+        public Response(VodAddress source, VodAddress destination, TimeoutId timeoutId,DescriptorBuffer buffer,
                 VodDescriptor desc) {
-            super(source, destination, clientId, remoteId, nextDest, timeoutId, status);
+            super(source, destination, timeoutId);
             assert (source.equals(destination) == false);
             this.buffer = buffer;
             this.desc = desc;
@@ -108,10 +103,7 @@ public class ShuffleMsg {
 
         @Override
         public int getSize() {
-            return super.getSize()
-                    + UserTypesEncoderFactory.getDescriptorBufferSize(buffer)
-                    + UserTypesEncoderFactory.GVOD_NODE_DESCRIPTOR_LEN
-                    + 1;
+            return getHeaderSize();
         }
 
         @Override
@@ -124,8 +116,7 @@ public class ShuffleMsg {
 
         @Override
         public RewriteableMsg copy() {
-            return new ShuffleMsg.Response(vodSrc, vodDest, clientId, remoteId,
-                    nextDest, timeoutId, getStatus(), buffer, desc);
+            return new ShuffleMsg.Response(vodSrc, vodDest, timeoutId, buffer, desc);
         }
     }
 
