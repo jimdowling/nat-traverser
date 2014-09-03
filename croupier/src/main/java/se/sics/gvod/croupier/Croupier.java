@@ -360,7 +360,7 @@ public class Croupier extends MsgRetryComponent {
         }
         sb.append("}");
 
-        logger.trace(compName + sb);
+        logger.error(compName + sb);
     }
 
     @Override
