@@ -149,7 +149,8 @@ public class VodConfig extends BaseCommandLineConfig {
     public final static int PERCENTAGE_FREERIDERS = 15;
     public static final int SEEDER_UTILITY_VALUE = -10;
     // GRADIENT'S DEFAULTS
-    public static final int GRADIENT_VIEW_SIZE = 10;
+    // FIXME: Changing Gradient View Size for Testing.
+    public static final int GRADIENT_VIEW_SIZE = 4;
     public static final int GRADIENT_SHUFFLE_TIMEOUT = DEFAULT_RTO;
     public static final int GRADIENT_SHUFFLE_PERIOD = 5000;
     public static final int GRADIENT_SEARCH_TIMEOUT = DEFAULT_RTO * 6;
