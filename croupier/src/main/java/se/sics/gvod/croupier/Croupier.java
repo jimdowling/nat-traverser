@@ -101,7 +101,7 @@ public class Croupier extends MsgRetryComponent {
             if (self.getId() == n.getVodAddress().getId()) {
                 logger.warn("Trying to add myself to self: {}", self.getId());
             } else {
-                logger.error("_Abhi: Adding node: " + n.getId() +" to the local view for croupier exchange. SelfId : " + self.getId());
+                logger.debug("SelfId: " + self.getAddress() + " adding bootstrapping node with Address: " + n.getVodAddress());
                 if (n.getVodAddress().isOpen()) {
                     pub.add(n);
                 } else {
@@ -217,7 +217,7 @@ public class Croupier extends MsgRetryComponent {
     Handler<ShuffleMsg.Request> handleShuffleRequest = new Handler<ShuffleMsg.Request>() {
         @Override
         public void handle(ShuffleMsg.Request msg) {
-            logger.error("_Abhi: " + compName + "shuffle_req recvd by {} from {} with timeoutId: " + msg.getTimeoutId(),
+            logger.error(compName + "shuffle_req recvd by {} from {} with timeoutId: " + msg.getTimeoutId(),
                     msg.getVodDestination(),
                     msg.getDesc().getVodAddress());
 

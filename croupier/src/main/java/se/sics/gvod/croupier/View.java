@@ -149,7 +149,9 @@ public class View {
 
 //-------------------------------------------------------------------	
     public void selectToKeep(VodAddress from, List<VodDescriptor> descriptors) {
-        if (from.equals(self.getAddress())) {
+
+        // TODO: Changing the check from the VodAddress equality to Address because original check resulted in retaining duplicate nodes in case of partitioning as only overlay id changed.
+        if (from.getPeerAddress().equals(self.getAddress().getPeerAddress())) {
             return;
         }
         LinkedList<ViewEntry> entriesSentToThisPeer = new LinkedList<ViewEntry>();
