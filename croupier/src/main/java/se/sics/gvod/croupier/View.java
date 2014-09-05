@@ -1,7 +1,13 @@
 package se.sics.gvod.croupier;
 
-import java.util.*;
-
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Random;
+import java.util.Set;
 import se.sics.gvod.common.Self;
 import se.sics.gvod.common.VodDescriptor;
 import se.sics.gvod.config.VodConfig;
@@ -273,22 +279,10 @@ public class View {
 //-------------------------------------------------------------------	
     private boolean removeEntry(ViewEntry entry) {
         boolean res = entries.remove(entry);
-
-        Iterator<VodAddress> i = d2e.keySet().iterator();
-
-        //FIXME: quick fix to remove duplicate entries in Croupier, might be changed later
-        while(i.hasNext()) {
-
-            if(entry.getDescriptor().getVodAddress().getPeerAddress().equals(i.next().getPeerAddress())) {
-
-                i.remove();
-                break;
-            }
-        }
-        /*if (d2e.remove(entry.getDescriptor().getVodAddress()) == null
+        if (d2e.remove(entry.getDescriptor().getVodAddress()) == null
                 && res == true) {
             System.err.println("Croupier View corrupted.");
-        }*/
+        }
         checkSize();
         return res;
     }
