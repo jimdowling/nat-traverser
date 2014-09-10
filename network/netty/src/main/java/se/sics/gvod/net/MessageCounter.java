@@ -49,12 +49,12 @@ public class MessageCounter extends ChannelDuplexHandler {
         super.write(ctx, msgs, promise);
     }
 
-    @Override
-    public void channelUnregistered(ChannelHandlerContext ctx) throws Exception {
-        System.out.println(this.id + ctx.channel() + " -> sent: " + this.getWrittenMessages()
-                + ", recv: " + this.getReadMessages());
-        super.channelUnregistered(ctx);
-    }
+//    @Override
+//    public void channelUnregistered(ChannelHandlerContext ctx) throws Exception {
+//        System.out.println(this.id + ctx.channel() + " -> sent: " + this.getWrittenMessages()
+//                + ", recv: " + this.getReadMessages());
+//        super.channelUnregistered(ctx);
+//    }
 
     // getters & setters ------------------------------------------------------
 

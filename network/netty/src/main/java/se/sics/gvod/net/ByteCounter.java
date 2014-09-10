@@ -56,12 +56,12 @@ public class ByteCounter extends ChannelDuplexHandler {
 		super.write(ctx, msg, promise);
 	}
 
-	@Override
-	public void channelUnregistered(ChannelHandlerContext ctx) throws Exception {
-		super.channelUnregistered(ctx);
-		System.out.println(this.id + ctx.channel() + " -> sent: " + this.getWrittenBytes()
-				+ "b, recv: " + this.getReadBytes() + "b");
-	}
+//	@Override
+//	public void channelUnregistered(ChannelHandlerContext ctx) throws Exception {
+//		super.channelUnregistered(ctx);
+//		System.out.println(this.id + ctx.channel() + " -> sent: " + this.getWrittenBytes()
+//				+ "b, recv: " + this.getReadBytes() + "b");
+//	}
 
 	// getters & setters ------------------------------------------------------
 

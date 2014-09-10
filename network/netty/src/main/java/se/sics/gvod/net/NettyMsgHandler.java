@@ -29,7 +29,7 @@ public class NettyMsgHandler extends NettyBaseHandler<DatagramPacket> {
     }
 
     @Override
-    protected void channelRead0(ChannelHandlerContext ctx, DatagramPacket msg) throws Exception {
+    protected void messageReceived(ChannelHandlerContext ctx, DatagramPacket msg) throws Exception {
         RewriteableMsg rewrittenMsg = (RewriteableMsg) decoder.parse(msg.content());
 
         // session-less UDP means that remoteAddresses cannot be found in

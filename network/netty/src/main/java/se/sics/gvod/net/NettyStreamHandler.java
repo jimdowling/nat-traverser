@@ -28,7 +28,7 @@ public class NettyStreamHandler extends NettyBaseHandler<RewriteableMsg> {
     }
 
 	@Override
-	protected void channelRead0(ChannelHandlerContext ctx, RewriteableMsg msg) throws Exception {
+	protected void messageReceived(ChannelHandlerContext ctx, RewriteableMsg msg) throws Exception {
         SocketAddress remoteAddress = ctx.channel().remoteAddress();
 
         if (remoteAddress instanceof InetSocketAddress) {
