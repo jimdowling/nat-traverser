@@ -50,6 +50,7 @@ public abstract class BaseCommandLineConfig {
     public static final String POM_FILENAME = "pom.xml";
     public static String GVOD_HOME;
     public static final String PROP_PORT = "port";
+    public static final String UDT_PORT="udt.port";
     public static final String PROP_MEDIA_PORT = "web.port";
     public static final String PROP_SEED = "seed";
     public static final String PROP_BOOTSTRAP_PORT = "bootstrap.server.port";
@@ -97,6 +98,7 @@ public abstract class BaseCommandLineConfig {
     }
 
     public static final int DEFAULT_PORT = 58022;
+    public static final int DEFAULT_UDT_PORT=58023;
     public static final int DEFAULT_STUN_PORT = 3478;
     public static final int DEFAULT_STUN_PORT_2 = 3479;
     // only use IP Addresses here - not hostnames.
@@ -182,6 +184,10 @@ public abstract class BaseCommandLineConfig {
         Option portOption = new Option("port", true, "port for gvod");
         portOption.setArgName(VAL_NUMBER);
         options.addOption(portOption);
+
+        Option udtPortOption = new Option("udtPort",true,"port for udt messages");
+        udtPortOption.setArgName("udtPort");
+        options.addOption(udtPortOption);
 
         Option bootstrapIpOption = new Option("bIp", true, "Bootstrap server host/ip");
         bootstrapIpOption.setArgName(VAL_ADDRESS);
@@ -276,6 +282,16 @@ public abstract class BaseCommandLineConfig {
                         + ". Port must be between 1024 and 65535", options);
             }
             compositeConfig.setProperty(PROP_PORT, port);
+        }
+
+        // Update for the udt port.
+        if(line.hasOption(udtPortOption.getOpt())){
+            int udtPort = new Integer(line.getOptionValue(udtPortOption.getOpt()));
+            if (udtPort < 1024 || udtPort > 65535) {
+                help(args, "Out-of-range udt port : " + udtPort
+                        + ". Port must be between 1024 and 65535", options);
+            }
+            compositeConfig.setProperty(UDT_PORT, udtPort);
         }
 
         if (line.hasOption(bootstrapIpOption.getOpt())) {
@@ -408,6 +424,15 @@ public abstract class BaseCommandLineConfig {
     public static int getPort() {
         baseInitialized();
         return singleton.compositeConfig.getInt(PROP_PORT, DEFAULT_PORT);
+    }
+
+    /**
+     *
+     * @return Port for exchanging UDT messages.
+     */
+    public static int getUdtPort(){
+        baseInitialized();
+        return singleton.compositeConfig.getInt(UDT_PORT,DEFAULT_UDT_PORT);
     }
 
     public static int getMediaPort() {
