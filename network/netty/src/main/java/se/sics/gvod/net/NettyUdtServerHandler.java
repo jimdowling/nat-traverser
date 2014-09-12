@@ -1,5 +1,6 @@
 package se.sics.gvod.net;
 
+import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.udt.UdtChannel;
 
@@ -8,6 +9,7 @@ import io.netty.channel.udt.UdtChannel;
  *
  * @author Steffen Grohsschmiedt
  */
+@ChannelHandler.Sharable
 public class NettyUdtServerHandler extends NettyStreamHandler {
 
 	public NettyUdtServerHandler(NettyNetwork component) {
