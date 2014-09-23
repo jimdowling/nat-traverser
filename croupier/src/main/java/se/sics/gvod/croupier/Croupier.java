@@ -217,7 +217,7 @@ public class Croupier extends MsgRetryComponent {
     Handler<ShuffleMsg.Request> handleShuffleRequest = new Handler<ShuffleMsg.Request>() {
         @Override
         public void handle(ShuffleMsg.Request msg) {
-            logger.error(compName + "shuffle_req recvd by {} from {} with timeoutId: " + msg.getTimeoutId(),
+            logger.debug(compName + "shuffle_req recvd by {} from {} with timeoutId: " + msg.getTimeoutId(),
                     msg.getVodDestination(),
                     msg.getDesc().getVodAddress());
 
@@ -360,7 +360,7 @@ public class Croupier extends MsgRetryComponent {
         }
         sb.append("}");
 
-        logger.error(compName + sb);
+        logger.debug(compName + sb);
     }
 
     @Override
