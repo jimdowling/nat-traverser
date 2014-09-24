@@ -4,7 +4,7 @@
 
     <groupId>se.sics</groupId>
     <artifactId>nattraverser</artifactId>
-    <version>1.1-SNAPSHOT</version>
+    <version>1.2-SNAPSHOT</version>
     <name>Nat Traverser Parent</name>
     <packaging>pom</packaging>
     <url>http://maven.apache.org</url>
