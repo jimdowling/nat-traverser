@@ -4,11 +4,11 @@
     <parent>
         <groupId>se.sics.hp</groupId>
         <artifactId>hole-punching</artifactId>
-        <version>1.1-SNAPSHOT</version>
+        <version>1.2-SNAPSHOT</version>
     </parent>
     <groupId>se.sics.nat.emu</groupId>
     <artifactId>nat-emulator</artifactId>
-    <version>1.1-SNAPSHOT</version>
+    <version>1.2-SNAPSHOT</version>
     <packaging>jar</packaging>
     <name>Nat Emulator</name>
     <url>http://maven.apache.org</url>

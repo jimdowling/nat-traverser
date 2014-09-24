@@ -4,11 +4,11 @@
     <parent>
         <groupId>se.sics.net</groupId>
         <artifactId>network-parent</artifactId>
-        <version>1.1-SNAPSHOT</version>
+        <version>1.2-SNAPSHOT</version>
     </parent>
     <groupId>se.sics.net.utils</groupId>
     <artifactId>resolve-ip</artifactId>
-    <version>1.1-SNAPSHOT</version>
+    <version>1.2-SNAPSHOT</version>
     <name>Resolve IP</name>
     <packaging>jar</packaging>
 

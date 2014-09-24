@@ -4,11 +4,11 @@
     <parent>
         <artifactId>nattraverser</artifactId>
         <groupId>se.sics</groupId>
-        <version>1.1-SNAPSHOT</version>
+        <version>1.2-SNAPSHOT</version>
     </parent>
     <groupId>se.sics.net</groupId>
     <artifactId>network-parent</artifactId>
-    <version>1.1-SNAPSHOT</version>
+    <version>1.2-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>Network Parent</name>
     <url>http://maven.apache.org</url>

@@ -4,11 +4,11 @@
     <parent>
         <artifactId>nattraverser</artifactId>
         <groupId>se.sics</groupId>
-        <version>1.1-SNAPSHOT</version>
+        <version>1.2-SNAPSHOT</version>
     </parent>
     <groupId>se.sics.common</groupId>
     <artifactId>common</artifactId>
-    <version>1.1-SNAPSHOT</version>
+    <version>1.2-SNAPSHOT</version>
     <packaging>jar</packaging>
     <name>Common</name>
     <url>http://maven.apache.org</url>

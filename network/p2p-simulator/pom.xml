@@ -4,14 +4,14 @@
     <parent>
         <groupId>se.sics.net</groupId>
         <artifactId>network-parent</artifactId>
-        <version>1.1-SNAPSHOT</version>
+        <version>1.2-SNAPSHOT</version>
     </parent>
     <groupId>se.sics.p2p.experiments</groupId>
     <artifactId>p2p-simulator</artifactId>
     <packaging>jar</packaging>
     <name>P2pSimulator Component</name>
     <description>P2pSimulator Component</description>
-    <version>1.1-SNAPSHOT</version>
+    <version>1.2-SNAPSHOT</version>
 
     <dependencies>
         <dependency>

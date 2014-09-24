@@ -4,11 +4,11 @@
     <parent>
         <groupId>se.sics.hp</groupId>
         <artifactId>hole-punching</artifactId>
-        <version>1.1-SNAPSHOT</version>
+        <version>1.2-SNAPSHOT</version>
     </parent>
     <groupId>se.sics.nat.common</groupId>
     <artifactId>nat-common</artifactId>
-    <version>1.1-SNAPSHOT</version>
+    <version>1.2-SNAPSHOT</version>
     <name>NAT Common</name>
     <url>http://maven.apache.org</url>
 

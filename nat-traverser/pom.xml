@@ -4,12 +4,12 @@
     <parent>
         <artifactId>nattraverser</artifactId>
         <groupId>se.sics</groupId>
-        <version>1.1-SNAPSHOT</version>
+        <version>1.2-SNAPSHOT</version>
     </parent>
     <groupId>se.sics.nat-traverser</groupId>
     <artifactId>nat-traverser</artifactId>
     <name>Nat Traverser</name>
-    <version>1.1-SNAPSHOT</version>
+    <version>1.2-SNAPSHOT</version>
 
     <dependencies>
         <dependency>

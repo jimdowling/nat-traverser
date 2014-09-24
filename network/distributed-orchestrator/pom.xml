@@ -4,11 +4,11 @@
     <parent>
         <groupId>se.sics.net</groupId>
         <artifactId>network-parent</artifactId>
-        <version>1.1-SNAPSHOT</version>
+        <version>1.2-SNAPSHOT</version>
     </parent>
     <groupId>se.sics.net</groupId>
     <artifactId>distributed-orchestrator</artifactId>
-    <version>1.1-SNAPSHOT</version>
+    <version>1.2-SNAPSHOT</version>
     <name>NAT Distributed Orchestrator</name>
     <packaging>jar</packaging>
 

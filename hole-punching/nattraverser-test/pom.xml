@@ -4,12 +4,12 @@
     <parent>
         <artifactId>hole-punching</artifactId>
         <groupId>se.sics.hp</groupId>
-        <version>1.1-SNAPSHOT</version>
+        <version>1.2-SNAPSHOT</version>
     </parent>
     <groupId>se.sics.hp.test</groupId>
     <artifactId>nattraverser-test</artifactId>
     <name>NatTraverser Test</name>
-    <version>1.1-SNAPSHOT</version>
+    <version>1.2-SNAPSHOT</version>
     <url>http://maven.apache.org</url>
 
     <dependencies>

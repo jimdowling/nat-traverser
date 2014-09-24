@@ -4,13 +4,13 @@
     <parent>
         <groupId>se.sics.net</groupId>
         <artifactId>network-parent</artifactId>
-        <version>1.1-SNAPSHOT</version>
+        <version>1.2-SNAPSHOT</version>
     </parent>
     <groupId>se.sics.net</groupId>
     <artifactId>netty</artifactId>
     <packaging>jar</packaging>
     <name>Netty</name>
-    <version>1.1-SNAPSHOT</version>
+    <version>1.2-SNAPSHOT</version>
 
     <dependencies>
         <dependency>
