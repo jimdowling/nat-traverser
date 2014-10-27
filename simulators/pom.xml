@@ -4,11 +4,11 @@
     <parent>
         <artifactId>nattraverser</artifactId>
         <groupId>se.sics</groupId>
-        <version>1.2-SNAPSHOT</version>
+        <version>1.2.1-SNAPSHOT</version>
     </parent>
     <groupId>se.sics.simulator</groupId>
     <artifactId>simulator</artifactId>
-    <version>1.2-SNAPSHOT</version>
+    <version>1.2.1-SNAPSHOT</version>
     <name>NatTraverser Simulators</name>
     <url>http://maven.apache.org</url>
     
